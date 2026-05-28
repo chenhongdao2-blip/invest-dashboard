@@ -1,5 +1,5 @@
 streamlit>=1.36,<2
-yfinance>=0.2.43,<0.3
+yfinance>=1.4,<2
 pandas>=2.2,<3
 pyyaml>=6.0,<7
 plotly>=5.22,<6

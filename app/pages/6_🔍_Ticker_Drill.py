@@ -173,6 +173,16 @@ if wiki_page is None:
         f"Drop a `companies/*.md` file in `~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
     )
 else:
+    # CMSI compliance gate: rendering analyst Rating/TP in a UI surface — even
+    # locally — re-disseminates research-report content. Show the standard
+    # internal-use disclaimer at the top of every memo render.
+    st.warning(
+        "⚠️ **本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
+        "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
+        "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
+        "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
+        icon="⚠️",
+    )
     st.markdown(f"### 📝 Research memo · {wiki_page.title}")
     meta_bits: list[str] = []
     if wiki_page.rating:
@@ -274,15 +284,16 @@ with col_mult:
             else:
                 disp = fmt.fmt_pct_decimal(v)
             mult_rows.append({"Metric": label, "Value": disp})
-        st.dataframe(
-            pd.DataFrame(mult_rows).set_index("Metric"),
-            use_container_width=True,
-            height=260,
-        )
+        # st.table renders a static, non-sortable grid — correct for vertical
+        # properties lists where Value column is mixed-type ($/%/x).
+        st.table(pd.DataFrame(mult_rows).set_index("Metric"))
 
 st.divider()
 
 # ---------- Extended fundamentals (live yfinance.info, cached 1h) ----------
+# Gated behind an explicit button so that Streamlit Cloud cold-start visits
+# don't pay a 30s+ yfinance.info round-trip on every page load. The button
+# triggers a single cached fetch — subsequent reruns hit the cache.
 @st.cache_data(ttl=3600, show_spinner="Fetching live fundamentals…")
 def _yf_info(_t: str) -> dict:
     try:
@@ -292,49 +303,63 @@ def _yf_info(_t: str) -> dict:
     return info or {}
 
 
-with st.expander("💼 Extended fundamentals (live yfinance.info, 1h cache)", expanded=False):
-    info = _yf_info(ticker)
-    if not info:
-        st.caption("yfinance.info returned empty — network issue or ticker delisted.")
+with st.expander("💼 Extended fundamentals (live yfinance.info — click to fetch)", expanded=False):
+    btn_key = f"fetch_yf_info_{ticker}"
+    fetched_key = f"fetched_yf_info_{ticker}"
+
+    cols = st.columns([1, 3])
+    if cols[0].button("🔄 Fetch live", key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
+        st.session_state[fetched_key] = True
+
+    if not st.session_state.get(fetched_key):
+        st.caption(
+            "Click *Fetch live* to pull EBITDA / margins / shares / business summary "
+            "from yfinance.info. Avoided by default to keep the page snappy on "
+            "Streamlit Cloud (cold-start visits skip the live call)."
+        )
     else:
-        rows: list[dict[str, object]] = []
+        info = _yf_info(ticker)
+        if not info:
+            st.caption("yfinance.info returned empty — network issue, rate limit, or ticker delisted.")
+        else:
+            rows: list[dict[str, object]] = []
 
-        def _push(label: str, val, kind: str = "money") -> None:
-            if val is None or (isinstance(val, float) and pd.isna(val)):
-                disp = "—"
-            elif kind == "money":
-                disp = fmt.fmt_money_b(val)
-            elif kind == "pct":
-                disp = f"{val * 100:+.2f}%" if abs(val) < 5 else f"{val:+.2f}%"
-            elif kind == "x":
-                disp = fmt.fmt_ratio(val)
-            elif kind == "int":
-                disp = f"{int(val):,}" if val else "—"
-            else:
-                disp = str(val)
-            rows.append({"Metric": label, "Value": disp})
+            def _push(label: str, val, kind: str = "money") -> None:
+                if val is None or (isinstance(val, float) and pd.isna(val)):
+                    disp = "—"
+                elif kind == "money":
+                    disp = fmt.fmt_money_b(val)
+                elif kind == "pct":
+                    disp = f"{val * 100:+.2f}%" if abs(val) < 5 else f"{val:+.2f}%"
+                elif kind == "x":
+                    disp = fmt.fmt_ratio(val)
+                elif kind == "int":
+                    disp = f"{int(val):,}" if val else "—"
+                else:
+                    disp = str(val)
+                rows.append({"Metric": label, "Value": disp})
 
-        _push("EBITDA (TTM)", info.get("ebitda"))
-        _push("Total cash", info.get("totalCash"))
-        _push("Total debt", info.get("totalDebt"))
-        _push("Total revenue (TTM)", info.get("totalRevenue"))
-        _push("Revenue growth (YoY)", info.get("revenueGrowth"), "pct")
-        _push("Gross margin", info.get("grossMargins"), "pct")
-        _push("Operating margin", info.get("operatingMargins"), "pct")
-        _push("Profit margin", info.get("profitMargins"), "pct")
-        _push("Return on equity", info.get("returnOnEquity"), "pct")
-        _push("PEG ratio", info.get("trailingPegRatio"), "x")
-        _push("Dividend yield", info.get("dividendYield"), "pct")
-        _push("Beta", info.get("beta"), "x")
-        _push("Shares outstanding", info.get("sharesOutstanding"), "int")
-        _push("Float shares", info.get("floatShares"), "int")
+            _push("EBITDA (TTM)", info.get("ebitda"))
+            _push("Total cash", info.get("totalCash"))
+            _push("Total debt", info.get("totalDebt"))
+            _push("Total revenue (TTM)", info.get("totalRevenue"))
+            _push("Revenue growth (YoY)", info.get("revenueGrowth"), "pct")
+            _push("Gross margin", info.get("grossMargins"), "pct")
+            _push("Operating margin", info.get("operatingMargins"), "pct")
+            _push("Profit margin", info.get("profitMargins"), "pct")
+            _push("Return on equity", info.get("returnOnEquity"), "pct")
+            _push("PEG ratio", info.get("trailingPegRatio"), "x")
+            _push("Dividend yield", info.get("dividendYield"), "pct")
+            _push("Beta", info.get("beta"), "x")
+            _push("Shares outstanding", info.get("sharesOutstanding"), "int")
+            _push("Float shares", info.get("floatShares"), "int")
 
-        st.dataframe(pd.DataFrame(rows).set_index("Metric"),
-                     use_container_width=True, height=520)
+            # st.table — static, no sort header (Value column is mixed-type).
+            st.table(pd.DataFrame(rows).set_index("Metric"))
 
-        if info.get("longBusinessSummary"):
-            st.markdown("##### Business summary")
-            st.markdown(info["longBusinessSummary"])
+            if info.get("longBusinessSummary"):
+                st.markdown("##### Business summary")
+                st.markdown(info["longBusinessSummary"])
 
 # ---------- Cross-sector tags ----------
 st.markdown("##### 🔗 Universe membership")

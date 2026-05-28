@@ -2,9 +2,9 @@
 
 ## 0. Pre-flight (already in repo)
 
-- [x] `requirements.txt` — pinned dep ranges (streamlit / yfinance / pandas / plotly / pyyaml / numpy)
-- [x] `runtime.txt` → `python-3.12` (Streamlit Cloud reads this)
-- [x] `.python-version` → `3.12` (uv / pyenv fallback)
+- [x] `requirements.txt` — pinned dep ranges (streamlit / yfinance / pandas / plotly / pyyaml / numpy). yfinance must be `>=1.4,<2` (1.4.0 shipped May 2026; older `<0.3` caps lock the cloud onto an EOL minor).
+- [x] `runtime.txt` → `python-3.12` (informational only; **Streamlit Community Cloud does NOT read `runtime.txt`** — Python version is selected in the Cloud UI Advanced settings. The file is kept for `uv` / `pyenv` parity)
+- [x] `.python-version` → `3.12` (uv / pyenv pin for local dev)
 - [x] `.streamlit/config.toml` — dark theme + headless + xsrf protection
 - [x] `app/streamlit_app.py` — main entry (Streamlit auto-discovers `app/pages/*`)
 - [x] `data/snapshots.db` committed (Streamlit Cloud has no writable persistent disk; SQLite-in-git is the storage)
@@ -19,6 +19,7 @@
    - Branch: `main`
    - Main file path: `app/streamlit_app.py`
    - App URL (optional): `cmsi-invest-dashboard` → resulting URL `https://cmsi-invest-dashboard.streamlit.app`
+   - **Advanced settings → Python version**: pick **3.12** explicitly (Community Cloud no longer reads `runtime.txt`; whatever Streamlit defaults to changes over time — pin it in the UI). [Streamlit docs reference](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/deploy#optional-configure-secrets-and-python-version).
 3. Click **Deploy**. First build takes ~2-3 minutes (uv install + cold cache).
 4. Once it boots, copy the public URL and paste it into `README.md` `Live: ...` line (replace `TBD`).
 

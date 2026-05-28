@@ -43,31 +43,60 @@ class WikiPage:
         return self.file_path.exists()
 
 
+# Explicit market-suffix → wiki filename convention. Don't lowercase non-CN
+# numeric codes — 北交所 836255.BJ would become '836255.bj-' under a naive
+# .lower() fallback. Wiki convention: keep the numeric code as-is for any
+# Chinese / HK / TW / SG exchange, and lowercase only for US-style alpha tickers.
+_NUMERIC_CODE_SUFFIXES = {
+    "HK",         # 港交所 — zero-pad to 5 digits (1093 → 01093) per wiki conv
+    "SS", "SH",   # 上交所 (yfinance .SS; Bloomberg/Wind .SH)
+    "SZ",         # 深交所
+    "BJ",         # 北交所
+    "TW",         # 台湾交易所
+    "TWO",        # 台湾 OTC (上柜)
+    "SI",         # 新加坡
+    "KS", "KQ",   # KOSPI / KOSDAQ
+    "T",          # 东证 (Tokyo)
+}
+
+
 def _candidate_stems(ticker: str) -> list[str]:
     """Return list of filename-prefix candidates to glob for.
 
     Examples:
         1093.HK   → ['01093-', '1093-']
         300760.SZ → ['300760-']
+        836255.BJ → ['836255-']
+        2330.TW   → ['02330-', '2330-']
         LLY       → ['lly-']
         688575.SS → ['688575-']
     """
     if not ticker:
         return []
+    ticker = ticker.strip()
     candidates: list[str] = []
     if "." in ticker:
         code, suffix = ticker.split(".", 1)
-        if suffix == "HK":
-            # HK Bloomberg style uses 4-digit; wiki uses zero-padded 5-digit.
-            candidates.append(f"{code.zfill(5)}-")
+        code = code.strip()
+        suffix = suffix.strip().upper()
+        if suffix == "HK" or suffix == "TW":
+            # 港股 / 台股 wiki convention: zero-pad to 5 digits when shorter,
+            # but also try the raw form to be tolerant.
+            if code.isdigit() and len(code) < 5:
+                candidates.append(f"{code.zfill(5)}-")
             candidates.append(f"{code}-")
-        elif suffix in ("SZ", "SS"):
+        elif suffix in _NUMERIC_CODE_SUFFIXES:
             candidates.append(f"{code}-")
         else:
-            candidates.append(f"{code.lower()}-")
+            # Unknown suffix: best-effort fallback. Try the raw code first, then
+            # the lowercase combined form so we don't silently match the wrong file.
+            candidates.append(f"{code}-")
+            candidates.append(f"{ticker.lower()}-")
     else:
         candidates.append(f"{ticker.lower()}-")
-    return candidates
+    # De-duplicate while preserving order.
+    seen: set[str] = set()
+    return [c for c in candidates if not (c in seen or seen.add(c))]
 
 
 def _resolve_path(ticker: str) -> Path | None:

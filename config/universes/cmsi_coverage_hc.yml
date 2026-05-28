@@ -1,24 +1,125 @@
-# CMSI HK Healthcare Coverage List
-# ⚠️ PLACEHOLDER — 用户提供 cover list 后填充
-# 来源候选: ~/Desktop/香港股票信息表信息.xlsx (recon 未找到)
-# 或: 用户 paste ticker list
+# CMSI HK Healthcare Coverage List — 28 tickers
+# Source: CMSI internal coverage table (HK + US + 3 CN A-share)
+# Provided by George 2026-05-28
+# Note: 部分 ticker 与 sector universe cross-membership（dashboard 自动 dedup）
 sector_id: cmsi_coverage_hc
 domain: healthcare
 
 tickers:
-  # 占位示例（用户提供后替换）
-  - ticker: 1681.HK    # 占位
+  # HK Listed
+  - ticker: 1093.HK
+    name_cn: 石药集团
+    name_en: CSPC Pharmaceutical
     region: HK
-    note: "PLACEHOLDER — replace with actual CMSI cover list"
+  - ticker: 1177.HK
+    name_cn: 中国生物制药
+    name_en: Sino Biopharm
+    region: HK
+  - ticker: 1530.HK
+    name_cn: 三生制药
+    name_en: 3SBio
+    region: HK
+  - ticker: 1681.HK
+    name_cn: 康臣药业
+    name_en: Consun Pharma
+    region: HK
+  - ticker: 1801.HK
+    name_cn: 信达生物
+    name_en: Innovent Bio
+    region: HK
+  - ticker: 2162.HK
+    name_cn: 康诺亚
+    name_en: Keymed Biosciences
+    region: HK
+  - ticker: 2256.HK
+    name_cn: 和誉
+    name_en: Abbisko
+    region: HK
+  - ticker: 2269.HK
+    name_cn: 药明生物
+    name_en: WuXi Biologics
+    region: HK
+  - ticker: 2359.HK
+    name_cn: 药明康德
+    name_en: WuXi AppTec
+    region: HK
   - ticker: 2506.HK
+    name_cn: 讯飞医疗
+    name_en: Xunfei Healthcare Tech
     region: HK
-    note: "PLACEHOLDER"
-  - ticker: 3692.HK    # 翰森制药 (per MEMORY context)
+  - ticker: 2616.HK
+    name_cn: 基石药业
+    name_en: CStone Pharmaceuticals
     region: HK
-    note: "PLACEHOLDER"
   - ticker: 2666.HK
+    name_cn: 环球医疗
+    name_en: Universal Medical
     region: HK
-    note: "PLACEHOLDER"
-  - ticker: 1801.HK    # 信达生物 (per MEMORY)
+  - ticker: 3320.HK
+    name_cn: 华润医药
+    name_en: CR Pharm
     region: HK
-    note: "PLACEHOLDER"
+  - ticker: 3692.HK
+    name_cn: 翰森制药
+    name_en: Hansoh Pharma
+    region: HK
+  - ticker: 9995.HK
+    name_cn: 荣昌生物
+    name_en: Remegen
+    region: HK
+
+  # US Listed
+  - ticker: ALNY
+    name_cn: 艾拉伦制药
+    name_en: Alnylam
+    region: US
+  - ticker: BSX
+    name_cn: 波士顿科学
+    name_en: Boston Scientific
+    region: US
+  - ticker: GPCR
+    name_cn: 硕迪生物
+    name_en: Structure Therapeutics
+    region: US
+  - ticker: HCM
+    name_cn: 和黄医药
+    name_en: HUTCHMED
+    region: US
+  - ticker: ISRG
+    name_cn: 直觉外科
+    name_en: Intuitive Surgical
+    region: US
+  - ticker: LLY
+    name_cn: 礼来制药
+    name_en: Eli Lilly
+    region: US
+  - ticker: NVS
+    name_cn: 诺华制药
+    name_en: Novartis
+    region: US
+  - ticker: ONC
+    name_cn: 百济神州
+    name_en: BeOne Medicines
+    region: US
+  - ticker: TMO
+    name_cn: 赛默飞世尔
+    name_en: Thermo Fisher
+    region: US
+  - ticker: VEEV
+    name_cn: Veeva Systems
+    name_en: Veeva Systems
+    region: US
+
+  # CN A-share (yfinance: .SS for Shanghai, .SZ for Shenzhen)
+  - ticker: 300760.SZ
+    name_cn: 迈瑞医疗
+    name_en: Mindray
+    region: CN
+  - ticker: 300832.SZ
+    name_cn: 新产业
+    name_en: SNIBE
+    region: CN
+  - ticker: 688575.SS
+    name_cn: 亚辉龙
+    name_en: YHLO Biotech
+    region: CN

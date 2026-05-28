@@ -14,6 +14,9 @@ on:
         required: false
         default: '0'
 
+permissions:
+  contents: write                  # 允许 bot push 数据 commit
+
 jobs:
   fetch:
     runs-on: ubuntu-latest

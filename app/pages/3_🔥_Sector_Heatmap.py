@@ -101,57 +101,40 @@ def render_sector(sec: dict) -> None:
         st.info(f"No tickers in {sec['name']} after min-mcap filter (>= ${min_mcap_b:.1f}B)")
         return
 
-    # --- Build STRING display DataFrame (M7 audit) ---
-    display_str = pd.DataFrame(index=merged.index)
-    display_str["BBG"] = merged["Ticker_bbg"]
-    display_str["Name"] = merged["Name"].fillna(merged.index.to_series())
-    display_str["Tier"] = merged.get("mcap_tier", pd.Series(index=merged.index)).fillna("—")
-    display_str["Mcap USD"] = merged["market_cap_usd"].apply(fmt.fmt_money_b)
-    display_str["YTD %"] = merged["ytd_%"].apply(fmt.fmt_pct)
-    display_str["1M %"] = merged["1m_%"].apply(fmt.fmt_pct)
-    display_str["5D %"] = merged["5d_%"].apply(fmt.fmt_pct)
-    display_str["1D %"] = merged["1d_%"].apply(fmt.fmt_pct)
-    display_str["Trail P/E"] = merged["trailing_pe"].apply(fmt.fmt_ratio)
-    display_str["Fwd P/E"] = merged["forward_pe"].apply(fmt.fmt_ratio)
-    display_str["EV/EBITDA"] = merged["ev_ebitda"].apply(fmt.fmt_ratio)
-    display_str["EV/Sales"] = merged["ev_sales"].apply(fmt.fmt_ratio)
-    display_str["FCF Yld"] = merged["fcf_yield"].apply(fmt.fmt_pct_decimal)
-    display_str["P/B"] = merged["pb"].apply(fmt.fmt_ratio)
-    display_str.index.name = "Ticker"
+    # --- Build NUMERIC display DataFrame (sort-bug fix) ---
+    # Sort bug fix: keep numeric, let column_config render the format, so the
+    # Streamlit header click sorts numerically instead of lexicographically.
+    disp = pd.DataFrame(index=merged.index)
+    disp["BBG"] = merged["Ticker_bbg"]
+    disp["Name"] = merged["Name"].fillna(merged.index.to_series())
+    disp["Tier"] = merged.get("mcap_tier", pd.Series(index=merged.index)).fillna("—")
+    disp["Mcap USD ($B)"] = merged["market_cap_usd"] / 1e9
+    disp["YTD %"] = merged["ytd_%"]
+    disp["1M %"] = merged["1m_%"]
+    disp["5D %"] = merged["5d_%"]
+    disp["1D %"] = merged["1d_%"]
+    disp["Trail P/E"] = merged["trailing_pe"]
+    disp["Fwd P/E"] = merged["forward_pe"]
+    disp["EV/EBITDA"] = merged["ev_ebitda"]
+    disp["EV/Sales"] = merged["ev_sales"]
+    disp["FCF Yld"] = merged["fcf_yield"]
+    disp["P/B"] = merged["pb"]
+    disp.index.name = "Ticker"
 
-    # --- Apply colors via Styler using NUMERIC values from `merged` ---
-    pct_cols = ["YTD %", "1M %", "5D %", "1D %"]
-    low_good_cols = ["Trail P/E", "Fwd P/E", "EV/EBITDA", "EV/Sales", "P/B"]
-    high_good_cols = ["FCF Yld"]
+    ui.render_styled_table(
+        disp,
+        pct_cols=["YTD %", "1M %", "5D %", "1D %"],
+        pct_decimal_cols=["FCF Yld"],
+        mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "EV/Sales", "P/B"],
+        money_b_cols=["Mcap USD ($B)"],
+        text_cols=["BBG", "Name", "Tier"],
+        height=540,
+    )
 
     pct_num_map = {"YTD %": "ytd_%", "1M %": "1m_%", "5D %": "5d_%", "1D %": "1d_%"}
     mult_num_map = {"Trail P/E": "trailing_pe", "Fwd P/E": "forward_pe",
                     "EV/EBITDA": "ev_ebitda", "EV/Sales": "ev_sales", "P/B": "pb",
                     "FCF Yld": "fcf_yield"}
-
-    styler = display_str.style
-    for col in pct_cols:
-        num_series = merged[pct_num_map[col]]
-        styler = styler.apply(
-            lambda _s, n=num_series: fmt.background_gradient_diverging(n),
-            subset=[col],
-        )
-    for col in low_good_cols:
-        num_series = merged[mult_num_map[col]]
-        styler = styler.apply(
-            lambda _s, n=num_series: fmt.background_gradient_low_good(n),
-            subset=[col],
-        )
-    for col in high_good_cols:
-        num_series = merged[mult_num_map[col]]
-        styler = styler.apply(
-            lambda _s, n=num_series: fmt.background_gradient_low_good(
-                n, low_color="#dc2626", high_color="#16a34a"
-            ),
-            subset=[col],
-        )
-
-    st.dataframe(styler, use_container_width=True, height=540)
 
     # --- Sector aggregates (M11 audit: by cap_tier optional) ---
     with st.expander(f"📊 {sec['name']} aggregates (mean / median / weighted)"):

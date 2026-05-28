@@ -149,52 +149,35 @@ def render_strategy(strat_id: str) -> None:
     cols_to_show = [c for c in front_cols if c in perf_sorted.columns]
     perf_display = perf_sorted[cols_to_show].rename(columns={"name": "Name"})
 
+    pct_cols_avail = [c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"]
+                      if c in perf_display.columns]
+    text_cols_avail = [c for c in ["Name"] if c in perf_display.columns]
+    extra_fmt = {}
+    if "Last" in perf_display.columns:
+        extra_fmt["Last"] = "%.2f"
+    if "Pick Score" in perf_display.columns:
+        extra_fmt["Pick Score"] = "%.2f"
+
+    def _render_perf(slice_df: pd.DataFrame, height: int = 280) -> None:
+        ui.render_styled_table(
+            slice_df,
+            pct_cols=pct_cols_avail,
+            text_cols=text_cols_avail,
+            extra_formats=extra_fmt,
+            height=height,
+        )
+
     c_top, c_bot = st.columns(2)
     with c_top:
         st.markdown(f"##### 🟢 Top {min(5, len(perf_display))} (since-inception)")
-        top5 = perf_display.head(5)
-        styler = (
-            top5.style
-            .format({
-                "Last": fmt.fmt_num,
-                "Pick Score": "{:.2f}",
-                "1D %": fmt.fmt_pct, "5D %": fmt.fmt_pct,
-                "15D %": fmt.fmt_pct, "30D %": fmt.fmt_pct, "Since %": fmt.fmt_pct,
-            }, na_rep="—")
-            .apply(fmt.style_pct_column,
-                   subset=[c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"] if c in top5.columns])
-        )
-        st.dataframe(styler, use_container_width=True)
+        _render_perf(perf_display.head(5))
     with c_bot:
         st.markdown(f"##### 🔴 Worst {min(5, len(perf_display))} (since-inception)")
-        bot5 = perf_display.tail(5).iloc[::-1]
-        styler = (
-            bot5.style
-            .format({
-                "Last": fmt.fmt_num,
-                "Pick Score": "{:.2f}",
-                "1D %": fmt.fmt_pct, "5D %": fmt.fmt_pct,
-                "15D %": fmt.fmt_pct, "30D %": fmt.fmt_pct, "Since %": fmt.fmt_pct,
-            }, na_rep="—")
-            .apply(fmt.style_pct_column,
-                   subset=[c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"] if c in bot5.columns])
-        )
-        st.dataframe(styler, use_container_width=True)
+        _render_perf(perf_display.tail(5).iloc[::-1])
 
     # --- Full table (expandable) ---
     with st.expander(f"📋 All {len(perf_display)} picks (sorted by since-inception)"):
-        styler = (
-            perf_display.style
-            .format({
-                "Last": fmt.fmt_num,
-                "Pick Score": "{:.2f}",
-                "1D %": fmt.fmt_pct, "5D %": fmt.fmt_pct,
-                "15D %": fmt.fmt_pct, "30D %": fmt.fmt_pct, "Since %": fmt.fmt_pct,
-            }, na_rep="—")
-            .apply(fmt.style_pct_column,
-                   subset=[c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"] if c in perf_display.columns])
-        )
-        st.dataframe(styler, use_container_width=True, height=500)
+        _render_perf(perf_display, height=500)
 
 
 # --- Onboarding expander ---

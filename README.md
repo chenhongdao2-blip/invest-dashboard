@@ -2,7 +2,7 @@
 
 > Multi-domain sell-side investment dashboard. Healthcare v1, AI 与其它 domain 后续扩展。
 
-**Live**: TBD (Streamlit Community Cloud URL)
+**Live**: TBD — set after first Streamlit Community Cloud deploy (see [docs/deploy/streamlit-cloud.md](docs/deploy/streamlit-cloud.md))
 **Cost**: $0/月（GitHub Actions cron + Streamlit Cloud free tier）
 **Author**: George Chen (CMSI HK Healthcare)
 **Plan**: see `~/.claude/plans/modular-toasting-spindle.md`
@@ -81,6 +81,33 @@ invest-dashboard/
 ```
 
 **Quick links**: [Plan](docs/plans/modular-toasting-spindle.md) · [Round 1 audit](docs/audits/round1/) · [Round 2 audit](docs/audits/round2/) · [Screenshots](docs/screenshots/)
+
+## Pages (D1–D7)
+
+| Page | What | Wiki integration |
+|---|---|---|
+| Home | Benchmarks + top movers + universe summary | — |
+| 💎 CMSI Coverage | 28-ticker cover list, full multiples, cross-sector tags | — |
+| 🏥 Healthcare | 7 sub-sector summary + per-sector top movers | — |
+| 🔥 Sector Heatmap | 7 sector tabs, color-graded multiples + returns | — |
+| 🧬 Strategy Picks | v4 / v5 biotech + HK 高股息, since-inception perf vs benchmark | — |
+| 💰 Valuation Scanner | Cross-sectional P/E percentile filter, deep-value & recovery presets | — |
+| 🔍 Ticker Drill | Single-ticker deep dive (price + multiples + cross-sector tags) | **Renders LLM Wiki memo** (Summary / Thesis / Rating / TP / Catalysts / Risks) if `~/Documents/LLM Wiki/Wiki/companies/<ticker>-*.md` exists |
+
+> **Wiki + Cloud caveat**: LLM Wiki lives on George's Mac and is **not** copied to Streamlit Cloud. On the deployed instance the Ticker Drill page falls back to price + multiples only; wiki memos render only when running locally. To surface memos in the cloud version, copy a sanitized subset under `data/wiki/companies/` and point `app/lib/wiki.py:WIKI_ROOT` at it — out of scope for v1.
+
+## Deployment
+
+| Step | What |
+|---|---|
+| 1. Sign in | https://share.streamlit.io — connect GitHub account |
+| 2. New app | Repo `chenhongdao2-blip/invest-dashboard`, branch `main`, main file `app/streamlit_app.py` |
+| 3. Python | Pinned via `runtime.txt` → 3.12 |
+| 4. Deps | `requirements.txt` (streamlit / yfinance / pandas / plotly / pyyaml / numpy) |
+| 5. Config | `.streamlit/config.toml` ships dark theme + headless mode |
+| 6. Verify | Page slug emoji ok (e.g. `/Ticker_Drill`), URL drilldown via `?ticker=LLY` |
+
+Cron updates land via GitHub Actions push → Streamlit Cloud auto-redeploy. See [docs/deploy/streamlit-cloud.md](docs/deploy/streamlit-cloud.md) for the end-to-end check.
 
 ## Roadmap
 

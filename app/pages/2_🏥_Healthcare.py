@@ -14,22 +14,16 @@ from lib import ui
 
 
 def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
-    """Pre-format strings + Styler color-only (M7 audit fix)."""
-    display_str = pd.DataFrame(index=df.index)
-    for c in df.columns:
-        if c in pct_cols:
-            display_str[c] = df[c].apply(fmt.fmt_pct)
-        elif num_cols and c in num_cols:
-            display_str[c] = df[c].apply(fmt.fmt_num)
-        else:
-            display_str[c] = df[c]
-    styler = display_str.style
-    for c in pct_cols:
-        styler = styler.apply(
-            lambda _s, n=df[c]: fmt.background_gradient_diverging(n),
-            subset=[c],
-        )
-    st.dataframe(styler, use_container_width=True)
+    """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
+    text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
+    extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
+    ui.render_styled_table(
+        df,
+        pct_cols=pct_cols,
+        text_cols=text_cols,
+        extra_formats=extra_formats,
+        height=360,
+    )
 
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
 

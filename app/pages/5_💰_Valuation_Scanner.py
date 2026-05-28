@@ -201,54 +201,31 @@ if candidates.empty:
     )
     st.stop()
 
-# Build display
+# Build NUMERIC display DataFrame (sort-bug fix).
+pe_label = pe_metric.replace("_", " ").title()
 disp = pd.DataFrame(index=candidates.index)
 disp["BBG"] = [fmt.fmt_ticker_bbg(t) for t in disp.index]
 disp["Name"] = [name_map.get(t, t) for t in disp.index]
-# disp["Sectors"] = [", ".join(all_tickers_by_sec.get(t, [])) for t in disp.index] # Cull to save space
-# disp["Tier"] = candidates.get("mcap_tier", pd.Series(index=candidates.index)).fillna("—")
-disp["Mcap USD"] = candidates["market_cap_usd"].apply(fmt.fmt_money_b)
-disp[f"{pe_metric.replace('_', ' ').title()}"] = candidates[pe_metric].apply(fmt.fmt_ratio)
-disp["Sector P/E %ile"] = candidates["pe_percentile"].apply(lambda v: f"{v:.0f}%" if pd.notna(v) else "—")
-disp["YTD %"] = candidates["ytd_%"].apply(fmt.fmt_pct)
-disp["1M %"] = candidates["1m_%"].apply(fmt.fmt_pct)
-disp["5D %"] = candidates["5d_%"].apply(fmt.fmt_pct)
-disp["EV/EBITDA"] = candidates["ev_ebitda"].apply(fmt.fmt_ratio)
-disp["FCF Yld"] = candidates["fcf_yield"].apply(fmt.fmt_pct_decimal)
+disp["Mcap USD ($B)"] = candidates["market_cap_usd"] / 1e9
+disp[pe_label] = candidates[pe_metric]
+disp["Sector P/E %ile"] = candidates["pe_percentile"]
+disp["YTD %"] = candidates["ytd_%"]
+disp["1M %"] = candidates["1m_%"]
+disp["5D %"] = candidates["5d_%"]
+disp["EV/EBITDA"] = candidates["ev_ebitda"]
+disp["FCF Yld"] = candidates["fcf_yield"]
 disp.index.name = "Ticker"
 
-# Color gradients
-styler = disp.style
-# ... (rest of style logic)
-for col, num in [("YTD %", candidates["ytd_%"]), ("1M %", candidates["1m_%"]),
-                 ("5D %", candidates["5d_%"])]:
-    styler = styler.apply(
-        lambda _s, n=num: fmt.background_gradient_diverging(n),
-        subset=[col],
-    )
-# Lower better
-styler = styler.apply(
-    lambda _s: fmt.background_gradient_low_good(candidates[pe_metric]),
-    subset=[f"{pe_metric.replace('_', ' ').title()}"],
+ui.render_styled_table(
+    disp,
+    pct_cols=["YTD %", "1M %", "5D %"],
+    pct_decimal_cols=["FCF Yld"],
+    mult_cols=[pe_label, "EV/EBITDA", "Sector P/E %ile"],
+    money_b_cols=["Mcap USD ($B)"],
+    text_cols=["BBG", "Name"],
+    extra_formats={"Sector P/E %ile": "%.0f%%"},
+    height=560,
 )
-styler = styler.apply(
-    lambda _s: fmt.background_gradient_low_good(candidates["ev_ebitda"]),
-    subset=["EV/EBITDA"],
-)
-# Higher better
-styler = styler.apply(
-    lambda _s: fmt.background_gradient_low_good(
-        candidates["fcf_yield"], low_color="#dc2626", high_color="#16a34a"
-    ),
-    subset=["FCF Yld"],
-)
-# Sector P/E percentile column — low percentile = cheap = green
-styler = styler.apply(
-    lambda _s: fmt.background_gradient_low_good(candidates["pe_percentile"]),
-    subset=["Sector P/E %ile"],
-)
-
-st.dataframe(styler, use_container_width=True, height=560)
 
 # --- Interpretation hints ---
 ui.onboarding_expander("Valuation Scanner", """

@@ -165,7 +165,10 @@ def render_region(df: pd.DataFrame) -> None:
     disp["Trail P/E"] = df["trailing_pe"]
     disp["Fwd P/E"] = df["forward_pe"]
     disp["EV/EBITDA"] = df["ev_ebitda"]
-    disp["FCF Yld"] = df["fcf_yield"]                               # decimal e.g. 0.025
+    # FCF Yld stored as decimal (0.025); pre-multiply by 100 so column_config
+    # "%+.2f%%" displays "+2.50%". Streamlit's NumberColumn format string does
+    # not implement printf's %%-as-percent-multiplier shorthand.
+    disp["FCF Yld"] = df["fcf_yield"] * 100
     disp["P/B"] = df["pb"]
     disp["TP Upside %"] = df["tp_upside_%"]                         # m8
     disp["Reco"] = df["recommendation_mean"].apply(_reco_label)
@@ -206,7 +209,7 @@ def render_region(df: pd.DataFrame) -> None:
         "Trail P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
         "Fwd P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
         "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx", width="small"),
-        "FCF Yld": st.column_config.NumberColumn(format="%+.2%", width="small"),
+        "FCF Yld": st.column_config.NumberColumn(format="%+.2f%%", width="small"),
         "P/B": st.column_config.NumberColumn(format="%.1fx", width="small"),
         "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
         "Reco": st.column_config.TextColumn(width="small"),

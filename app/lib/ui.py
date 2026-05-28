@@ -93,6 +93,17 @@ def render_styled_table(
     column_widths = column_widths or {}
     extra_formats = extra_formats or {}
 
+    # pct_decimal_cols hold values in [-1, 1] decimal form (e.g. 0.025 → 2.5%).
+    # Streamlit NumberColumn `format` does NOT implement the printf `%%`-as-
+    # multiplier shorthand, so we pre-multiply the column by 100 on a *local
+    # copy* of the DataFrame and display with a plain "%+.2f%%" format. The
+    # original frame is untouched.
+    if pct_decimal_cols:
+        df = df.copy()
+        for col in pct_decimal_cols:
+            if col in df.columns:
+                df[col] = df[col] * 100
+
     # Build Styler from the numeric DataFrame.
     styler = df.style
     for col in pct_cols:
@@ -126,8 +137,10 @@ def render_styled_table(
             )
     for col in pct_decimal_cols:
         if col in df.columns:
+            # df[col] was already multiplied by 100 above, so "%+.2f%%" prints
+            # e.g. 0.025 (pre-mul: 2.5) → "+2.50%".
             col_cfg[col] = st.column_config.NumberColumn(
-                format="%+.2%",
+                format="%+.2f%%",
                 width=column_widths.get(col, "small"),
             )
     for col in mult_cols:

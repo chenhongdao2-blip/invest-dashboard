@@ -136,6 +136,8 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
             "1d_%": ret_back(1),
             "5d_%": ret_back(5),
             "1m_%": ret_back(21),
+            "3m_%": ret_back(63),    # M14 audit: 3-month
+            "6m_%": ret_back(126),   # M14 audit: 6-month
             "ytd_%": ytd,
             "60d_%": ret_back(60),
         }

@@ -51,9 +51,11 @@ def cumulative_return_chart(
     closes: pd.DataFrame,
     title: str = "",
     pick_date: str | None = None,
+    show_individual: bool = False,
 ) -> go.Figure:
     """Index series to pick_date (or first date) = 100.
-    Each ticker shown as a translucent line, plus equal-weighted portfolio in bold.
+    Shows equal-weighted portfolio in bold, plus a 10-90th percentile shaded band
+    for dispersion. Individual lines optional.
     """
     if closes.empty:
         return go.Figure()
@@ -63,27 +65,51 @@ def cumulative_return_chart(
         closes = closes[closes.index >= anchor_ts]
         if closes.empty:
             return go.Figure()
+
     base = closes.iloc[0]
     norm = (closes / base) * 100
     portfolio = norm.mean(axis=1)
+
     fig = go.Figure()
-    for col in norm.columns:
-        fig.add_trace(go.Scatter(
-            x=norm.index, y=norm[col],
-            mode="lines", name=col,
-            line=dict(width=1), opacity=0.35,
-            showlegend=False, hoverinfo="x+y+name",
-        ))
+
+    # --- Dispersion Band (10th - 90th percentile) ---
+    p10 = norm.quantile(0.1, axis=1)
+    p90 = norm.quantile(0.9, axis=1)
+
+    fig.add_trace(go.Scatter(
+        x=p90.index.tolist() + p90.index[::-1].tolist(),
+        y=p90.values.tolist() + p10.values[::-1].tolist(),
+        fill="toself",
+        fillcolor="rgba(34, 197, 94, 0.15)",  # Translucent green
+        line=dict(color="rgba(255,255,255,0)"),
+        hoverinfo="skip",
+        showlegend=True,
+        name="10th–90th %ile Range",
+    ))
+
+    # --- Individual Lines (Optional) ---
+    if show_individual:
+        for col in norm.columns:
+            fig.add_trace(go.Scatter(
+                x=norm.index, y=norm[col],
+                mode="lines", name=col,
+                line=dict(width=1), opacity=0.25,
+                showlegend=False, hoverinfo="x+y+name",
+            ))
+
+    # --- Portfolio Line ---
     fig.add_trace(go.Scatter(
         x=portfolio.index, y=portfolio.values,
-        mode="lines", name="Equal-weight portfolio",
+        mode="lines", name="Equal-weight Portfolio",
         line=dict(width=3, color=PRIMARY),
     ))
+
     fig.update_layout(
         template=PLOT_TEMPLATE,
         title=title,
         yaxis_title="Indexed (start=100)",
-        height=420,
+        height=450,
         margin=dict(l=10, r=10, t=40, b=10),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     )
     return fig

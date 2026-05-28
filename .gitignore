@@ -25,3 +25,11 @@ tmp/
 # OMC plugin auto-state (do not commit)
 .omc/
 .claude/
+
+# B1 audit fix: don't commit raw ic-foundry ledger (contains IP — thesis/conviction/postmortem JSON)
+data/external/picks.db
+data/external/picks.db-shm
+data/external/picks.db-wal
+data/external/*.db
+data/external/*.db-shm
+data/external/*.db-wal

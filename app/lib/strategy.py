@@ -2,15 +2,17 @@
 
 Strategies tracked:
 - v4 biotech (2026-04-22, 27 picks, XBI benchmark) — CSV
-- v5 biotech (2026-05-15, 40 picks, XBI benchmark)   — picks.db (catalyst-monitor)
+- v5 biotech (2026-05-15, 40 picks, XBI benchmark) — CSV (derived from picks.db)
 - HK 高股息 (2026-03-20, 34 picks, 3110.HK benchmark) — CSV
+
+B1 audit fix: picks.db not committed (contains thesis/conviction IP).
+Sync via `scripts/sync_ledger.sh` to regenerate v5_picks.csv from local ic-foundry.
 
 Prices fetched live via yfinance, cached 1 hour.
 """
 
 from __future__ import annotations
 
-import sqlite3
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -21,8 +23,8 @@ import yfinance as yf
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_EXT = REPO_ROOT / "data" / "external"
 
-PICKS_DB = DATA_EXT / "picks.db"
 V4_CSV = DATA_EXT / "v4_picks.csv"
+V5_CSV = DATA_EXT / "v5_picks.csv"
 HD_CSV = DATA_EXT / "hd_picks.csv"
 
 
@@ -35,25 +37,10 @@ def load_v4() -> pd.DataFrame:
 
 @st.cache_data(ttl=900)
 def load_v5() -> pd.DataFrame:
-    """v5 biotech: from picks.db, source_skill='catalyst-monitor'."""
-    if not PICKS_DB.exists():
+    """v5 biotech: from CSV (derived from ic-foundry catalyst-monitor picks)."""
+    if not V5_CSV.exists():
         return pd.DataFrame()
-    conn = sqlite3.connect(f"file:{PICKS_DB}?mode=ro", uri=True)
-    try:
-        df = pd.read_sql(
-            "SELECT ticker, MAX(price_at_decision) AS price_at_decision, "
-            "MIN(date_added) AS pick_date "
-            "FROM picks_v2 WHERE source_skill='catalyst-monitor' GROUP BY ticker",
-            conn,
-        )
-    finally:
-        conn.close()
-    df["name"] = df["ticker"]
-    df["score"] = None
-    df["benchmark"] = "XBI"
-    df["yf_sym"] = df["ticker"]
-    df["pick_date"] = "2026-05-15"
-    return df[["ticker", "name", "score", "pick_date", "benchmark", "yf_sym", "price_at_decision"]]
+    return pd.read_csv(V5_CSV)
 
 
 @st.cache_data(ttl=900)
@@ -144,9 +131,12 @@ def compute_strategy_returns(
     sub = closes[closes.index >= anchor_ts]
     if sub.empty:
         return pd.DataFrame(), pd.Series(dtype=float), pd.DataFrame()
+    # M2 audit fix: forward-fill missing closes (trading halts) before normalization
+    # so portfolio weight per ticker stays constant; avoid bias toward currently-trading subset
+    sub = sub.ffill()
     base = sub.iloc[0]
     normed = (sub / base) * 100
-    # Equal-weight portfolio: mean across tickers each day
+    # Equal-weight portfolio: mean across tickers each day (after ffill)
     portfolio = normed.mean(axis=1, skipna=True)
 
     # Per-window returns

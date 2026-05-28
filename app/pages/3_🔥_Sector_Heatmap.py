@@ -18,6 +18,7 @@ import yaml
 
 from lib import db
 from lib import format as fmt
+from lib import ui
 
 st.set_page_config(page_title="Sector Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
 
@@ -36,18 +37,20 @@ cfg = load_domain_cfg()
 st.title("🔥 Sector Heatmap")
 st.caption("Cross-sectional snapshot per sector. Multiples from yfinance — trailing + 12M forward only.")
 
-# --- Sidebar filter (M11 audit) ---
+# --- Sidebar global search + filter ---
 with st.sidebar:
+    ui.sidebar_search(key_prefix="heatmap")
+    st.divider()
     st.subheader("Filter")
     min_mcap_b = st.slider(
         "Min market cap (USD B)", 0.0, 50.0, 0.0, 0.5,
-        help="过滤掉小市值标的避免均值扭曲（GLM audit M11: 4587.T $904M 拉低 biotech 均值）"
+        help="过滤掉小市值标的避免均值扭曲"
     )
     sort_col = st.selectbox(
         "Sort by",
         ["Mcap USD", "YTD %", "1M %", "Trail P/E", "Fwd P/E"],
         index=0,
-        help="默认按市值降序（M10 audit: 中文卖方习惯）"
+        help="默认按市值降序"
     )
 
 
@@ -193,3 +196,16 @@ st.caption(
     "Sort/filter via sidebar. Min market cap filter is useful when small-cap stocks "
     "distort sector means (e.g., 4587 JP $904M vs GILD $166B)."
 )
+
+# --- Onboarding ---
+ui.onboarding_expander("Sector Heatmap", """
+**Multiples & Returns**: 
+- **Color Legend**: 收益率（YTD/1M等）绿涨红跌；估值倍数（P/E, EV/EBITDA）绿低红高（代表便宜）；FCF Yield 绿高红低。
+- **Tabs**: 通过上方选项卡快速切换 7 个不同的细分板块。
+
+**Filters**:
+- **Min Market Cap**: 过滤掉极小市值的标的（如某些市值不到 B 的 Biotech），避免它们极端的估值拉低或拉高板块整体均值。
+
+**Aggregates**:
+- 展开下方的 "Sector aggregates" 可以看到该板块所有标的的平均值 (Mean) 和中位数 (Median)。
+""")

@@ -96,8 +96,9 @@ def upsert_multiples(conn: sqlite3.Connection, rows: list[tuple]) -> int:
         """INSERT OR REPLACE INTO multiples_daily
            (ticker, date, market_cap_usd, mcap_tier, trailing_pe, forward_pe,
             trailing_eps, forward_eps, ev_ebitda, ev_sales, fcf_yield,
-            peg, pb, ytd_return, last_price, last_price_usd, currency)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            peg, pb, ytd_return, last_price, last_price_usd, currency,
+            target_price_mean, recommendation_mean, n_analysts)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
     return len(rows)
@@ -316,6 +317,10 @@ def info_to_multiple_row(
         last_price,                                   # local ccy
         last_price_usd,                               # M1: USD
         ccy,                                          # currency from info
+        # m8 audit: sell-side consensus fields
+        _safe_float(info.get("targetMeanPrice")),
+        _safe_float(info.get("recommendationMean")),
+        _safe_int(info.get("numberOfAnalystOpinions")),
     )
 
 

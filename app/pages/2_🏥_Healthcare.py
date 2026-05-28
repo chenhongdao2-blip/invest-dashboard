@@ -10,6 +10,7 @@ from pathlib import Path
 from lib import benchmarks as bm
 from lib import db
 from lib import format as fmt
+from lib import ui
 
 
 def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
@@ -31,6 +32,10 @@ def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str]
     st.dataframe(styler, use_container_width=True)
 
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
+
+# --- Sidebar global search ---
+with st.sidebar:
+    ui.sidebar_search(key_prefix="hc_overview")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "healthcare.yml"
@@ -123,3 +128,14 @@ for sec in cfg["sectors"]:
         with c2:
             st.markdown("🔴 Top 3 drags (1D)")
             _render_pct_table(drags, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
+
+# --- Onboarding ---
+ui.onboarding_expander("Healthcare Overview", """
+**Sector Summary**: 展示了医疗健康 7 个子板块的平均涨跌幅。
+- **Tickers**: 该板块包含的股票数量。
+- **Benchmark**: 该板块对应的行业指数（如 XBI 对应 Biotech）。
+
+**Domain Benchmarks**: XLV (Healthcare) 及其主要细分行业 ETF 的表现。
+
+**Per-sector Movers**: 每个板块内当日表现最好和最差的 3 只个股。
+""")

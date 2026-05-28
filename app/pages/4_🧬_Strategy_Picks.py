@@ -16,6 +16,7 @@ from lib import db
 from lib import format as fmt
 from lib import strategy as strat
 from lib import charts
+from lib import ui
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -23,17 +24,12 @@ st.set_page_config(
     layout="wide",
 )
 
-# Sidebar global search (B4 audit, on every page)
+# Sidebar global search
 with st.sidebar:
-    st.subheader("🔍 Find ticker")
-    pick = st.selectbox(
-        "Jump to ticker drill",
-        options=[""] + sorted(db.all_tickers()),
-        format_func=lambda x: fmt.fmt_ticker_bbg(x) if x else "— select —",
-        key="strategy_search",
-    )
-    if pick:
-        st.info(f"📍 {fmt.fmt_ticker_bbg(pick)} — Ticker Drill (D6) coming soon.")
+    ui.sidebar_search(key_prefix="strategy")
+    st.divider()
+    st.subheader("⚙️ Chart Settings")
+    show_lines = st.checkbox("Show individual ticker lines", value=False, help="Display translucent lines for every ticker in the portfolio.")
 
 st.title("🧬 Strategy Picks Performance")
 st.caption(
@@ -122,6 +118,7 @@ def render_strategy(strat_id: str) -> None:
             picks_closes[picks_closes.index >= pd.Timestamp(pick_date)],
             title=f"{cfg['name']} — Indexed return since {pick_date}",
             pick_date=pick_date,
+            show_individual=show_lines,
         )
         # Add benchmark overlay
         import plotly.graph_objects as go
@@ -133,7 +130,7 @@ def render_strategy(strat_id: str) -> None:
             ))
         st.plotly_chart(fig, use_container_width=True)
 
-    # --- Top/Bottom ranking table ---
+    # --- Top/Worst ranking table ---
     if perf.empty:
         st.warning("No per-ticker performance data.")
         return
@@ -169,7 +166,7 @@ def render_strategy(strat_id: str) -> None:
         )
         st.dataframe(styler, use_container_width=True)
     with c_bot:
-        st.markdown(f"##### 🔴 Bottom {min(5, len(perf_display))} (since-inception)")
+        st.markdown(f"##### 🔴 Worst {min(5, len(perf_display))} (since-inception)")
         bot5 = perf_display.tail(5).iloc[::-1]
         styler = (
             bot5.style
@@ -198,6 +195,24 @@ def render_strategy(strat_id: str) -> None:
                    subset=[c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"] if c in perf_display.columns])
         )
         st.dataframe(styler, use_container_width=True, height=500)
+
+
+# --- Onboarding expander ---
+ui.onboarding_expander("Strategy Page", """
+**Cumulative Return Chart**: 
+- **Portfolio (Equal-weight)**: 每只票在 Pick Date 初始权重相同，展示其后的复合回报（Indexed=100）。
+- **Benchmark**: 比较基准（如 XBI 或 3110.HK）的同步表现。
+- **10th–90th %ile Range**: 阴影区域展示了组合内 80% 标的的表现分布。如果阴影很宽，说明个股分化巨大。
+- **Individual Lines**: 可在侧边栏开启，查看每只具体股票的轨迹。
+
+**Metrics**:
+- **Alpha (pp)**: 组合回报减去基准回报的百分点差。
+- **Pick Score**: 如果来自 catalyst-monitor，显示其当时的量化评分。
+
+**Sorting**:
+- **Top 5**: 累计回报最高的 5 只票。
+- **Worst 5**: 累计回报最低的 5 只票（Worst first）。
+""")
 
 
 # --- M8 audit: tabs > dropdown ---

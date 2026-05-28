@@ -79,11 +79,24 @@ CREATE TABLE IF NOT EXISTS meta (
 """
 
 
+def _safe_alter(conn: sqlite3.Connection, sql: str) -> None:
+    """ALTER TABLE ADD COLUMN — ignore 'duplicate column name' errors."""
+    try:
+        conn.execute(sql)
+    except sqlite3.OperationalError as e:
+        if "duplicate column" not in str(e).lower():
+            raise
+
+
 def main() -> None:
     DB_PATH.parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     try:
         conn.executescript(SCHEMA)
+        # m8 audit: idempotent column adds for existing DBs (no destructive migration)
+        _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN target_price_mean REAL")
+        _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN recommendation_mean REAL")
+        _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN n_analysts INTEGER")
         conn.commit()
         # Sanity log
         cur = conn.execute(

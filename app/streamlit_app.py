@@ -15,6 +15,7 @@ import streamlit as st
 from lib import benchmarks as bm
 from lib import db
 from lib import format as fmt
+from lib import ui
 
 st.set_page_config(
     page_title="invest-dashboard",
@@ -23,18 +24,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# --- B4 audit: global ticker search ---
+# --- Unified sidebar search ---
 with st.sidebar:
-    st.subheader("🔍 Find ticker")
-    all_t = db.all_tickers()
-    pick = st.selectbox(
-        "Jump to ticker drill",
-        options=[""] + sorted(all_t),
-        format_func=lambda x: fmt.fmt_ticker_bbg(x) if x else "— select —",
-    )
-    if pick:
-        st.info(f"📍 Selected: **{fmt.fmt_ticker_bbg(pick)}** — Ticker Drill page coming D6.")
-        # st.switch_page("pages/6_🔍_Ticker_Drill.py")   # uncomment when D6 ships
+    ui.sidebar_search(key_prefix="home")
 
 # --- Header ---
 st.title("📊 Multi-Domain Investment Dashboard")

@@ -173,16 +173,23 @@ if wiki_page is None:
         f"Drop a `companies/*.md` file in `~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
     )
 else:
-    # CMSI compliance gate: rendering analyst Rating/TP in a UI surface — even
-    # locally — re-disseminates research-report content. Show the standard
-    # internal-use disclaimer at the top of every memo render.
-    st.warning(
-        "⚠️ **本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
-        "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
-        "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
-        "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
-        icon="⚠️",
-    )
+    # Compliance gate — different banner for internal vs sanitized public view.
+    if wiki_page.is_sanitized:
+        st.info(
+            "📋 **公开版 memo** — Rating / TP / 研报源文件引用 / 分析师姓名已剥离。"
+            "公开数据 + thesis 框架 only。完整内部版本需在本地 "
+            "`~/Documents/LLM Wiki/Wiki/` 下访问。"
+            "本材料不构成任何证券的投资建议或邀请。",
+            icon="📋",
+        )
+    else:
+        st.warning(
+            "⚠️ **本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
+            "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
+            "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
+            "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
+            icon="⚠️",
+        )
     st.markdown(f"### 📝 Research memo · {wiki_page.title}")
     meta_bits: list[str] = []
     if wiki_page.rating:

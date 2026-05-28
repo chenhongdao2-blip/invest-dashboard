@@ -1,4 +1,11 @@
-"""invest-dashboard — Home page."""
+"""invest-dashboard — Home page.
+
+Audit fixes:
+- M7: pre-format strings + Styler color-only
+- M10: name_cn priority
+- B4: global ticker search in sidebar (stub for D6 Ticker Drill)
+- n2: Bloomberg ticker style display
+"""
 
 from __future__ import annotations
 
@@ -15,6 +22,19 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+# --- B4 audit: global ticker search ---
+with st.sidebar:
+    st.subheader("🔍 Find ticker")
+    all_t = db.all_tickers()
+    pick = st.selectbox(
+        "Jump to ticker drill",
+        options=[""] + sorted(all_t),
+        format_func=lambda x: fmt.fmt_ticker_bbg(x) if x else "— select —",
+    )
+    if pick:
+        st.info(f"📍 Selected: **{fmt.fmt_ticker_bbg(pick)}** — Ticker Drill page coming D6.")
+        # st.switch_page("pages/6_🔍_Ticker_Drill.py")   # uncomment when D6 ships
 
 # --- Header ---
 st.title("📊 Multi-Domain Investment Dashboard")
@@ -33,29 +53,35 @@ col3.metric("🌐 Universe tickers", f"{n_tickers}")
 
 st.divider()
 
+
+def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
+    """Render a DataFrame with formatted strings + colored pct columns."""
+    display_str = pd.DataFrame(index=df.index)
+    for c in df.columns:
+        if c in pct_cols:
+            display_str[c] = df[c].apply(fmt.fmt_pct)
+        elif num_cols and c in num_cols:
+            display_str[c] = df[c].apply(fmt.fmt_num)
+        else:
+            display_str[c] = df[c]
+    styler = display_str.style
+    for c in pct_cols:
+        styler = styler.apply(
+            lambda _s, n=df[c]: fmt.background_gradient_diverging(n),
+            subset=[c],
+        )
+    st.dataframe(styler, use_container_width=True)
+
+
 # --- Benchmarks ---
 st.subheader("📐 Benchmarks")
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
-    show = bench_df.copy()
-    # Build a display DataFrame with formatted strings + bg gradient on raw values
-    display_cols = ["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]
-    show = show[display_cols].rename(columns={
+    show = bench_df[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]].rename(columns={
         "name": "Name", "last": "Last",
         "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %",
     })
-    styler = (
-        show.style
-        .format({
-            "Last": fmt.fmt_num,
-            "1D %": fmt.fmt_pct,
-            "5D %": fmt.fmt_pct,
-            "1M %": fmt.fmt_pct,
-            "YTD %": fmt.fmt_pct,
-        }, na_rep="—")
-        .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-    )
-    st.dataframe(styler, use_container_width=True)
+    _render_pct_table(show, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
 else:
     st.warning("Benchmark fetch failed (yfinance live, check network).")
 
@@ -65,36 +91,24 @@ st.divider()
 st.subheader("🏆 Today's Top Movers (across all 7 healthcare sectors)")
 gainers, losers = db.top_movers(n=10)
 if gainers.empty:
-    st.info("No price data — run `jobs/fetch_eod.py --backfill-days 30`.")
+    st.info("No price data — run `jobs/fetch_eod.py --backfill-days 180`.")
 else:
-    movers_col1, movers_col2 = st.columns(2)
-    pct_cols = ["1d_%", "5d_%", "1m_%", "ytd_%"]
     rename_map = {"name": "Name", "last": "Last",
                   "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %"}
 
+    movers_col1, movers_col2 = st.columns(2)
     with movers_col1:
         st.markdown("##### 🟢 Top 10 Gainers")
         g = gainers.rename(columns=rename_map)
-        styler = (
-            g.style
-            .format({"Last": fmt.fmt_num, "1D %": fmt.fmt_pct,
-                     "5D %": fmt.fmt_pct, "1M %": fmt.fmt_pct, "YTD %": fmt.fmt_pct},
-                    na_rep="—")
-            .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-        )
-        st.dataframe(styler, use_container_width=True)
+        # n2: rewrite index to Bloomberg style
+        g.index = [fmt.fmt_ticker_bbg(t) for t in g.index]
+        _render_pct_table(g, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
 
     with movers_col2:
         st.markdown("##### 🔴 Top 10 Drags")
         l = losers.rename(columns=rename_map)
-        styler = (
-            l.style
-            .format({"Last": fmt.fmt_num, "1D %": fmt.fmt_pct,
-                     "5D %": fmt.fmt_pct, "1M %": fmt.fmt_pct, "YTD %": fmt.fmt_pct},
-                    na_rep="—")
-            .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-        )
-        st.dataframe(styler, use_container_width=True)
+        l.index = [fmt.fmt_ticker_bbg(t) for t in l.index]
+        _render_pct_table(l, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
 
 st.divider()
 
@@ -116,7 +130,7 @@ st.caption(
     "Use this dashboard for quick visual scan; refer to your manual Excel comp tables for precise consensus."
 )
 st.caption(
-    f"Repo: [github.com/chenhongdao2-blip/invest-dashboard](https://github.com/chenhongdao2-blip/invest-dashboard) · "
-    f"Data: SQLite committed in repo · "
-    f"Auto-update: GitHub Actions cron (22:30 UTC US + 09:00 UTC HK)"
+    "Repo: [github.com/chenhongdao2-blip/invest-dashboard](https://github.com/chenhongdao2-blip/invest-dashboard) · "
+    "Data: SQLite committed in repo · "
+    "Auto-update: GitHub Actions cron (22:30 UTC US + 09:00 UTC HK)"
 )

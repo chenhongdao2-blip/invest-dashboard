@@ -63,11 +63,16 @@ def sector_tickers(domain: str, sector: str) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=300)
-def ticker_to_name() -> dict[str, str]:
-    """Use English name if available, else Chinese, else ticker."""
+def ticker_to_name(prefer_cn: bool = True) -> dict[str, str]:
+    """Resolve display name. M10 audit fix: default to Chinese first (中文卖方 习惯).
+
+    Set prefer_cn=False to fall back to English-first."""
+    if prefer_cn:
+        col_expr = "COALESCE(name_cn, name_en, ticker)"
+    else:
+        col_expr = "COALESCE(name_en, name_cn, ticker)"
     df = query(
-        "SELECT ticker, "
-        "  COALESCE(name_en, name_cn, ticker) AS display_name "
+        f"SELECT ticker, {col_expr} AS display_name "
         "FROM universe_member GROUP BY ticker"
     )
     return dict(zip(df["ticker"], df["display_name"]))
@@ -141,7 +146,7 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
 # ---------- multiples ----------
 @st.cache_data(ttl=300)
 def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
-    """Latest multiples_daily snapshot per ticker."""
+    """Latest multiples_daily snapshot per ticker. Includes M1 close_usd + M11 mcap_tier."""
     if not tickers:
         return pd.DataFrame()
     placeholders = ",".join("?" * len(tickers))
@@ -161,6 +166,26 @@ def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
     if df.empty:
         return df
     return df.set_index("ticker")
+
+
+@st.cache_data(ttl=300)
+def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
+    """M1 audit fix: USD-converted close series (so cross-region returns are comparable).
+
+    Falls back to local close × FX if close_usd is null (legacy rows pre-M1 fix).
+    """
+    if not tickers:
+        return pd.DataFrame()
+    placeholders = ",".join("?" * len(tickers))
+    df = query(
+        f"SELECT ticker, date, COALESCE(close_usd, close) AS close_usd "
+        f"FROM prices_daily WHERE ticker IN ({placeholders}) ORDER BY date",
+        tuple(tickers),
+    )
+    if df.empty:
+        return pd.DataFrame()
+    df["date"] = pd.to_datetime(df["date"])
+    return df.pivot(index="date", columns="ticker", values="close_usd").sort_index()
 
 
 # ---------- top movers ----------

@@ -35,7 +35,25 @@ FX_PAIRS = {
 }
 
 BATCH_SIZE = 40                   # yfinance batch download size
-SLEEP_BETWEEN_INFO = 0.2          # seconds between .info calls (rate limit)
+SLEEP_BETWEEN_INFO = 0.4          # seconds between .info calls (rate limit, M4 doubled)
+INFO_MAX_RETRY = 4                # M4: max retries per ticker
+INFO_BACKOFF_BASE = 1.5           # M4: exp backoff multiplier
+INFO_FAIL_THRESHOLD = 0.20        # M4: fail workflow if >20% .info calls fail
+
+
+def cap_tier(mcap_usd: float | None) -> str | None:
+    """M11: classify market cap into tier."""
+    if mcap_usd is None or pd.isna(mcap_usd):
+        return None
+    if mcap_usd >= 200e9:
+        return "mega"
+    if mcap_usd >= 50e9:
+        return "large"
+    if mcap_usd >= 10e9:
+        return "mid"
+    if mcap_usd >= 2e9:
+        return "small"
+    return "micro"
 
 
 # ----- args -----
@@ -63,8 +81,9 @@ def upsert_prices(conn: sqlite3.Connection, rows: list[tuple]) -> int:
         return 0
     conn.executemany(
         """INSERT OR REPLACE INTO prices_daily
-           (ticker, date, open, high, low, close, adj_close, volume, currency)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+           (ticker, date, open, high, low, close, adj_close, volume, currency,
+            close_usd, adj_close_usd)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
     return len(rows)
@@ -75,10 +94,10 @@ def upsert_multiples(conn: sqlite3.Connection, rows: list[tuple]) -> int:
         return 0
     conn.executemany(
         """INSERT OR REPLACE INTO multiples_daily
-           (ticker, date, market_cap_usd, trailing_pe, forward_pe,
+           (ticker, date, market_cap_usd, mcap_tier, trailing_pe, forward_pe,
             trailing_eps, forward_eps, ev_ebitda, ev_sales, fcf_yield,
-            peg, pb, ytd_return, last_price)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            peg, pb, ytd_return, last_price, last_price_usd, currency)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
     return len(rows)
@@ -92,11 +111,13 @@ def set_meta(conn: sqlite3.Connection, key: str, value: str) -> None:
 
 
 # ----- FX rate snapshot -----
-def fetch_fx_rates() -> dict[str, float]:
+def fetch_fx_rates(prev_rates: dict[str, float] | None = None) -> dict[str, float]:
     """Get current USD-conversion factors. {ccy → ccy/USD multiplier}.
 
+    M1/m1 audit fix: fail-fast — if FX 数据失败，**raise**，不 silently default to 1.0
+    (which made HKD/JPY/KRW market caps wildly wrong). Optionally reuse `prev_rates`.
+
     Example: USDHKD=X close = 7.8 → 1 HKD = 1/7.8 USD.
-    Output: {"HKD": 1/7.8, "JPY": 1/152, ...} so price * factor[ccy] = USD.
     """
     rates: dict[str, float] = {"USD": 1.0}
     symbols = [pair for pair in FX_PAIRS.values() if pair is not None]
@@ -104,9 +125,18 @@ def fetch_fx_rates() -> dict[str, float]:
         d = yf.download(symbols, period="5d", auto_adjust=True,
                         progress=False, threads=True, group_by="ticker")
     except Exception as e:
-        print(f"[fx] download failed: {e}; defaulting all FX to 1.0")
-        return {ccy: 1.0 for ccy in FX_PAIRS}
+        if prev_rates:
+            print(f"[fx] download failed: {e}; reusing previous rates")
+            return prev_rates
+        raise RuntimeError(f"FX fetch failed and no previous rates available: {e}")
 
+    if d.empty:
+        if prev_rates:
+            print("[fx] empty result; reusing previous rates")
+            return prev_rates
+        raise RuntimeError("FX fetch returned empty data")
+
+    missing: list[str] = []
     for ccy, sym in FX_PAIRS.items():
         if sym is None:
             continue
@@ -116,19 +146,43 @@ def fetch_fx_rates() -> dict[str, float]:
             else:
                 ser = d["Close"].dropna()
             if ser.empty:
-                rates[ccy] = 1.0
+                missing.append(ccy)
                 continue
             last = float(ser.iloc[-1])
-            # USDXXX=X means how many XXX per 1 USD
-            # XXXUSD=X means how many USD per 1 XXX
+            # USDXXX=X means how many XXX per 1 USD → invert
+            # XXXUSD=X means how many USD per 1 XXX → direct
             if sym.startswith("USD"):
                 rates[ccy] = 1.0 / last
             else:
                 rates[ccy] = last
-        except Exception:
-            rates[ccy] = 1.0
+        except Exception as e:
+            missing.append(f"{ccy}({e})")
+
+    if missing:
+        if prev_rates:
+            print(f"[fx] missing pairs {missing}; backfilling from previous rates")
+            for ccy in missing:
+                base = ccy.split("(")[0]
+                if base in prev_rates:
+                    rates[base] = prev_rates[base]
+        else:
+            raise RuntimeError(f"FX missing pairs: {missing}")
     print(f"[fx] rates → USD: { {k: round(v, 5) for k, v in rates.items()} }")
     return rates
+
+
+def last_good_fx(conn: sqlite3.Connection) -> dict[str, float] | None:
+    """Recover the most recent FX snapshot from meta table."""
+    cur = conn.execute(
+        "SELECT value FROM meta WHERE key = 'last_fx_rates'"
+    ).fetchone()
+    if not cur:
+        return None
+    try:
+        import json
+        return json.loads(cur[0])
+    except Exception:
+        return None
 
 
 # ----- price batch fetch -----
@@ -168,19 +222,31 @@ def fetch_prices_batch(tickers: list[str], start: str, end: str) -> dict[str, pd
     return out
 
 
-def prices_to_rows(ticker: str, df: pd.DataFrame, currency: str) -> list[tuple]:
+def prices_to_rows(
+    ticker: str, df: pd.DataFrame, currency: str, fx_to_usd: float = 1.0
+) -> list[tuple]:
+    """Convert price DataFrame to upsert rows. Includes USD-converted close/adj_close."""
     rows = []
     for ts, r in df.iterrows():
         d = ts.date().isoformat() if hasattr(ts, "date") else str(ts)[:10]
+        adj_raw = r.get("Adj Close")
+        close_raw = r.get("Close")
+        # Explicit NaN-safe fallback (NaN is truthy in `or`, so don't use `or`)
+        adj = _safe_float(adj_raw) if not pd.isna(adj_raw) else _safe_float(close_raw)
+        close = _safe_float(close_raw)
+        close_usd = close * fx_to_usd if close is not None else None
+        adj_usd = adj * fx_to_usd if adj is not None else None
         rows.append((
             ticker, d,
             _safe_float(r.get("Open")),
             _safe_float(r.get("High")),
             _safe_float(r.get("Low")),
-            _safe_float(r.get("Close")),
-            _safe_float(r.get("Adj Close") or r.get("Close")),
+            close,
+            adj,
             _safe_int(r.get("Volume")),
             currency,
+            close_usd,
+            adj_usd,
         ))
     return rows
 
@@ -201,16 +267,20 @@ def _safe_int(v) -> int | None:
 
 # ----- multiples fetch (.info) -----
 def fetch_info_for(ticker: str) -> dict | None:
-    """Single-ticker .info fetch with retry."""
-    for attempt in range(2):
+    """Single-ticker .info fetch with exponential backoff + jitter (M4)."""
+    import random
+    for attempt in range(INFO_MAX_RETRY):
         try:
             t = yf.Ticker(ticker)
             info = t.info or {}
             if info and (info.get("marketCap") or info.get("regularMarketPrice")):
                 return info
+            # Sparse / no useful fields — treat as fail and retry
         except Exception as e:
-            print(f"[info] {ticker} attempt {attempt + 1} fail: {e}")
-        time.sleep(0.5)
+            print(f"[info] {ticker} attempt {attempt + 1}/{INFO_MAX_RETRY} fail: {e}")
+        # Exp backoff with jitter: 0.6s, 1.5s, 3.4s, 7.6s
+        sleep_s = (INFO_BACKOFF_BASE ** attempt) * 0.6 + random.uniform(0, 0.3)
+        time.sleep(sleep_s)
     return None
 
 
@@ -222,23 +292,30 @@ def info_to_multiple_row(
     fx_to_usd = fx.get(ccy, 1.0)
     mcap_local = _safe_float(info.get("marketCap"))
     mcap_usd = mcap_local * fx_to_usd if mcap_local is not None else None
+    last_price = _safe_float(info.get("regularMarketPrice") or info.get("currentPrice"))
+    last_price_usd = last_price * fx_to_usd if last_price is not None else None
+    # FCF Yield: explicit guard (M1 audit nit — `a and b and a/b` is dangerous if 0)
+    fcf = _safe_float(info.get("freeCashflow"))
+    fcf_yield = (fcf / mcap_local) if (fcf is not None and mcap_local and mcap_local > 0) else None
 
     return (
         ticker,
         snapshot_date,
         mcap_usd,
+        cap_tier(mcap_usd),                          # M11: mcap_tier
         _safe_float(info.get("trailingPE")),
         _safe_float(info.get("forwardPE")),
         _safe_float(info.get("trailingEps")),
         _safe_float(info.get("forwardEps")),
         _safe_float(info.get("enterpriseToEbitda")),
         _safe_float(info.get("enterpriseToRevenue")),
-        _safe_float(info.get("freeCashflow") and mcap_local
-                    and info.get("freeCashflow") / mcap_local),
+        fcf_yield,
         _safe_float(info.get("pegRatio") or info.get("trailingPegRatio")),
         _safe_float(info.get("priceToBook")),
         _safe_float(info.get("ytdReturn")),         # may be None for individual stocks
-        _safe_float(info.get("regularMarketPrice") or info.get("currentPrice")),
+        last_price,                                   # local ccy
+        last_price_usd,                               # M1: USD
+        ccy,                                          # currency from info
     )
 
 
@@ -262,8 +339,11 @@ def main() -> None:
 
     print(f"[fetch_eod] tickers={len(tickers)} | start={start} | end={end}")
 
-    # 1. FX rates
-    fx = fetch_fx_rates()
+    # 1. FX rates (M1/m1 audit: fail-fast, with last-good fallback)
+    import json
+    prev_fx = last_good_fx(conn)
+    fx = fetch_fx_rates(prev_rates=prev_fx)
+    set_meta(conn, "last_fx_rates", json.dumps(fx))
 
     # 2. Build ticker → currency lookup from universe_member.region
     region_to_ccy = {
@@ -275,29 +355,43 @@ def main() -> None:
     for t, r in cur.fetchall():
         ccy_map[t] = region_to_ccy.get(r, "USD")
 
-    # 3. Batch fetch prices
+    # 3. Batch fetch prices (M1: store USD-converted close + m2: log missing tickers)
     total_prices = 0
+    price_fails: list[str] = []
     for i in range(0, len(tickers), BATCH_SIZE):
         batch = tickers[i:i + BATCH_SIZE]
-        print(f"[prices] batch {i // BATCH_SIZE + 1}/{(len(tickers) + BATCH_SIZE - 1) // BATCH_SIZE} ({len(batch)} tickers)")
+        bnum = i // BATCH_SIZE + 1
+        total_b = (len(tickers) + BATCH_SIZE - 1) // BATCH_SIZE
+        print(f"[prices] batch {bnum}/{total_b} ({len(batch)} tickers)")
         result = fetch_prices_batch(batch, start=start, end=end)
+        missing_in_batch = set(batch) - set(result.keys())
+        if missing_in_batch:
+            print(f"[prices] batch {bnum} MISSING: {sorted(missing_in_batch)}")
+            price_fails.extend(missing_in_batch)
         for t, df in result.items():
             ccy = ccy_map.get(t, "USD")
-            rows = prices_to_rows(t, df, ccy)
+            fx_to_usd = fx.get(ccy, 1.0)
+            rows = prices_to_rows(t, df, ccy, fx_to_usd=fx_to_usd)
             total_prices += upsert_prices(conn, rows)
         conn.commit()
         time.sleep(0.5)
-    print(f"[prices] total upserted rows: {total_prices}")
+    print(f"[prices] total upserted rows: {total_prices}, missing={len(price_fails)}")
+    # m2 audit: fail loudly if too many missing
+    if len(tickers) > 0 and len(price_fails) / len(tickers) > 0.10:
+        raise RuntimeError(
+            f"[prices] FAIL: {len(price_fails)}/{len(tickers)} tickers missing (>10% threshold): "
+            f"{price_fails[:20]}"
+        )
 
-    # 4. Multiples (.info)  — slower, one by one
+    # 4. Multiples (.info) — M4 audit: track failure rate and raise if > threshold
     if not args.skip_multiples:
         total_mult = 0
         ok = 0
-        fail = 0
+        fail_list: list[str] = []
         for idx, t in enumerate(tickers, 1):
             info = fetch_info_for(t)
             if not info:
-                fail += 1
+                fail_list.append(t)
                 continue
             row = info_to_multiple_row(t, info, snapshot_date, fx)
             if row:
@@ -305,10 +399,18 @@ def main() -> None:
                 ok += 1
             if idx % 20 == 0:
                 conn.commit()
-                print(f"[mult] progress {idx}/{len(tickers)} (ok={ok}, fail={fail})")
+                print(f"[mult] progress {idx}/{len(tickers)} (ok={ok}, fail={len(fail_list)})")
             time.sleep(SLEEP_BETWEEN_INFO)
         conn.commit()
-        print(f"[mult] done. ok={ok} fail={fail} rows={total_mult}")
+        fail_rate = len(fail_list) / max(len(tickers), 1)
+        print(f"[mult] done. ok={ok} fail={len(fail_list)} ({fail_rate:.1%}) rows={total_mult}")
+        if fail_list:
+            print(f"[mult] failed tickers: {fail_list}")
+        if fail_rate > INFO_FAIL_THRESHOLD:
+            raise RuntimeError(
+                f"[mult] FAIL: {len(fail_list)}/{len(tickers)} (>{INFO_FAIL_THRESHOLD:.0%}) "
+                f".info fetches failed — treat as data outage."
+            )
     else:
         print("[mult] skipped (--skip-multiples)")
 

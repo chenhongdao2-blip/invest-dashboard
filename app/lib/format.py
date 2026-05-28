@@ -63,6 +63,23 @@ def fmt_num(v, decimals: int = 2) -> str:
     return f"{v:,.{decimals}f}"
 
 
+def fmt_ticker_bbg(ticker: str) -> str:
+    """n2 audit fix: Bloomberg ticker style '2269 HK' instead of '2269.HK'.
+
+    Suffix mapping:
+      .HK → HK (Hong Kong)
+      .T  → JP (Tokyo, Bloomberg uses JP not T)
+      .SS → CH (Shanghai, Bloomberg uses CH)
+      .SZ → CH (Shenzhen, Bloomberg uses CH)
+      .KS → KS (Korea)
+    """
+    if not ticker or "." not in ticker:
+        return ticker
+    code, suffix = ticker.split(".", 1)
+    mapping = {"HK": "HK", "T": "JP", "SS": "CH", "SZ": "CH", "KS": "KS"}
+    return f"{code} {mapping.get(suffix, suffix)}"
+
+
 def color_pct(v) -> str:
     """Return CSS color string for a percentage value."""
     if v is None or (isinstance(v, float) and pd.isna(v)):

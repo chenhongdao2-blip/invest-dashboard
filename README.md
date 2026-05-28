@@ -72,3 +72,45 @@ uv run --with streamlit --with plotly --with pyyaml --with pandas streamlit run 
 - **P0 (Week 1)**: Home + Sector Heatmap + CMSI Coverage + Strategy Picks + Valuation Scanner + Ticker Drill
 - **P1 (Week 2-4)**: Multiple Z-score (需 60 天数据)、Earnings drift tracker、YTD decomp
 - **P2 (Backlog)**: Earnings calendar、Insider trades、Cross-membership comparison
+- **P1 deferred from audit**: 港股通 / 北向资金（中资 healthcare sell-side 核心指标，yfinance 无，需 AKShare / Tushare 集成）
+
+## Operational notes
+
+### SQLite-in-git growth (M5 audit fix)
+
+`data/snapshots.db` is committed daily. With binary churn in git pack, growth is faster
+than working-file size suggests. Migration trigger points:
+
+- Working DB > **50MB** → consider partitioned Parquet snapshots
+- `.git/pack` > **200MB** → migrate to external SQLite (Turso/Supabase free tier)
+- Multi-year history (3+ years) → mandatory migration
+
+Current state: ~640KB DB after 60-day backfill of 106 tickers → ~4MB/yr projected.
+
+### Data path for D4 Strategy Picks (B1 audit)
+
+`ic-foundry/ledger.db` lives in `~/ic-foundry/` on George's Mac — **NOT accessible**
+from Streamlit Cloud. For D4 deployment:
+
+- **Scheme A** (recommended): `cp ~/ic-foundry/ledger.db data/external/picks.db` and commit periodically
+- **Scheme B**: extract picks_v2 to a derived JSON in repo (less sensitive than raw ledger)
+- **Scheme C**: external DB via Streamlit secrets (Turso / Supabase)
+
+Default: Scheme A — sync via `make sync-ledger`.
+
+### China network proxy (国内 dev)
+
+When running locally in China for yfinance:
+```bash
+export HTTP_PROXY=http://127.0.0.1:7897
+export HTTPS_PROXY=http://127.0.0.1:7897
+```
+GitHub Actions runs on Microsoft cloud — proxy NOT needed for scheduled fetches.
+
+### Known yfinance gotchas
+
+- **BGNE → ONC rename**: BeOne Medicines (ONC) historical data may not include pre-rename
+  ticker (BGNE). For YTD anchored at Jan 1 2026, ONC has continuous data — safe.
+- **Hong Kong stocks**: 复权 precision略糙 vs Futu OpenAPI. Severe backtest 用 Futu (eval-ledger).
+  Dashboard daily quick scan 用 yfinance 够。
+- **CN A-share**: Use `.SS` (Shanghai) and `.SZ` (Shenzhen) suffix, not `.SH`.

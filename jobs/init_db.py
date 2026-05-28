@@ -16,16 +16,19 @@ DB_PATH = REPO_ROOT / "data" / "snapshots.db"
 
 SCHEMA = """
 -- Daily prices (auto-grown by fetch_eod.py)
+-- Local-currency close + USD-converted close (M1 audit fix)
 CREATE TABLE IF NOT EXISTS prices_daily (
-    ticker     TEXT NOT NULL,
-    date       TEXT NOT NULL,        -- YYYY-MM-DD
-    open       REAL,
-    high       REAL,
-    low        REAL,
-    close      REAL,
-    adj_close  REAL,
-    volume     INTEGER,
-    currency   TEXT,                  -- USD / HKD / JPY / KRW / EUR
+    ticker        TEXT NOT NULL,
+    date          TEXT NOT NULL,        -- YYYY-MM-DD
+    open          REAL,
+    high          REAL,
+    low           REAL,
+    close         REAL,                  -- local ccy
+    adj_close     REAL,                  -- local ccy
+    volume        INTEGER,
+    currency      TEXT,                  -- USD / HKD / JPY / KRW / EUR / CNY / GBP / CHF
+    close_usd     REAL,                  -- M1: USD-converted close
+    adj_close_usd REAL,                  -- M1: USD-converted adj_close
     PRIMARY KEY (ticker, date)
 );
 CREATE INDEX IF NOT EXISTS idx_prices_date ON prices_daily(date);
@@ -35,6 +38,7 @@ CREATE TABLE IF NOT EXISTS multiples_daily (
     ticker            TEXT NOT NULL,
     date              TEXT NOT NULL,
     market_cap_usd    REAL,
+    mcap_tier         TEXT,                -- M11: mega/large/mid/small/micro
     trailing_pe       REAL,
     forward_pe        REAL,
     trailing_eps      REAL,
@@ -45,7 +49,9 @@ CREATE TABLE IF NOT EXISTS multiples_daily (
     peg               REAL,
     pb                REAL,
     ytd_return        REAL,
-    last_price        REAL,
+    last_price        REAL,                -- local ccy
+    last_price_usd    REAL,                -- M1: USD-converted last price
+    currency          TEXT,                -- 来自 yfinance.info
     PRIMARY KEY (ticker, date)
 );
 CREATE INDEX IF NOT EXISTS idx_mult_date ON multiples_daily(date);

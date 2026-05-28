@@ -11,6 +11,25 @@ from lib import benchmarks as bm
 from lib import db
 from lib import format as fmt
 
+
+def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
+    """Pre-format strings + Styler color-only (M7 audit fix)."""
+    display_str = pd.DataFrame(index=df.index)
+    for c in df.columns:
+        if c in pct_cols:
+            display_str[c] = df[c].apply(fmt.fmt_pct)
+        elif num_cols and c in num_cols:
+            display_str[c] = df[c].apply(fmt.fmt_num)
+        else:
+            display_str[c] = df[c]
+    styler = display_str.style
+    for c in pct_cols:
+        styler = styler.apply(
+            lambda _s, n=df[c]: fmt.background_gradient_diverging(n),
+            subset=[c],
+        )
+    st.dataframe(styler, use_container_width=True)
+
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -37,7 +56,7 @@ for sec in cfg["sectors"]:
     tickers = tuple(uni["ticker"].tolist())
     if not tickers:
         continue
-    closes = db.get_close_series(tickers)
+    closes = db.get_close_series_usd(tickers)   # M1 audit: USD-converted
     rets = db.compute_returns(closes)
     if rets.empty:
         continue
@@ -55,14 +74,9 @@ for sec in cfg["sectors"]:
 if not rows:
     st.warning("No sector data — backfill needed.")
 else:
-    summary = pd.DataFrame(rows)
+    summary = pd.DataFrame(rows).set_index("Sector")
     pct_cols = ["1D % avg", "5D % avg", "1M % avg", "YTD % avg"]
-    styler = (
-        summary.style
-        .format({c: fmt.fmt_pct for c in pct_cols}, na_rep="—")
-        .apply(fmt.style_pct_column, subset=pct_cols)
-    )
-    st.dataframe(styler, use_container_width=True, hide_index=True)
+    _render_pct_table(summary, pct_cols=pct_cols)
 
 st.divider()
 
@@ -76,21 +90,14 @@ if not bench_df.empty:
         "name": "Name", "last": "Last",
         "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %",
     })
-    styler = (
-        sub.style
-        .format({"Last": fmt.fmt_num, "1D %": fmt.fmt_pct,
-                 "5D %": fmt.fmt_pct, "1M %": fmt.fmt_pct, "YTD %": fmt.fmt_pct},
-                na_rep="—")
-        .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-    )
-    st.dataframe(styler, use_container_width=True)
+    _render_pct_table(sub, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
 
 st.divider()
 
 # --- Per-sector top 3 movers / drags ---
 st.subheader("🎯 Per-sector top 3 movers / drags (1D)")
 
-name_map = db.ticker_to_name()
+name_map = db.ticker_to_name(prefer_cn=True)   # M10 audit
 for sec in cfg["sectors"]:
     rets = all_returns_by_sector.get(sec["id"])
     if rets is None or rets.empty:
@@ -101,30 +108,18 @@ for sec in cfg["sectors"]:
         rets = rets[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]]
         rets.index.name = "Ticker"
 
+        rename_map = {"name": "Name", "last": "Last",
+                      "1d_%": "1D %", "5d_%": "5D %",
+                      "1m_%": "1M %", "ytd_%": "YTD %"}
         c1, c2 = st.columns(2)
-        gainers = rets.sort_values("1d_%", ascending=False).head(3)
-        drags = rets.sort_values("1d_%", ascending=True).head(3)
+        gainers = rets.sort_values("1d_%", ascending=False).head(3).rename(columns=rename_map)
+        drags = rets.sort_values("1d_%", ascending=True).head(3).rename(columns=rename_map)
+        # n2: Bloomberg ticker style
+        gainers.index = [fmt.fmt_ticker_bbg(t) for t in gainers.index]
+        drags.index = [fmt.fmt_ticker_bbg(t) for t in drags.index]
         with c1:
             st.markdown("🟢 Top 3 gainers (1D)")
-            styler = (
-                gainers.rename(columns={"name": "Name", "last": "Last",
-                                        "1d_%": "1D %", "5d_%": "5D %",
-                                        "1m_%": "1M %", "ytd_%": "YTD %"}).style
-                .format({"Last": fmt.fmt_num, "1D %": fmt.fmt_pct,
-                         "5D %": fmt.fmt_pct, "1M %": fmt.fmt_pct, "YTD %": fmt.fmt_pct},
-                        na_rep="—")
-                .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-            )
-            st.dataframe(styler, use_container_width=True)
+            _render_pct_table(gainers, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
         with c2:
             st.markdown("🔴 Top 3 drags (1D)")
-            styler = (
-                drags.rename(columns={"name": "Name", "last": "Last",
-                                      "1d_%": "1D %", "5d_%": "5D %",
-                                      "1m_%": "1M %", "ytd_%": "YTD %"}).style
-                .format({"Last": fmt.fmt_num, "1D %": fmt.fmt_pct,
-                         "5D %": fmt.fmt_pct, "1M %": fmt.fmt_pct, "YTD %": fmt.fmt_pct},
-                        na_rep="—")
-                .apply(fmt.style_pct_column, subset=["1D %", "5D %", "1M %", "YTD %"])
-            )
-            st.dataframe(styler, use_container_width=True)
+            _render_pct_table(drags, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])

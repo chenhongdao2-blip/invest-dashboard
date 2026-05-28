@@ -1,6 +1,4 @@
-# CMSI HK Healthcare Coverage List — 28 tickers
-# Source: CMSI internal coverage table (HK + US + 3 CN A-share)
-# Provided by George 2026-05-28
+# Healthcare Coverage List — 28 tickers (HK + US + 3 CN A-share)
 # Note: 部分 ticker 与 sector universe cross-membership（dashboard 自动 dedup）
 sector_id: cmsi_coverage_hc
 domain: healthcare

@@ -2,7 +2,7 @@
 
 > Multi-domain sell-side investment dashboard. Healthcare v1, AI 与其它 domain 后续扩展。
 
-**Live**: TBD — set after first Streamlit Community Cloud deploy (see [docs/deploy/streamlit-cloud.md](docs/deploy/streamlit-cloud.md))
+**Live**: [agentmental-research.streamlit.app](https://agentmental-research.streamlit.app) ([deploy notes](docs/deploy/streamlit-cloud.md))
 **Cost**: $0/月（GitHub Actions cron + Streamlit Cloud free tier）
 **Author**: George Chen (CMSI HK Healthcare)
 **Plan**: see `~/.claude/plans/modular-toasting-spindle.md`

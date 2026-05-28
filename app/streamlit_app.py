@@ -1,122 +1,85 @@
-"""invest-dashboard — Home page.
+"""invest-dashboard — st.navigation hub.
 
-Audit fixes:
-- M7: pre-format strings + Styler color-only
-- M10: name_cn priority
-- B4: global ticker search in sidebar (stub for D6 Ticker Drill)
-- n2: Bloomberg ticker style display
+Switched from auto-discovery of app/pages/* to explicit st.Page registration
+so we can group children under a Healthcare section. Ticker Drill stays at
+top level (not nested) — it's domain-agnostic.
+
+Layout:
+    📊 Home
+    🔍 Ticker Drill
+    ── 🏥 Healthcare ──
+        💎 CMSI Coverage
+        🏥 Overview
+        🔥 Sector Heatmap
+        🧬 Strategy Picks
+        💰 Valuation Scanner
+
+The `url_path` arguments preserve the slugs created by the prior
+auto-discovery layout so existing deep-links (e.g. /Ticker_Drill?ticker=LLY)
+continue to work after the redeploy.
 """
 
 from __future__ import annotations
 
-import pandas as pd
 import streamlit as st
 
-from lib import benchmarks as bm
-from lib import db
-from lib import format as fmt
-from lib import ui
-
-st.set_page_config(
-    page_title="invest-dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
+# --- Top-level pages ---
+home = st.Page(
+    "home.py",
+    title="Home",
+    icon="📊",
+    url_path="",
+    default=True,
+)
+ticker_drill = st.Page(
+    "pages/6_🔍_Ticker_Drill.py",
+    title="Ticker Drill",
+    icon="🔍",
+    url_path="Ticker_Drill",
 )
 
-# --- Unified sidebar search ---
-with st.sidebar:
-    ui.sidebar_search(key_prefix="home")
-
-# --- Header ---
-st.title("📊 Multi-Domain Investment Dashboard")
-st.caption(
-    "Sell-side healthcare coverage · v1 (P0) · data via yfinance · "
-    "build: `streamlit_app.py` · plan: `~/.claude/plans/modular-toasting-spindle.md`"
+# --- Healthcare children ---
+cmsi_coverage = st.Page(
+    "pages/1_💎_CMSI_Coverage.py",
+    title="CMSI Coverage",
+    icon="💎",
+    url_path="CMSI_Coverage",
+)
+healthcare_overview = st.Page(
+    "pages/2_🏥_Healthcare.py",
+    title="Overview",
+    icon="🏥",
+    url_path="Healthcare",
+)
+sector_heatmap = st.Page(
+    "pages/3_🔥_Sector_Heatmap.py",
+    title="Sector Heatmap",
+    icon="🔥",
+    url_path="Sector_Heatmap",
+)
+strategy_picks = st.Page(
+    "pages/4_🧬_Strategy_Picks.py",
+    title="Strategy Picks",
+    icon="🧬",
+    url_path="Strategy_Picks",
+)
+valuation_scanner = st.Page(
+    "pages/5_💰_Valuation_Scanner.py",
+    title="Valuation Scanner",
+    icon="💰",
+    url_path="Valuation_Scanner",
 )
 
-latest = db.latest_snapshot_date()
-fetch_utc = db.last_fetch_utc()
-col1, col2, col3 = st.columns([2, 2, 3])
-col1.metric("📅 Latest snapshot", latest or "—")
-col2.metric("🕒 Last fetch (UTC)", fetch_utc[:16] if fetch_utc else "—")
-n_tickers = len(db.all_tickers())
-col3.metric("🌐 Universe tickers", f"{n_tickers}")
-
-st.divider()
-
-
-def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
-    """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
-    text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
-    extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
-    ui.render_styled_table(
-        df,
-        pct_cols=pct_cols,
-        text_cols=text_cols,
-        extra_formats=extra_formats,
-        height=360,
-    )
-
-
-# --- Benchmarks ---
-st.subheader("📐 Benchmarks")
-bench_df = bm.fetch_benchmarks()
-if not bench_df.empty:
-    show = bench_df[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]].rename(columns={
-        "name": "Name", "last": "Last",
-        "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %",
-    })
-    _render_pct_table(show, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
-else:
-    st.warning("Benchmark fetch failed (yfinance live, check network).")
-
-st.divider()
-
-# --- Top movers ---
-st.subheader("🏆 Today's Top Movers (across all 7 healthcare sectors)")
-gainers, losers = db.top_movers(n=10)
-if gainers.empty:
-    st.info("No price data — run `jobs/fetch_eod.py --backfill-days 180`.")
-else:
-    rename_map = {"name": "Name", "last": "Last",
-                  "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %"}
-
-    movers_col1, movers_col2 = st.columns(2)
-    with movers_col1:
-        st.markdown("##### 🟢 Top 10 Gainers")
-        g = gainers.rename(columns=rename_map)
-        # n2: rewrite index to Bloomberg style
-        g.index = [fmt.fmt_ticker_bbg(t) for t in g.index]
-        _render_pct_table(g, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
-
-    with movers_col2:
-        st.markdown("##### 🔴 Top 10 Drags")
-        l = losers.rename(columns=rename_map)
-        l.index = [fmt.fmt_ticker_bbg(t) for t in l.index]
-        _render_pct_table(l, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
-
-st.divider()
-
-# --- Universe ---
-st.subheader("🌐 Universe Coverage")
-uni = db.universe_summary()
-if not uni.empty:
-    st.dataframe(uni.rename(columns={"domain": "Domain", "sector": "Sector", "n": "Tickers"}),
-                 use_container_width=True, hide_index=True)
-else:
-    st.warning("universe_member empty — run `jobs/load_universe.py`")
-
-# --- Footer ---
-st.divider()
-st.caption(
-    "⚠️ **Data caveat**: valuation multiples are from **yfinance** "
-    "(trailing P/E + 12M forward P/E). Multi-year forward (25E / 26E / 27E) "
-    "requires Bloomberg / FactSet and is **not in scope**. "
-    "Use this dashboard for quick visual scan; refer to your manual Excel comp tables for precise consensus."
+pg = st.navigation(
+    {
+        "": [home, ticker_drill],
+        "🏥 Healthcare": [
+            cmsi_coverage,
+            healthcare_overview,
+            sector_heatmap,
+            strategy_picks,
+            valuation_scanner,
+        ],
+    }
 )
-st.caption(
-    "Repo: [github.com/chenhongdao2-blip/invest-dashboard](https://github.com/chenhongdao2-blip/invest-dashboard) · "
-    "Data: SQLite committed in repo · "
-    "Auto-update: GitHub Actions cron (22:30 UTC US + 09:00 UTC HK)"
-)
+pg.run()

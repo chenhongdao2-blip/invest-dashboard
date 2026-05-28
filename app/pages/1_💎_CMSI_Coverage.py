@@ -198,22 +198,25 @@ def render_region(df: pd.DataFrame) -> None:
 
     # Narrow column widths so all 15 columns fit at Streamlit 1050px viewport.
     # Sort works because the DataFrame is numeric (column_config formats on display).
+    # `help=ui.COLUMN_HELP.get(col)` surfaces a header tooltip on hover — shared
+    # text across pages so wording / definition is consistent.
+    H = ui.COLUMN_HELP
     col_cfg = {
         "Name": st.column_config.TextColumn(width="medium"),
-        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB", width="small"),
+        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB", width="small", help=H.get("Mcap USD ($B)")),
         "YTD %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
         "1M %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
         "5D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
         "1D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "vs HSI YTD": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "Trail P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
-        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
-        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx", width="small"),
-        "FCF Yld": st.column_config.NumberColumn(format="%+.2f%%", width="small"),
-        "P/B": st.column_config.NumberColumn(format="%.1fx", width="small"),
-        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "Reco": st.column_config.TextColumn(width="small"),
-        "N analysts": st.column_config.NumberColumn(format="%d", width="small"),
+        "vs HSI YTD": st.column_config.NumberColumn(format="%+.1f%%", width="small", help=H.get("vs HSI YTD")),
+        "Trail P/E": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("Trail P/E")),
+        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("Fwd P/E")),
+        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("EV/EBITDA")),
+        "FCF Yld": st.column_config.NumberColumn(format="%+.2f%%", width="small", help=H.get("FCF Yld")),
+        "P/B": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("P/B")),
+        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%", width="small", help=H.get("TP Upside %")),
+        "Reco": st.column_config.TextColumn(width="small", help=H.get("Reco")),
+        "N analysts": st.column_config.NumberColumn(format="%d", width="small", help=H.get("N analysts")),
         "Cross": st.column_config.TextColumn(width="small"),
     }
     st.dataframe(styler, use_container_width=True, height=560, column_config=col_cfg)

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.gcc.invest-dashboard.wiki-sync</string>
+
+    <!-- Run wiki_weekly_sync.sh through bash -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/gcc/invest-dashboard/scripts/wiki_weekly_sync.sh</string>
+    </array>
+
+    <!-- Fire every Sunday (Weekday=0) at 20:00 local time. -->
+    <!-- launchd misfire semantics: if Mac is asleep at 20:00 Sunday, the job
+         fires when Mac wakes (at most a few hours later). -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>20</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Don't fire on every load (only on schedule). -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>WorkingDirectory</key>
+    <string>/Users/gcc/invest-dashboard</string>
+
+    <!-- Logs are routed inside the script via exec >>, but also keep launchd's
+         stderr in case the script can't even start. -->
+    <key>StandardErrorPath</key>
+    <string>/Users/gcc/invest-dashboard/.omc/logs/wiki_weekly.launchd.err</string>
+
+    <key>StandardOutPath</key>
+    <string>/Users/gcc/invest-dashboard/.omc/logs/wiki_weekly.launchd.out</string>
+
+    <!-- Inherit user's PATH so git, uv, etc. are visible -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/Users/gcc/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+        <key>HOME</key>
+        <string>/Users/gcc</string>
+    </dict>
+</dict>
+</plist>

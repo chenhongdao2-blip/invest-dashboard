@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Streamlit secrets (keep local, not commit)
+.streamlit/secrets.toml
+
+# logs / scratch
+*.log
+.scratch/
+tmp/
+
+# uv
+.uv-cache/
+
+# OMC plugin auto-state (do not commit)
+.omc/
+.claude/

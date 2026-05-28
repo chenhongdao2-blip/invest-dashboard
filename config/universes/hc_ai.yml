@@ -1,0 +1,31 @@
+# Healthcare + AI sector — 13 tickers
+sector_id: hc_ai
+domain: healthcare
+
+tickers:
+  - ticker: CRM        # 赛富时 Salesforce (Health Cloud)
+    region: US
+  - ticker: ISRG       # 直觉外科 Intuitive Surgical (cross-membership: medtech)
+    region: US
+  - ticker: HIMS       # Hims & Hers Health
+    region: US
+  - ticker: VEEV       # Veeva Systems
+    region: US
+  - ticker: IQV        # 艾昆纬 IQVIA (cross-membership: cxo)
+    region: US
+  - ticker: 6618.HK    # 京东健康 JD Health
+    region: HK
+  - ticker: DOCS       # Doximity
+    region: US
+  - ticker: TEM        # Tempus AI
+    region: US
+  - ticker: HQY        # HealthEquity
+    region: US
+  - ticker: RXRX       # Recursion Pharmaceuticals
+    region: US
+  - ticker: 2506.HK    # 讯飞医疗 iFlytek Healthcare
+    region: HK
+  - ticker: OMCL       # Omnicell
+    region: US
+  - ticker: 2413.T     # M3 Inc.
+    region: JP

@@ -1,0 +1,24 @@
+# CMSI HK Healthcare Coverage List
+# ⚠️ PLACEHOLDER — 用户提供 cover list 后填充
+# 来源候选: ~/Desktop/香港股票信息表信息.xlsx (recon 未找到)
+# 或: 用户 paste ticker list
+sector_id: cmsi_coverage_hc
+domain: healthcare
+
+tickers:
+  # 占位示例（用户提供后替换）
+  - ticker: 1681.HK    # 占位
+    region: HK
+    note: "PLACEHOLDER — replace with actual CMSI cover list"
+  - ticker: 2506.HK
+    region: HK
+    note: "PLACEHOLDER"
+  - ticker: 3692.HK    # 翰森制药 (per MEMORY context)
+    region: HK
+    note: "PLACEHOLDER"
+  - ticker: 2666.HK
+    region: HK
+    note: "PLACEHOLDER"
+  - ticker: 1801.HK    # 信达生物 (per MEMORY)
+    region: HK
+    note: "PLACEHOLDER"

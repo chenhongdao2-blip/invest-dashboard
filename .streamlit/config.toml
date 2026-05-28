@@ -1,0 +1,14 @@
+[theme]
+base = "dark"
+primaryColor = "#22c55e"          # green for gains
+backgroundColor = "#0f172a"       # dark slate
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f1f5f9"
+font = "monospace"
+
+[server]
+headless = true
+runOnSave = true
+
+[browser]
+gatherUsageStats = false

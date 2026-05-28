@@ -1,0 +1,25 @@
+# Hospital Care sector — 10 tickers
+sector_id: hospital_care
+domain: healthcare
+
+tickers:
+  - ticker: HCA        # HCA Healthcare
+    region: US
+  - ticker: THC        # Tenet Healthcare
+    region: US
+  - ticker: UHS        # Universal Health Services
+    region: US
+  - ticker: DVA        # DaVita
+    region: US
+  - ticker: EHC        # Encompass Health
+    region: US
+  - ticker: CHE        # Chemed
+    region: US
+  - ticker: ENSG       # The Ensign Group
+    region: US
+  - ticker: SEM        # Select Medical
+    region: US
+  - ticker: OPCH       # Option Care Health
+    region: US
+  - ticker: ACHC       # Acadia Healthcare
+    region: US

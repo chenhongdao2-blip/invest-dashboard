@@ -1,0 +1,38 @@
+# Biotech sector — 16 tickers from CMSI sector comp table (vintage 2025-11-06)
+# yfinance ticker format
+sector_id: biotech
+domain: healthcare
+
+tickers:
+  - ticker: GILD       # 吉利德 Gilead Sciences
+    region: US
+  - ticker: VRTX       # 福泰制药 Vertex Pharmaceuticals
+    region: US
+  - ticker: REGN       # 再生元 Regeneron
+    region: US
+  - ticker: ARGX       # argenx SE (Nasdaq ADR)
+    region: US
+  - ticker: ALNY       # 阿尼拉姆制药 Alnylam
+    region: US
+  - ticker: BNTX       # BioNTech (ADR)
+    region: US
+  - ticker: BIIB       # 渤健 Biogen
+    region: US
+  - ticker: ONC        # 百济神州 BeOne Medicines (formerly BeiGene/BGNE)
+    region: US
+  - ticker: MRNA       # 莫德纳 Moderna
+    region: US
+  - ticker: RPRX       # Royalty Pharma
+    region: US
+  - ticker: GMAB       # Genmab (Nasdaq ADR)
+    region: US
+  - ticker: NBIX       # Neurocrine Biosciences
+    region: US
+  - ticker: INCY       # Incyte
+    region: US
+  - ticker: BMRN       # BioMarin Pharmaceutical
+    region: US
+  - ticker: RVMD       # Revolution Medicines
+    region: US
+  - ticker: 4587.T     # PeptiDream
+    region: JP

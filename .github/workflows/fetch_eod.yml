@@ -1,0 +1,53 @@
+name: Fetch EOD data
+
+on:
+  schedule:
+    # US 收盘 16:00 ET. EDT = UTC-4 → 20:00 UTC; EST = UTC-5 → 21:00 UTC.
+    # 跑 22:30 UTC 兼容夏冬时
+    - cron: '30 22 * * 1-5'
+    # HK 收盘 16:00 HKT = 08:00 UTC. 跑 09:00 UTC.
+    - cron: '0 9 * * 1-5'
+  workflow_dispatch:               # 允许手动从 Actions tab 触发
+    inputs:
+      backfill_days:
+        description: 'Backfill historical days (0 = today only)'
+        required: false
+        default: '0'
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fetch-eod
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Init schema (idempotent)
+        run: python jobs/init_db.py
+
+      - name: Load universe
+        run: python jobs/load_universe.py
+
+      - name: Fetch EOD data
+        run: python jobs/fetch_eod.py --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
+
+      - name: Commit data
+        run: |
+          git config user.email "data-bot@github.com"
+          git config user.name "data-bot"
+          git add data/snapshots.db
+          if git diff-index --quiet HEAD; then
+            echo "No data changes to commit"
+          else
+            git commit -m "data: EOD snapshot $(date -u +%Y-%m-%d) [skip ci]"
+            git push
+          fi

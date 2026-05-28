@@ -1,0 +1,26 @@
+# Managed Care & Health Insurance sector — 10 tickers
+# Note: HCA / THC / UHS 与 hospital_care 板块 cross-membership
+sector_id: managed_care
+domain: healthcare
+
+tickers:
+  - ticker: UNH        # 联合健康 UnitedHealth
+    region: US
+  - ticker: ELV        # Elevance Health
+    region: US
+  - ticker: HCA        # HCA Healthcare (cross: hospital_care)
+    region: US
+  - ticker: CI         # 信诺 Cigna
+    region: US
+  - ticker: CVS        # CVS Health
+    region: US
+  - ticker: HUM        # Humana
+    region: US
+  - ticker: CNC        # Centene
+    region: US
+  - ticker: MOH        # Molina Healthcare
+    region: US
+  - ticker: THC        # Tenet Healthcare (cross: hospital_care)
+    region: US
+  - ticker: UHS        # Universal Health Services (cross: hospital_care)
+    region: US

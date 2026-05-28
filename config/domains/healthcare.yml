@@ -1,0 +1,49 @@
+# Healthcare domain config
+name: Healthcare
+emoji: 🏥
+description: |
+  Sell-side healthcare coverage across 7 sub-sectors.
+  Includes US / HK / JP / KR / EU-listed tickers.
+
+# 板块列表（按 universe YAML 命名）
+sectors:
+  - id: biotech
+    name: Biotech
+    universe_file: hc_biotech.yml
+    benchmark: XBI            # SPDR S&P Biotech ETF
+  - id: hospital_care
+    name: Hospital Care
+    universe_file: hc_hospital_care.yml
+    benchmark: XLV            # Health Care Select Sector SPDR
+  - id: hc_ai
+    name: Healthcare + AI
+    universe_file: hc_ai.yml
+    benchmark: XLV
+  - id: managed_care
+    name: Managed Care
+    universe_file: hc_managed_care.yml
+    benchmark: IHF            # iShares US Healthcare Providers
+  - id: medtech
+    name: Medtech
+    universe_file: hc_medtech.yml
+    benchmark: IHI            # iShares US Medical Devices
+  - id: cxo
+    name: CXO & Life Sciences
+    universe_file: hc_cxo.yml
+    benchmark: XLV
+  - id: pharma
+    name: Pharma
+    universe_file: hc_pharma.yml
+    benchmark: XPH            # SPDR S&P Pharmaceuticals
+
+# Domain-level benchmarks
+benchmarks:
+  primary: XLV
+  secondary:
+    - XBI                     # Biotech
+    - XPH                     # Pharma
+    - IXJ                     # iShares Global Healthcare
+
+# CMSI 自己 cover list
+coverage:
+  universe_file: cmsi_coverage_hc.yml

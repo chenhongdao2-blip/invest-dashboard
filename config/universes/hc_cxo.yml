@@ -1,0 +1,33 @@
+# CXO & Life Sciences sector — 14 tickers
+sector_id: cxo
+domain: healthcare
+
+tickers:
+  - ticker: TMO          # 赛默飞世尔 Thermo Fisher
+    region: US
+  - ticker: DHR          # 丹纳赫 Danaher
+    region: US
+  - ticker: 207940.KS    # 三星生物 Samsung Biologics
+    region: KR
+  - ticker: LZAGY        # 龙沙 Lonza (ADR)
+    region: US
+  - ticker: IQV          # 艾昆纬 IQVIA (cross: hc_ai)
+    region: US
+  - ticker: A            # 安捷伦 Agilent
+    region: US
+  - ticker: IDXX         # IDEXX Laboratories
+    region: US
+  - ticker: MTD          # Mettler-Toledo
+    region: US
+  - ticker: WAT          # 沃特世 Waters
+    region: US
+  - ticker: LH           # Labcorp
+    region: US
+  - ticker: ILMN         # 因美纳 Illumina
+    region: US
+  - ticker: MEDP         # Medpace
+    region: US
+  - ticker: CRL          # 查理斯河实验室 Charles River Labs
+    region: US
+  - ticker: ICLR         # ICON plc
+    region: US

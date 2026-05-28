@@ -1,0 +1,37 @@
+# Pharma sector — 16 tickers
+sector_id: pharma
+domain: healthcare
+
+tickers:
+  - ticker: LLY          # 礼来 Eli Lilly
+    region: US
+  - ticker: NVO          # 诺和诺德 Novo Nordisk (ADR)
+    region: US
+  - ticker: JNJ          # 强生 Johnson & Johnson
+    region: US
+  - ticker: ABBV         # 艾伯维 AbbVie
+    region: US
+  - ticker: MRK          # 默沙东 Merck
+    region: US
+  - ticker: RHHBY        # 罗氏 Roche (US ADR; primary listing ROG.SW)
+    region: US
+  - ticker: NVS          # 诺华 Novartis
+    region: US
+  - ticker: AZN          # 阿斯利康 AstraZeneca (US ADR)
+    region: US
+  - ticker: AMGN         # 安进 Amgen
+    region: US
+  - ticker: PFE          # 辉瑞 Pfizer
+    region: US
+  - ticker: GSK          # GSK
+    region: US
+  - ticker: 4502.T       # Takeda 武田制药
+    region: JP
+  - ticker: 4151.T       # Kyowa Kirin
+    region: JP
+  - ticker: 4506.T       # Sumitomo Pharma
+    region: JP
+  - ticker: 4519.T       # Chugai 中外制药
+    region: JP
+  - ticker: 4568.T       # Daiichi Sankyo 第一三共
+    region: JP

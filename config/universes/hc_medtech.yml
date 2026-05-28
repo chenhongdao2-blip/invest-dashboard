@@ -1,0 +1,31 @@
+# Medtech sector — 13 tickers
+sector_id: medtech
+domain: healthcare
+
+tickers:
+  - ticker: ABT        # 雅培 Abbott Laboratories
+    region: US
+  - ticker: ISRG       # 直觉外科 Intuitive Surgical (cross: hc_ai)
+    region: US
+  - ticker: SYK        # 史赛克 Stryker
+    region: US
+  - ticker: BSX        # 波士顿科学 Boston Scientific
+    region: US
+  - ticker: MDT        # 美敦力 Medtronic
+    region: US
+  - ticker: BDX        # 碧迪医疗 Becton Dickinson
+    region: US
+  - ticker: EW         # 爱德华生命科学 Edwards Lifesciences
+    region: US
+  - ticker: ALC        # 爱尔康 Alcon
+    region: US
+  - ticker: GEHC       # GE HealthCare
+    region: US
+  - ticker: RMD        # 瑞思迈 ResMed
+    region: US
+  - ticker: 4543.T     # TERUMO
+    region: JP
+  - ticker: 7747.T     # Asahi Intecc
+    region: JP
+  - ticker: 6869.T     # Sysmex
+    region: JP

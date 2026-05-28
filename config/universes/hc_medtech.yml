@@ -3,29 +3,51 @@ sector_id: medtech
 domain: healthcare
 
 tickers:
-  - ticker: ABT        # 雅培 Abbott Laboratories
+  - ticker: ABT
+    name_cn: 雅培
+    name_en: Abbott Laboratories
     region: US
-  - ticker: ISRG       # 直觉外科 Intuitive Surgical (cross: hc_ai)
+  - ticker: ISRG
+    name_cn: 直觉外科
+    name_en: Intuitive Surgical
     region: US
-  - ticker: SYK        # 史赛克 Stryker
+  - ticker: SYK
+    name_cn: 史赛克
+    name_en: Stryker
     region: US
-  - ticker: BSX        # 波士顿科学 Boston Scientific
+  - ticker: BSX
+    name_cn: 波士顿科学
+    name_en: Boston Scientific
     region: US
-  - ticker: MDT        # 美敦力 Medtronic
+  - ticker: MDT
+    name_cn: 美敦力
+    name_en: Medtronic
     region: US
-  - ticker: BDX        # 碧迪医疗 Becton Dickinson
+  - ticker: BDX
+    name_cn: 碧迪医疗
+    name_en: Becton Dickinson
     region: US
-  - ticker: EW         # 爱德华生命科学 Edwards Lifesciences
+  - ticker: EW
+    name_cn: 爱德华生命科学
+    name_en: Edwards Lifesciences
     region: US
-  - ticker: ALC        # 爱尔康 Alcon
+  - ticker: ALC
+    name_cn: 爱尔康
+    name_en: Alcon
     region: US
-  - ticker: GEHC       # GE HealthCare
+  - ticker: GEHC
+    name_en: GE HealthCare
     region: US
-  - ticker: RMD        # 瑞思迈 ResMed
+  - ticker: RMD
+    name_cn: 瑞思迈
+    name_en: ResMed
     region: US
-  - ticker: 4543.T     # TERUMO
+  - ticker: 4543.T
+    name_en: TERUMO
     region: JP
-  - ticker: 7747.T     # Asahi Intecc
+  - ticker: 7747.T
+    name_en: Asahi Intecc
     region: JP
-  - ticker: 6869.T     # Sysmex
+  - ticker: 6869.T
+    name_en: Sysmex
     region: JP

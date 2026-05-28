@@ -3,35 +3,61 @@ sector_id: pharma
 domain: healthcare
 
 tickers:
-  - ticker: LLY          # 礼来 Eli Lilly
+  - ticker: LLY
+    name_cn: 礼来
+    name_en: Eli Lilly
     region: US
-  - ticker: NVO          # 诺和诺德 Novo Nordisk (ADR)
+  - ticker: NVO
+    name_cn: 诺和诺德
+    name_en: Novo Nordisk
     region: US
-  - ticker: JNJ          # 强生 Johnson & Johnson
+  - ticker: JNJ
+    name_cn: 强生
+    name_en: Johnson & Johnson
     region: US
-  - ticker: ABBV         # 艾伯维 AbbVie
+  - ticker: ABBV
+    name_cn: 艾伯维
+    name_en: AbbVie
     region: US
-  - ticker: MRK          # 默沙东 Merck
+  - ticker: MRK
+    name_cn: 默沙东
+    name_en: Merck
     region: US
-  - ticker: RHHBY        # 罗氏 Roche (US ADR; primary listing ROG.SW)
+  - ticker: RHHBY
+    name_cn: 罗氏
+    name_en: Roche
     region: US
-  - ticker: NVS          # 诺华 Novartis
+  - ticker: NVS
+    name_cn: 诺华
+    name_en: Novartis
     region: US
-  - ticker: AZN          # 阿斯利康 AstraZeneca (US ADR)
+  - ticker: AZN
+    name_cn: 阿斯利康
+    name_en: AstraZeneca (US ADR)
     region: US
-  - ticker: AMGN         # 安进 Amgen
+  - ticker: AMGN
+    name_cn: 安进
+    name_en: Amgen
     region: US
-  - ticker: PFE          # 辉瑞 Pfizer
+  - ticker: PFE
+    name_cn: 辉瑞
+    name_en: Pfizer
     region: US
-  - ticker: GSK          # GSK
+  - ticker: GSK
+    name_en: GSK
     region: US
-  - ticker: 4502.T       # Takeda 武田制药
+  - ticker: 4502.T
+    name_en: Takeda 武田制药
     region: JP
-  - ticker: 4151.T       # Kyowa Kirin
+  - ticker: 4151.T
+    name_en: Kyowa Kirin
     region: JP
-  - ticker: 4506.T       # Sumitomo Pharma
+  - ticker: 4506.T
+    name_en: Sumitomo Pharma
     region: JP
-  - ticker: 4519.T       # Chugai 中外制药
+  - ticker: 4519.T
+    name_en: Chugai 中外制药
     region: JP
-  - ticker: 4568.T       # Daiichi Sankyo 第一三共
+  - ticker: 4568.T
+    name_en: Daiichi Sankyo 第一三共
     region: JP

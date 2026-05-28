@@ -4,35 +4,58 @@ sector_id: biotech
 domain: healthcare
 
 tickers:
-  - ticker: GILD       # 吉利德 Gilead Sciences
+  - ticker: GILD
+    name_cn: 吉利德
+    name_en: Gilead Sciences
     region: US
-  - ticker: VRTX       # 福泰制药 Vertex Pharmaceuticals
+  - ticker: VRTX
+    name_cn: 福泰制药
+    name_en: Vertex Pharmaceuticals
     region: US
-  - ticker: REGN       # 再生元 Regeneron
+  - ticker: REGN
+    name_cn: 再生元
+    name_en: Regeneron
     region: US
-  - ticker: ARGX       # argenx SE (Nasdaq ADR)
+  - ticker: ARGX
+    name_en: argenx SE
     region: US
-  - ticker: ALNY       # 阿尼拉姆制药 Alnylam
+  - ticker: ALNY
+    name_cn: 阿尼拉姆制药
+    name_en: Alnylam
     region: US
-  - ticker: BNTX       # BioNTech (ADR)
+  - ticker: BNTX
+    name_en: BioNTech
     region: US
-  - ticker: BIIB       # 渤健 Biogen
+  - ticker: BIIB
+    name_cn: 渤健
+    name_en: Biogen
     region: US
-  - ticker: ONC        # 百济神州 BeOne Medicines (formerly BeiGene/BGNE)
+  - ticker: ONC
+    name_cn: 百济神州
+    name_en: BeOne Medicines
     region: US
-  - ticker: MRNA       # 莫德纳 Moderna
+  - ticker: MRNA
+    name_cn: 莫德纳
+    name_en: Moderna
     region: US
-  - ticker: RPRX       # Royalty Pharma
+  - ticker: RPRX
+    name_en: Royalty Pharma
     region: US
-  - ticker: GMAB       # Genmab (Nasdaq ADR)
+  - ticker: GMAB
+    name_en: Genmab
     region: US
-  - ticker: NBIX       # Neurocrine Biosciences
+  - ticker: NBIX
+    name_en: Neurocrine Biosciences
     region: US
-  - ticker: INCY       # Incyte
+  - ticker: INCY
+    name_en: Incyte
     region: US
-  - ticker: BMRN       # BioMarin Pharmaceutical
+  - ticker: BMRN
+    name_en: BioMarin Pharmaceutical
     region: US
-  - ticker: RVMD       # Revolution Medicines
+  - ticker: RVMD
+    name_en: Revolution Medicines
     region: US
-  - ticker: 4587.T     # PeptiDream
+  - ticker: 4587.T
+    name_en: PeptiDream
     region: JP

@@ -3,29 +3,47 @@ sector_id: hc_ai
 domain: healthcare
 
 tickers:
-  - ticker: CRM        # 赛富时 Salesforce (Health Cloud)
+  - ticker: CRM
+    name_cn: 赛富时
+    name_en: Salesforce (Health Cloud)
     region: US
-  - ticker: ISRG       # 直觉外科 Intuitive Surgical (cross-membership: medtech)
+  - ticker: ISRG
+    name_cn: 直觉外科
+    name_en: Intuitive Surgical
     region: US
-  - ticker: HIMS       # Hims & Hers Health
+  - ticker: HIMS
+    name_en: Hims & Hers Health
     region: US
-  - ticker: VEEV       # Veeva Systems
+  - ticker: VEEV
+    name_en: Veeva Systems
     region: US
-  - ticker: IQV        # 艾昆纬 IQVIA (cross-membership: cxo)
+  - ticker: IQV
+    name_cn: 艾昆纬
+    name_en: IQVIA
     region: US
-  - ticker: 6618.HK    # 京东健康 JD Health
+  - ticker: 6618.HK
+    name_cn: 京东健康
+    name_en: JD Health
     region: HK
-  - ticker: DOCS       # Doximity
+  - ticker: DOCS
+    name_en: Doximity
     region: US
-  - ticker: TEM        # Tempus AI
+  - ticker: TEM
+    name_en: Tempus AI
     region: US
-  - ticker: HQY        # HealthEquity
+  - ticker: HQY
+    name_en: HealthEquity
     region: US
-  - ticker: RXRX       # Recursion Pharmaceuticals
+  - ticker: RXRX
+    name_en: Recursion Pharmaceuticals
     region: US
-  - ticker: 2506.HK    # 讯飞医疗 iFlytek Healthcare
+  - ticker: 2506.HK
+    name_cn: 讯飞医疗
+    name_en: iFlytek Healthcare
     region: HK
-  - ticker: OMCL       # Omnicell
+  - ticker: OMCL
+    name_en: Omnicell
     region: US
-  - ticker: 2413.T     # M3 Inc.
+  - ticker: 2413.T
+    name_en: M3 Inc.
     region: JP

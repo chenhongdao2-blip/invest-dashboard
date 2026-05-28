@@ -4,23 +4,35 @@ sector_id: managed_care
 domain: healthcare
 
 tickers:
-  - ticker: UNH        # 联合健康 UnitedHealth
+  - ticker: UNH
+    name_cn: 联合健康
+    name_en: UnitedHealth
     region: US
-  - ticker: ELV        # Elevance Health
+  - ticker: ELV
+    name_en: Elevance Health
     region: US
-  - ticker: HCA        # HCA Healthcare (cross: hospital_care)
+  - ticker: HCA
+    name_en: HCA Healthcare
     region: US
-  - ticker: CI         # 信诺 Cigna
+  - ticker: CI
+    name_cn: 信诺
+    name_en: Cigna
     region: US
-  - ticker: CVS        # CVS Health
+  - ticker: CVS
+    name_en: CVS Health
     region: US
-  - ticker: HUM        # Humana
+  - ticker: HUM
+    name_en: Humana
     region: US
-  - ticker: CNC        # Centene
+  - ticker: CNC
+    name_en: Centene
     region: US
-  - ticker: MOH        # Molina Healthcare
+  - ticker: MOH
+    name_en: Molina Healthcare
     region: US
-  - ticker: THC        # Tenet Healthcare (cross: hospital_care)
+  - ticker: THC
+    name_en: Tenet Healthcare
     region: US
-  - ticker: UHS        # Universal Health Services (cross: hospital_care)
+  - ticker: UHS
+    name_en: Universal Health Services
     region: US

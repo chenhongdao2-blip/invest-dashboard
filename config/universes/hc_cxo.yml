@@ -3,31 +3,54 @@ sector_id: cxo
 domain: healthcare
 
 tickers:
-  - ticker: TMO          # 赛默飞世尔 Thermo Fisher
+  - ticker: TMO
+    name_cn: 赛默飞世尔
+    name_en: Thermo Fisher
     region: US
-  - ticker: DHR          # 丹纳赫 Danaher
+  - ticker: DHR
+    name_cn: 丹纳赫
+    name_en: Danaher
     region: US
-  - ticker: 207940.KS    # 三星生物 Samsung Biologics
+  - ticker: 207940.KS
+    name_cn: 三星生物
+    name_en: Samsung Biologics
     region: KR
-  - ticker: LZAGY        # 龙沙 Lonza (ADR)
+  - ticker: LZAGY
+    name_cn: 龙沙
+    name_en: Lonza
     region: US
-  - ticker: IQV          # 艾昆纬 IQVIA (cross: hc_ai)
+  - ticker: IQV
+    name_cn: 艾昆纬
+    name_en: IQVIA
     region: US
-  - ticker: A            # 安捷伦 Agilent
+  - ticker: A
+    name_cn: 安捷伦
+    name_en: Agilent
     region: US
-  - ticker: IDXX         # IDEXX Laboratories
+  - ticker: IDXX
+    name_en: IDEXX Laboratories
     region: US
-  - ticker: MTD          # Mettler-Toledo
+  - ticker: MTD
+    name_en: Mettler-Toledo
     region: US
-  - ticker: WAT          # 沃特世 Waters
+  - ticker: WAT
+    name_cn: 沃特世
+    name_en: Waters
     region: US
-  - ticker: LH           # Labcorp
+  - ticker: LH
+    name_en: Labcorp
     region: US
-  - ticker: ILMN         # 因美纳 Illumina
+  - ticker: ILMN
+    name_cn: 因美纳
+    name_en: Illumina
     region: US
-  - ticker: MEDP         # Medpace
+  - ticker: MEDP
+    name_en: Medpace
     region: US
-  - ticker: CRL          # 查理斯河实验室 Charles River Labs
+  - ticker: CRL
+    name_cn: 查理斯河实验室
+    name_en: Charles River Labs
     region: US
-  - ticker: ICLR         # ICON plc
+  - ticker: ICLR
+    name_en: ICON plc
     region: US

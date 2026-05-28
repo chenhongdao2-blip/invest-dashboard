@@ -77,7 +77,6 @@ def render_sector(sec: dict) -> None:
                 merged[col] = mults[col]
     merged["Name"] = pd.Series(name_map).reindex(merged.index)
     merged["Region"] = pd.Series(region_map).reindex(merged.index)
-    merged["Ticker_bbg"] = [fmt.fmt_ticker_bbg(t) for t in merged.index]   # n2 audit
 
     # M11 audit: filter by min_mcap (in B)
     if min_mcap_b > 0:
@@ -104,8 +103,9 @@ def render_sector(sec: dict) -> None:
     # --- Build NUMERIC display DataFrame (sort-bug fix) ---
     # Sort bug fix: keep numeric, let column_config render the format, so the
     # Streamlit header click sorts numerically instead of lexicographically.
+    # Note: BBG column dropped — duplicates the ticker index. Keep ticker as the
+    # row identifier, surface Name (CN > EN > ticker) as the human-readable column.
     disp = pd.DataFrame(index=merged.index)
-    disp["BBG"] = merged["Ticker_bbg"]
     disp["Name"] = merged["Name"].fillna(merged.index.to_series())
     disp["Tier"] = merged.get("mcap_tier", pd.Series(index=merged.index)).fillna("—")
     disp["Mcap USD ($B)"] = merged["market_cap_usd"] / 1e9
@@ -127,7 +127,8 @@ def render_sector(sec: dict) -> None:
         pct_decimal_cols=["FCF Yld"],
         mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "EV/Sales", "P/B"],
         money_b_cols=["Mcap USD ($B)"],
-        text_cols=["BBG", "Name", "Tier"],
+        text_cols=["Name", "Tier"],
+        column_widths={"Name": "medium"},
         height=540,
     )
 

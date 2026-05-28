@@ -152,9 +152,10 @@ def render_region(df: pd.DataFrame) -> None:
     # BUGFIX: Build NUMERIC DataFrame (not pre-formatted strings) so column sort
     # works correctly. Streamlit column_config handles display format; Styler.apply
     # still works for background_gradient on the numeric values.
+    # Note: BBG column dropped — duplicates the ticker index. Name column uses
+    # name_cn first, falls back to name_en, then ticker.
     disp = pd.DataFrame(index=df.index)
-    disp["BBG"] = df["BBG"]
-    disp["Name (CN)"] = df["name_cn"].fillna("")
+    disp["Name"] = df["name_cn"].fillna(df["name_en"]).fillna(df.index.to_series())
     disp["Mcap USD ($B)"] = df["market_cap_usd"] / 1e9              # numeric, B
     disp["YTD %"] = df["ytd_%"]
     disp["1M %"] = df["1m_%"]
@@ -192,28 +193,10 @@ def render_region(df: pd.DataFrame) -> None:
         subset=["FCF Yld"],
     )
 
-    # column_config: display format (preserves numeric sort)
+    # Narrow column widths so all 15 columns fit at Streamlit 1050px viewport.
+    # Sort works because the DataFrame is numeric (column_config formats on display).
     col_cfg = {
-        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB"),
-        "YTD %": st.column_config.NumberColumn(format="%+.2f%%"),
-        "1M %": st.column_config.NumberColumn(format="%+.2f%%"),
-        "5D %": st.column_config.NumberColumn(format="%+.2f%%"),
-        "1D %": st.column_config.NumberColumn(format="%+.2f%%"),
-        "vs HSI YTD": st.column_config.NumberColumn(format="%+.2f%%"),
-        "Trail P/E": st.column_config.NumberColumn(format="%.1fx"),
-        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx"),
-        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx"),
-        "FCF Yld": st.column_config.NumberColumn(format="%+.2%"),    # 0.025 → +2.5%
-        "P/B": st.column_config.NumberColumn(format="%.1fx"),
-        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%"),
-        "N analysts": st.column_config.NumberColumn(format="%d"),
-    }
-
-    # 17 columns require narrow widths to fit Streamlit canvas at 1050px viewport.
-    # Sort works because dataframe is numeric (not pre-formatted strings).
-    col_cfg = {
-        "BBG": st.column_config.TextColumn(width="small"),
-        "Name (CN)": st.column_config.TextColumn(width="small"),
+        "Name": st.column_config.TextColumn(width="medium"),
         "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB", width="small"),
         "YTD %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
         "1M %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),

@@ -3,23 +3,33 @@ sector_id: hospital_care
 domain: healthcare
 
 tickers:
-  - ticker: HCA        # HCA Healthcare
+  - ticker: HCA
+    name_en: HCA Healthcare
     region: US
-  - ticker: THC        # Tenet Healthcare
+  - ticker: THC
+    name_en: Tenet Healthcare
     region: US
-  - ticker: UHS        # Universal Health Services
+  - ticker: UHS
+    name_en: Universal Health Services
     region: US
-  - ticker: DVA        # DaVita
+  - ticker: DVA
+    name_en: DaVita
     region: US
-  - ticker: EHC        # Encompass Health
+  - ticker: EHC
+    name_en: Encompass Health
     region: US
-  - ticker: CHE        # Chemed
+  - ticker: CHE
+    name_en: Chemed
     region: US
-  - ticker: ENSG       # The Ensign Group
+  - ticker: ENSG
+    name_en: The Ensign Group
     region: US
-  - ticker: SEM        # Select Medical
+  - ticker: SEM
+    name_en: Select Medical
     region: US
-  - ticker: OPCH       # Option Care Health
+  - ticker: OPCH
+    name_en: Option Care Health
     region: US
-  - ticker: ACHC       # Acadia Healthcare
+  - ticker: ACHC
+    name_en: Acadia Healthcare
     region: US

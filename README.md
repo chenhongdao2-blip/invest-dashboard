@@ -67,6 +67,21 @@ uv run --with streamlit --with plotly --with pyyaml --with pandas streamlit run 
 
 无需改 schema 或核心代码。
 
+## 📂 Project layout (IDE-friendly)
+
+```
+invest-dashboard/
+├── app/              Streamlit pages + lib helpers
+├── config/           Domain & universe YAMLs
+├── data/             SQLite snapshots + external CSVs
+├── jobs/             Cron-driven data fetcher
+├── scripts/          Helper scripts (sync_ledger.sh etc.)
+├── .github/          GitHub Actions cron workflow
+└── docs/             ⭐ Plans / audits / screenshots — see docs/README.md
+```
+
+**Quick links**: [Plan](docs/plans/modular-toasting-spindle.md) · [Round 1 audit](docs/audits/round1/) · [Round 2 audit](docs/audits/round2/) · [Screenshots](docs/screenshots/)
+
 ## Roadmap
 
 - **P0 (Week 1)**: Home + Sector Heatmap + CMSI Coverage + Strategy Picks + Valuation Scanner + Ticker Drill

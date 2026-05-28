@@ -149,60 +149,88 @@ def render_region(df: pd.DataFrame) -> None:
         st.info("No tickers in this region.")
         return
 
-    # Build display string DataFrame (M7 audit pattern)
+    # BUGFIX: Build NUMERIC DataFrame (not pre-formatted strings) so column sort
+    # works correctly. Streamlit column_config handles display format; Styler.apply
+    # still works for background_gradient on the numeric values.
     disp = pd.DataFrame(index=df.index)
     disp["BBG"] = df["BBG"]
-    disp["Name (CN)"] = df["name_cn"].fillna("—")
-    # disp["Name (EN)"] = df["name_en"].fillna("—") # Cull redundant name
-    # disp["Region"] = df["region"] # Redundant in tabs
-    # disp["Tier"] = df.get("mcap_tier", pd.Series(index=df.index)).fillna("—")
-    disp["Mcap USD"] = df["market_cap_usd"].apply(fmt.fmt_money_b)
-    disp["YTD %"] = df["ytd_%"].apply(fmt.fmt_pct)
-    disp["1M %"] = df["1m_%"].apply(fmt.fmt_pct)
-    disp["5D %"] = df["5d_%"].apply(fmt.fmt_pct)
-    disp["1D %"] = df["1d_%"].apply(fmt.fmt_pct)
-    disp["vs HSI YTD"] = df["vs_hsi_ytd"].apply(fmt.fmt_pct)        # m8 audit
-    disp["Trail P/E"] = df["trailing_pe"].apply(fmt.fmt_ratio)
-    disp["Fwd P/E"] = df["forward_pe"].apply(fmt.fmt_ratio)
-    disp["EV/EBITDA"] = df["ev_ebitda"].apply(fmt.fmt_ratio)
-    disp["FCF Yld"] = df["fcf_yield"].apply(fmt.fmt_pct_decimal)
-    disp["P/B"] = df["pb"].apply(fmt.fmt_ratio)
-    # m8 audit: sell-side consensus columns
-    disp["TP Upside"] = df["tp_upside_%"].apply(fmt.fmt_pct)
+    disp["Name (CN)"] = df["name_cn"].fillna("")
+    disp["Mcap USD ($B)"] = df["market_cap_usd"] / 1e9              # numeric, B
+    disp["YTD %"] = df["ytd_%"]
+    disp["1M %"] = df["1m_%"]
+    disp["5D %"] = df["5d_%"]
+    disp["1D %"] = df["1d_%"]
+    disp["vs HSI YTD"] = df["vs_hsi_ytd"]
+    disp["Trail P/E"] = df["trailing_pe"]
+    disp["Fwd P/E"] = df["forward_pe"]
+    disp["EV/EBITDA"] = df["ev_ebitda"]
+    disp["FCF Yld"] = df["fcf_yield"]                               # decimal e.g. 0.025
+    disp["P/B"] = df["pb"]
+    disp["TP Upside %"] = df["tp_upside_%"]                         # m8
     disp["Reco"] = df["recommendation_mean"].apply(_reco_label)
-    disp["N analysts"] = df["n_analysts"].apply(
-        lambda v: str(int(v)) if pd.notna(v) else "—"
-    )
+    disp["N analysts"] = df["n_analysts"]                           # int
     disp["Cross"] = df["Cross-Sector"]
     disp.index.name = "Ticker"
 
-    pct_cols = ["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD", "TP Upside"]
-    mult_cols = ["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"]
+    # Background gradient via Styler (works on numeric)
+    pct_cols = ["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD", "TP Upside %"]
+    mult_low_good = ["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"]
 
     styler = disp.style
-    pct_num_map = {
-        "YTD %": "ytd_%", "1M %": "1m_%", "5D %": "5d_%", "1D %": "1d_%",
-        "vs HSI YTD": "vs_hsi_ytd", "TP Upside": "tp_upside_%",
-    }
     for col in pct_cols:
-        num = df[pct_num_map[col]]
         styler = styler.apply(
-            lambda _s, n=num: fmt.background_gradient_diverging(n),
+            lambda s: fmt.background_gradient_diverging(s),
             subset=[col],
         )
-    for col in mult_cols:
-        num_field = {"Trail P/E": "trailing_pe", "Fwd P/E": "forward_pe",
-                     "EV/EBITDA": "ev_ebitda", "P/B": "pb"}[col]
+    for col in mult_low_good:
         styler = styler.apply(
-            lambda _s, n=df[num_field]: fmt.background_gradient_low_good(n),
+            lambda s: fmt.background_gradient_low_good(s),
             subset=[col],
         )
     styler = styler.apply(
-        lambda _s: fmt.background_gradient_low_good(df["fcf_yield"], low_color="#dc2626", high_color="#16a34a"),
+        lambda s: fmt.background_gradient_low_good(s, low_color="#dc2626", high_color="#16a34a"),
         subset=["FCF Yld"],
     )
 
-    st.dataframe(styler, use_container_width=True, height=560)
+    # column_config: display format (preserves numeric sort)
+    col_cfg = {
+        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB"),
+        "YTD %": st.column_config.NumberColumn(format="%+.2f%%"),
+        "1M %": st.column_config.NumberColumn(format="%+.2f%%"),
+        "5D %": st.column_config.NumberColumn(format="%+.2f%%"),
+        "1D %": st.column_config.NumberColumn(format="%+.2f%%"),
+        "vs HSI YTD": st.column_config.NumberColumn(format="%+.2f%%"),
+        "Trail P/E": st.column_config.NumberColumn(format="%.1fx"),
+        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx"),
+        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx"),
+        "FCF Yld": st.column_config.NumberColumn(format="%+.2%"),    # 0.025 → +2.5%
+        "P/B": st.column_config.NumberColumn(format="%.1fx"),
+        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%"),
+        "N analysts": st.column_config.NumberColumn(format="%d"),
+    }
+
+    # 17 columns require narrow widths to fit Streamlit canvas at 1050px viewport.
+    # Sort works because dataframe is numeric (not pre-formatted strings).
+    col_cfg = {
+        "BBG": st.column_config.TextColumn(width="small"),
+        "Name (CN)": st.column_config.TextColumn(width="small"),
+        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB", width="small"),
+        "YTD %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "1M %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "5D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "1D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "vs HSI YTD": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "Trail P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
+        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx", width="small"),
+        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx", width="small"),
+        "FCF Yld": st.column_config.NumberColumn(format="%+.2%", width="small"),
+        "P/B": st.column_config.NumberColumn(format="%.1fx", width="small"),
+        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
+        "Reco": st.column_config.TextColumn(width="small"),
+        "N analysts": st.column_config.NumberColumn(format="%d", width="small"),
+        "Cross": st.column_config.TextColumn(width="small"),
+    }
+    st.dataframe(styler, use_container_width=True, height=560, column_config=col_cfg)
 
 
 for tab, region in zip(tabs, regions):

@@ -18,6 +18,7 @@ import yaml
 from lib import db
 from lib import format as fmt
 from lib import ui
+from lib import theme
 
 st.set_page_config(
     page_title="Valuation Scanner · invest-dashboard",
@@ -42,25 +43,25 @@ with st.sidebar:
     ui.sidebar_search(key_prefix="scanner")
     st.divider()
     
-    st.subheader("🎯 Presets")
+    st.subheader("Presets")
     c1, c2 = st.columns(2)
-    if c1.button("💎 Deep Value", use_container_width=True):
+    if c1.button("Deep Value", width="stretch"):
         st.session_state["scan_pe_pct"] = 15
         st.session_state["scan_mcap"] = 5.0
         st.session_state["scan_ytd"] = (-100, 20)
         st.session_state["scan_5d"] = -30
-    if c2.button("🚀 Recovery", use_container_width=True):
+    if c2.button("Recovery", width="stretch"):
         st.session_state["scan_pe_pct"] = 30
         st.session_state["scan_mcap"] = 2.0
         st.session_state["scan_ytd"] = (-100, 0)
         st.session_state["scan_5d"] = 5
-    if st.button("🔄 Reset all filters", use_container_width=True):
+    if st.button("Reset all filters", width="stretch"):
         for k in ["scan_pe_pct", "scan_mcap", "scan_ytd", "scan_5d", "scan_sectors"]:
             if k in st.session_state: del st.session_state[k]
         st.rerun()
 
     st.divider()
-    st.subheader("📊 Filters")
+    st.subheader("Filters")
 
     selected_sectors = st.multiselect(
         "Sector",
@@ -87,7 +88,7 @@ with st.sidebar:
 
 
 # --- Build candidate universe ---
-st.title("💰 Valuation Scanner")
+theme.page_header("07 / 07", "Valuation Scanner")
 st.caption(
     "Cross-sectional scan — find cheap-on-multiple stocks with positive recent momentum. "
     "Sector-internal P/E percentile + YTD/5D filter. Latest: " + (db.latest_snapshot_date() or "—")
@@ -166,7 +167,7 @@ if small_n_secs or total_neg_excl > 0:
     caveats = []
     if small_n_secs:
         caveats.append(
-            "⚠️ **Small-N sectors** (percentile coarse): "
+            "**Small-N sectors** (percentile coarse): "
             + ", ".join(f"{s} (N={n})" for s, n in small_n_secs.items())
         )
     if total_neg_excl > 0:
@@ -189,15 +190,15 @@ candidates = candidates.sort_values("pe_percentile", ascending=True)
 
 # --- Result summary ---
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("🌐 Universe scanned", f"{len(all_t)}")
-col2.metric("✅ Candidates", f"{len(candidates)}")
-col3.metric("📐 Median Mcap (USD B)",
+col1.metric("Universe scanned", f"{len(all_t)}")
+col2.metric("Candidates", f"{len(candidates)}")
+col3.metric("Median Mcap (USD B)",
             f"${candidates['market_cap_usd'].median()/1e9:.1f}B" if not candidates.empty else "—")
-col4.metric("📈 Median YTD", fmt.fmt_pct(candidates['ytd_%'].median()) if not candidates.empty else "—")
+col4.metric("Median YTD", fmt.fmt_pct(candidates['ytd_%'].median()) if not candidates.empty else "—")
 
 if candidates.empty:
     st.warning(
-        "🤷 No candidates match filters. Loosen criteria (lower min mcap / higher P/E threshold / widen YTD range)."
+        "No candidates match filters. Loosen criteria (lower min mcap / higher P/E threshold / widen YTD range)."
     )
     st.stop()
 
@@ -249,7 +250,7 @@ ui.onboarding_expander("Valuation Scanner", """
 
 st.divider()
 st.caption(
-    "🎯 **Methodology**: Cross-sectional within selected sectors. Negative P/E excluded from percentile rank. "
+    "**Methodology**: Cross-sectional within selected sectors. Negative P/E excluded from percentile rank. "
     "Latest snapshot: " + (db.latest_snapshot_date() or "—") + ". "
     "Sector membership: many-to-many (ISRG ∈ hc_ai + medtech 等)."
 )

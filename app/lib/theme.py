@@ -1,0 +1,610 @@
+"""Global visual theme — CMSI Healthcare Research Portal · Design System v1.0.
+
+Provenance: Claude Design (claude.ai/design) brief, 2026-05-28, after /cccg
+quad-advisor review (Codex + Gemini + GLM) converged on:
+- CMSI 招商证券 red `#c8102e` (GLM BLOCKER — replaces FT暗酒红)
+- Cream `#fff1e5` paper bg (Gemini PASS for healthcare equity research)
+- HTML table for Coverage (Codex TOP PICK — solves canvas dark-mode穿透)
+- 22 color tokens / 12 type tokens / hairline-only borders / no emoji
+
+Full design language spec: ~/Downloads/DESIGN.md (also in repo at docs/DESIGN.md
+once landed).
+Mockup reference: ~/Downloads/CMSI Dashboard mockup.html
+
+How CSS reaches the page:
+- `.streamlit/config.toml` sets the JS-side palette (cream + CMSI red + official
+  `dataframeHeaderBackgroundColor` + `dataframeBorderColor`) so pre-CSS render
+  flash matches and Streamlit's internal widget theme picks up the same colors.
+- `inject_css()` is called from `ui.sidebar_search()` on every page, AFTER
+  `st.set_page_config`. Streamlit reruns the script on every interaction and
+  rebuilds DOM, so inject every call — no session-state guard.
+- `PLOTLY_LAYOUT` is the dict patch to pass into `fig.update_layout(**...)`.
+- Helpers `kpi_metric()` / `section_header()` / `page_header()` emit HTML
+  components that replace native `st.metric` / `st.subheader` / `st.title`
+  for consistent editorial styling.
+"""
+from __future__ import annotations
+
+from textwrap import dedent
+
+import streamlit as st
+
+# ── Color tokens (Claude Design v1.0) ────────────────────────────────────
+# Brand
+CMSI_RED = "#c8102e"        # 主红 · 表头字 / active / 跌幅 (signal-red 同色但语义分)
+CMSI_RED_DEEP = "#9c0e25"   # hover / 章节重号
+CMSI_RED_TINT = "#fbe9ec"   # 跌幅 cell heatmap 12%
+CMSI_RED_BAND = "#f2dfce"   # 表头米色档
+
+# Paper / surface (cream stack)
+PAPER = "#fff1e5"           # body bg 主画布
+PAPER_DEEP = "#f9e6d4"      # sidebar / 二级 surface
+PAPER_BAND = "#f2dfce"      # 表头 band / KPI label band
+PAPER_RULE = "#ebd9c8"      # hairline · 行间分隔
+PAPER_EDGE = "#d4c4b0"      # 强 hairline · KPI 卡边
+
+# Ink (text)
+INK = "#1a1a1a"             # primary · 数字 / H1
+INK_2 = "#4a4a4a"           # secondary · body / 公司名
+INK_3 = "#8a8580"           # muted · 副标 / 单位
+INK_4 = "#b8b1a8"           # faint · 占位 / disabled
+
+# Up / Down (港美股 convention)
+UP = "#0d7680"              # FT teal-green (not vivid #00c853)
+UP_DEEP = "#0a5a62"
+UP_TINT = "#d9e8e6"
+DOWN = "#cc0000"            # signal-red — distinct from brand #c8102e
+DOWN_DEEP = "#a30000"
+DOWN_TINT = "#f7d9d9"
+FLAT = "#8a8580"
+
+# Sector accents (muted FT palette)
+SECTOR_PALETTE = ["#c8102e", "#0d7680", "#a07a2c", "#4a6fa5",
+                  "#8b3a62", "#5d7c3a", "#6b4423", "#4a4a4a"]
+
+# Aliases kept for backward compat with prior imports
+BG = PAPER
+BG_ALT = PAPER_BAND
+TABLE_BG = PAPER
+TABLE_ALT = PAPER_DEEP
+BORDER = PAPER_EDGE
+TEXT = INK
+TEXT_MUTED = INK_3
+PRIMARY = CMSI_RED
+
+# ── Font stack ───────────────────────────────────────────────────────────
+FONT_STACK = (
+    "'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', "
+    "'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif"
+)
+FONT_MONO = "'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', 'Courier New', monospace"
+
+# ── Plotly layout patch ──────────────────────────────────────────────────
+PLOTLY_LAYOUT: dict = {
+    "paper_bgcolor": PAPER,
+    "plot_bgcolor": PAPER,
+    "font": {"family": FONT_STACK, "size": 12, "color": INK},
+    "colorway": SECTOR_PALETTE,
+    "xaxis": {
+        "gridcolor": PAPER_RULE,
+        "linecolor": INK,
+        "linewidth": 1,
+        "zerolinecolor": INK,
+        "zerolinewidth": 1,
+        "tickfont": {"size": 11, "color": INK_2},
+        "showspikes": False,
+    },
+    "yaxis": {
+        "gridcolor": PAPER_RULE,
+        "linecolor": INK,
+        "linewidth": 1,
+        "zerolinecolor": INK,
+        "zerolinewidth": 1,
+        "tickfont": {"size": 11, "color": INK_2},
+        "tickformat": ",.2f",
+    },
+    "margin": {"l": 48, "r": 24, "t": 92, "b": 40},
+    "hovermode": "x unified",
+    "hoverlabel": {
+        "bgcolor": INK,
+        "bordercolor": INK,
+        "font": {"family": "Inter", "size": 11, "color": PAPER},
+    },
+    "showlegend": True,
+    "legend": {
+        "orientation": "h",
+        "yanchor": "bottom", "y": 1.06,
+        "xanchor": "left",   "x": 0,
+        "font": {"size": 11, "color": INK},
+        "bgcolor": "rgba(0,0,0,0)",
+    },
+    # Title sits in its own band at the container top; legend at y=1.06 of the
+    # plot area sits below it. margin.t=92 reserves room so they never collide
+    # (cccg-2 fix — title.yref=container vs legend.yref=paper were crammed in t=32).
+    "title": {
+        "xref": "container", "x": 0, "xanchor": "left",
+        "yref": "container", "y": 0.985, "yanchor": "top",
+        "font": {"size": 15, "color": INK},
+    },
+}
+
+
+def style_plotly(fig):
+    """Apply the CMSI/FT Plotly look to a figure: cream paper/plot bg, FT grid,
+    Inter font, sector colorway. Call right before st.plotly_chart. Idempotent.
+    Chart-specific title/height set before this call are preserved (PLOTLY_LAYOUT
+    does not set them).
+    """
+    fig.update_layout(template="plotly_white")
+    fig.update_layout(**PLOTLY_LAYOUT)
+    return fig
+
+
+# ── CSS ──────────────────────────────────────────────────────────────────
+_CSS = f"""
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+
+/* force light color-scheme — dodge OS dark-mode for canvas widgets */
+:root, html, body {{ color-scheme: light !important; }}
+
+/* base page */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
+  background: {PAPER} !important;
+  color: {INK} !important;
+  font-family: {FONT_STACK} !important;
+  font-size: 14px;
+  line-height: 20px;
+  font-feature-settings: 'tnum', 'ss01', 'cv11';
+  -webkit-font-smoothing: antialiased;
+}}
+[data-testid="stHeader"] {{
+  border-bottom: 2px solid {INK} !important;
+  height: 1px !important;
+}}
+[data-testid="stToolbar"] {{ background: {PAPER} !important; }}
+
+/* sidebar — Claude Design §4.4 (CSS-mapped onto Streamlit's native sidebar) */
+[data-testid="stSidebar"] {{
+  background: {PAPER_DEEP} !important;
+  border-right: 1px solid {PAPER_EDGE} !important;
+  min-width: 240px !important;
+}}
+[data-testid="stSidebar"] > div:first-child {{
+  padding-top: 1rem;
+}}
+[data-testid="stSidebar"] * {{
+  color: {INK_2} !important;
+  font-family: {FONT_STACK} !important;
+}}
+[data-testid="stSidebar"] [data-testid="stHeading"] h2,
+[data-testid="stSidebar"] [data-testid="stHeading"] h3 {{
+  font-size: 11px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.14em !important;
+  color: {INK_3} !important;
+  font-weight: 600 !important;
+  border-left: none !important;
+  border-bottom: none !important;
+  padding: 0 !important;
+  margin: 0 0 6px 0 !important;
+}}
+[data-testid="stSidebarNav"] ul li a,
+[data-testid="stSidebarNav"] a {{
+  border-left: 4px solid transparent;
+  padding-left: 16px !important;
+}}
+[data-testid="stSidebarNav"] a[aria-current="page"] {{
+  border-left-color: {CMSI_RED} !important;
+  background: {PAPER_BAND} !important;
+  color: {INK} !important;
+  font-weight: 600 !important;
+}}
+
+/* page typography — Claude Design §2 */
+.block-container {{ padding-top: 1.5rem !important; padding-bottom: 4rem !important; max-width: 1440px; }}
+h1, h2, h3, h4 {{
+  font-family: {FONT_STACK} !important;
+  color: {INK} !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+}}
+h1 {{ font-size: 32px !important; line-height: 36px !important; margin: 0 0 0.4rem 0 !important; border-bottom: 2px solid {INK}; padding-bottom: 0.6rem; }}
+h2 {{ font-size: 24px !important; line-height: 30px !important; margin: 1.5rem 0 1rem !important; border-top: 1px solid {INK}; border-left: none !important; border-bottom: none !important; padding: 0.6rem 0 0 0 !important; }}
+h3 {{ font-size: 18px !important; line-height: 24px !important; margin: 1.2rem 0 0.6rem !important; color: {INK_2} !important; font-weight: 600 !important; text-transform: none; letter-spacing: 0 !important; }}
+h4 {{ font-size: 14px !important; color: {INK_3} !important; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }}
+
+/* metric KPI — native st.metric inherits these (kpi_metric helper is preferred) */
+[data-testid="stMetric"] {{
+  background: {PAPER} !important;
+  border: 1px solid {PAPER_EDGE} !important;
+  border-radius: 0 !important;
+  padding: 14px 16px !important;
+}}
+[data-testid="stMetricValue"] {{
+  font-family: {FONT_STACK} !important;
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums lining-nums;
+  font-size: 30px !important;
+  line-height: 36px !important;
+  color: {INK} !important;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}}
+[data-testid="stMetricLabel"] {{
+  font-family: {FONT_STACK} !important;
+  font-size: 10px !important;
+  color: {INK_3} !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.12em !important;
+}}
+[data-testid="stMetricDelta"] {{
+  font-family: {FONT_STACK} !important;
+  font-feature-settings: 'tnum';
+  font-size: 12px !important;
+  font-weight: 600;
+}}
+
+/* captions */
+.stCaption, [data-testid="stCaptionContainer"] {{
+  color: {INK_3} !important;
+  font-family: {FONT_STACK} !important;
+  font-size: 11px !important;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}}
+
+/* dividers */
+hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important; }}
+
+/* buttons */
+.stButton button {{
+  background: {CMSI_RED} !important;
+  border: none !important;
+  color: {PAPER} !important;
+  font-family: {FONT_STACK} !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 2px !important;
+  padding: 0 16px !important;
+  height: 32px !important;
+}}
+.stButton button:hover {{ background: {CMSI_RED_DEEP} !important; }}
+
+/* dataframe — outer frame only; cell colors come from config.toml */
+[data-testid="stDataFrame"] {{
+  font-family: {FONT_STACK} !important;
+  font-feature-settings: 'tnum';
+  border: 1px solid {PAPER_EDGE};
+  border-radius: 0;
+}}
+
+/* selectbox / popover — light & cream-bordered */
+[data-baseweb="select"] > div {{
+  background-color: {PAPER} !important;
+  color: {INK} !important;
+  border-color: {PAPER_EDGE} !important;
+  border-radius: 2px !important;
+}}
+[data-baseweb="select"] input,
+[data-baseweb="select"] span {{ color: {INK} !important; }}
+[data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
+  background-color: {PAPER} !important;
+  border: 1px solid {PAPER_EDGE} !important;
+  border-radius: 2px !important;
+}}
+[data-baseweb="popover"] li,
+[data-baseweb="menu"] li,
+[role="option"] {{ color: {INK} !important; }}
+[data-baseweb="popover"] li:hover,
+[role="option"]:hover,
+[aria-selected="true"][role="option"] {{
+  background-color: {PAPER_BAND} !important;
+}}
+
+/* text input */
+[data-baseweb="input"] > div,
+[data-testid="stTextInput"] input {{
+  background-color: {PAPER} !important;
+  color: {INK} !important;
+  border-color: {PAPER_EDGE} !important;
+  border-radius: 2px !important;
+}}
+
+/* tabs — Claude Design §4.3 underline style, FT/Stripe-like */
+.stTabs [data-baseweb="tab-list"] {{
+  border-bottom: 1px solid {PAPER_RULE};
+  gap: 32px;
+}}
+.stTabs [data-baseweb="tab"] {{
+  font-family: {FONT_STACK} !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: {INK_3} !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  padding: 10px 0 !important;
+}}
+.stTabs [aria-selected="true"] {{
+  color: {CMSI_RED} !important;
+  border-bottom: 2px solid {CMSI_RED} !important;
+}}
+
+/* form widgets */
+.stSelectbox, .stTextInput, .stMultiSelect, .stRadio, .stCheckbox {{
+  font-family: {FONT_STACK} !important;
+}}
+.stAlert {{
+  font-family: {FONT_STACK} !important;
+  border-radius: 2px !important;
+  border-width: 1px !important;
+}}
+
+/* hide chrome */
+#MainMenu, footer, [data-testid="stStatusWidget"], [data-testid="stDeployButton"] {{
+  visibility: hidden !important;
+}}
+
+/* expander */
+[data-testid="stExpander"] {{
+  border: 1px solid {PAPER_EDGE} !important;
+  border-radius: 0 !important;
+  background: {PAPER} !important;
+}}
+[data-testid="stExpander"] summary {{
+  font-family: {FONT_STACK} !important;
+  font-weight: 600 !important;
+  color: {INK} !important;
+  font-size: 13px;
+}}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Editorial component classes (used by helpers below — kpi_metric etc.)
+   ────────────────────────────────────────────────────────────────────── */
+
+/* KPI metric card */
+.cmsi-kpi-strip {{
+  display: grid;
+  gap: 0;
+  border: 1px solid {PAPER_EDGE};
+  background: {PAPER};
+  margin: 0.4rem 0 1.2rem;
+}}
+.cmsi-kpi {{
+  padding: 14px 16px;
+  border-right: 1px solid {PAPER_EDGE};
+  position: relative;
+}}
+.cmsi-kpi:last-child {{ border-right: none; }}
+.cmsi-kpi-head {{ display: flex; justify-content: space-between; align-items: center; }}
+.cmsi-kpi-label {{
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: {INK_3};
+}}
+.cmsi-kpi-label b {{
+  color: {INK};
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+  margin-right: 6px;
+}}
+.cmsi-kpi-stamp {{
+  width: 4px;
+  height: 12px;
+  background: {CMSI_RED};
+  display: inline-block;
+}}
+.cmsi-kpi-num {{
+  font-size: 30px;
+  line-height: 36px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: {INK};
+  margin-top: 10px;
+  font-variant-numeric: tabular-nums lining-nums;
+  font-family: {FONT_STACK};
+}}
+.cmsi-kpi-delta {{
+  margin-top: 4px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  line-height: 16px;
+}}
+.cmsi-kpi-delta.up {{ color: {UP}; }}
+.cmsi-kpi-delta.down {{ color: {DOWN}; }}
+.cmsi-kpi-delta.flat {{ color: {FLAT}; }}
+.cmsi-kpi-delta .pct {{ margin-left: 8px; font-weight: 600; }}
+.cmsi-kpi-foot {{
+  margin-top: 8px;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: {INK_3};
+  text-transform: uppercase;
+  font-weight: 500;
+  font-family: {FONT_MONO};
+}}
+
+/* Page hero header — [NN/07] code + title + 4px red bar */
+.cmsi-page-hero {{
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin: 0 0 1rem 0;
+  border-bottom: 2px solid {INK};
+  padding-bottom: 0.6rem;
+}}
+.cmsi-page-hero .code {{
+  font-family: {FONT_MONO};
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: {INK_3};
+  font-weight: 500;
+}}
+.cmsi-page-hero .ttl {{
+  font-size: 32px;
+  line-height: 36px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: {INK};
+  margin: 0;
+}}
+.cmsi-page-hero .bar {{
+  display: inline-block;
+  width: 4px;
+  height: 24px;
+  background: {CMSI_RED};
+  vertical-align: middle;
+  margin-left: 4px;
+}}
+.cmsi-page-hero .meta {{
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: {INK_3};
+  font-weight: 500;
+  font-family: {FONT_MONO};
+}}
+.cmsi-page-hero .sub {{
+  display: block;
+  font-size: 12px;
+  color: {INK_3};
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  margin-top: 4px;
+}}
+
+/* Section header — Tier 2 (1px ink top + h2 + 4px red bar) */
+.cmsi-section {{
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 1.6rem 0 0.8rem;
+  border-top: 1px solid {INK};
+  padding-top: 10px;
+}}
+.cmsi-section .bar {{
+  width: 4px;
+  height: 18px;
+  background: {CMSI_RED};
+  display: inline-block;
+}}
+.cmsi-section .ttl {{
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 600;
+  color: {INK};
+}}
+.cmsi-section .meta {{
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: {INK_3};
+  font-weight: 500;
+  font-family: {FONT_MONO};
+}}
+"""
+
+
+def inject_css() -> None:
+    """Inject the global theme CSS. Call AFTER set_page_config.
+
+    Streamlit reruns on every interaction and rebuilds DOM, so inject every
+    call — no session-state guard (would skip subsequent renders).
+    """
+    st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
+
+
+# ── Editorial component helpers ──────────────────────────────────────────
+
+def page_header(code: str, title: str, meta: str | None = None,
+                subtitle: str | None = None) -> None:
+    """Render a Claude Design Tier-1 page header.
+
+    Replaces `st.title("📊 Multi-Domain Investment Dashboard")` with:
+        page_header("01 / 07", "Multi-Domain Investment Dashboard",
+                    meta="As of 2026-05-28 16:08 HKT")
+    """
+    meta_html = f'<span class="meta">{meta}</span>' if meta else ""
+    sub_html = f'<span class="sub">{subtitle}</span>' if subtitle else ""
+    st.markdown(
+        f'<div class="cmsi-page-hero">'
+        f'<span class="code">[{code}]</span>'
+        f'<h1 class="ttl">{title}<span class="bar"></span></h1>'
+        f'{meta_html}'
+        f'</div>{sub_html}',
+        unsafe_allow_html=True,
+    )
+
+
+def section_header(title: str, meta: str | None = None) -> None:
+    """Render a Claude Design Tier-2 section header (replaces st.subheader).
+
+    Use:
+        section_header("Top Movers · 5D", meta="Across 7 sectors")
+    """
+    meta_html = f'<span class="meta">{meta}</span>' if meta else ""
+    st.markdown(
+        f'<div class="cmsi-section">'
+        f'<span class="bar"></span>'
+        f'<span class="ttl">{title}</span>'
+        f'{meta_html}'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def kpi_metric(label: str, value: str, delta_abs: str | None = None,
+               delta_pct: str | None = None, foot: str | None = None,
+               direction: str = "flat") -> str:
+    """Render one KPI card. Returns the HTML — use kpi_strip([...]) to compose.
+
+    `direction` ∈ {'up', 'down', 'flat'} drives delta color.
+
+    Usage:
+        kpi_strip([
+            kpi_metric("HSI · HANG SENG", "19,247.82",
+                       delta_abs="▲ +183.42", delta_pct="+0.96%",
+                       foot="AS OF 28 MAY · 16:08 HKT", direction="up"),
+            kpi_metric("S&P 500", "5,328.10", direction="flat"),
+        ])
+    """
+    delta_html = ""
+    if delta_abs or delta_pct:
+        parts = []
+        if delta_abs:
+            parts.append(f'<span class="abs">{delta_abs}</span>')
+        if delta_pct:
+            parts.append(f'<span class="pct">{delta_pct}</span>')
+        delta_html = f'<div class="cmsi-kpi-delta {direction}">{"".join(parts)}</div>'
+    foot_html = f'<div class="cmsi-kpi-foot">{foot}</div>' if foot else ""
+
+    return dedent(f"""
+        <div class="cmsi-kpi">
+          <div class="cmsi-kpi-head">
+            <span class="cmsi-kpi-label">{label}</span>
+            <span class="cmsi-kpi-stamp"></span>
+          </div>
+          <div class="cmsi-kpi-num">{value}</div>
+          {delta_html}
+          {foot_html}
+        </div>
+    """).strip()
+
+
+def kpi_strip(cards: list[str]) -> None:
+    """Render multiple KPI cards in a grid strip (1 row, N cols)."""
+    n = len(cards) or 1
+    body = "".join(cards)
+    st.markdown(
+        f'<div class="cmsi-kpi-strip" style="grid-template-columns:repeat({n},1fr);">'
+        f'{body}</div>',
+        unsafe_allow_html=True,
+    )

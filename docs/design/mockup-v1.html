@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>CMSI · Healthcare Research Portal — Design Mockup</title>
+<template id="__bundler_thumbnail" data-bg-color="#fff1e5">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#fff1e5"/>
+    <rect x="0" y="0" width="6" height="800" fill="#c8102e"/>
+    <text x="80" y="180" font-family="Inter,sans-serif" font-size="120" font-weight="700" fill="#1a1a1a">CMSI</text>
+    <text x="80" y="240" font-family="Inter,sans-serif" font-size="28" font-weight="600" fill="#c8102e" letter-spacing="6">HEALTHCARE · RESEARCH</text>
+    <rect x="80" y="320" width="1040" height="2" fill="#1a1a1a"/>
+    <text x="80" y="400" font-family="Inter,sans-serif" font-size="44" font-weight="600" fill="#1a1a1a">Coverage · 28 names</text>
+    <text x="80" y="460" font-family="Inter,sans-serif" font-size="20" fill="#4a4a4a">FT editorial · sell-side institutional</text>
+  </svg>
+</template>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CMSI HC RESEARCH · Design System v1.0 — token + component CSS
+   ============================================================ */
+:root{
+  /* brand */
+  --cmsi-red:#c8102e; --cmsi-red-deep:#9c0e25; --cmsi-red-tint:#fbe9ec; --cmsi-red-band:#f2dfce;
+  /* paper */
+  --paper:#fff1e5; --paper-deep:#f9e6d4; --paper-band:#f2dfce; --paper-rule:#ebd9c8; --paper-edge:#d4c4b0;
+  /* ink */
+  --ink:#1a1a1a; --ink-2:#4a4a4a; --ink-3:#8a8580; --ink-4:#b8b1a8;
+  /* signal */
+  --up:#0d7680; --up-deep:#0a5a62; --up-tint:#d9e8e6;
+  --down:#cc0000; --down-deep:#a30000; --down-tint:#f7d9d9;
+  --flat:#8a8580;
+  /* sector */
+  --s-1:#c8102e; --s-2:#0d7680; --s-3:#a07a2c; --s-4:#4a6fa5;
+  --s-5:#8b3a62; --s-6:#5d7c3a; --s-7:#6b4423;
+  /* font */
+  --font-sans:'Inter','PingFang SC','Hiragino Sans GB','Noto Sans SC','Microsoft YaHei',sans-serif;
+  --font-mono:'JetBrains Mono','IBM Plex Mono','SF Mono','Courier New',monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--paper);color:var(--ink);font-family:var(--font-sans);font-size:14px;line-height:20px;font-feature-settings:"tnum","ss01","cv11";-webkit-font-smoothing:antialiased;}
+.tnum{font-variant-numeric:tabular-nums lining-nums;font-feature-settings:"tnum"}
+.up{color:var(--up)} .down{color:var(--down)} .flat{color:var(--flat)}
+.mono{font-family:var(--font-mono)}
+.eyebrow{font-size:11px;line-height:14px;font-weight:600;text-transform:uppercase;letter-spacing:.10em;color:var(--ink-3)}
+.micro{font-size:11px;line-height:14px;color:var(--ink-3);letter-spacing:.02em}
+
+/* ===== App shell ===== */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:100vh;}
+
+/* ===== Sidebar ===== */
+.sb{background:var(--paper-deep);border-right:1px solid var(--paper-edge);padding:24px 0 24px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;}
+.sb-brand{padding:0 24px 20px;display:flex;gap:10px;align-items:flex-start;border-bottom:1px solid var(--paper-rule);}
+.sb-brand .bar{width:4px;height:36px;background:var(--cmsi-red);flex:0 0 4px;margin-top:2px}
+.sb-brand .id .name{font-size:18px;font-weight:600;letter-spacing:.04em;color:var(--ink);line-height:22px}
+.sb-brand .id .sub{font-size:10px;letter-spacing:.10em;color:var(--ink-3);text-transform:uppercase;margin-top:4px;font-weight:500}
+.sb-group{padding:18px 24px 6px;}
+.sb-group .h{font-size:10px;letter-spacing:.14em;color:var(--ink-3);text-transform:uppercase;font-weight:600;margin-bottom:6px}
+.sb-nav{display:flex;flex-direction:column;}
+.sb-item{display:flex;align-items:center;height:32px;padding-left:24px;font-size:13px;color:var(--ink-2);text-decoration:none;position:relative;cursor:pointer;line-height:32px;}
+.sb-item:hover{background:var(--paper-band);}
+.sb-item.active{background:var(--paper-band);color:var(--ink);font-weight:600;}
+.sb-item.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cmsi-red);}
+.sb-input{margin:0 24px;background:var(--paper);border:1px solid var(--paper-edge);border-radius:2px;height:32px;display:flex;align-items:center;padding:0 10px;font-size:13px;color:var(--ink);}
+.sb-input .tk{font-family:var(--font-mono);font-weight:700;font-size:12px;letter-spacing:.04em;color:var(--ink)}
+.sb-input .nm{margin-left:6px;color:var(--ink-3);font-size:12px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sb-input .ch{color:var(--ink-3);font-size:12px}
+.sb-foot{margin-top:auto;padding:16px 24px 0;border-top:1px solid var(--paper-rule);}
+.sb-foot .row{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.06em;color:var(--ink-3);text-transform:uppercase;font-weight:500;margin-bottom:4px;}
+
+/* ===== Main ===== */
+.main{padding:32px 32px 64px;max-width:1200px;}
+
+/* ===== Top status strip ===== */
+.status{display:flex;justify-content:space-between;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:10px;margin-bottom:24px;}
+.status .left{display:flex;gap:18px;align-items:baseline}
+.status .crumb{font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.status .crumb b{color:var(--ink);font-weight:600}
+.status .right{display:flex;gap:16px;align-items:baseline;font-size:11px;letter-spacing:.04em;color:var(--ink-3);font-family:var(--font-mono)}
+.status .right .live{color:var(--cmsi-red);font-weight:700}
+.status .right .live::before{content:"●";margin-right:4px}
+
+/* ===== Section header (Tier 1) ===== */
+.sec-1{display:flex;align-items:baseline;gap:16px;margin:24px 0 18px;position:relative;}
+.sec-1 .code{font-family:var(--font-mono);font-size:11px;letter-spacing:.10em;color:var(--ink-3);font-weight:500}
+.sec-1 .ttl{font-size:24px;line-height:30px;font-weight:600;letter-spacing:-.01em;margin:0}
+.sec-1 .meta{margin-left:auto;font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.sec-1 .bar{display:inline-block;width:4px;height:18px;background:var(--cmsi-red);vertical-align:middle;margin-left:4px}
+
+/* ===== Section header (Tier 2) ===== */
+.sec-2{display:flex;align-items:baseline;gap:10px;margin:28px 0 14px;border-top:1px solid var(--ink);padding-top:10px;}
+.sec-2 .bar{width:4px;height:18px;background:var(--cmsi-red);}
+.sec-2 h2{font-size:18px;line-height:24px;font-weight:600;margin:0;color:var(--ink)}
+.sec-2 .meta{margin-left:auto;font-size:11px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+
+/* ===== KPI strip ===== */
+.kpi-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--paper-edge);background:var(--paper);}
+.kpi{padding:14px 16px 14px;border-right:1px solid var(--paper-edge);position:relative;}
+.kpi:last-child{border-right:none}
+.kpi .head{display:flex;justify-content:space-between;align-items:center;}
+.kpi .label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--ink-3)}
+.kpi .label b{color:var(--ink);font-weight:600;letter-spacing:.04em;font-size:11px;margin-right:6px}
+.kpi .stamp{width:4px;height:12px;background:var(--cmsi-red)}
+.kpi .num{font-size:30px;line-height:36px;font-weight:500;letter-spacing:-.02em;color:var(--ink);margin-top:10px;font-variant-numeric:tabular-nums}
+.kpi .delta{margin-top:4px;font-size:12px;font-variant-numeric:tabular-nums;line-height:16px;}
+.kpi .delta .pct{margin-left:8px;font-weight:600}
+.kpi .foot{margin-top:8px;font-size:10px;letter-spacing:.04em;color:var(--ink-3);text-transform:uppercase;font-weight:500;font-family:var(--font-mono)}
+
+/* ===== Tabs ===== */
+.tabs-row{display:flex;align-items:center;border-bottom:1px solid var(--paper-rule);margin-top:18px;}
+.tabs{display:flex;gap:0}
+.tab{padding:10px 0;margin-right:32px;font-size:11px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;color:var(--ink-3);cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:baseline;gap:8px;}
+.tab .cnt{font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;font-weight:700;color:var(--ink-4)}
+.tab.active{color:var(--cmsi-red);border-bottom-color:var(--cmsi-red);}
+.tab.active .cnt{color:var(--cmsi-red)}
+.tab:hover:not(.active){color:var(--ink-2)}
+.tab:hover:not(.active) .cnt{color:var(--ink-3)}
+.tabs-row .actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.toggle{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-3);font-weight:600;cursor:pointer;padding:6px 10px;border:1px solid var(--paper-edge);border-radius:2px;background:var(--paper);}
+.toggle .dot{width:6px;height:6px;background:var(--ink-4);border-radius:50%}
+.toggle.on{color:var(--cmsi-red);border-color:var(--cmsi-red);}
+.toggle.on .dot{background:var(--cmsi-red)}
+
+/* ===== Coverage table ===== */
+.tbl-wrap{margin-top:0;border-bottom:1px solid var(--paper-rule);overflow:auto;background:var(--paper);}
+table.cov{width:100%;border-collapse:collapse;font-size:13px;}
+table.cov thead th{
+  background:var(--paper-band);color:var(--cmsi-red);
+  font-size:10px;letter-spacing:.10em;text-transform:uppercase;font-weight:600;
+  padding:10px 12px;text-align:right;border-bottom:1px solid var(--cmsi-red);
+  white-space:nowrap;cursor:pointer;user-select:none;position:sticky;top:0;z-index:2;
+}
+table.cov thead th.l{text-align:left}
+table.cov thead th .arr{display:inline-block;width:8px;color:var(--cmsi-red);margin-left:4px;opacity:.5;font-size:9px}
+table.cov thead th.sort .arr{opacity:1}
+table.cov tbody td{padding:0 12px;height:36px;text-align:right;font-variant-numeric:tabular-nums lining-nums;border-bottom:1px solid var(--paper-rule);white-space:nowrap;color:var(--ink-2);}
+table.cov tbody td.l{text-align:left}
+table.cov tbody tr:hover td{background:var(--paper-band)}
+table.cov td.tk{font-family:var(--font-mono);font-weight:700;color:var(--ink);font-size:12px;letter-spacing:.04em;position:sticky;left:0;background:var(--paper);border-right:1px solid var(--paper-edge);z-index:1}
+table.cov tr:hover td.tk{background:var(--paper-band)}
+table.cov thead th.tk{position:sticky;left:0;z-index:3;border-right:1px solid var(--paper-edge);background:var(--paper-band)}
+table.cov td.nm{color:var(--ink);font-weight:500;text-align:left}
+table.cov td.nm small{display:block;font-size:10px;font-weight:500;color:var(--ink-3);letter-spacing:.04em;text-transform:uppercase;margin-top:1px;line-height:12px}
+table.cov td.num-strong{color:var(--ink);font-weight:500}
+.chip{display:inline-flex;align-items:center;height:16px;padding:0 5px;font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;border-radius:2px;margin-right:6px;vertical-align:1px}
+.chip-hk{background:var(--ink);color:var(--paper)}
+.chip-us{background:var(--paper);border:1px solid var(--ink);color:var(--ink)}
+.chip-cn{background:var(--cmsi-red);color:var(--paper)}
+.gly{display:inline-block;width:8px;text-align:center;margin-right:2px;font-size:8px;vertical-align:1px}
+.tbl-foot{display:flex;justify-content:space-between;padding:10px 0 0;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:500;}
+
+/* heatmap mode opt-in via .heat */
+table.cov.heat td.heat{position:relative}
+
+/* ===== Right rail Top Movers card ===== */
+.split{display:grid;grid-template-columns:1fr 320px;gap:24px;margin-top:24px;}
+.movers{border:1px solid var(--paper-edge);background:var(--paper);padding:16px 18px;}
+.movers .h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;border-bottom:1px solid var(--paper-rule);padding-bottom:8px;}
+.movers .h .t{font-size:13px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px}
+.movers .h .t i{width:4px;height:14px;background:var(--cmsi-red);display:inline-block}
+.movers .h .m{font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink-3);font-weight:500}
+.movers ol{margin:0;padding:0;list-style:none}
+.movers li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;padding:6px 0;border-bottom:1px dotted var(--paper-rule);align-items:baseline;}
+.movers li:last-child{border-bottom:none}
+.movers li .rk{font-family:var(--font-mono);color:var(--ink-3);font-size:10px;font-weight:700;letter-spacing:.04em}
+.movers li .nm{font-size:12.5px;color:var(--ink-2)}
+.movers li .nm b{display:block;font-family:var(--font-mono);font-size:11.5px;color:var(--ink);font-weight:700;letter-spacing:.04em;line-height:14px}
+.movers li .pct{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+
+/* footer */
+.page-foot{display:flex;justify-content:space-between;border-top:1px solid var(--paper-rule);margin-top:32px;padding-top:10px;font-size:10px;color:var(--ink-3);letter-spacing:.06em;text-transform:uppercase;font-weight:500;}
+
+/* Annotation pins (only on this mock — DON'T ship) */
+.ann{display:none;position:absolute;font-size:9px;letter-spacing:.06em;color:var(--cmsi-red);font-family:var(--font-mono);font-weight:700;background:var(--paper);border:1px dashed var(--cmsi-red);padding:1px 4px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ========== SIDEBAR ========== -->
+  <aside class="sb">
+    <div class="sb-brand">
+      <div class="bar"></div>
+      <div class="id">
+        <div class="name">CMSI</div>
+        <div class="sub">招商证券国际 · HC Research</div>
+      </div>
+    </div>
+
+    <div class="sb-group">
+      <div class="h">Navigation</div>
+      <div class="sb-nav">
+        <a class="sb-item">Home</a>
+        <a class="sb-item">Ticker Drill</a>
+        <a class="sb-item active">Coverage</a>
+        <a class="sb-item">Healthcare Overview</a>
+        <a class="sb-item">Sector Heatmap</a>
+        <a class="sb-item">Strategy Picks</a>
+        <a class="sb-item">Valuation Scanner</a>
+      </div>
+    </div>
+
+    <div class="sb-group">
+      <div class="h">Jump to ticker</div>
+    </div>
+    <div class="sb-input">
+      <span class="tk">0700.HK</span>
+      <span class="nm">Tencent Holdings</span>
+      <span class="ch">⌄</span>
+    </div>
+
+    <div class="sb-group" style="padding-top:18px">
+      <div class="h">Quick filter</div>
+    </div>
+    <div class="sb-input" style="margin-bottom:8px">
+      <span class="nm" style="margin-left:0">All sectors</span>
+      <span class="ch">⌄</span>
+    </div>
+    <div class="sb-input">
+      <span class="nm" style="margin-left:0">Mcap ≥ 1B USD</span>
+      <span class="ch">⌄</span>
+    </div>
+
+    <div class="sb-foot">
+      <div class="row"><span>As of</span><span>28 May 2026</span></div>
+      <div class="row"><span>Time</span><span>16:08 HKT</span></div>
+      <div class="row"><span>Data</span><span>FactSet · Wind</span></div>
+      <div class="row"><span>Analyst</span><span>G. Chen</span></div>
+    </div>
+  </aside>
+
+  <!-- ========== MAIN ========== -->
+  <main class="main">
+
+    <!-- Status strip -->
+    <div class="status">
+      <div class="left">
+        <span class="crumb">CMSI HC RESEARCH · <b>COVERAGE</b></span>
+      </div>
+      <div class="right">
+        <span class="live">LIVE · 16:08 HKT</span>
+        <span>HSI 19,247.82</span>
+        <span class="up">+0.96%</span>
+        <span>·</span>
+        <span>XBI 78.42</span>
+        <span class="down">-0.83%</span>
+        <span>·</span>
+        <span>USDHKD 7.8412</span>
+      </div>
+    </div>
+
+    <!-- Page section header -->
+    <div class="sec-1">
+      <span class="code">[ 03 / 07 ]</span>
+      <h1 class="ttl">CMSI Coverage</h1>
+      <span class="meta">28 TICKERS · HK 15 / US 10 / CN 3 · UPDATED 16:08 HKT<i class="bar"></i></span>
+    </div>
+
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <div class="kpi">
+        <div class="head"><span class="label"><b>HSI</b>HANG SENG</span><span class="stamp"></span></div>
+        <div class="num">19,247.82</div>
+        <div class="delta up"><span class="gly">▲</span>+183.42<span class="pct">+0.96%</span></div>
+        <div class="foot">16:08 HKT · SPOT</div>
+      </div>
+      <div class="kpi">
+        <div class="head"><span class="label"><b>HSCEI</b>H-SHARES</span><span class="stamp"></span></div>
+        <div class="num">6,894.51</div>
+        <div class="delta up"><span class="gly">▲</span>+74.18<span class="pct">+1.09%</span></div>
+        <div class="foot">16:08 HKT · SPOT</div>
+      </div>
+      <div class="kpi">
+        <div class="head"><span class="label"><b>SPX</b>S&amp;P 500</span><span class="stamp"></span></div>
+        <div class="num">5,842.34</div>
+        <div class="delta up"><span class="gly">▲</span>+11.27<span class="pct">+0.19%</span></div>
+        <div class="foot">PREV CLOSE · 27 MAY</div>
+      </div>
+      <div class="kpi">
+        <div class="head"><span class="label"><b>NDX</b>NASDAQ-100</span><span class="stamp"></span></div>
+        <div class="num">20,431.08</div>
+        <div class="delta down"><span class="gly">▼</span>-58.42<span class="pct">-0.29%</span></div>
+        <div class="foot">PREV CLOSE · 27 MAY</div>
+      </div>
+      <div class="kpi">
+        <div class="head"><span class="label"><b>XBI</b>BIOTECH ETF</span><span class="stamp"></span></div>
+        <div class="num">78.42</div>
+        <div class="delta down"><span class="gly">▼</span>-0.66<span class="pct">-0.83%</span></div>
+        <div class="foot">PREV CLOSE · 27 MAY</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-row">
+      <div class="tabs">
+        <div class="tab active">HK <span class="cnt">15</span></div>
+        <div class="tab">US <span class="cnt">10</span></div>
+        <div class="tab">CN <span class="cnt">3</span></div>
+        <div class="tab">ALL <span class="cnt">28</span></div>
+      </div>
+      <div class="actions">
+        <div class="toggle"><span class="dot"></span>Heatmap</div>
+        <div class="toggle on"><span class="dot"></span>Tabular nums</div>
+        <div class="toggle">Export CSV</div>
+      </div>
+    </div>
+
+    <!-- Coverage table -->
+    <div class="tbl-wrap">
+      <table class="cov" id="cov">
+        <thead>
+          <tr>
+            <th class="l tk sort" data-k="t" data-type="s">Ticker <span class="arr">▲</span></th>
+            <th class="l" data-k="n" data-type="s">Name <span class="arr"></span></th>
+            <th data-k="mcap" data-type="n">Mcap $B <span class="arr"></span></th>
+            <th data-k="ytd" data-type="n">YTD % <span class="arr"></span></th>
+            <th data-k="m1" data-type="n">1M % <span class="arr"></span></th>
+            <th data-k="d5" data-type="n">5D % <span class="arr"></span></th>
+            <th data-k="d1" data-type="n">1D % <span class="arr"></span></th>
+            <th data-k="vh" data-type="n">vs HSI <span class="arr"></span></th>
+            <th data-k="tpe" data-type="n">Trail P/E <span class="arr"></span></th>
+            <th data-k="fpe" data-type="n">Fwd P/E <span class="arr"></span></th>
+            <th data-k="evb" data-type="n">EV/EBITDA <span class="arr"></span></th>
+            <th data-k="fcf" data-type="n">FCF Yld % <span class="arr"></span></th>
+            <th data-k="pb" data-type="n">P/B <span class="arr"></span></th>
+          </tr>
+        </thead>
+        <tbody id="cov-body"></tbody>
+      </table>
+    </div>
+
+    <div class="tbl-foot">
+      <span>SOURCE · FACTSET · WIND · COMPANY FILINGS</span>
+      <span>SORT BY HEADER · 28 ROWS LOADED FROM 28</span>
+    </div>
+
+    <!-- Split: Top Movers / Top Laggards -->
+    <div class="split" style="grid-template-columns:1fr 1fr;">
+      <div class="movers">
+        <div class="h">
+          <div class="t"><i></i>Top Movers · 5D</div>
+          <div class="m">28 MAY · 16:08</div>
+        </div>
+        <ol>
+          <li><span class="rk">01</span><div class="nm"><b>2269.HK</b>WuXi Biologics</div><span class="pct up">+8.42%</span></li>
+          <li><span class="rk">02</span><div class="nm"><b>BGNE.O</b>BeiGene</div><span class="pct up">+6.18%</span></li>
+          <li><span class="rk">03</span><div class="nm"><b>1093.HK</b>CSPC Pharmaceutical</div><span class="pct up">+4.91%</span></li>
+          <li><span class="rk">04</span><div class="nm"><b>300760.SZ</b>Mindray Medical</div><span class="pct up">+3.84%</span></li>
+          <li><span class="rk">05</span><div class="nm"><b>0853.HK</b>MicroPort Scientific</div><span class="pct up">+3.22%</span></li>
+        </ol>
+      </div>
+      <div class="movers">
+        <div class="h">
+          <div class="t"><i style="background:var(--down)"></i>Top Laggards · 5D</div>
+          <div class="m">28 MAY · 16:08</div>
+        </div>
+        <ol>
+          <li><span class="rk">01</span><div class="nm"><b>MRNA.O</b>Moderna</div><span class="pct down">-7.41%</span></li>
+          <li><span class="rk">02</span><div class="nm"><b>2196.HK</b>Shanghai Fosun Pharma</div><span class="pct down">-5.83%</span></li>
+          <li><span class="rk">03</span><div class="nm"><b>BNTX.O</b>BioNTech</div><span class="pct down">-4.52%</span></li>
+          <li><span class="rk">04</span><div class="nm"><b>6160.HK</b>BeiGene HK</div><span class="pct down">-3.91%</span></li>
+          <li><span class="rk">05</span><div class="nm"><b>002007.SZ</b>Hualan Biological</div><span class="pct down">-3.04%</span></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Section divider Tier 2 demo -->
+    <div class="sec-2">
+      <i class="bar"></i>
+      <h2>Note · Section divider demo</h2>
+      <span class="meta">REPLACES st.divider</span>
+    </div>
+    <p style="font-size:13px;color:var(--ink-2);line-height:20px;max-width:780px;margin:0;">
+      上方 2px 顶线 + 4px CMSI 红竖条 + 18px 600 标题 + 右侧 11px UPPERCASE meta 是 Tier 2 section header 标配。替换所有 <code style="font-family:var(--font-mono);font-size:12px;background:var(--paper-band);padding:1px 4px;">st.divider()</code> 调用。Tier 1 (页面顶)、Tier 3 (子区) 见 DESIGN.md §4.5。
+    </p>
+
+    <div class="page-foot">
+      <span>CMSI · HC RESEARCH · INTERNAL USE</span>
+      <span>DESIGN SYSTEM v1.0 · 28 MAY 2026</span>
+    </div>
+
+  </main>
+
+</div>
+
+<script>
+/* ============== Coverage data (12 rows demo, HK tab) ============== */
+const ROWS=[
+  {t:"1093.HK",n:"CSPC Pharmaceutical",sec:"创新药 · HK",reg:"HK",mcap:18.24,ytd:12.4,m1:3.20,d5:4.91,d1:0.83,vh:-0.13,tpe:14.2,fpe:11.8,evb:9.4,fcf:6.1,pb:2.4},
+  {t:"2269.HK",n:"WuXi Biologics",sec:"CXO · HK",reg:"HK",mcap:24.18,ytd:-8.32,m1:-2.10,d5:8.42,d1:0.12,vh:-0.84,tpe:22.4,fpe:18.6,evb:14.2,fcf:3.2,pb:3.1},
+  {t:"2359.HK",n:"WuXi AppTec",sec:"CXO · HK",reg:"HK",mcap:14.62,ytd:-4.91,m1:-1.20,d5:2.84,d1:-0.42,vh:-1.38,tpe:18.6,fpe:15.2,evb:12.4,fcf:4.4,pb:2.6},
+  {t:"1177.HK",n:"Sino Biopharmaceutical",sec:"创新药 · HK",reg:"HK",mcap:8.92,ytd:24.18,m1:6.42,d5:2.10,d1:1.14,vh:0.18,tpe:11.4,fpe:10.2,evb:8.1,fcf:7.4,pb:1.8},
+  {t:"1801.HK",n:"Innovent Biologics",sec:"创新药 · HK",reg:"HK",mcap:11.84,ytd:38.42,m1:10.84,d5:1.91,d1:0.42,vh:-0.54,tpe:0,fpe:42.8,evb:38.4,fcf:-2.1,pb:4.2},
+  {t:"6160.HK",n:"BeiGene",sec:"创新药 · HK",reg:"HK",mcap:21.94,ytd:-12.42,m1:-4.10,d5:-3.91,d1:-1.42,vh:-2.38,tpe:0,fpe:0,evb:0,fcf:-4.2,pb:5.4},
+  {t:"2196.HK",n:"Shanghai Fosun Pharma",sec:"创新药 · HK",reg:"HK",mcap:6.42,ytd:-18.42,m1:-7.20,d5:-5.83,d1:-2.10,vh:-3.06,tpe:18.4,fpe:14.2,evb:11.8,fcf:2.1,pb:0.84},
+  {t:"3692.HK",n:"Hansoh Pharmaceutical",sec:"创新药 · HK",reg:"HK",mcap:9.18,ytd:8.42,m1:2.18,d5:1.42,d1:0.20,vh:-0.76,tpe:16.2,fpe:13.8,evb:10.4,fcf:5.2,pb:2.1},
+  {t:"3320.HK",n:"China Resources Pharma",sec:"医药流通 · HK",reg:"HK",mcap:4.18,ytd:6.20,m1:1.42,d5:0.84,d1:0.10,vh:-0.86,tpe:9.4,fpe:8.6,evb:6.8,fcf:8.4,pb:0.92},
+  {t:"0853.HK",n:"MicroPort Scientific",sec:"医疗器械 · HK",reg:"HK",mcap:3.84,ytd:-4.12,m1:1.84,d5:3.22,d1:0.54,vh:-0.42,tpe:0,fpe:32.4,evb:24.1,fcf:-1.4,pb:1.62},
+  {t:"1099.HK",n:"Sinopharm Group",sec:"医药流通 · HK",reg:"HK",mcap:7.82,ytd:2.42,m1:0.84,d5:0.20,d1:0.04,vh:-0.92,tpe:6.8,fpe:6.2,evb:5.4,fcf:9.6,pb:0.78},
+  {t:"1066.HK",n:"Shandong Weigao",sec:"医疗器械 · HK",reg:"HK",mcap:2.18,ytd:-2.84,m1:-0.92,d5:1.18,d1:0.32,vh:-0.64,tpe:11.8,fpe:10.2,evb:7.6,fcf:6.8,pb:1.24},
+  {t:"2120.HK",n:"Wuxi XDC",sec:"CXO · HK",reg:"HK",mcap:5.84,ytd:42.18,m1:12.42,d5:2.84,d1:1.18,vh:0.22,tpe:0,fpe:38.4,evb:32.1,fcf:-0.84,pb:6.42},
+  {t:"6618.HK",n:"JD Health",sec:"医药流通 · HK",reg:"HK",mcap:8.42,ytd:18.42,m1:4.18,d5:1.92,d1:0.42,vh:-0.54,tpe:38.4,fpe:24.6,evb:18.2,fcf:3.4,pb:2.84},
+  {t:"2616.HK",n:"CStone Pharmaceuticals",sec:"创新药 · HK",reg:"HK",mcap:1.42,ytd:-24.18,m1:-8.42,d5:-4.18,d1:-1.84,vh:-2.80,tpe:0,fpe:0,evb:0,fcf:-12.4,pb:2.18},
+];
+
+const tbody=document.getElementById('cov-body');
+const fmtN=(v,k)=>{
+  if(v===0 && (k==='tpe'||k==='fpe'||k==='evb')) return '<span style="color:var(--ink-3)">NM</span>';
+  if(k==='mcap') return v.toFixed(2);
+  if(k==='tpe'||k==='fpe'||k==='evb'||k==='pb') return v.toFixed(1);
+  if(['ytd','m1','d5','d1','vh','fcf'].includes(k)){
+    const cls = v>0?'up':(v<0?'down':'flat');
+    const sign = v>0?'+':(v<0?'':'');
+    const gly = v>0?'<span class="gly">▲</span>':(v<0?'<span class="gly">▼</span>':'<span class="gly">·</span>');
+    return `<span class="${cls}">${gly}${sign}${v.toFixed(2)}%</span>`;
+  }
+  return v;
+};
+const render = (rows)=>{
+  tbody.innerHTML = rows.map(r=>{
+    return `<tr>
+      <td class="l tk">${r.t}</td>
+      <td class="l nm">${r.n}<small>${r.sec}</small></td>
+      <td class="num-strong">${fmtN(r.mcap,'mcap')}</td>
+      <td>${fmtN(r.ytd,'ytd')}</td>
+      <td>${fmtN(r.m1,'m1')}</td>
+      <td>${fmtN(r.d5,'d5')}</td>
+      <td>${fmtN(r.d1,'d1')}</td>
+      <td>${fmtN(r.vh,'vh')}</td>
+      <td>${fmtN(r.tpe,'tpe')}</td>
+      <td>${fmtN(r.fpe,'fpe')}</td>
+      <td>${fmtN(r.evb,'evb')}</td>
+      <td>${fmtN(r.fcf,'fcf')}</td>
+      <td>${fmtN(r.pb,'pb')}</td>
+    </tr>`;
+  }).join('');
+};
+render(ROWS);
+
+/* Sort */
+let sortKey='t', sortDir=1;
+document.querySelectorAll('#cov thead th').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.k, type=th.dataset.type;
+    if(!k) return;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=1; }
+    document.querySelectorAll('#cov thead th').forEach(x=>{
+      x.classList.remove('sort');
+      const a=x.querySelector('.arr'); if(a) a.textContent='';
+    });
+    th.classList.add('sort');
+    th.querySelector('.arr').textContent = sortDir>0 ? '▲' : '▼';
+    const sorted = [...ROWS].sort((a,b)=>{
+      const va=a[k], vb=b[k];
+      if(type==='n'){ return (va-vb)*sortDir; }
+      return String(va).localeCompare(String(vb))*sortDir;
+    });
+    render(sorted);
+  });
+});
+/* default sort indicator */
+document.querySelector('#cov thead th[data-k="t"]').classList.add('sort');
+document.querySelector('#cov thead th[data-k="t"] .arr').textContent='▲';
+
+/* Heatmap toggle */
+const heatBtn = [...document.querySelectorAll('.toggle')].find(b=>b.textContent.trim().startsWith('Heatmap'));
+heatBtn.addEventListener('click',()=>{
+  heatBtn.classList.toggle('on');
+  const on = heatBtn.classList.contains('on');
+  document.querySelectorAll('#cov tbody td').forEach((td,i)=>{
+    const colIdx = i%13;
+    // YTD..vsHSI..FCF columns = 3,4,5,6,7,11
+    if(![3,4,5,6,7,11].includes(colIdx)) return;
+    const sp=td.querySelector('span'); if(!sp) return;
+    const txt = sp.textContent.replace(/[▲▼·+%]/g,'').trim();
+    const v = parseFloat(txt) * (sp.classList.contains('down')?-1:1);
+    if(isNaN(v)) return;
+    if(!on){ td.style.background=''; return; }
+    const k = Math.min(Math.abs(v)/20, 1) * 0.12;
+    if(v>0) td.style.background=`rgba(13,118,128,${k})`;
+    else if(v<0) td.style.background=`rgba(204,0,0,${k})`;
+  });
+});
+
+/* Tabs: HK / US / CN / All — visual only on mock */
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

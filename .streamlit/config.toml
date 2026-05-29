@@ -1,14 +1,18 @@
 [theme]
-base = "dark"
-primaryColor = "#22c55e"
-backgroundColor = "#0f172a"
-secondaryBackgroundColor = "#1e293b"
-textColor = "#e2e8f0"
+base = "light"
+primaryColor = "#c8102e"
+backgroundColor = "#fff1e5"
+secondaryBackgroundColor = "#f2dfce"
+textColor = "#33302e"
 font = "sans serif"
+
+# Streamlit 1.36+ official dataframe theme keys.
+# bodyCellBg = theme.backgroundColor; header uses these explicit keys.
+dataframeHeaderBackgroundColor = "#f2dfce"
+dataframeBorderColor = "#d9c7b6"
 
 [server]
 headless = true
-enableCORS = false
 enableXsrfProtection = true
 
 [browser]

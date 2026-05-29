@@ -17,6 +17,7 @@ from lib import format as fmt
 from lib import strategy as strat
 from lib import charts
 from lib import ui
+from lib import theme
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -28,10 +29,10 @@ st.set_page_config(
 with st.sidebar:
     ui.sidebar_search(key_prefix="strategy")
     st.divider()
-    st.subheader("⚙️ Chart Settings")
+    st.subheader("Chart Settings")
     show_lines = st.checkbox("Show individual ticker lines", value=False, help="Display translucent lines for every ticker in the portfolio.")
 
-st.title("🧬 Strategy Picks Performance")
+theme.page_header("06 / 07", "Strategy Picks Performance")
 st.caption(
     "v4 / v5 biotech + HK 高股息 since-inception cumulative returns vs benchmark. "
     "Data source: ic-foundry ledger.db + scoring Excel, picks fetched live via yfinance."
@@ -53,10 +54,10 @@ def render_strategy(strat_id: str) -> None:
     n_picks = len(picks)
     days_since = (pd.Timestamp.now().normalize() - pd.Timestamp(pick_date)).days
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("📅 Pick date", pick_date)
-    c2.metric("📊 # picks", n_picks)
-    c3.metric("📆 Days since", days_since)
-    c4.metric("📐 Benchmark", bench_sym)
+    c1.metric("Pick date", pick_date)
+    c2.metric("# picks", n_picks)
+    c3.metric("Days since", days_since)
+    c4.metric("Benchmark", bench_sym)
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
@@ -90,17 +91,17 @@ def render_strategy(strat_id: str) -> None:
         alpha = (port_last - bench_last) if bench_last is not None else None
         c1, c2, c3 = st.columns(3)
         c1.metric(
-            "📈 Portfolio since-inception",
+            "Portfolio since-inception",
             f"{port_last:+.2f}%",
             delta=None,
         )
         c2.metric(
-            f"📐 Benchmark ({bench_sym})",
+            f"Benchmark ({bench_sym})",
             f"{bench_last:+.2f}%" if bench_last is not None else "—",
             delta=None,
         )
         c3.metric(
-            "🎯 Alpha (pp)",
+            "Alpha (pp)",
             f"{alpha:+.2f}pp" if alpha is not None else "—",
             delta=f"{'outperform' if alpha and alpha > 0 else 'underperform' if alpha else 'tied'}",
             delta_color="normal" if alpha and alpha > 0 else "inverse" if alpha else "off",
@@ -126,9 +127,12 @@ def render_strategy(strat_id: str) -> None:
             fig.add_trace(go.Scatter(
                 x=bench_norm.index, y=bench_norm.values,
                 mode="lines", name=f"{bench_sym} ({bench_name})",
-                line=dict(width=3, color="#a78bfa", dash="dash"),
+                line=dict(width=1.5, color="#8a8580", dash="dash"),
             ))
-        st.plotly_chart(fig, use_container_width=True)
+        # theme=None: do NOT let Streamlit re-theme the figure — our PLOTLY_LAYOUT
+        # (cream bg + INK title/legend) is authoritative; theme="streamlit" washed
+        # the title/legend text to a faint color on cream.
+        st.plotly_chart(fig, width="stretch", theme=None)
 
     # --- Top/Worst ranking table ---
     if perf.empty:
@@ -169,14 +173,14 @@ def render_strategy(strat_id: str) -> None:
 
     c_top, c_bot = st.columns(2)
     with c_top:
-        st.markdown(f"##### 🟢 Top {min(5, len(perf_display))} (since-inception)")
+        st.markdown(f"##### Top {min(5, len(perf_display))} (since-inception)")
         _render_perf(perf_display.head(5))
     with c_bot:
-        st.markdown(f"##### 🔴 Worst {min(5, len(perf_display))} (since-inception)")
+        st.markdown(f"##### Worst {min(5, len(perf_display))} (since-inception)")
         _render_perf(perf_display.tail(5).iloc[::-1])
 
     # --- Full table (expandable) ---
-    with st.expander(f"📋 All {len(perf_display)} picks (sorted by since-inception)"):
+    with st.expander(f"All {len(perf_display)} picks (sorted by since-inception)"):
         _render_perf(perf_display, height=500)
 
 
@@ -206,7 +210,7 @@ for tab, sid in zip(strategy_tabs, strat.STRATEGIES.keys()):
 
 st.divider()
 st.caption(
-    "📊 **Methodology**: Equal-weight portfolio cumulative return from pick date. "
+    "**Methodology**: Equal-weight portfolio cumulative return from pick date. "
     "All prices via yfinance (auto-adjusted for splits/dividends). "
     "Benchmark: XBI for biotech, 3110.HK for HK 高股息."
 )

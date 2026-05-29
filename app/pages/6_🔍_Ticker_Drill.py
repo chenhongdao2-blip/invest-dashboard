@@ -25,6 +25,7 @@ from lib import format as fmt
 from lib import strategy as strat
 from lib import ui
 from lib import wiki
+from lib import theme
 
 st.set_page_config(
     page_title="Ticker Drill · invest-dashboard",
@@ -51,7 +52,7 @@ if isinstance(url_ticker, list):
 if url_ticker and url_ticker in all_tickers and st.session_state.global_ticker != url_ticker:
     st.session_state.global_ticker = url_ticker
 
-st.title("🔍 Ticker Drill")
+theme.page_header("02 / 07", "Ticker Drill")
 st.caption("Single-ticker deep dive — wiki memo (if any) + price chart + multiples + cross-sector tags.")
 
 # Local selectbox (fallback when sidebar empty).
@@ -71,7 +72,7 @@ if pick:
 
 ticker = st.session_state.global_ticker
 if not ticker:
-    st.info("👈 Pick a ticker from the sidebar or the selectbox above.")
+    st.info("Pick a ticker from the sidebar or the selectbox above.")
     st.stop()
 
 # ---------- Header card ----------
@@ -120,9 +121,9 @@ with c_name:
     st.markdown(f"### {display_name}")
     badges: list[str] = [f"`{bbg}`"]
     if is_in_coverage:
-        badges.append("💎 CMSI Coverage")
+        badges.append("CMSI Coverage")
     if pick_strategies:
-        badges.append(f"🧬 Pick: {' · '.join(pick_strategies)}")
+        badges.append(f"Pick: {' · '.join(pick_strategies)}")
     st.markdown(" · ".join(badges))
 
 if mults_row is not None:
@@ -135,22 +136,22 @@ if mults_row is not None:
 
     with c_price:
         if pd.notna(last_px):
-            label = "💵 Last (local)"
+            label = "Last (local)"
             sub = f"USD {last_px_usd:,.2f}" if pd.notna(last_px_usd) else None
             st.metric(label, f"{last_px:,.2f}", delta=None, help=sub)
         else:
-            st.metric("💵 Last", "—")
+            st.metric("Last", "—")
     with c_mcap:
         if pd.notna(mcap):
-            st.metric("📊 Market cap", fmt.fmt_money_b(mcap))
+            st.metric("Market cap", fmt.fmt_money_b(mcap))
         else:
-            st.metric("📊 Market cap", "—")
+            st.metric("Market cap", "—")
     with c_pe:
         if pd.notna(fwd_pe):
-            st.metric("📐 Fwd P/E", fmt.fmt_ratio(fwd_pe),
+            st.metric("Fwd P/E", fmt.fmt_ratio(fwd_pe),
                       help=f"Trailing P/E: {fmt.fmt_ratio(trail_pe)}")
         else:
-            st.metric("📐 Fwd P/E", fmt.fmt_ratio(trail_pe))
+            st.metric("Fwd P/E", fmt.fmt_ratio(trail_pe))
 
     # TP upside callout.
     if pd.notna(tp) and pd.notna(last_px) and last_px > 0:
@@ -158,7 +159,7 @@ if mults_row is not None:
         n_analysts = mults_row.get("n_analysts")
         analysts_str = f" · {int(n_analysts)} analysts" if pd.notna(n_analysts) else ""
         st.caption(
-            f"🎯 Consensus TP: **{tp:,.2f}** ({upside_pct:+.1f}% vs last){analysts_str}"
+            f"Consensus TP: **{tp:,.2f}** ({upside_pct:+.1f}% vs last){analysts_str}"
         )
 else:
     st.caption("No multiples snapshot — ticker may be picks-only (not in main fetch universe).")
@@ -169,14 +170,14 @@ st.divider()
 wiki_page = wiki.find_wiki(ticker)
 if wiki_page is None:
     st.caption(
-        "📝 No LLM Wiki memo for this ticker. "
+        "No LLM Wiki memo for this ticker. "
         f"Drop a `companies/*.md` file in `~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
     )
 else:
     # Compliance gate — different banner for internal vs sanitized public view.
     if wiki_page.is_sanitized:
         st.info(
-            "📋 **公开版 memo** — Rating / TP / 研报源文件引用 / 分析师姓名已剥离。"
+            "**公开版 memo** — Rating / TP / 研报源文件引用 / 分析师姓名已剥离。"
             "公开数据 + thesis 框架 only。完整内部版本需在本地 "
             "`~/Documents/LLM Wiki/Wiki/` 下访问。"
             "本材料不构成任何证券的投资建议或邀请。",
@@ -184,13 +185,13 @@ else:
         )
     else:
         st.warning(
-            "⚠️ **本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
+            "**本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
             "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
             "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
             "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
             icon="⚠️",
         )
-    st.markdown(f"### 📝 Research memo · {wiki_page.title}")
+    st.markdown(f"### Research memo · {wiki_page.title}")
     meta_bits: list[str] = []
     if wiki_page.rating:
         meta_bits.append(f"**Rating**: {wiki_page.rating}")
@@ -208,7 +209,7 @@ else:
     if wiki_page.thesis:
         st.markdown(f"**Thesis**: {wiki_page.thesis}")
     if wiki_page.sources:
-        st.caption(f"📚 Sources: {wiki_page.sources}")
+        st.caption(f"Sources: {wiki_page.sources}")
 
     # Pull the high-value sections to the top, leave the rest in expanders.
     priority_keys = ["核心投资逻辑", "催化剂", "风险点", "财务快照"]
@@ -216,20 +217,20 @@ else:
     for key in priority_keys:
         body = wiki_page.sections.get(key)
         if body:
-            with st.expander(f"📂 {key}", expanded=(key in ("催化剂", "风险点"))):
+            with st.expander(f"{key}", expanded=(key in ("催化剂", "风险点"))):
                 st.markdown(body)
             rendered.add(key)
     for key, body in wiki_page.sections.items():
         if key in rendered or not body:
             continue
-        with st.expander(f"📂 {key}", expanded=False):
+        with st.expander(f"{key}", expanded=False):
             st.markdown(body)
 
-    st.caption(f"📄 Source file: `{wiki_page.file_path}`")
+    st.caption(f"Source file: `{wiki_page.file_path}`")
     st.divider()
 
 # ---------- Price chart ----------
-st.markdown("### 📈 Price (USD-normalized)")
+theme.section_header("Price · USD-normalized")
 closes = db.get_close_series_usd((ticker,))
 if closes.empty:
     st.warning("No price history in snapshots.db — backfill needed for this ticker.")
@@ -245,13 +246,13 @@ else:
             title=f"{bbg} · USD close (snapshots.db, {len(ser)} obs)",
             ylabel="USD close",
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch", theme=None)
 
 # ---------- Return windows + multiples panel ----------
 rets = db.compute_returns(closes)
 col_perf, col_mult = st.columns(2)
 with col_perf:
-    st.markdown("##### 📊 Return windows")
+    st.markdown("##### Return windows")
     if rets.empty or ticker not in rets.index:
         st.caption("No return data.")
     else:
@@ -270,7 +271,7 @@ with col_perf:
         )
 
 with col_mult:
-    st.markdown("##### 📐 Latest multiples (yfinance)")
+    st.markdown("##### Latest multiples (yfinance)")
     if mults_row is None:
         st.caption("No multiples snapshot.")
     else:
@@ -310,12 +311,12 @@ def _yf_info(_t: str) -> dict:
     return info or {}
 
 
-with st.expander("💼 Extended fundamentals (live yfinance.info — click to fetch)", expanded=False):
+with st.expander("Extended fundamentals (live yfinance.info — click to fetch)", expanded=False):
     btn_key = f"fetch_yf_info_{ticker}"
     fetched_key = f"fetched_yf_info_{ticker}"
 
     cols = st.columns([1, 3])
-    if cols[0].button("🔄 Fetch live", key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
+    if cols[0].button("Fetch live", key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
         st.session_state[fetched_key] = True
 
     if not st.session_state.get(fetched_key):
@@ -369,14 +370,14 @@ with st.expander("💼 Extended fundamentals (live yfinance.info — click to fe
                 st.markdown(info["longBusinessSummary"])
 
 # ---------- Cross-sector tags ----------
-st.markdown("##### 🔗 Universe membership")
+st.markdown("##### Universe membership")
 if sectors:
     icons = {
-        "biotech": "🧬", "pharma": "💊", "hc_ai": "🤖",
-        "medtech": "⚕️", "hospital_care": "🏥",
-        "managed_care": "🩺", "cxo": "🧪", "_coverage": "💎",
+        "biotech": "BIO", "pharma": "PHAR", "hc_ai": "AI",
+        "medtech": "MED", "hospital_care": "HOSP",
+        "managed_care": "MC", "cxo": "CXO", "_coverage": "COV",
     }
-    tags = " · ".join(f"{icons.get(s, '🏷️')} `{s}`" for s in sectors)
+    tags = " · ".join(f"{icons.get(s, s)} `{s}`" for s in sectors)
     st.markdown(tags)
 else:
     st.caption("Ticker is not in any configured sector universe.")
@@ -399,6 +400,6 @@ NaN 或 "—" 表示 yfinance 未提供该字段（小盘 / 港股常见）。
 **Deep-link**: 可通过 `?ticker=LLY` URL 参数直接跳到该票。
 """)
 st.caption(
-    "⚠️ Wiki memo 反映 CMS HK 内部观点 + George 自己的迭代，**不是中立分析**。"
+    "Wiki memo 反映 CMS HK 内部观点 + George 自己的迭代，**不是中立分析**。"
     " 评级 / TP 引用必带 wiki Last updated 时间戳，>30 天请回到原研报核对。"
 )

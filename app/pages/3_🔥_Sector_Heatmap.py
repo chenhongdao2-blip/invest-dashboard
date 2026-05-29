@@ -19,6 +19,7 @@ import yaml
 from lib import db
 from lib import format as fmt
 from lib import ui
+from lib import theme
 
 st.set_page_config(page_title="Sector Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
 
@@ -34,7 +35,7 @@ def load_domain_cfg() -> dict:
 
 cfg = load_domain_cfg()
 
-st.title("🔥 Sector Heatmap")
+theme.page_header("05 / 07", "Sector Heatmap")
 st.caption("Cross-sectional snapshot per sector. Multiples from yfinance — trailing + 12M forward only.")
 
 # --- Sidebar global search + filter ---
@@ -137,7 +138,7 @@ def render_sector(sec: dict) -> None:
                     "FCF Yld": "fcf_yield"}
 
     # --- Sector aggregates (M11 audit: by cap_tier optional) ---
-    with st.expander(f"📊 {sec['name']} aggregates (mean / median / weighted)"):
+    with st.expander(f"{sec['name']} aggregates (mean / median / weighted)"):
         agg_rows: dict[str, dict] = {}
         for label, num_col in pct_num_map.items():
             s = merged[num_col].dropna()
@@ -156,8 +157,14 @@ def render_sector(sec: dict) -> None:
                 "Min": fmt_fn(s.min() if not s.empty else None),
                 "Max": fmt_fn(s.max() if not s.empty else None),
             }
-        st.dataframe(pd.DataFrame.from_dict(agg_rows, orient="index"),
-                     use_container_width=True)
+        _agg = pd.DataFrame.from_dict(agg_rows, orient="index")
+        ui.render_html_table(
+            _agg,
+            text_cols=list(_agg.columns),
+            column_help={},
+            index_label="Metric",
+            height=460,
+        )
 
 
 # --- M8 audit: render tabs for piano-key navigation ---
@@ -170,7 +177,7 @@ for tab, sec in zip(sector_tabs, cfg["sectors"]):
 
 st.divider()
 st.caption(
-    "🎨 **Color legend**: Returns 绿涨红跌. Multiples (P/E, EV/EBITDA) 绿低红高 (cheap=green). "
+    "**Color legend**: Returns 绿涨红跌. Multiples (P/E, EV/EBITDA) 绿低红高 (cheap=green). "
     "FCF Yield 绿高红低. "
     "Ticker shown in **Bloomberg style** (2269 HK / 4587 JP / 300760 CH). "
     f"Latest data: **{db.latest_snapshot_date()}**"

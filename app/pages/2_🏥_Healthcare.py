@@ -11,6 +11,7 @@ from lib import benchmarks as bm
 from lib import db
 from lib import format as fmt
 from lib import ui
+from lib import theme
 
 
 def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
@@ -23,6 +24,7 @@ def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str]
         text_cols=text_cols,
         extra_formats=extra_formats,
         height=360,
+        heatmap=True,
     )
 
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
@@ -42,11 +44,11 @@ def load_domain_cfg() -> dict:
 
 
 cfg = load_domain_cfg()
-st.title(f"{cfg.get('emoji', '🏥')} {cfg['name']}")
+theme.page_header("04 / 07", cfg['name'])
 st.caption(cfg.get("description", "").strip())
 
 # --- 7 sector aggregate summary ---
-st.subheader("📊 Sector summary (mean returns per sector)")
+theme.section_header("Sector Summary", meta="MEAN RETURNS PER SECTOR")
 
 rows = []
 all_returns_by_sector: dict[str, pd.DataFrame] = {}
@@ -80,7 +82,7 @@ else:
 st.divider()
 
 # --- Domain benchmark snapshot ---
-st.subheader("📐 Domain benchmark (XLV) & peers")
+theme.section_header("Domain Benchmark (XLV) & Peers")
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
     focus = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI"]
@@ -94,7 +96,7 @@ if not bench_df.empty:
 st.divider()
 
 # --- Per-sector top 3 movers / drags ---
-st.subheader("🎯 Per-sector top 3 movers / drags (1D)")
+theme.section_header("Per-Sector Top 3 Movers / Drags · 1D")
 
 name_map = db.ticker_to_name(prefer_cn=True)   # M10 audit
 for sec in cfg["sectors"]:
@@ -117,10 +119,10 @@ for sec in cfg["sectors"]:
         gainers.index = [fmt.fmt_ticker_bbg(t) for t in gainers.index]
         drags.index = [fmt.fmt_ticker_bbg(t) for t in drags.index]
         with c1:
-            st.markdown("🟢 Top 3 gainers (1D)")
+            st.markdown("**Top 3 gainers · 1D**")
             _render_pct_table(gainers, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
         with c2:
-            st.markdown("🔴 Top 3 drags (1D)")
+            st.markdown("**Top 3 drags · 1D**")
             _render_pct_table(drags, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
 
 # --- Onboarding ---

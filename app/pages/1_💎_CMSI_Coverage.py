@@ -18,6 +18,7 @@ from lib import benchmarks as bm
 from lib import db
 from lib import format as fmt
 from lib import ui
+from lib import theme
 
 
 def _reco_label(v) -> str:
@@ -44,7 +45,7 @@ st.set_page_config(
 with st.sidebar:
     ui.sidebar_search(key_prefix="cmsi")
 
-st.title("💎 CMSI Healthcare Coverage")
+theme.page_header("03 / 07", "CMSI Coverage")
 st.caption("28 ticker official cover list — HK 15 / US 10 / CN A-share 3. Latest data: " + (db.latest_snapshot_date() or "—"))
 
 
@@ -127,9 +128,9 @@ def _cross_tag(ticker: str) -> str:
         return ""
     # 简短 emoji mapping
     icons = {
-        "biotech": "🧬", "pharma": "💊", "hc_ai": "🤖",
-        "medtech": "⚕️", "hospital_care": "🏥",
-        "managed_care": "🩺", "cxo": "🧪",
+        "biotech": "BIO", "pharma": "PHAR", "hc_ai": "AI",
+        "medtech": "MED", "hospital_care": "HOSP",
+        "managed_care": "MC", "cxo": "CXO",
     }
     return " ".join(icons.get(s, f"[{s}]") for s in sectors)
 
@@ -176,50 +177,21 @@ def render_region(df: pd.DataFrame) -> None:
     disp["Cross"] = df["Cross-Sector"]
     disp.index.name = "Ticker"
 
-    # Background gradient via Styler (works on numeric)
-    pct_cols = ["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD", "TP Upside %"]
-    mult_low_good = ["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"]
-
-    styler = disp.style
-    for col in pct_cols:
-        styler = styler.apply(
-            lambda s: fmt.background_gradient_diverging(s),
-            subset=[col],
-        )
-    for col in mult_low_good:
-        styler = styler.apply(
-            lambda s: fmt.background_gradient_low_good(s),
-            subset=[col],
-        )
-    styler = styler.apply(
-        lambda s: fmt.background_gradient_low_good(s, low_color="#dc2626", high_color="#16a34a"),
-        subset=["FCF Yld"],
+    # Stage 2: render as FT-editorial HTML table (iframe) instead of st.dataframe.
+    # Solves the glide-data-grid canvas dark-mode penetration (black cells), and
+    # gives click-sort + tabular-nums + <th title> tooltips with full CSS control.
+    # Column kinds map onto render_html_table; coloring is text-only (染字不染底).
+    # FCF Yld is already ×100 (pct units) above, so it goes in pct_cols.
+    ui.render_html_table(
+        disp,
+        money_b_cols=["Mcap USD ($B)"],
+        pct_cols=["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD", "TP Upside %"],
+        pct2_cols=["FCF Yld"],
+        mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"],
+        int_cols=["N analysts"],
+        text_cols=["Name", "Reco", "Cross"],
+        height=620,
     )
-
-    # Narrow column widths so all 15 columns fit at Streamlit 1050px viewport.
-    # Sort works because the DataFrame is numeric (column_config formats on display).
-    # `help=ui.COLUMN_HELP.get(col)` surfaces a header tooltip on hover — shared
-    # text across pages so wording / definition is consistent.
-    H = ui.COLUMN_HELP
-    col_cfg = {
-        "Name": st.column_config.TextColumn(width="medium"),
-        "Mcap USD ($B)": st.column_config.NumberColumn(format="$%.1fB", width="small", help=H.get("Mcap USD ($B)")),
-        "YTD %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "1M %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "5D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "1D %": st.column_config.NumberColumn(format="%+.1f%%", width="small"),
-        "vs HSI YTD": st.column_config.NumberColumn(format="%+.1f%%", width="small", help=H.get("vs HSI YTD")),
-        "Trail P/E": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("Trail P/E")),
-        "Fwd P/E": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("Fwd P/E")),
-        "EV/EBITDA": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("EV/EBITDA")),
-        "FCF Yld": st.column_config.NumberColumn(format="%+.2f%%", width="small", help=H.get("FCF Yld")),
-        "P/B": st.column_config.NumberColumn(format="%.1fx", width="small", help=H.get("P/B")),
-        "TP Upside %": st.column_config.NumberColumn(format="%+.1f%%", width="small", help=H.get("TP Upside %")),
-        "Reco": st.column_config.TextColumn(width="small", help=H.get("Reco")),
-        "N analysts": st.column_config.NumberColumn(format="%d", width="small", help=H.get("N analysts")),
-        "Cross": st.column_config.TextColumn(width="small"),
-    }
-    st.dataframe(styler, use_container_width=True, height=560, column_config=col_cfg)
 
 
 for tab, region in zip(tabs, regions):
@@ -244,10 +216,10 @@ ui.onboarding_expander("Coverage Page", """
 
 st.divider()
 st.caption(
-    "🧬 = Biotech · 💊 = Pharma · 🤖 = HC+AI · ⚕️ = Medtech · 🏥 = Hospital Care · 🩺 = Managed Care · 🧪 = CXO. "
+    "BIO = Biotech · PHAR = Pharma · AI = HC+AI · MED = Medtech · HOSP = Hospital Care · MC = Managed Care · CXO = CXO. "
     "Cross-sector tags 表示 ticker 同时存在于其他 sector universe（dedup 自动）。"
 )
 st.caption(
-    f"📊 Cover list source: `config/universes/cmsi_coverage_hc.yml` ({len(merged)} tickers). "
+    f"Cover list source: `config/universes/cmsi_coverage_hc.yml` ({len(merged)} tickers). "
     "默认按 market cap 降序，名字优先中文 (M10 audit)。"
 )

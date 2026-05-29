@@ -33,3 +33,6 @@ data/external/picks.db-wal
 data/external/*.db
 data/external/*.db-shm
 data/external/*.db-wal
+
+# local CSV backups (never commit)
+data/external/_bak_*/

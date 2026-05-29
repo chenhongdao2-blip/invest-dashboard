@@ -26,6 +26,7 @@ from lib import strategy as strat
 from lib import ui
 from lib import wiki
 from lib import theme
+from lib import i18n
 
 st.set_page_config(
     page_title="Ticker Drill · invest-dashboard",
@@ -52,8 +53,11 @@ if isinstance(url_ticker, list):
 if url_ticker and url_ticker in all_tickers and st.session_state.global_ticker != url_ticker:
     st.session_state.global_ticker = url_ticker
 
-theme.page_header("Ticker Drill")
-st.caption("Single-ticker deep dive — wiki memo (if any) + price chart + multiples + cross-sector tags.")
+i18n.init_lang()
+i18n.render_lang_toggle()
+
+theme.page_header(i18n.t("drill.title"))
+st.caption(i18n.t("drill.caption"))
 
 # Local selectbox (fallback when sidebar empty).
 default_idx = 0
@@ -67,14 +71,14 @@ def _drill_label(x: str) -> str:
     """Company name + Bloomberg ticker, e.g. '康臣药业 · 1681 HK' (CN preferred,
     then EN; bare ticker when no name on file)."""
     if not x:
-        return "— select —"
+        return i18n.t("sidebar.select_placeholder")
     bbg = fmt.fmt_ticker_bbg(x)
     nm = _drill_names.get(x)
     return f"{nm} · {bbg}" if nm and nm != x else bbg
 
 
 pick = st.selectbox(
-    "Choose ticker",
+    i18n.t("drill.choose"),
     options=[""] + all_tickers,
     index=default_idx,
     format_func=_drill_label,
@@ -85,7 +89,7 @@ if pick:
 
 ticker = st.session_state.global_ticker
 if not ticker:
-    st.info("Pick a ticker from the sidebar or the selectbox above.")
+    st.info(i18n.t("drill.pick_prompt"))
     st.stop()
 
 # ---------- Header card ----------
@@ -134,9 +138,9 @@ with c_name:
     st.markdown(f"### {display_name}")
     badges: list[str] = [f"`{bbg}`"]
     if is_in_coverage:
-        badges.append("CMSI Coverage")
+        badges.append(i18n.t("drill.badge.coverage"))
     if pick_strategies:
-        badges.append(f"Pick: {' · '.join(pick_strategies)}")
+        badges.append(i18n.t("drill.badge.pick", names=' · '.join(pick_strategies)))
     st.markdown(" · ".join(badges))
 
 if mults_row is not None:
@@ -149,22 +153,22 @@ if mults_row is not None:
 
     with c_price:
         if pd.notna(last_px):
-            label = "Last (local)"
+            label = i18n.t("drill.metric.last_local")
             sub = f"USD {last_px_usd:,.2f}" if pd.notna(last_px_usd) else None
             st.metric(label, f"{last_px:,.2f}", delta=None, help=sub)
         else:
-            st.metric("Last", "—")
+            st.metric(i18n.t("drill.metric.last"), "—")
     with c_mcap:
         if pd.notna(mcap):
-            st.metric("Market cap", fmt.fmt_money_b(mcap))
+            st.metric(i18n.t("drill.metric.mcap"), fmt.fmt_money_b(mcap))
         else:
-            st.metric("Market cap", "—")
+            st.metric(i18n.t("drill.metric.mcap"), "—")
     with c_pe:
         if pd.notna(fwd_pe):
-            st.metric("Fwd P/E", fmt.fmt_ratio(fwd_pe),
+            st.metric(i18n.t("drill.metric.fwd_pe"), fmt.fmt_ratio(fwd_pe),
                       help=f"Trailing P/E: {fmt.fmt_ratio(trail_pe)}")
         else:
-            st.metric("Fwd P/E", fmt.fmt_ratio(trail_pe))
+            st.metric(i18n.t("drill.metric.fwd_pe"), fmt.fmt_ratio(trail_pe))
 
     # TP upside callout.
     if pd.notna(tp) and pd.notna(last_px) and last_px > 0:
@@ -172,10 +176,10 @@ if mults_row is not None:
         n_analysts = mults_row.get("n_analysts")
         analysts_str = f" · {int(n_analysts)} analysts" if pd.notna(n_analysts) else ""
         st.caption(
-            f"Consensus TP: **{tp:,.2f}** ({upside_pct:+.1f}% vs last){analysts_str}"
+            i18n.t("drill.consensus_tp", tp=f"{tp:,.2f}", upside=f"{upside_pct:+.1f}%", analysts=analysts_str)
         )
 else:
-    st.caption("No multiples snapshot — ticker may be picks-only (not in main fetch universe).")
+    st.caption(i18n.t("drill.no_mults"))
 
 st.divider()
 
@@ -243,7 +247,7 @@ else:
     st.divider()
 
 # ---------- Price chart ----------
-theme.section_header("Price · USD-normalized")
+theme.section_header(i18n.t("drill.section.price"))
 closes = db.get_close_series_usd((ticker,))
 if closes.empty:
     st.warning("No price history in snapshots.db — backfill needed for this ticker.")
@@ -265,7 +269,7 @@ else:
 rets = db.compute_returns(closes)
 col_perf, col_mult = st.columns(2)
 with col_perf:
-    st.markdown("##### Return windows")
+    st.markdown(f"##### {i18n.t('drill.ret_windows')}")
     if rets.empty or ticker not in rets.index:
         st.caption("No return data.")
     else:
@@ -281,10 +285,12 @@ with col_perf:
             perf_df.set_index("Window"),
             pct_cols=["Return %"],
             height=260,
+            column_labels={"Return %": i18n.t("drill.col.return")},
+            index_label=i18n.t("drill.col.window"),
         )
 
 with col_mult:
-    st.markdown("##### Latest multiples (yfinance)")
+    st.markdown(f"##### {i18n.t('drill.latest_mults')}")
     if mults_row is None:
         st.caption("No multiples snapshot.")
     else:
@@ -324,12 +330,12 @@ def _yf_info(_t: str) -> dict:
     return info or {}
 
 
-with st.expander("Extended fundamentals (live yfinance.info — click to fetch)", expanded=False):
+with st.expander(i18n.t("drill.ext.expander"), expanded=False):
     btn_key = f"fetch_yf_info_{ticker}"
     fetched_key = f"fetched_yf_info_{ticker}"
 
     cols = st.columns([1, 3])
-    if cols[0].button("Fetch live", key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
+    if cols[0].button(i18n.t("drill.ext.fetch"), key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
         st.session_state[fetched_key] = True
 
     if not st.session_state.get(fetched_key):
@@ -383,7 +389,7 @@ with st.expander("Extended fundamentals (live yfinance.info — click to fetch)"
                 st.markdown(info["longBusinessSummary"])
 
 # ---------- Cross-sector tags ----------
-st.markdown("##### Universe membership")
+st.markdown(f"##### {i18n.t('drill.membership')}")
 if sectors:
     icons = {
         "biotech": "BIO", "pharma": "PHAR", "hc_ai": "AI",
@@ -396,22 +402,8 @@ else:
     st.caption("Ticker is not in any configured sector universe.")
 
 # ---------- Footer caveats ----------
-ui.onboarding_expander("Ticker Drill", """
-**Memo source**: 如果 `~/Documents/LLM Wiki/Wiki/companies/<ticker>-*.md` 文件存在，
-本页顶部会渲染 wiki memo 的 Summary / Thesis / Rating / TP / 核心投资逻辑 / 催化剂 /
-风险点 / 财务快照。Memo 写入在 wiki 端，本页只读，不会回写。
-
-**Price**: USD-converted close from `snapshots.db` (cron 每日累积；data 始于
-~ 2025-12-01)。
-
-**Multiples**: yfinance trailing + 12M forward only。Multi-year forward
-(25E / 26E / 27E) 不在 dashboard 范围。
-
-**Extended fundamentals**: 来自 yfinance.info 的 live fetch，1 小时 cache。
-NaN 或 "—" 表示 yfinance 未提供该字段（小盘 / 港股常见）。
-
-**Deep-link**: 可通过 `?ticker=LLY` URL 参数直接跳到该票。
-""")
+with st.expander(i18n.t("drill.onboarding.title")):
+    st.markdown(i18n.t("drill.onboarding.body"))
 st.caption(
     "Wiki memo 反映 CMS HK 内部观点 + George 自己的迭代，**不是中立分析**。"
     " 评级 / TP 引用必带 wiki Last updated 时间戳，>30 天请回到原研报核对。"

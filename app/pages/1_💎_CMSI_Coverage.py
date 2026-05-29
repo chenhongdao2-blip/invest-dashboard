@@ -19,6 +19,7 @@ from lib import db
 from lib import format as fmt
 from lib import ui
 from lib import theme
+from lib import i18n
 
 
 def _reco_label(v) -> str:
@@ -45,8 +46,11 @@ st.set_page_config(
 with st.sidebar:
     ui.sidebar_search(key_prefix="cmsi")
 
-theme.page_header("CMSI Coverage")
-st.caption("28 ticker official cover list — HK 15 / US 10 / CN A-share 3. Latest data: " + (db.latest_snapshot_date() or "—"))
+i18n.init_lang()
+i18n.render_lang_toggle()
+
+theme.page_header(i18n.t("cov.title"))
+st.caption(i18n.t("cov.caption", date=(db.latest_snapshot_date() or "—")))
 
 
 # --- Load CMSI Coverage tickers ---
@@ -171,10 +175,8 @@ def render_region(df: pd.DataFrame) -> None:
     # not implement printf's %%-as-percent-multiplier shorthand.
     disp["FCF Yld"] = df["fcf_yield"] * 100
     disp["P/B"] = df["pb"]
-    disp["TP Upside %"] = df["tp_upside_%"]                         # m8
-    disp["Reco"] = df["recommendation_mean"].apply(_reco_label)
-    disp["N analysts"] = df["n_analysts"]                           # int
-    disp["Cross"] = df["Cross-Sector"]
+    # TP Upside % / Reco / N analysts / Cross columns removed per user request
+    # (analyst TP/Reco are LOW-reliability yfinance consensus; Cross was clutter).
     disp.index.name = "Ticker"
 
     # Stage 2: render as FT-editorial HTML table (iframe) instead of st.dataframe.
@@ -185,12 +187,16 @@ def render_region(df: pd.DataFrame) -> None:
     ui.render_html_table(
         disp,
         money_b_cols=["Mcap USD ($B)"],
-        pct_cols=["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD", "TP Upside %"],
+        pct_cols=["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD"],
         pct2_cols=["FCF Yld"],
         mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"],
-        int_cols=["N analysts"],
-        text_cols=["Name", "Reco", "Cross"],
+        text_cols=["Name"],
         height=620,
+        column_labels={
+            **i18n.common_cols(),
+            "vs HSI YTD": i18n.t("cov.col.vs_hsi"),
+        },
+        index_label=i18n.t("common.col.ticker"),
     )
 
 
@@ -202,24 +208,9 @@ for tab, region in zip(tabs, regions):
             render_region(merged[merged["region"] == region])
 
 # --- Onboarding ---
-ui.onboarding_expander("Coverage Page", """
-**Official Coverage List**: 招商证券 (CMSI) Healthcare 覆盖名单，包含港股、美股及 A 股。
-
-**Columns**:
-- **Cross**: 跨板块标签。如果一个标的同时属于多个 Sector Universe（如信达属于 Biotech + Pharma），此处会显示对应 emoji。
-- **Mcap USD**: 统一换算为美元的市值，方便跨地域比较。
-- **Fwd P/E**: yfinance 提供的 12M forward P/E。
-- **FCF Yield**: 自由现金流收益率。越高通常代表现金流越稳健。
-
-**Sorting**: 默认按市值 (Mcap) 降序排列。
-""")
+with st.expander(i18n.t("cov.onboarding.title")):
+    st.markdown(i18n.t("cov.onboarding.body"))
 
 st.divider()
-st.caption(
-    "BIO = Biotech · PHAR = Pharma · AI = HC+AI · MED = Medtech · HOSP = Hospital Care · MC = Managed Care · CXO = CXO. "
-    "Cross-sector tags 表示 ticker 同时存在于其他 sector universe（dedup 自动）。"
-)
-st.caption(
-    f"Cover list source: `config/universes/cmsi_coverage_hc.yml` ({len(merged)} tickers). "
-    "默认按 market cap 降序，名字优先中文 (M10 audit)。"
-)
+st.caption(i18n.t("cov.caption.tags"))
+st.caption(i18n.t("cov.caption.source", n=len(merged)))

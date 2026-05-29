@@ -12,9 +12,15 @@ from lib import db
 from lib import format as fmt
 from lib import ui
 from lib import theme
+from lib import i18n
 
 
-def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str] | None = None) -> None:
+def _render_pct_table(
+    df: pd.DataFrame,
+    pct_cols: list[str],
+    num_cols: list[str] | None = None,
+    column_labels: dict | None = None,
+) -> None:
     """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
     text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
     extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
@@ -25,6 +31,7 @@ def _render_pct_table(df: pd.DataFrame, pct_cols: list[str], num_cols: list[str]
         extra_formats=extra_formats,
         height=360,
         heatmap=True,
+        column_labels=column_labels,
     )
 
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
@@ -44,11 +51,13 @@ def load_domain_cfg() -> dict:
 
 
 cfg = load_domain_cfg()
-theme.page_header(cfg['name'])
+i18n.init_lang()
+i18n.render_lang_toggle()
+theme.page_header(i18n.t("hc.title"))
 st.caption(cfg.get("description", "").strip())
 
 # --- 7 sector aggregate summary ---
-theme.section_header("Sector Summary", meta="MEAN RETURNS PER SECTOR")
+theme.section_header(i18n.t("hc.section.summary"), meta=i18n.t("hc.section.summary_meta"))
 
 rows = []
 all_returns_by_sector: dict[str, pd.DataFrame] = {}
@@ -63,7 +72,7 @@ for sec in cfg["sectors"]:
         continue
     all_returns_by_sector[sec["id"]] = rets
     rows.append({
-        "Sector": sec["name"],
+        "Sector": i18n.sector_name(sec["id"]),
         "Tickers": len(tickers),
         "1D % avg": rets["1d_%"].mean(),
         "5D % avg": rets["5d_%"].mean(),
@@ -73,16 +82,28 @@ for sec in cfg["sectors"]:
     })
 
 if not rows:
-    st.warning("No sector data — backfill needed.")
+    st.warning(i18n.t("hc.summary.empty"))
 else:
     summary = pd.DataFrame(rows).set_index("Sector")
     pct_cols = ["1D % avg", "5D % avg", "1M % avg", "YTD % avg"]
-    _render_pct_table(summary, pct_cols=pct_cols)
+    _render_pct_table(
+        summary,
+        pct_cols=pct_cols,
+        column_labels={
+            "Sector": i18n.t("hc.col.sector"),
+            "Tickers": i18n.t("hc.col.tickers"),
+            "Benchmark": i18n.t("hc.col.benchmark"),
+            "1D % avg": i18n.t("hc.col.1d_avg"),
+            "5D % avg": i18n.t("hc.col.5d_avg"),
+            "1M % avg": i18n.t("hc.col.1m_avg"),
+            "YTD % avg": i18n.t("hc.col.ytd_avg"),
+        },
+    )
 
 st.divider()
 
 # --- Domain benchmark snapshot ---
-theme.section_header("Domain Benchmark (XLV) & Peers")
+theme.section_header(i18n.t("hc.section.benchmark"))
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
     focus = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI"]
@@ -91,19 +112,25 @@ if not bench_df.empty:
         "name": "Name", "last": "Last",
         "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %",
     })
-    _render_pct_table(sub, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
+    sub["Name"] = [i18n.bench_name(s, n) for s, n in zip(sub.index, sub["Name"])]
+    _render_pct_table(
+        sub,
+        pct_cols=["1D %", "5D %", "1M %", "YTD %"],
+        num_cols=["Last"],
+        column_labels=i18n.common_cols(),
+    )
 
 st.divider()
 
 # --- Per-sector top 3 movers / drags ---
-theme.section_header("Per-Sector Top 3 Movers / Drags · 1D")
+theme.section_header(i18n.t("hc.section.movers"))
 
 name_map = db.ticker_to_name(prefer_cn=True)   # M10 audit
 for sec in cfg["sectors"]:
     rets = all_returns_by_sector.get(sec["id"])
     if rets is None or rets.empty:
         continue
-    with st.expander(f"**{sec['name']}**  ({len(rets)} tickers)"):
+    with st.expander(f"**{i18n.sector_name(sec['id'])}**  ({len(rets)} tickers)"):
         rets = rets.copy()
         rets["name"] = rets.index.map(name_map)
         rets = rets[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]]
@@ -119,19 +146,22 @@ for sec in cfg["sectors"]:
         gainers.index = [fmt.fmt_ticker_bbg(t) for t in gainers.index]
         drags.index = [fmt.fmt_ticker_bbg(t) for t in drags.index]
         with c1:
-            st.markdown("**Top 3 gainers · 1D**")
-            _render_pct_table(gainers, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
+            st.markdown(f"**{i18n.t('hc.movers.gainers')}**")
+            _render_pct_table(
+                gainers,
+                pct_cols=["1D %", "5D %", "1M %", "YTD %"],
+                num_cols=["Last"],
+                column_labels=i18n.common_cols(),
+            )
         with c2:
-            st.markdown("**Top 3 drags · 1D**")
-            _render_pct_table(drags, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"])
+            st.markdown(f"**{i18n.t('hc.movers.drags')}**")
+            _render_pct_table(
+                drags,
+                pct_cols=["1D %", "5D %", "1M %", "YTD %"],
+                num_cols=["Last"],
+                column_labels=i18n.common_cols(),
+            )
 
 # --- Onboarding ---
-ui.onboarding_expander("Healthcare Overview", """
-**Sector Summary**: 展示了医疗健康 7 个子板块的平均涨跌幅。
-- **Tickers**: 该板块包含的股票数量。
-- **Benchmark**: 该板块对应的行业指数（如 XBI 对应 Biotech）。
-
-**Domain Benchmarks**: XLV (Healthcare) 及其主要细分行业 ETF 的表现。
-
-**Per-sector Movers**: 每个板块内当日表现最好和最差的 3 只个股。
-""")
+with st.expander(i18n.t("hc.onboarding.title")):
+    st.markdown(i18n.t("hc.onboarding.body"))

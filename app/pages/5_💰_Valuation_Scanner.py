@@ -19,6 +19,7 @@ from lib import db
 from lib import format as fmt
 from lib import ui
 from lib import theme
+from lib import i18n
 
 st.set_page_config(
     page_title="Valuation Scanner · invest-dashboard",
@@ -39,63 +40,63 @@ sector_options = [(sec["id"], sec["name"]) for sec in cfg["sectors"]]
 all_sector_ids = [s[0] for s in sector_options]
 
 # --- Sidebar global search + Filters ---
+i18n.init_lang()  # seed lang before sidebar uses t()/sector_name (Codex MINOR)
 with st.sidebar:
     ui.sidebar_search(key_prefix="scanner")
     st.divider()
     
-    st.subheader("Presets")
+    st.subheader(i18n.t("scan.presets.header"))
     c1, c2 = st.columns(2)
-    if c1.button("Deep Value", width="stretch"):
+    if c1.button(i18n.t("scan.presets.deep_value"), width="stretch"):
         st.session_state["scan_pe_pct"] = 15
         st.session_state["scan_mcap"] = 5.0
         st.session_state["scan_ytd"] = (-100, 20)
         st.session_state["scan_5d"] = -30
-    if c2.button("Recovery", width="stretch"):
+    if c2.button(i18n.t("scan.presets.recovery"), width="stretch"):
         st.session_state["scan_pe_pct"] = 30
         st.session_state["scan_mcap"] = 2.0
         st.session_state["scan_ytd"] = (-100, 0)
         st.session_state["scan_5d"] = 5
-    if st.button("Reset all filters", width="stretch"):
+    if st.button(i18n.t("scan.presets.reset"), width="stretch"):
         for k in ["scan_pe_pct", "scan_mcap", "scan_ytd", "scan_5d", "scan_sectors"]:
             if k in st.session_state: del st.session_state[k]
         st.rerun()
 
     st.divider()
-    st.subheader("Filters")
+    st.subheader(i18n.t("scan.filters.header"))
 
     selected_sectors = st.multiselect(
-        "Sector",
+        i18n.t("scan.filters.sector"),
         options=all_sector_ids,
         default=all_sector_ids,
-        format_func=lambda x: next(s[1] for s in sector_options if s[0] == x),
+        format_func=lambda x: i18n.sector_name(x),
         key="scan_sectors"
     )
 
     min_mcap_b = st.slider(
-        "Min market cap (USD B)", 0.0, 50.0, 1.5, 0.5, key="scan_mcap",
+        i18n.t("scan.filters.min_mcap"), 0.0, 50.0, 1.5, 0.5, key="scan_mcap",
         help="M11 audit: default $1.5B 适合 HK biotech 中小盘 + US 中盘。原 $5B 默认过滤掉 90% HK 18A。"
     )
     pct_threshold = st.slider(
-        "P/E percentile threshold",
+        i18n.t("scan.filters.pe_pct"),
         0, 100, 25,
-        help="只显示 fwd P/E 在板块内分位 ≤ 此阈值的候选",
+        help=i18n.t("scan.filters.pe_pct_help"),
         key="scan_pe_pct"
     )
-    pe_metric = st.selectbox("P/E metric", ["forward_pe", "trailing_pe"], index=0)
-    ytd_range = st.slider("YTD return range (%)", -100, 200, (-50, 100), 5, key="scan_ytd")
+    pe_metric = st.selectbox(i18n.t("scan.filters.pe_metric"), ["forward_pe", "trailing_pe"], index=0)
+    ytd_range = st.slider(i18n.t("scan.filters.ytd_range"), -100, 200, (-50, 100), 5, key="scan_ytd")
     ytd_min, ytd_max = ytd_range
-    min_5d = st.slider("Min 5D return (%)", -30, 30, -10, 1, key="scan_5d")
+    min_5d = st.slider(i18n.t("scan.filters.min_5d"), -30, 30, -10, 1, key="scan_5d")
 
 
 # --- Build candidate universe ---
-theme.page_header("Valuation Scanner")
-st.caption(
-    "Cross-sectional scan — find cheap-on-multiple stocks with positive recent momentum. "
-    "Sector-internal P/E percentile + YTD/5D filter. Latest: " + (db.latest_snapshot_date() or "—")
-)
+i18n.init_lang()
+i18n.render_lang_toggle()
+theme.page_header(i18n.t("scan.title"))
+st.caption(i18n.t("scan.caption", date=(db.latest_snapshot_date() or "—")))
 
 if not selected_sectors:
-    st.warning("Select at least 1 sector in sidebar.")
+    st.warning(i18n.t("scan.warn.no_sector"))
     st.stop()
 
 # Collect all tickers across selected sectors
@@ -190,16 +191,14 @@ candidates = candidates.sort_values("pe_percentile", ascending=True)
 
 # --- Result summary ---
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Universe scanned", f"{len(all_t)}")
-col2.metric("Candidates", f"{len(candidates)}")
-col3.metric("Median Mcap (USD B)",
+col1.metric(i18n.t("scan.metric.universe"), f"{len(all_t)}")
+col2.metric(i18n.t("scan.metric.candidates"), f"{len(candidates)}")
+col3.metric(i18n.t("scan.metric.median_mcap"),
             f"${candidates['market_cap_usd'].median()/1e9:.1f}B" if not candidates.empty else "—")
-col4.metric("Median YTD", fmt.fmt_pct(candidates['ytd_%'].median()) if not candidates.empty else "—")
+col4.metric(i18n.t("scan.metric.median_ytd"), fmt.fmt_pct(candidates['ytd_%'].median()) if not candidates.empty else "—")
 
 if candidates.empty:
-    st.warning(
-        "No candidates match filters. Loosen criteria (lower min mcap / higher P/E threshold / widen YTD range)."
-    )
+    st.warning(i18n.t("scan.warn.no_candidates"))
     st.stop()
 
 # Build NUMERIC display DataFrame (sort-bug fix).
@@ -226,31 +225,13 @@ ui.render_styled_table(
     text_cols=["BBG", "Name"],
     extra_formats={"Sector P/E %ile": "%.0f%%"},
     height=560,
+    column_labels={**i18n.common_cols(), "Sector P/E %ile": i18n.t("scan.col.pe_pctile")},
+    index_label=i18n.t("common.col.ticker"),
 )
 
 # --- Interpretation hints ---
-ui.onboarding_expander("Valuation Scanner", """
-**Sector P/E %ile**：当前股票的 forward (or trailing) P/E 在所属板块内的分位。
-- `0%-25%` = cheapest quartile within sector
-- 一般 sell-side framework: 看 cheap multiple + 正面 momentum 一起 → 可能 re-rating 候选
-
-**YTD %**: 年至今总回报。负 YTD + 低 P/E 可能是 "fallen angel" 候选。
-正 YTD + 低 P/E 可能是 "value with momentum"。
-
-**5D %**: 最近 5 个交易日 momentum。Filter 默认 ≥ -10% 排除崩盘中候选。
-
-**EV/EBITDA**: complementary multiple，避免单看 P/E 误判（EPS 被一次性项目影响）。
-
-**FCF Yield**: free cash flow / market cap. 高 = 现金生成能力强 = 好。
-
-**Presets**:
-- **Deep Value**: 寻找板块内极低估 (15%ile) 的大市值标的。
-- **Recovery**: 寻找已经开始从底部回升 (5D % > 5%) 的低估标的。
-""")
+with st.expander(i18n.t("scan.onboarding.title")):
+    st.markdown(i18n.t("scan.onboarding.body"))
 
 st.divider()
-st.caption(
-    "**Methodology**: Cross-sectional within selected sectors. Negative P/E excluded from percentile rank. "
-    "Latest snapshot: " + (db.latest_snapshot_date() or "—") + ". "
-    "Sector membership: many-to-many (ISRG ∈ hc_ai + medtech 等)."
-)
+st.caption(i18n.t("scan.caption.method", date=(db.latest_snapshot_date() or "—")))

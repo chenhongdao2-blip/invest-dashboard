@@ -59,65 +59,83 @@ def price_line_chart(
 
 
 def cumulative_return_chart(
-    closes: pd.DataFrame,
+    normed: pd.DataFrame,
+    portfolio: pd.Series,
+    *,
     title: str = "",
-    pick_date: str | None = None,
+    portfolio_rebalanced: pd.Series | None = None,
     show_individual: bool = False,
+    show_rebalanced: bool = False,
+    labels: dict | None = None,
 ) -> go.Figure:
-    """Index series to pick_date (or first date) = 100.
-    Shows equal-weighted portfolio in bold, plus a 10-90th percentile shaded band
-    for dispersion. Individual lines optional.
-    """
-    if closes.empty:
-        return go.Figure()
-    closes = closes.sort_index()
-    if pick_date:
-        anchor_ts = pd.Timestamp(pick_date)
-        closes = closes[closes.index >= anchor_ts]
-        if closes.empty:
-            return go.Figure()
+    """Plot precomputed since-inception curves (indexed=100).
 
-    base = closes.iloc[0]
-    norm = (closes / base) * 100
-    portfolio = norm.mean(axis=1)
+    Ship-gate #2: this function does NOT recompute portfolio math — it consumes
+    series already produced by `strategy.compute_strategy_returns` (single
+    source). `normed` is the per-ticker indexed wide frame, used ONLY for the
+    dispersion band + optional individual lines.
+
+    - portfolio: equal-weight buy & hold (solid, primary) — always shown.
+    - portfolio_rebalanced: equal-weight periodic rebalance (dashed) — shown when
+      `show_rebalanced` and the series is non-empty.
+    - labels: i18n line names; keys 'portfolio' / 'rebalanced' / 'band' / 'y'.
+      Defaults to English so the chart stays i18n-agnostic.
+    """
+    if portfolio is None or portfolio.empty:
+        return go.Figure()
+    lab = {
+        "portfolio": "Portfolio (buy & hold)",
+        "rebalanced": "Portfolio (monthly rebalance)",
+        "band": "10th–90th %ile range",
+        "y": "Indexed (start=100)",
+        **(labels or {}),
+    }
 
     fig = go.Figure()
 
-    # --- Dispersion Band (10th - 90th percentile) ---
-    p10 = norm.quantile(0.1, axis=1)
-    p90 = norm.quantile(0.9, axis=1)
+    # --- Dispersion Band (10th - 90th percentile) — display only ---
+    if normed is not None and not normed.empty and normed.shape[1] >= 2:
+        norm = normed.sort_index()
+        p10 = norm.quantile(0.1, axis=1)
+        p90 = norm.quantile(0.9, axis=1)
+        fig.add_trace(go.Scatter(
+            x=p90.index.tolist() + p90.index[::-1].tolist(),
+            y=p90.values.tolist() + p10.values[::-1].tolist(),
+            fill="toself",
+            fillcolor="rgba(13, 118, 128, 0.12)",  # FT teal tint ≤12% (DESIGN.md)
+            line=dict(color="rgba(255,255,255,0)"),
+            hoverinfo="skip",
+            showlegend=True,
+            name=lab["band"],
+        ))
+        # --- Individual Lines (Optional) ---
+        if show_individual:
+            for col in norm.columns:
+                fig.add_trace(go.Scatter(
+                    x=norm.index, y=norm[col],
+                    mode="lines", name=str(col),
+                    line=dict(width=1), opacity=0.25,
+                    showlegend=False, hoverinfo="x+y+name",
+                ))
 
-    fig.add_trace(go.Scatter(
-        x=p90.index.tolist() + p90.index[::-1].tolist(),
-        y=p90.values.tolist() + p10.values[::-1].tolist(),
-        fill="toself",
-        fillcolor="rgba(13, 118, 128, 0.12)",  # FT teal tint ≤12% (DESIGN.md)
-        line=dict(color="rgba(255,255,255,0)"),
-        hoverinfo="skip",
-        showlegend=True,
-        name="10th–90th %ile Range",
-    ))
+    # --- Rebalanced Line (dashed) — drawn under the buy&hold solid ---
+    if show_rebalanced and portfolio_rebalanced is not None and not portfolio_rebalanced.empty:
+        fig.add_trace(go.Scatter(
+            x=portfolio_rebalanced.index, y=portfolio_rebalanced.values,
+            mode="lines", name=lab["rebalanced"],
+            line=dict(width=1.5, color=SECONDARY, dash="dash"),
+        ))
 
-    # --- Individual Lines (Optional) ---
-    if show_individual:
-        for col in norm.columns:
-            fig.add_trace(go.Scatter(
-                x=norm.index, y=norm[col],
-                mode="lines", name=col,
-                line=dict(width=1), opacity=0.25,
-                showlegend=False, hoverinfo="x+y+name",
-            ))
-
-    # --- Portfolio Line ---
+    # --- Portfolio Line (buy & hold, solid primary) ---
     fig.add_trace(go.Scatter(
         x=portfolio.index, y=portfolio.values,
-        mode="lines", name="Equal-weight Portfolio",
+        mode="lines", name=lab["portfolio"],
         line=dict(width=1.5, color=PRIMARY),
     ))
 
     fig.update_layout(
         title=_clean_title(title),
-        yaxis_title="Indexed (start=100)",
+        yaxis_title=lab["y"],
         height=450,
     )
     return theme.style_plotly(fig)

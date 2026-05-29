@@ -20,6 +20,8 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+from lib import portfolio_math as pm
+
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_EXT = REPO_ROOT / "data" / "external"
 
@@ -114,30 +116,46 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
 
 
 def compute_strategy_returns(
-    closes: pd.DataFrame, pick_date: str
-) -> tuple[pd.DataFrame, pd.Series, pd.Series]:
-    """Compute since-inception cumulative return (indexed=100) for each ticker
-    + equal-weight portfolio + per-window returns table.
+    closes: pd.DataFrame, pick_date: str, rebalance_freq: str = "M",
+    portfolio_syms: list[str] | tuple[str, ...] | None = None,
+) -> tuple[pd.DataFrame, pd.Series, pd.Series, pd.Series]:
+    """Compute since-inception cumulative return (indexed=100) + TWO equal-weight
+    portfolio curves + per-window returns table.
 
-    Returns:
-      - normed: wide DataFrame indexed=100 from pick_date
-      - portfolio: equal-weight portfolio cumulative (Series)
-      - perf_table: per-ticker returns for windows
+    The strategy is a SCORING model: rank by score, build the portfolio from the
+    **Top 20** by rank (equal-weight headline; `portfolio_syms` = those 20 yf
+    symbols). The portfolio curves (`normed` / `portfolio` / `portfolio_rebalanced`)
+    are computed ONLY on `portfolio_syms`; the per-ticker `perf` table is computed
+    on ALL columns of `closes` (so the page can show the full ranked universe in an
+    expander). If `portfolio_syms` is None the portfolio uses every column.
+
+    Dual-track: buy & hold (shipped curve) + monthly-rebalanced (reproducible-
+    strategy curve). Both computed once here — `charts.py` consumes the series.
+
+    Returns: (normed, portfolio, portfolio_rebalanced, perf_table)
     """
+    _empty4 = (pd.DataFrame(), pd.Series(dtype=float),
+               pd.Series(dtype=float), pd.DataFrame())
     if closes.empty:
-        return pd.DataFrame(), pd.Series(dtype=float), pd.DataFrame()
+        return _empty4
     closes = closes.sort_index()
     anchor_ts = pd.Timestamp(pick_date)
-    sub = closes[closes.index >= anchor_ts]
-    if sub.empty:
-        return pd.DataFrame(), pd.Series(dtype=float), pd.DataFrame()
+    sub_all = closes[closes.index >= anchor_ts]
+    if sub_all.empty:
+        return _empty4
     # M2 audit fix: forward-fill missing closes (trading halts) before normalization
     # so portfolio weight per ticker stays constant; avoid bias toward currently-trading subset
-    sub = sub.ffill()
-    base = sub.iloc[0]
-    normed = (sub / base) * 100
-    # Equal-weight portfolio: mean across tickers each day (after ffill)
-    portfolio = normed.mean(axis=1, skipna=True)
+    sub_all = sub_all.ffill()
+    # Portfolio = Top-N subset (by rank, passed as portfolio_syms); fall back to all.
+    if portfolio_syms:
+        port_cols = [c for c in portfolio_syms if c in sub_all.columns]
+        sub = sub_all[port_cols] if port_cols else sub_all
+    else:
+        sub = sub_all
+    # Single-source math (lib.portfolio_math — pure, unit-tested in tests/test_strategy.py)
+    normed = pm.normalize(sub)
+    portfolio = pm.buy_hold_portfolio(normed)
+    portfolio_rebalanced = pm.rebalanced_portfolio(sub, freq=rebalance_freq)
 
     # Per-window returns
     rows = []
@@ -168,4 +186,4 @@ def compute_strategy_returns(
             "Since %": since,
         })
     perf = pd.DataFrame(rows).set_index("Ticker") if rows else pd.DataFrame()
-    return normed, portfolio, perf
+    return normed, portfolio, portfolio_rebalanced, perf

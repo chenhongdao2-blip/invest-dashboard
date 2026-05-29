@@ -1,28 +1,28 @@
-ticker,name,score,pick_date,benchmark,yf_sym
-CYTK,Cytokinetics,8.22,2026-04-22,XBI,CYTK
-BMRN,BioMarin Pharmaceutical,7.68,2026-04-22,XBI,BMRN
-GMAB,Genmab (ADR),7.6,2026-04-22,XBI,GMAB
-IONS,Ionis Pharmaceuticals,7.43,2026-04-22,XBI,IONS
-MIRM,Mirum Pharmaceuticals,7.35,2026-04-22,XBI,MIRM
-XENE,Xenon Pharmaceuticals,7.3,2026-04-22,XBI,XENE
-PTCT,PTC Therapeutics,7.15,2026-04-22,XBI,PTCT
-RVMD,Revolution Medicines,7.02,2026-04-22,XBI,RVMD
-ARGX,argenx (ADR),7.0,2026-04-22,XBI,ARGX
-DNTH,Dianthus Therapeutics,6.98,2026-04-22,XBI,DNTH
-CORT,Corcept Therapeutics,6.78,2026-04-22,XBI,CORT
-ARWR,Arrowhead Pharmaceuticals,6.73,2026-04-22,XBI,ARWR
-TNGX,Tango Therapeutics,6.7,2026-04-22,XBI,TNGX
-SYRE,Spyre Therapeutics,6.6,2026-04-22,XBI,SYRE
-CELC,Celcuity,6.53,2026-04-22,XBI,CELC
-JAZZ,Jazz Pharmaceuticals,6.48,2026-04-22,XBI,JAZZ
-VRTX,Vertex Pharmaceuticals,6.45,2026-04-22,XBI,VRTX
-GPCR,Structure Therapeutics,6.38,2026-04-22,XBI,GPCR
-ALMS,Alumis,6.38,2026-04-22,XBI,ALMS
-TVTX,Travere Therapeutics,6.3,2026-04-22,XBI,TVTX
-CGON,CG Oncology,6.25,2026-04-22,XBI,CGON
-IMVT,Immunovant,6.23,2026-04-22,XBI,IMVT
-FOLD,Amicus Therapeutics,6.08,2026-04-22,XBI,FOLD
-INCY,Incyte,5.88,2026-04-22,XBI,INCY
-REGN,Regeneron Pharmaceuticals,5.75,2026-04-22,XBI,REGN
-BNTX,BioNTech (ADR),5.15,2026-04-22,XBI,BNTX
-EWTX,Edgewise Therapeutics,7.03,2026-04-22,XBI,EWTX
+rank,ticker,name,score,pick_date,benchmark,yf_sym
+1,CYTK,Cytokinetics,8.22,2026-04-22,XBI,CYTK
+2,BMRN,BioMarin Pharmaceutical,7.68,2026-04-22,XBI,BMRN
+3,GMAB,Genmab (ADR),7.6,2026-04-22,XBI,GMAB
+4,IONS,Ionis Pharmaceuticals,7.43,2026-04-22,XBI,IONS
+5,MIRM,Mirum Pharmaceuticals,7.35,2026-04-22,XBI,MIRM
+6,XENE,Xenon Pharmaceuticals,7.3,2026-04-22,XBI,XENE
+7,PTCT,PTC Therapeutics,7.15,2026-04-22,XBI,PTCT
+8,EWTX,Edgewise Therapeutics,7.03,2026-04-22,XBI,EWTX
+9,RVMD,Revolution Medicines,7.02,2026-04-22,XBI,RVMD
+10,ARGX,argenx (ADR),7.0,2026-04-22,XBI,ARGX
+11,DNTH,Dianthus Therapeutics,6.98,2026-04-22,XBI,DNTH
+12,CORT,Corcept Therapeutics,6.78,2026-04-22,XBI,CORT
+13,ARWR,Arrowhead Pharmaceuticals,6.73,2026-04-22,XBI,ARWR
+14,TNGX,Tango Therapeutics,6.7,2026-04-22,XBI,TNGX
+15,SYRE,Spyre Therapeutics,6.6,2026-04-22,XBI,SYRE
+16,CELC,Celcuity,6.53,2026-04-22,XBI,CELC
+17,JAZZ,Jazz Pharmaceuticals,6.48,2026-04-22,XBI,JAZZ
+18,VRTX,Vertex Pharmaceuticals,6.45,2026-04-22,XBI,VRTX
+19,ALMS,Alumis,6.38,2026-04-22,XBI,ALMS
+20,GPCR,Structure Therapeutics,6.38,2026-04-22,XBI,GPCR
+21,TVTX,Travere Therapeutics,6.3,2026-04-22,XBI,TVTX
+22,CGON,CG Oncology,6.25,2026-04-22,XBI,CGON
+23,IMVT,Immunovant,6.23,2026-04-22,XBI,IMVT
+24,FOLD,Amicus Therapeutics,6.08,2026-04-22,XBI,FOLD
+25,INCY,Incyte,5.88,2026-04-22,XBI,INCY
+26,REGN,Regeneron Pharmaceuticals,5.75,2026-04-22,XBI,REGN
+27,BNTX,BioNTech (ADR),5.15,2026-04-22,XBI,BNTX

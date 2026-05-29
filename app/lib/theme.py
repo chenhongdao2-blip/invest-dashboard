@@ -335,6 +335,19 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
   height: 32px !important;
 }}
 .stButton button:hover {{ background: {CMSI_RED_DEEP} !important; }}
+/* Button :active / :focus — without these the click/pressed + focus-ring state
+   bleeds dark-slate (OS dark-mode) → the button "turns black" on click. Pin all
+   interaction states to the CMSI-red brand and kill the dark focus box-shadow.
+   Covers the top-bar language toggle (a single st.button) and every other button. */
+.stButton button:active,
+.stButton button:focus,
+.stButton button:focus-visible {{
+  background: {CMSI_RED_DEEP} !important;
+  color: {PAPER} !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}}
 
 /* dataframe — outer frame only; cell colors come from config.toml */
 [data-testid="stDataFrame"] {{

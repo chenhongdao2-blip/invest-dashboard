@@ -20,6 +20,7 @@ from lib import db
 from lib import format as fmt
 from lib import ui
 from lib import theme
+from lib import i18n
 
 st.set_page_config(page_title="Sector Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
 
@@ -35,23 +36,26 @@ def load_domain_cfg() -> dict:
 
 cfg = load_domain_cfg()
 
-theme.page_header("Sector Heatmap")
-st.caption("Cross-sectional snapshot per sector. Multiples from yfinance — trailing + 12M forward only.")
+i18n.init_lang()
+i18n.render_lang_toggle()
+
+theme.page_header(i18n.t("heat.title"))
+st.caption(i18n.t("heat.caption"))
 
 # --- Sidebar global search + filter ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="heatmap")
     st.divider()
-    st.subheader("Filter")
+    st.subheader(i18n.t("heat.filter.header"))
     min_mcap_b = st.slider(
-        "Min market cap (USD B)", 0.0, 50.0, 0.0, 0.5,
-        help="过滤掉小市值标的避免均值扭曲"
+        i18n.t("heat.filter.min_mcap"), 0.0, 50.0, 0.0, 0.5,
+        help=i18n.t("heat.filter.min_mcap_help")
     )
     sort_col = st.selectbox(
-        "Sort by",
+        i18n.t("heat.filter.sort_by"),
         ["Mcap USD", "YTD %", "1M %", "Trail P/E", "Fwd P/E"],
         index=0,
-        help="默认按市值降序"
+        help=i18n.t("heat.filter.sort_help")
     )
 
 
@@ -130,6 +134,8 @@ def render_sector(sec: dict) -> None:
         text_cols=["Name"],
         column_widths={"Name": "medium"},
         height=540,
+        column_labels=i18n.common_cols(),
+        index_label=i18n.t("common.col.ticker"),
     )
 
     pct_num_map = {"YTD %": "ytd_%", "1M %": "1m_%", "5D %": "5d_%", "1D %": "1d_%"}
@@ -138,7 +144,7 @@ def render_sector(sec: dict) -> None:
                     "FCF Yld": "fcf_yield"}
 
     # --- Sector aggregates (M11 audit: by cap_tier optional) ---
-    with st.expander(f"{sec['name']} aggregates (mean / median / weighted)"):
+    with st.expander(i18n.t("heat.agg.expander", sector=i18n.sector_name(sec['id']))):
         agg_rows: dict[str, dict] = {}
         for label, num_col in pct_num_map.items():
             s = merged[num_col].dropna()
@@ -162,13 +168,13 @@ def render_sector(sec: dict) -> None:
             _agg,
             text_cols=list(_agg.columns),
             column_help={},
-            index_label="Metric",
+            index_label=i18n.t("heat.agg.metric"),
             height=460,
         )
 
 
 # --- M8 audit: render tabs for piano-key navigation ---
-sector_tabs = st.tabs([f"{sec['name']} ({len(db.sector_tickers('healthcare', sec['id']))})"
+sector_tabs = st.tabs([f"{i18n.sector_name(sec['id'])} ({len(db.sector_tickers('healthcare', sec['id']))})"
                        for sec in cfg["sectors"]])
 
 for tab, sec in zip(sector_tabs, cfg["sectors"]):
@@ -176,26 +182,9 @@ for tab, sec in zip(sector_tabs, cfg["sectors"]):
         render_sector(sec)
 
 st.divider()
-st.caption(
-    "**Color legend**: Returns 绿涨红跌. Multiples (P/E, EV/EBITDA) 绿低红高 (cheap=green). "
-    "FCF Yield 绿高红低. "
-    "Ticker shown in **Bloomberg style** (2269 HK / 4587 JP / 300760 CH). "
-    f"Latest data: **{db.latest_snapshot_date()}**"
-)
-st.caption(
-    "Sort/filter via sidebar. Min market cap filter is useful when small-cap stocks "
-    "distort sector means (e.g., 4587 JP $904M vs GILD $166B)."
-)
+st.caption(i18n.t("heat.caption.legend", date=(db.latest_snapshot_date() or "—")))
+st.caption(i18n.t("heat.caption.filter_note"))
 
 # --- Onboarding ---
-ui.onboarding_expander("Sector Heatmap", """
-**Multiples & Returns**: 
-- **Color Legend**: 收益率（YTD/1M等）绿涨红跌；估值倍数（P/E, EV/EBITDA）绿低红高（代表便宜）；FCF Yield 绿高红低。
-- **Tabs**: 通过上方选项卡快速切换 7 个不同的细分板块。
-
-**Filters**:
-- **Min Market Cap**: 过滤掉极小市值的标的（如某些市值不到 B 的 Biotech），避免它们极端的估值拉低或拉高板块整体均值。
-
-**Aggregates**:
-- 展开下方的 "Sector aggregates" 可以看到该板块所有标的的平均值 (Mean) 和中位数 (Median)。
-""")
+with st.expander(i18n.t("heat.onboarding.title")):
+    st.markdown(i18n.t("heat.onboarding.body"))

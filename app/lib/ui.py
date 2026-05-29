@@ -11,6 +11,7 @@ import streamlit as st
 from lib import db
 from lib import format as fmt
 from lib import theme
+from lib import i18n
 
 # Shared column tooltips — single source of truth for cross-page consistency.
 # Reference these via render_styled_table(column_help=COLUMN_HELP) or splice
@@ -67,50 +68,19 @@ COLUMN_HELP = {
 
 
 def sidebar_search(key_prefix: str = ""):
-    """Unified sidebar ticker search with session state persistence.
+    """Global theme-CSS injection hook (kept on every page).
 
-    Also the global theme injection hook — every page calls this in its sidebar
-    setup, so injecting the CSS here gives us 100% page coverage with zero
-    per-page edits.
+    The sidebar ticker-search UI (🔍 查找标的 subheader + jump-to dropdown) was
+    removed per user request — the top navigation + the dedicated Ticker Drill
+    page already cover lookup, so the duplicate sidebar search was redundant.
+    Function name/signature kept so the existing per-page call sites stay valid
+    and CSS still injects with 100% page coverage. `key_prefix` is now unused.
+    Ticker Drill still resolves its own selection via its local selectbox + the
+    `?ticker=` URL param; `global_ticker` is initialised here for safety.
     """
     theme.inject_css()
-    st.subheader("🔍 Find ticker")
-
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = ""
-
-    all_t = sorted(db.all_tickers())
-    _names = db.ticker_to_name(prefer_cn=True)  # COALESCE(name_cn, name_en, ticker)
-
-    def _ticker_label(x: str) -> str:
-        """Company name + Bloomberg ticker, e.g. '石药集团 · 1093 HK'. Falls back
-        to bare ticker when no name is on file (CN preferred, then EN)."""
-        if not x:
-            return "— select —"
-        bbg = fmt.fmt_ticker_bbg(x)
-        nm = _names.get(x)
-        return f"{nm} · {bbg}" if nm and nm != x else bbg
-
-    current_index = 0
-    if st.session_state.global_ticker in all_t:
-        current_index = all_t.index(st.session_state.global_ticker) + 1
-
-    pick = st.selectbox(
-        "Jump to ticker drill",
-        options=[""] + all_t,
-        index=current_index,
-        format_func=_ticker_label,
-        key=f"{key_prefix}_search_box",
-    )
-
-    if pick != st.session_state.global_ticker:
-        st.session_state.global_ticker = pick
-
-    if st.session_state.global_ticker:
-        st.info(
-            f"📍 **{fmt.fmt_ticker_bbg(st.session_state.global_ticker)}** "
-            "— open *Ticker Drill* page for the full profile."
-        )
 
 
 def onboarding_expander(page_name: str, markdown_text: str):
@@ -133,6 +103,8 @@ def render_styled_table(
     column_widths: dict[str, str] | None = None,
     extra_formats: dict[str, str] | None = None,
     column_help: dict[str, str] | None = None,
+    column_labels: dict[str, str] | None = None,
+    index_label: str | None = None,
     height: int = 500,
     hide_index: bool = False,
     heatmap: bool = False,
@@ -155,6 +127,8 @@ def render_styled_table(
         text_cols=text_cols,
         extra_formats=extra_formats,
         column_help=column_help,
+        column_labels=column_labels,
+        index_label=index_label,
         height=height,
         hide_index=hide_index,
         heatmap=heatmap,

@@ -52,7 +52,7 @@ if isinstance(url_ticker, list):
 if url_ticker and url_ticker in all_tickers and st.session_state.global_ticker != url_ticker:
     st.session_state.global_ticker = url_ticker
 
-theme.page_header("02 / 07", "Ticker Drill")
+theme.page_header("Ticker Drill")
 st.caption("Single-ticker deep dive — wiki memo (if any) + price chart + multiples + cross-sector tags.")
 
 # Local selectbox (fallback when sidebar empty).
@@ -60,11 +60,24 @@ default_idx = 0
 if st.session_state.global_ticker in all_tickers:
     default_idx = all_tickers.index(st.session_state.global_ticker) + 1
 
+_drill_names = db.ticker_to_name(prefer_cn=True)  # COALESCE(name_cn, name_en, ticker)
+
+
+def _drill_label(x: str) -> str:
+    """Company name + Bloomberg ticker, e.g. '康臣药业 · 1681 HK' (CN preferred,
+    then EN; bare ticker when no name on file)."""
+    if not x:
+        return "— select —"
+    bbg = fmt.fmt_ticker_bbg(x)
+    nm = _drill_names.get(x)
+    return f"{nm} · {bbg}" if nm and nm != x else bbg
+
+
 pick = st.selectbox(
     "Choose ticker",
     options=[""] + all_tickers,
     index=default_idx,
-    format_func=lambda x: fmt.fmt_ticker_bbg(x) if x else "— select —",
+    format_func=_drill_label,
     key="drill_local_pick",
 )
 if pick:

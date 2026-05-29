@@ -28,11 +28,7 @@ with st.sidebar:
     ui.sidebar_search(key_prefix="home")
 
 # --- Header ---
-theme.page_header("01 / 07", "Multi-Domain Investment Dashboard")
-st.caption(
-    "Sell-side multi-domain coverage · v1 (P0) · data via yfinance · "
-    "build: `streamlit_app.py` · plan: `~/.claude/plans/modular-toasting-spindle.md`"
-)
+theme.page_header("Multi-Domain Investment Dashboard")
 
 latest = db.latest_snapshot_date()
 fetch_utc = db.last_fetch_utc()

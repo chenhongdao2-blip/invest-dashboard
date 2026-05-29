@@ -44,7 +44,7 @@ def load_domain_cfg() -> dict:
 
 
 cfg = load_domain_cfg()
-theme.page_header("04 / 07", cfg['name'])
+theme.page_header(cfg['name'])
 st.caption(cfg.get("description", "").strip())
 
 # --- 7 sector aggregate summary ---

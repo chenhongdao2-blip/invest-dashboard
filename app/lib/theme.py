@@ -147,8 +147,31 @@ _CSS = f"""
 /* force light color-scheme — dodge OS dark-mode for canvas widgets */
 :root, html, body {{ color-scheme: light !important; }}
 
-/* base page */
-html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
+/* Text-selection highlight. Without this the browser default (a dark slate in
+   OS dark-mode) paints behind selected text → unreadable on cream. Use a soft
+   CMSI-red tint + INK text so selected text stays legible and on-brand. */
+::selection {{ background: rgba(200, 16, 46, 0.22) !important; color: {INK} !important; }}
+::-moz-selection {{ background: rgba(200, 16, 46, 0.22) !important; color: {INK} !important; }}
+
+/* NEVER override Streamlit's Material icon font / ligatures — else controls like
+   the sidebar collapse/expand chevron render as raw ligature TEXT
+   ("keyboard_double_arrow_left") and stop working. Our global tnum/ss01 + the
+   sidebar font-family override would otherwise kill the icon ligatures. */
+[data-testid="stIconMaterial"], span[data-testid="stIconMaterial"],
+.material-symbols-rounded, .material-symbols-outlined, .material-icons,
+[class*="material-symbols"] {{
+  font-family: 'Material Symbols Rounded', 'Material Symbols Outlined', 'Material Icons' !important;
+  font-feature-settings: 'liga' !important;
+  -webkit-font-feature-settings: 'liga' !important;
+  font-variant-numeric: normal !important;
+}}
+
+/* base page — include stApp ROOT. On an OS in dark mode Streamlit 1.58 paints
+   [data-testid="stApp"] dark slate (#0f172a) despite config base="light"; that
+   dark root then shows through any transparent child AND through portaled
+   BaseWeb popovers (which mount into stApp, not stAppViewContainer). Force cream
+   on the root so nothing bleeds dark. */
+html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
   background: {PAPER} !important;
   color: {INK} !important;
   font-family: {FONT_STACK} !important;
@@ -157,11 +180,39 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
   font-feature-settings: 'tnum', 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
 }}
+/* Header: cream, NATURAL height. Do NOT crush to 1px — that (a) lets page_header
+   slide under the fixed toolbar (clipped title) and (b) hides the sidebar
+   collapse/expand control which lives in this header. */
 [data-testid="stHeader"] {{
-  border-bottom: 2px solid {INK} !important;
-  height: 1px !important;
+  background: {PAPER} !important;
 }}
 [data-testid="stToolbar"] {{ background: {PAPER} !important; }}
+/* Sidebar collapse + collapsed-state reopen chevrons.
+   Real Streamlit 1.58 testids (verified against the shipped build + live Chrome
+   DOM probe): stSidebarCollapseButton (open → collapse, « icon) and
+   stExpandSidebarButton (collapsed → reopen, » icon). The earlier guess
+   `stSidebarCollapsedControl` does NOT exist in 1.58 — that CSS was dead.
+   Streamlit paints both chevrons with fadedText60, which resolves to
+   #f1f5f9 (near-white, dark-theme bleed) → invisible on our cream paper.
+   Force INK so they are actually visible/findable. */
+[data-testid="stSidebarCollapseButton"] [data-testid="stIconMaterial"],
+[data-testid="stExpandSidebarButton"] [data-testid="stIconMaterial"],
+[data-testid="stExpandSidebarButton"] svg {{
+  color: {INK} !important;
+  fill: {INK} !important;
+}}
+/* Make the collapsed reopen control discoverable — hairline chip + red hover.
+   It lives inside stHeader at y≈14; NEVER crush stHeader to 1px or this gets
+   clipped out of the viewport (that was the original cloud bug). */
+[data-testid="stExpandSidebarButton"] {{
+  background: {PAPER} !important;
+  border: 1px solid {PAPER_EDGE} !important;
+  border-radius: 2px !important;
+}}
+[data-testid="stExpandSidebarButton"]:hover {{
+  background: {PAPER_BAND} !important;
+  border-color: {CMSI_RED} !important;
+}}
 
 /* sidebar — Claude Design §4.4 (CSS-mapped onto Streamlit's native sidebar) */
 [data-testid="stSidebar"] {{
@@ -172,9 +223,11 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
 [data-testid="stSidebar"] > div:first-child {{
   padding-top: 1rem;
 }}
-[data-testid="stSidebar"] * {{
-  color: {INK_2} !important;
+[data-testid="stSidebar"] {{
   font-family: {FONT_STACK} !important;
+}}
+[data-testid="stSidebar"] *:not([data-testid="stIconMaterial"]):not([class*="material-symbols"]) {{
+  color: {INK_2} !important;
 }}
 [data-testid="stSidebar"] [data-testid="stHeading"] h2,
 [data-testid="stSidebar"] [data-testid="stHeading"] h3 {{
@@ -201,7 +254,18 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {{
 }}
 
 /* page typography — Claude Design §2 */
-.block-container {{ padding-top: 1.5rem !important; padding-bottom: 4rem !important; max-width: 1440px; }}
+/* padding-top clears the fixed 53px stHeader. 4.5rem (=72px) leaves ~19px gap
+   so [NN/07] never tucks under the toolbar (4rem left only ~3px on localhost;
+   too tight for the cloud Manage-app bar). */
+.block-container {{ padding-top: 4.5rem !important; padding-bottom: 4rem !important; max-width: 1440px; }}
+/* When the sidebar is COLLAPSED, let main content reclaim the freed width
+   instead of staying boxed at 1440px (which left a big empty band where the
+   sidebar was). stExpandSidebarButton is rendered ONLY while collapsed, so
+   :has() detects the collapsed state in pure CSS — editorial 1440 cap stays
+   when the sidebar is open, content goes fluid when it's hidden. */
+body:has([data-testid="stExpandSidebarButton"]) .block-container {{
+  max-width: 2200px !important;
+}}
 h1, h2, h3, h4 {{
   font-family: {FONT_STACK} !important;
   color: {INK} !important;
@@ -280,6 +344,52 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
   border-radius: 0;
 }}
 
+/* st.table — native HTML <table> (NOT the canvas grid). Streamlit's base theme
+   paints its text in dark-theme fadedText (rgb(241,245,249), near-white) on a
+   gray border → unreadable / "black" on cream. Force editorial light styling.
+   (Sortable data tables go through ui.render_html_table, not st.table.) */
+[data-testid="stTable"] table {{
+  background: {PAPER} !important;
+  color: {INK} !important;
+  border-collapse: collapse !important;
+  border: 1px solid {PAPER_EDGE} !important;
+  font-family: {FONT_STACK} !important;
+  font-feature-settings: 'tnum';
+}}
+[data-testid="stTable"] thead th {{
+  background: {PAPER_BAND} !important;
+  color: {INK} !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid {PAPER_EDGE} !important;
+}}
+[data-testid="stTable"] tbody th,
+[data-testid="stTable"] tbody td {{
+  background: {PAPER} !important;
+  color: {INK} !important;
+  border-bottom: 1px solid {PAPER_RULE} !important;
+}}
+
+/* inline code / `badges` (e.g. `1801 HK`, `streamlit_app.py`) — Streamlit's
+   default code chip resolves to a dark background; recolor to a cream band so
+   it reads on paper instead of showing as a dark/black pill. */
+code {{
+  background: {PAPER_BAND} !important;
+  color: {INK} !important;
+  border: 1px solid {PAPER_RULE} !important;
+  border-radius: 2px !important;
+  padding: 0 4px !important;
+  font-family: {FONT_MONO} !important;
+  font-size: 0.85em !important;
+}}
+/* …but don't chip-style multi-line st.code() blocks — only inline chips.
+   (No st.code() in the app today; this hardens against future use.) */
+pre code {{
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  font-size: inherit !important;
+}}
+
 /* selectbox / popover — light & cream-bordered */
 [data-baseweb="select"] > div {{
   background-color: {PAPER} !important;
@@ -290,14 +400,25 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
 [data-baseweb="select"] input,
 [data-baseweb="select"] span {{ color: {INK} !important; }}
 [data-baseweb="popover"], [data-baseweb="menu"], [role="listbox"] {{
-  background-color: {PAPER} !important;
   border: 1px solid {PAPER_EDGE} !important;
   border-radius: 2px !important;
 }}
+/* The dropdown LIST in Streamlit 1.58 is a bare <div>/<ul> carrying ONLY
+   emotion classes (st-*) — no data-baseweb/role — so the earlier
+   [data-baseweb=menu]/[role=listbox] rules never matched it and it bled dark
+   slate (#0f172a / #1e293b). Force cream on EVERY container inside the popover;
+   options get INK text + a band hover. */
+[data-baseweb="popover"],
+[data-baseweb="popover"] div,
+[data-baseweb="popover"] ul,
 [data-baseweb="popover"] li,
-[data-baseweb="menu"] li,
-[role="option"] {{ color: {INK} !important; }}
+[data-baseweb="menu"], [data-baseweb="menu"] li,
+[role="listbox"], [role="option"] {{
+  background-color: {PAPER} !important;
+  color: {INK} !important;
+}}
 [data-baseweb="popover"] li:hover,
+[data-baseweb="menu"] li:hover,
 [role="option"]:hover,
 [aria-selected="true"][role="option"] {{
   background-color: {PAPER_BAND} !important;
@@ -342,6 +463,16 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
   border-radius: 2px !important;
   border-width: 1px !important;
 }}
+/* Alert text → INK. Streamlit paints st.warning/st.info body text a faint
+   muted color that is unreadable on the light tint; force black so the
+   disclaimer (and any caveat) is legible. Tint bg is left as-is. */
+[data-testid="stAlert"],
+[data-testid="stAlert"] [data-testid="stMarkdownContainer"],
+[data-testid="stAlert"] p,
+[data-testid="stAlert"] strong,
+[data-testid="stAlert"] li {{
+  color: {INK} !important;
+}}
 
 /* hide chrome */
 #MainMenu, footer, [data-testid="stStatusWidget"], [data-testid="stDeployButton"] {{
@@ -359,6 +490,13 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
   font-weight: 600 !important;
   color: {INK} !important;
   font-size: 13px;
+  background: {PAPER} !important;   /* expanded summary bleeds dark slate otherwise */
+}}
+[data-testid="stExpander"] summary:hover {{ background: {PAPER_BAND} !important; }}
+[data-testid="stExpander"] details,
+[data-testid="stExpander"] details > div,
+[data-testid="stExpanderDetails"] {{
+  background: {PAPER} !important;
 }}
 
 /* ──────────────────────────────────────────────────────────────────────
@@ -524,19 +662,21 @@ def inject_css() -> None:
 
 # ── Editorial component helpers ──────────────────────────────────────────
 
-def page_header(code: str, title: str, meta: str | None = None,
+def page_header(title: str, meta: str | None = None,
                 subtitle: str | None = None) -> None:
     """Render a Claude Design Tier-1 page header.
 
     Replaces `st.title("📊 Multi-Domain Investment Dashboard")` with:
-        page_header("01 / 07", "Multi-Domain Investment Dashboard",
+        page_header("Multi-Domain Investment Dashboard",
                     meta="As of 2026-05-28 16:08 HKT")
+
+    (The old "NN / 07" code prefix was dropped per user request — investor-facing
+    pages don't need an internal page-numbering scheme.)
     """
     meta_html = f'<span class="meta">{meta}</span>' if meta else ""
     sub_html = f'<span class="sub">{subtitle}</span>' if subtitle else ""
     st.markdown(
         f'<div class="cmsi-page-hero">'
-        f'<span class="code">[{code}]</span>'
         f'<h1 class="ttl">{title}<span class="bar"></span></h1>'
         f'{meta_html}'
         f'</div>{sub_html}',

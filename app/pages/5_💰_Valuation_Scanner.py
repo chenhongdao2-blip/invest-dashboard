@@ -88,7 +88,7 @@ with st.sidebar:
 
 
 # --- Build candidate universe ---
-theme.page_header("07 / 07", "Valuation Scanner")
+theme.page_header("Valuation Scanner")
 st.caption(
     "Cross-sectional scan — find cheap-on-multiple stocks with positive recent momentum. "
     "Sector-internal P/E percentile + YTD/5D filter. Latest: " + (db.latest_snapshot_date() or "—")
@@ -172,7 +172,7 @@ if small_n_secs or total_neg_excl > 0:
         )
     if total_neg_excl > 0:
         caveats.append(
-            f"ℹ️ **{total_neg_excl} tickers excluded from P/E percentile** "
+            f"**{total_neg_excl} tickers excluded from P/E percentile** "
             "(negative or null trailing/forward EPS — biotech 烧钱期标的 / one-time charge)"
         )
     st.caption(" · ".join(caveats))

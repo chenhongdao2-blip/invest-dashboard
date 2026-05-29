@@ -35,7 +35,7 @@ def load_domain_cfg() -> dict:
 
 cfg = load_domain_cfg()
 
-theme.page_header("05 / 07", "Sector Heatmap")
+theme.page_header("Sector Heatmap")
 st.caption("Cross-sectional snapshot per sector. Multiples from yfinance — trailing + 12M forward only.")
 
 # --- Sidebar global search + filter ---

@@ -45,7 +45,7 @@ st.set_page_config(
 with st.sidebar:
     ui.sidebar_search(key_prefix="cmsi")
 
-theme.page_header("03 / 07", "CMSI Coverage")
+theme.page_header("CMSI Coverage")
 st.caption("28 ticker official cover list — HK 15 / US 10 / CN A-share 3. Latest data: " + (db.latest_snapshot_date() or "—"))
 
 

@@ -80,6 +80,16 @@ def sidebar_search(key_prefix: str = ""):
         st.session_state.global_ticker = ""
 
     all_t = sorted(db.all_tickers())
+    _names = db.ticker_to_name(prefer_cn=True)  # COALESCE(name_cn, name_en, ticker)
+
+    def _ticker_label(x: str) -> str:
+        """Company name + Bloomberg ticker, e.g. '石药集团 · 1093 HK'. Falls back
+        to bare ticker when no name is on file (CN preferred, then EN)."""
+        if not x:
+            return "— select —"
+        bbg = fmt.fmt_ticker_bbg(x)
+        nm = _names.get(x)
+        return f"{nm} · {bbg}" if nm and nm != x else bbg
 
     current_index = 0
     if st.session_state.global_ticker in all_t:
@@ -89,7 +99,7 @@ def sidebar_search(key_prefix: str = ""):
         "Jump to ticker drill",
         options=[""] + all_t,
         index=current_index,
-        format_func=lambda x: fmt.fmt_ticker_bbg(x) if x else "— select —",
+        format_func=_ticker_label,
         key=f"{key_prefix}_search_box",
     )
 
@@ -105,7 +115,7 @@ def sidebar_search(key_prefix: str = ""):
 
 def onboarding_expander(page_name: str, markdown_text: str):
     """Consistent onboarding expander across pages."""
-    with st.expander(f"📖 How to read this {page_name}"):
+    with st.expander(f"How to read this {page_name}"):
         st.markdown(markdown_text)
 
 
@@ -171,7 +181,7 @@ def _cmsi_table_css() -> str:
     table.cov thead th {{
       background: {t.PAPER_BAND}; color: {t.CMSI_RED};
       font-size: 10px; letter-spacing: .08em; text-transform: uppercase; font-weight: 600;
-      padding: 9px 12px; text-align: right; border-bottom: 1px solid {t.CMSI_RED};
+      padding: 9px 8px; text-align: right; border-bottom: 1px solid {t.CMSI_RED};
       white-space: nowrap; cursor: pointer; user-select: none;
       position: sticky; top: 0; z-index: 2;
     }}
@@ -181,7 +191,7 @@ def _cmsi_table_css() -> str:
       font-size: 9px;
     }}
     table.cov tbody td {{
-      padding: 0 12px; height: 36px; text-align: right;
+      padding: 0 8px; height: 36px; text-align: right;
       font-variant-numeric: tabular-nums lining-nums;
       border-bottom: 1px solid {t.PAPER_RULE}; white-space: nowrap; color: {t.INK_2};
     }}

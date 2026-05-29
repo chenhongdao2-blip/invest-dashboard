@@ -32,7 +32,7 @@ with st.sidebar:
     st.subheader("Chart Settings")
     show_lines = st.checkbox("Show individual ticker lines", value=False, help="Display translucent lines for every ticker in the portfolio.")
 
-theme.page_header("06 / 07", "Strategy Picks Performance")
+theme.page_header("Strategy Picks Performance")
 st.caption(
     "v4 / v5 biotech + HK 高股息 since-inception cumulative returns vs benchmark. "
     "Data source: ic-foundry ledger.db + scoring Excel, picks fetched live via yfinance."
@@ -203,7 +203,10 @@ ui.onboarding_expander("Strategy Page", """
 
 
 # --- M8 audit: tabs > dropdown ---
-strategy_tabs = st.tabs([strat.STRATEGIES[sid]["name"] for sid in strat.STRATEGIES])
+strategy_tabs = st.tabs([
+    strat.STRATEGIES[sid]["name"].lstrip("🧬💰🤖⚕️🏥🩺🧪🚀 ").strip()
+    for sid in strat.STRATEGIES
+])
 for tab, sid in zip(strategy_tabs, strat.STRATEGIES.keys()):
     with tab:
         render_strategy(sid)

@@ -59,3 +59,8 @@ tickers:
   - ticker: 4587.T
     name_en: PeptiDream
     region: JP
+  - ticker: RXRX
+    name_cn: 递归制药
+    name_en: Recursion Pharmaceuticals
+    region: US
+    note: AI 制药/TechBio — 亦在 hc_ai；benchmark 走 biotech(XBI) 非软件

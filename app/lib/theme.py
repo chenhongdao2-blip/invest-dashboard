@@ -25,6 +25,7 @@ How CSS reaches the page:
 """
 from __future__ import annotations
 
+from html import escape as _esc
 from textwrap import dedent
 
 import streamlit as st
@@ -175,8 +176,8 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   background: {PAPER} !important;
   color: {INK} !important;
   font-family: {FONT_STACK} !important;
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 15px;
+  line-height: 23px;
   font-feature-settings: 'tnum', 'ss01', 'cv11';
   -webkit-font-smoothing: antialiased;
 }}
@@ -313,7 +314,7 @@ h4 {{ font-size: 14px !important; color: {INK_3} !important; font-weight: 600; t
 .stCaption, [data-testid="stCaptionContainer"] {{
   color: {INK_3} !important;
   font-family: {FONT_STACK} !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 400;
   letter-spacing: 0.02em;
 }}
@@ -583,8 +584,8 @@ pre code {{
   display: inline-block;
 }}
 .cmsi-kpi-num {{
-  font-size: 30px;
-  line-height: 36px;
+  font-size: 38px;
+  line-height: 44px;
   font-weight: 500;
   letter-spacing: -0.02em;
   color: {INK};
@@ -678,8 +679,8 @@ pre code {{
   display: inline-block;
 }}
 .cmsi-section .ttl {{
-  font-size: 18px;
-  line-height: 24px;
+  font-size: 21px;
+  line-height: 27px;
   font-weight: 600;
   color: {INK};
 }}
@@ -691,6 +692,48 @@ pre code {{
   color: {INK_3};
   font-weight: 500;
   font-family: {FONT_MONO};
+}}
+
+/* ── Research-memo editorial block (Ticker Drill wiki memo) ─────────────── */
+/* Rating / TP meta strip — hairline cells, eyebrow label over INK value. */
+.cmsi-memo-bar {{
+  display: flex; flex-wrap: wrap; align-items: stretch;
+  border: 1px solid {PAPER_EDGE}; background: {PAPER};
+  margin: 0.2rem 0 1rem;
+}}
+.cmsi-memo-cell {{
+  padding: 8px 16px; border-right: 1px solid {PAPER_RULE};
+  display: flex; flex-direction: column; gap: 3px; min-width: 116px;
+}}
+.cmsi-memo-cell:last-child {{ border-right: none; }}
+.cmsi-memo-k {{
+  font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  font-weight: 600; color: {INK_3};
+}}
+.cmsi-memo-v {{
+  font-size: 18px; font-weight: 600; color: {INK};
+  font-variant-numeric: tabular-nums lining-nums;
+}}
+
+/* Eyebrow label (摘要 / 投资逻辑 …) — ▎red + uppercase; body markdown follows. */
+.cmsi-eyebrow {{
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 600; color: {INK_3};
+  display: flex; align-items: center; gap: 8px;
+  margin: 1.1rem 0 0.35rem;
+}}
+.cmsi-eyebrow::before {{
+  content: ''; width: 3px; height: 13px; background: {CMSI_RED}; display: inline-block;
+}}
+
+/* Sector / tag chips — hairline, mono, no fill, no emoji. */
+.cmsi-chips {{ display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 0.8rem; }}
+.cmsi-chip {{
+  display: inline-flex; align-items: center; height: 22px; padding: 0 10px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+  font-family: {FONT_MONO}; color: {INK_2};
+  border: 1px solid {PAPER_EDGE}; border-radius: 2px; background: {PAPER};
+  white-space: nowrap;
 }}
 """
 
@@ -792,3 +835,31 @@ def kpi_strip(cards: list[str]) -> None:
         f'{body}</div>',
         unsafe_allow_html=True,
     )
+
+
+# ── Research-memo helpers (Ticker Drill) ─────────────────────────────────
+
+def memo_meta_bar(items: list[tuple[str, str]]) -> None:
+    """Hairline meta strip for the research-memo header — [(label, value), …]
+    e.g. [('评级', '增持/BUY'), ('目标价', 'HKD25 (+30%)')]. Label = uppercase
+    eyebrow, value = INK bold tabular. Replaces the old '**评级**: x · …' markdown."""
+    cells = "".join(
+        f'<div class="cmsi-memo-cell"><span class="cmsi-memo-k">{_esc(str(k))}</span>'
+        f'<span class="cmsi-memo-v">{_esc(str(v))}</span></div>'
+        for k, v in items
+    )
+    st.markdown(f'<div class="cmsi-memo-bar">{cells}</div>', unsafe_allow_html=True)
+
+
+def eyebrow(label: str) -> None:
+    """Editorial eyebrow label (▎red + uppercase). Follow it with st.markdown(body)
+    so the body keeps normal markdown rendering."""
+    st.markdown(f'<div class="cmsi-eyebrow">{_esc(str(label))}</div>',
+                unsafe_allow_html=True)
+
+
+def chips(items: list[str]) -> None:
+    """Hairline mono chips (sector tags etc) — no fill, no emoji. Replaces the old
+    `code`-backtick tag list."""
+    body = "".join(f'<span class="cmsi-chip">{_esc(str(c))}</span>' for c in items)
+    st.markdown(f'<div class="cmsi-chips">{body}</div>', unsafe_allow_html=True)

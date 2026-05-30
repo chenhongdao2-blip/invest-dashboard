@@ -58,6 +58,116 @@ def price_line_chart(
     return theme.style_plotly(fig)
 
 
+def _rgba(hex_color: str, a: float) -> str:
+    """'#rrggbb' → 'rgba(r,g,b,a)' (for soft fills under a same-color line)."""
+    h = hex_color.lstrip("#")
+    try:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except (ValueError, IndexError):
+        r, g, b = 74, 74, 74
+    return f"rgba({r},{g},{b},{a:.3f})"
+
+
+def mini_trend_chart(
+    series: pd.Series,
+    *,
+    title: str = "",
+    color: str | None = None,
+    ylabel: str = "USD bn",
+) -> go.Figure:
+    """Compact single-metric trend (SEC financials: Revenue / R&D / Cash …).
+
+    series: index=period-end date, values in display units (e.g. USD billions).
+    Smooth spline line over a soft gradient fill, small period markers, and an
+    emphasised last point — a clean sell-side sparkline. Height 220, designed to
+    sit in a 3-column st.columns grid. FT-editorial via theme.style_plotly.
+    """
+    fig = go.Figure()
+    if series is None or series.dropna().empty:
+        return theme.style_plotly(fig)
+    c = color or theme.INK_2
+    s = series.dropna()
+    # Area fill (soft, same-hue) under a smoothed spline line.
+    fig.add_trace(go.Scatter(
+        x=s.index, y=s.values, mode="lines",
+        line=dict(width=2.2, color=c, shape="spline", smoothing=0.6),
+        fill="tozeroy", fillcolor=_rgba(c, 0.10), showlegend=False,
+        hovertemplate="%{x|%Y-%m}<br>%{y:.2f}<extra></extra>",
+    ))
+    # Small markers at the real (annual) data points so the spline stays honest.
+    fig.add_trace(go.Scatter(
+        x=s.index, y=s.values, mode="markers",
+        marker=dict(size=4, color=c), showlegend=False, hoverinfo="skip",
+    ))
+    # Emphasised last point (ring) — the latest reported value.
+    fig.add_trace(go.Scatter(
+        x=[s.index[-1]], y=[s.values[-1]], mode="markers",
+        marker=dict(size=8, color=c, line=dict(width=2, color=theme.PAPER)),
+        showlegend=False, hoverinfo="skip",
+    ))
+    fig.update_layout(
+        title=_clean_title(title), yaxis_title=ylabel, height=220,
+        margin=dict(l=52, r=18, t=52, b=28),
+        xaxis=dict(showgrid=False),   # declutter — keep only horizontal gridlines
+    )
+    return theme.style_plotly(fig)
+
+
+def relative_strength_chart(
+    stock: pd.Series,
+    benchmarks: dict[str, pd.Series],
+    *,
+    stock_name: str,
+    title: str = "",
+    ylabel: str = "Rebased (start=100)",
+) -> tuple[go.Figure | None, str | None]:
+    """Rebased=100 relative strength: a single stock vs sector benchmark(s).
+
+    G3 (Codex /cccg): all series are INNER-JOINED on common trading days and
+    rebased to 100 at the FIRST COMMON date — never each series' own first day.
+    benchmarks_daily starts ~2 months later than prices_daily, so rebasing the
+    stock from its own earlier start would show that start-date gap as spurious
+    alpha. The anchor is therefore the latest common start.
+
+    Series are distinguished by line STYLE not color (DESIGN.md §4): the stock is
+    a solid CMSI-red 1.8px line; benchmarks are muted-grey dashed/dotted 1.3px.
+
+    Returns (figure, anchor_date_iso). Figure is None when there is too little
+    common history (<5 points) — the caller should fall back to the absolute
+    price line.
+    """
+    if stock is None or stock.dropna().empty or not benchmarks:
+        return None, None
+    frame: dict[str, pd.Series] = {stock_name: stock.dropna()}
+    for sym, ser in benchmarks.items():
+        if ser is not None and not ser.dropna().empty:
+            frame[sym] = ser.dropna()
+    wide = pd.DataFrame(frame).dropna()          # inner-join → common trading days
+    if len(wide) < 5 or wide.shape[1] < 2:
+        return None, None
+    rebased = wide.divide(wide.iloc[0]) * 100.0   # anchor = first common date
+    anchor_iso = wide.index[0].date().isoformat()
+
+    fig = go.Figure()
+    # Benchmarks first (drawn under), muted grey, distinguished by dash pattern.
+    dash_cycle = ["dash", "dot", "dashdot"]
+    bench_cols = [c for c in rebased.columns if c != stock_name]
+    for i, col in enumerate(bench_cols):
+        fig.add_trace(go.Scatter(
+            x=rebased.index, y=rebased[col], mode="lines", name=col,
+            line=dict(width=1.3, color=theme.INK_3, dash=dash_cycle[i % len(dash_cycle)]),
+        ))
+    # Stock on top — solid CMSI-red emphasis.
+    fig.add_trace(go.Scatter(
+        x=rebased.index, y=rebased[stock_name], mode="lines", name=stock_name,
+        line=dict(width=1.8, color=theme.CMSI_RED),
+    ))
+    fig.update_layout(title=_clean_title(title), yaxis_title=ylabel, height=380)
+    # Baseline at 100 — the rebase anchor reference.
+    fig.add_hline(y=100, line=dict(width=1, color=theme.INK_3, dash="dash"), opacity=0.4)
+    return theme.style_plotly(fig), anchor_iso
+
+
 def cumulative_return_chart(
     normed: pd.DataFrame,
     portfolio: pd.Series,

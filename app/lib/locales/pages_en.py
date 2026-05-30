@@ -185,13 +185,49 @@ STRINGS = {
     "drill.pick_prompt": "Pick a ticker from the sidebar or the selectbox above.",
     "drill.badge.coverage": "CMSI Coverage",
     "drill.badge.pick": "Pick: {names}",
-    "drill.metric.last_local": "Last (local)",
+    "drill.metric.last_local": "Last",
     "drill.metric.last": "Last",
     "drill.metric.mcap": "Market cap",
     "drill.metric.fwd_pe": "Fwd P/E",
+    "drill.metric.tp_upside": "TP Upside",
+    "drill.metric.ytd": "YTD Return",
+    "drill.metric.adv": "20D Turnover",
+    "drill.kpi.ytd_foot": "{ccy} · local",
+    "drill.kpi.adv_foot": "{ccy} · liquidity",
+    "drill.consensus_line": "Consensus TP {tp} ({upside} vs last) · {n} analysts · third-party estimate, reference only",
+    "drill.analysts": "analysts",
+    "drill.kpi.pe_foot": "TRAIL {pe}",
+    "drill.kpi.tp_foot": "Consensus TP {tp}",
+    "drill.kpi.tp_none": "No consensus TP",
+    # ── Variant block (House vs Consensus) ──
+    "drill.variant.title": "Variant · House vs Consensus",
+    "drill.variant.house": "House View · CMS HK",
+    "drill.variant.consensus": "Consensus · Reference Only",
+    "drill.variant.gap": "Variant Gap",
+    "drill.variant.tp_foot": "TP {tp}",
+    "drill.variant.cons_foot": "TP {tp} · {n} analysts",
+    "drill.variant.gap_foot": "vs last price",
+    "drill.variant.disclaimer": (
+        "Consensus is a third-party Yahoo Finance aggregate (limited analyst "
+        "coverage; may be unreliable for HK 18A names) — reference only, not a "
+        "CMS HK view, and not investment advice. House view is from the wiki memo "
+        "and uses a different methodology; do not distribute externally."
+    ),
+    "drill.reco.strong_buy": "Strong Buy",
+    "drill.reco.buy": "Buy",
+    "drill.reco.hold": "Hold",
+    "drill.reco.sell": "Sell",
+    "drill.reco.strong_sell": "Strong Sell",
     "drill.consensus_tp": "Consensus TP: **{tp}** ({upside} vs last){analysts}",
     "drill.no_mults": "No multiples snapshot — ticker may be picks-only (not in main fetch universe).",
     "drill.section.price": "Price · USD-normalized",
+    "drill.section.rs": "Relative Strength · vs Sector",
+    "drill.rs.title": "{bbg} · Relative Strength (rebased = 100)",
+    "drill.rs.caption": (
+        "Rebased to 100 on {date}. Benchmarks: {benches}. Stock and benchmarks are "
+        "all in the listing currency ({ccy}) — same-currency comparison, no FX distortion."
+    ),
+    "drill.rs.fallback": "No overlapping sector-benchmark data — falling back to the absolute USD close.",
     "drill.ret_windows": "Return windows",
     "drill.col.window": "Window",
     "drill.col.return": "Return %",
@@ -231,6 +267,12 @@ STRINGS = {
         "`~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
     ),
     "drill.wiki.memo_title": "Research memo",
+    "drill.wiki.banner_public": (
+        "Public research summary · investment thesis and publicly available "
+        "information. For ratings, target prices and full estimates, please refer "
+        "to the formal CMS HK research report. For reference only; not investment "
+        "advice or an offer."
+    ),
     "drill.wiki.rating": "Rating",
     "drill.wiki.tp": "TP",
     "drill.wiki.updated": "Updated",
@@ -245,7 +287,7 @@ STRINGS = {
     "drill.warn.no_return": "No return data.",
     "drill.warn.no_mult_snap": "No multiples snapshot.",
     "drill.no_sector": "Ticker is not in any configured sector universe.",
-    "drill.chart.title": "{bbg} · USD close ({n} obs)",
+    "drill.chart.title": "{bbg} · {ccy} close ({n} obs)",
     # multiples panel labels
     "drill.mult.trailing_pe": "Trailing P/E",
     "drill.mult.forward_pe": "Forward P/E",
@@ -253,6 +295,19 @@ STRINGS = {
     "drill.mult.ev_sales": "EV/Sales",
     "drill.mult.pb": "P/B",
     "drill.mult.fcf_yield": "FCF Yield",
+    # ── SEC financial trends (US-only) ──
+    "drill.sec.section": "Financial Trends · SEC",
+    "drill.sec.na": (
+        "No SEC filing for this name (SEC XBRL is US-GAAP only). HK 18A reports "
+        "under IFRS and A-shares under PRC GAAP — see local / Wind financials."
+    ),
+    "drill.sec.revenue": "Revenue",
+    "drill.sec.rnd": "R&D",
+    "drill.sec.cash": "Cash & equivalents",
+    "drill.sec.no_concept": "No data",
+    "drill.sec.latest": "Latest {val} ({date})",
+    "drill.sec.runway": "Cash runway ≈ {years} yr ((cash + ST investments) ÷ annual R&D, as of {date}, rough)",
+    "drill.sec.source": "Source: SEC XBRL · latest filing {filed} · US filers only",
     "drill.membership": "Universe membership",
     "drill.onboarding.title": "How to read this page",
     "drill.onboarding.body": (

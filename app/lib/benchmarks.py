@@ -24,6 +24,15 @@ BENCHMARKS = {
     "IHI":   "US Medical Devices",
     "^HSI":  "Hang Seng Index",
     "^GSPC": "S&P 500",
+    "^SP500-352020": "S&P 500 Pharmaceuticals",   # US large-cap MNC pharma (vs XPH equal-weight)
+    "^NDX": "Nasdaq 100",                          # tech 大盘 anchor for hc_ai / health-tech names
+    "IGV": "Tech-Software (SaaS)",                 # US software/SaaS — health-tech (Veeva…) RS benchmark
+    "XHS": "Health Care Services",                 # US hospital/facility operators — hospital_care RS benchmark
+    # HK / China healthcare benchmarks — native currency (HKD / CNY). HSHCI is
+    # iFind-seeded (not on yfinance); 512170 is yfinance-fetched. See
+    # jobs/fetch_cn_benchmarks.py.
+    "HSHCI.HK":  "Hang Seng Healthcare",
+    "512170.SS": "CSI Healthcare (A-share)",
 }
 
 
@@ -82,6 +91,14 @@ def _series_live() -> dict[str, pd.Series]:
         except Exception:
             out[t] = pd.Series(dtype=float)
     return out
+
+
+@st.cache_data(ttl=1800)
+def close_series() -> dict[str, pd.Series]:
+    """Public accessor: {benchmark symbol: close series}. Cron-cached DB first,
+    live yfinance fallback only if the DB is empty. Used by the Ticker Drill
+    relative-strength chart."""
+    return _series_from_db() or _series_live()
 
 
 @st.cache_data(ttl=1800)

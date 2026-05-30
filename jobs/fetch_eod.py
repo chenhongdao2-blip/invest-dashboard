@@ -36,7 +36,14 @@ FX_PAIRS = {
 
 # Benchmark indices — keep in sync with app/lib/benchmarks.py BENCHMARKS.
 # Cron-fetched into benchmarks_daily so the home page never makes a live call.
-BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC"]
+BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
+                     "^SP500-352020",   # S&P 500 Pharmaceuticals — US MNC big-pharma RS benchmark
+                     "^NDX",            # Nasdaq 100 — tech 大盘 for hc_ai / health-tech RS benchmark
+                     "IGV",             # iShares Tech-Software — US health-tech / SaaS RS benchmark
+                     "XHS",             # SPDR Health Care Services — US hospital_care RS benchmark
+                     "512170.SS"]       # 中证医疗 ETF (CNY) — A-share healthcare RS benchmark
+# NB: 恒生医疗保健 (HSHCI.HK) is NOT here — yfinance has no pure HK healthcare index.
+# It is iFind-seeded via jobs/fetch_cn_benchmarks.py (cron can't reach iFind).
 
 # yfinance.info → company_profile column map (column name == yf.info key, so the
 # Ticker Drill page can keep using info.get('ebitda') etc unchanged).

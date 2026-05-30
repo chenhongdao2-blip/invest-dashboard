@@ -171,6 +171,23 @@ def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=300)
+def adv_20d(ticker: str) -> float | None:
+    """20-trading-day average daily turnover (close × volume) in the stock's LOCAL
+    currency — a liquidity gauge (small-cap HK/A names can be hard to build/exit).
+    Returns None when no volume is on file. Reads the committed snapshots.db only
+    (works offline; no live call)."""
+    df = query(
+        "SELECT close, volume FROM prices_daily WHERE ticker = ? "
+        "ORDER BY date DESC LIMIT 20",
+        (ticker,),
+    )
+    if df.empty or df["volume"].isna().all():
+        return None
+    turn = (df["close"] * df["volume"]).dropna()
+    return float(turn.mean()) if not turn.empty else None
+
+
+@st.cache_data(ttl=300)
 def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
     """M1 audit fix: USD-converted close series (so cross-region returns are comparable).
 

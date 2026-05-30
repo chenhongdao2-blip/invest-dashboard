@@ -351,6 +351,35 @@ def concept_timeseries(
     return df
 
 
+@st.cache_data(ttl=300)
+def kpi_timeseries(ticker: str, kpi_key: str, freq: str = "annual") -> tuple[pd.DataFrame, str]:
+    """Time-series for a KPI, choosing the concept in its fallback chain with the
+    LONGEST history (most distinct period-ends) so concept migrations don't truncate
+    the trend. Returns (df[end_date,value,yoy(,qoq)], concept). Empty df if no data.
+
+    SEC / US-GAAP data only — reads the committed snapshots.db (works offline)."""
+    kpi = _kpi_row(kpi_key)
+    if not kpi:
+        return pd.DataFrame(), ""
+    # Prefer the concept whose data is MOST RECENT (latest end_date), then longest.
+    # A "most period-ends" rule wrongly picks a DEPRECATED concept: e.g. revenue's
+    # 'Revenues' (heavily used pre-2018, many old period-ends) would beat the current
+    # 'RevenueFromContractWithCustomer…' and render a stale 2017 series.
+    best = pd.DataFrame()
+    best_concept = ""
+    best_key: tuple[str, int] | None = None
+    for taxconcept in kpi["concepts"]:
+        tax, _, concept = taxconcept.partition(":")
+        ts = concept_timeseries(ticker, tax, concept, kpi["unit_hint"], freq=freq)
+        tsv = ts.dropna(subset=["value"]) if not ts.empty else ts
+        if tsv.empty:
+            continue
+        key = (str(tsv["end_date"].max()), len(tsv))
+        if best_key is None or key > best_key:
+            best, best_concept, best_key = ts, concept, key
+    return best, best_concept
+
+
 # ──────────────────────────────────────────────────────────────────────────
 # Full fact browser
 # ──────────────────────────────────────────────────────────────────────────

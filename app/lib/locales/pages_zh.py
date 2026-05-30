@@ -179,13 +179,48 @@ STRINGS = {
     "drill.pick_prompt": "从侧边栏或上方下拉框选择一只标的。",
     "drill.badge.coverage": "CMSI 覆盖",
     "drill.badge.pick": "入选：{names}",
-    "drill.metric.last_local": "最新价（本币）",
+    "drill.metric.last_local": "最新价",
     "drill.metric.last": "最新价",
     "drill.metric.mcap": "市值",
     "drill.metric.fwd_pe": "动态 P/E",
+    "drill.metric.tp_upside": "目标价空间",
+    "drill.metric.ytd": "年初至今",
+    "drill.metric.adv": "20日成交额",
+    "drill.kpi.ytd_foot": "{ccy} · 本币口径",
+    "drill.kpi.adv_foot": "{ccy} · 流动性",
+    "drill.consensus_line": "市场一致目标价 {tp}（较现价 {upside}）· {n} 分析师 · 第三方一致预期，仅供参考",
+    "drill.analysts": "分析师",
+    "drill.kpi.pe_foot": "静态 {pe}",
+    "drill.kpi.tp_foot": "一致目标价 {tp}",
+    "drill.kpi.tp_none": "无一致目标价",
+    # ── Variant block (House vs Consensus) ──
+    "drill.variant.title": "预期差 · 内部观点 vs 市场一致",
+    "drill.variant.house": "内部观点 · CMS HK",
+    "drill.variant.consensus": "市场一致预期 · 仅供参考",
+    "drill.variant.gap": "预期差 · VARIANT",
+    "drill.variant.tp_foot": "目标价 {tp}",
+    "drill.variant.cons_foot": "目标价 {tp} · {n} 分析师",
+    "drill.variant.gap_foot": "较最新价",
+    "drill.variant.disclaimer": (
+        "市场一致预期来自 Yahoo Finance 第三方聚合（覆盖分析师有限，港股 18A 标的口径"
+        "可能失真），仅供参考、不代表 CMS HK 观点，亦不构成投资建议。内部观点引自 wiki "
+        "memo，与第三方预期口径不同，请勿对外分发。"
+    ),
+    "drill.reco.strong_buy": "强烈买入",
+    "drill.reco.buy": "买入",
+    "drill.reco.hold": "持有",
+    "drill.reco.sell": "卖出",
+    "drill.reco.strong_sell": "强烈卖出",
     "drill.consensus_tp": "一致目标价：**{tp}**（较最新 {upside}）{analysts}",
     "drill.no_mults": "无估值快照——该标的可能仅为选股池标的（不在主获取池）。",
     "drill.section.price": "价格 · 美元归一",
+    "drill.section.rs": "相对强弱 · vs 板块基准",
+    "drill.rs.title": "{bbg} · 相对强弱（基准日 = 100）",
+    "drill.rs.caption": (
+        "{date} 归一为 100。对照基准：{benches}。个股与基准均按上市地本币（{ccy}）"
+        "同币种对照，rebase 比较相对走势，无汇率扰动。"
+    ),
+    "drill.rs.fallback": "无重叠的板块基准数据，回退显示美元绝对收盘价。",
     "drill.ret_windows": "区间收益率",
     "drill.col.window": "区间",
     "drill.col.return": "收益 %",
@@ -224,6 +259,10 @@ STRINGS = {
         "`companies/*.md` 文件即可在此展示投资逻辑。"
     ),
     "drill.wiki.memo_title": "研究备忘",
+    "drill.wiki.banner_public": (
+        "公开研究摘要 · 呈现投资逻辑与公开信息框架。具体评级、目标价及完整测算"
+        "以 CMS HK 正式研究报告为准。本材料仅供参考，不构成任何投资建议或要约。"
+    ),
     "drill.wiki.rating": "评级",
     "drill.wiki.tp": "目标价",
     "drill.wiki.updated": "更新于",
@@ -238,7 +277,7 @@ STRINGS = {
     "drill.warn.no_return": "无收益数据。",
     "drill.warn.no_mult_snap": "无估值倍数快照。",
     "drill.no_sector": "该标的不在任何已配置的板块股票池中。",
-    "drill.chart.title": "{bbg} · 美元收盘价（{n} 个观测）",
+    "drill.chart.title": "{bbg} · {ccy} 收盘价（{n} 个观测）",
     # multiples panel labels
     "drill.mult.trailing_pe": "静态市盈率",
     "drill.mult.forward_pe": "动态市盈率",
@@ -246,6 +285,19 @@ STRINGS = {
     "drill.mult.ev_sales": "EV/销售额",
     "drill.mult.pb": "市净率",
     "drill.mult.fcf_yield": "自由现金流收益率",
+    # ── SEC financial trends (US-only) ──
+    "drill.sec.section": "财务趋势 · SEC",
+    "drill.sec.na": (
+        "本标的无 SEC 申报（SEC XBRL 为美股 US-GAAP 口径专属）。港股 18A 采用 IFRS、"
+        "A 股采用企业会计准则，财务请见本地 / Wind 财报。"
+    ),
+    "drill.sec.revenue": "营业收入",
+    "drill.sec.rnd": "研发费用",
+    "drill.sec.cash": "现金及等价物",
+    "drill.sec.no_concept": "无此科目数据",
+    "drill.sec.latest": "最新 {val}（{date}）",
+    "drill.sec.runway": "现金跑道 ≈ {years} 年（现金+短投 ÷ 年度研发，截至 {date}，粗略估算）",
+    "drill.sec.source": "来源：SEC XBRL · 最新申报 {filed} · 仅美股口径",
     "drill.membership": "所属板块",
     "drill.onboarding.title": "如何阅读本页",
     "drill.onboarding.body": (

@@ -34,6 +34,19 @@ FX_PAIRS = {
     "CHF": "USDCHF=X",
 }
 
+# Benchmark indices — keep in sync with app/lib/benchmarks.py BENCHMARKS.
+# Cron-fetched into benchmarks_daily so the home page never makes a live call.
+BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC"]
+
+# yfinance.info → company_profile column map (column name == yf.info key, so the
+# Ticker Drill page can keep using info.get('ebitda') etc unchanged).
+PROFILE_FIELDS = [
+    "ebitda", "totalCash", "totalDebt", "totalRevenue", "revenueGrowth",
+    "grossMargins", "operatingMargins", "profitMargins", "returnOnEquity",
+    "trailingPegRatio", "dividendYield", "beta", "sharesOutstanding",
+    "floatShares", "longBusinessSummary",
+]
+
 BATCH_SIZE = 40                   # yfinance batch download size
 SLEEP_BETWEEN_INFO = 0.4          # seconds between .info calls (rate limit, M4 doubled)
 INFO_MAX_RETRY = 4                # M4: max retries per ticker
@@ -324,6 +337,62 @@ def info_to_multiple_row(
     )
 
 
+# ----- benchmarks -----
+def upsert_benchmarks(conn: sqlite3.Connection, rows: list[tuple]) -> int:
+    if not rows:
+        return 0
+    conn.executemany(
+        "INSERT OR REPLACE INTO benchmarks_daily (ticker, date, close) VALUES (?, ?, ?)",
+        rows,
+    )
+    return len(rows)
+
+
+def fetch_benchmarks(conn: sqlite3.Connection, start: str, end: str) -> int:
+    """Download benchmark index closes and store them. INVARIANT: use yf.download
+    (not Ticker().history) for index tickers like ^HSI."""
+    try:
+        d = yf.download(
+            BENCHMARK_TICKERS, start=start, end=end,
+            auto_adjust=True, progress=False, threads=True, group_by="ticker",
+        )
+    except Exception as e:  # noqa: BLE001
+        print(f"[bench] download failed: {e}")
+        return 0
+    total = 0
+    for t in BENCHMARK_TICKERS:
+        try:
+            if isinstance(d.columns, pd.MultiIndex):
+                ser = d[t]["Close"].dropna() if t in d.columns.get_level_values(0) else pd.Series(dtype=float)
+            else:
+                ser = d["Close"].dropna()
+            rows = [(t, idx.date().isoformat(), float(v)) for idx, v in ser.items()]
+            n = upsert_benchmarks(conn, rows)
+            total += n
+            print(f"[bench] {t}: {n} rows" + ("" if n else "  <- EMPTY"))
+        except Exception as e:  # noqa: BLE001
+            print(f"[bench] {t}: parse failed ({e})")
+    conn.commit()
+    return total
+
+
+# ----- company profile (.info → company_profile) -----
+def upsert_profile(conn: sqlite3.Connection, ticker: str, info: dict) -> None:
+    """Persist profile fields from an already-fetched .info dict (no extra request)."""
+    vals = {f: info.get(f) for f in PROFILE_FIELDS}
+    # numeric-ish fields → float; longBusinessSummary stays text
+    for f in PROFILE_FIELDS:
+        if f != "longBusinessSummary":
+            vals[f] = _safe_float(vals[f])
+    cols = ["ticker", "fetched_at", *PROFILE_FIELDS]
+    placeholders = ", ".join("?" * len(cols))
+    conn.execute(
+        f"INSERT OR REPLACE INTO company_profile ({', '.join(cols)}) VALUES ({placeholders})",
+        (ticker, datetime.now(timezone.utc).isoformat(timespec="seconds"),
+         *[vals[f] for f in PROFILE_FIELDS]),
+    )
+
+
 # ----- main -----
 def main() -> None:
     args = parse_args()
@@ -388,6 +457,12 @@ def main() -> None:
             f"{price_fails[:20]}"
         )
 
+    # 3b. Benchmark indices (cron-cached so home page never calls live yfinance).
+    #     Needs a longer window than prices for 1M/YTD returns.
+    bench_start = (today - timedelta(days=200)).isoformat()
+    n_bench = fetch_benchmarks(conn, start=bench_start, end=end)
+    print(f"[bench] total benchmark rows upserted: {n_bench}")
+
     # 4. Multiples (.info) — M4 audit: track failure rate and raise if > threshold
     if not args.skip_multiples:
         total_mult = 0
@@ -402,6 +477,7 @@ def main() -> None:
             if row:
                 total_mult += upsert_multiples(conn, [row])
                 ok += 1
+            upsert_profile(conn, t, info)   # piggyback profile from same .info dict
             if idx % 20 == 0:
                 conn.commit()
                 print(f"[mult] progress {idx}/{len(tickers)} (ok={ok}, fail={len(fail_list)})")

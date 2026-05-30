@@ -327,19 +327,30 @@ st.divider()
 # Gated behind an explicit button so that Streamlit Cloud cold-start visits
 # don't pay a 30s+ yfinance.info round-trip on every page load. The button
 # triggers a single cached fetch — subsequent reruns hit the cache.
-@st.cache_data(ttl=3600, show_spinner="Fetching live fundamentals…")
+@st.cache_data(ttl=3600, show_spinner="Loading fundamentals…")
 def _yf_info(t: str) -> dict:
-    """Live yfinance.info, cached 1h PER TICKER.
+    """Fundamentals as an info-like dict, cached 1h PER TICKER.
+
+    Source priority: cron-cached company_profile in snapshots.db FIRST (live
+    yfinance.info is rate-limited/blocked from Streamlit Cloud IPs → returns empty);
+    live yfinance.info only as fallback when the ticker has no cached profile row.
 
     NB: param must NOT start with '_' — Streamlit drops underscore-prefixed args
     from the cache key. With `_t`, the first ticker fetched was cached and returned
     for every other ticker (the "every company shows Innovent" bug).
     """
-    try:
-        info = yf.Ticker(t).info or {}
+    prof = db.query("SELECT * FROM company_profile WHERE ticker = ?", (t,))
+    if not prof.empty:
+        row = prof.iloc[0].to_dict()
+        row.pop("ticker", None)
+        row.pop("fetched_at", None)
+        # drop nulls so the page's "—" fallback still shows for missing fields
+        return {k: v for k, v in row.items()
+                if v is not None and not (isinstance(v, float) and pd.isna(v))}
+    try:  # fallback: live (works locally w/ proxy; usually blocked on cloud)
+        return yf.Ticker(t).info or {}
     except Exception:
         return {}
-    return info or {}
 
 
 with st.expander(i18n.t("drill.ext.expander"), expanded=False):

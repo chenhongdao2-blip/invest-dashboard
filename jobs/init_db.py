@@ -77,6 +77,39 @@ CREATE TABLE IF NOT EXISTS meta (
     updated_at  TEXT
 );
 
+-- Benchmark index closes (cron-fetched; home page reads this, NOT live yfinance —
+-- live calls from Streamlit Cloud get rate-limited by Yahoo, esp. ^HSI).
+CREATE TABLE IF NOT EXISTS benchmarks_daily (
+    ticker TEXT NOT NULL,
+    date   TEXT NOT NULL,
+    close  REAL,
+    PRIMARY KEY (ticker, date)
+);
+CREATE INDEX IF NOT EXISTS idx_bench_date ON benchmarks_daily(date);
+
+-- Company profile from yfinance.info (cron-fetched; Ticker Drill extended
+-- fundamentals reads this, NOT live .info — Yahoo blocks live .info from cloud IPs).
+-- Columns mirror yfinance.info field names so the page can use info.get('ebitda') etc.
+CREATE TABLE IF NOT EXISTS company_profile (
+    ticker                TEXT PRIMARY KEY,
+    fetched_at            TEXT,
+    ebitda                REAL,
+    totalCash             REAL,
+    totalDebt             REAL,
+    totalRevenue          REAL,
+    revenueGrowth         REAL,
+    grossMargins          REAL,
+    operatingMargins      REAL,
+    profitMargins         REAL,
+    returnOnEquity        REAL,
+    trailingPegRatio      REAL,
+    dividendYield         REAL,
+    beta                  REAL,
+    sharesOutstanding     REAL,
+    floatShares           REAL,
+    longBusinessSummary   TEXT
+);
+
 -- ── SEC Company Facts (auto-grown by fetch_sec_facts.py) ──
 -- ticker→CIK mapping + fetch status + raw snapshot (audit/re-parse)
 CREATE TABLE IF NOT EXISTS sec_company (

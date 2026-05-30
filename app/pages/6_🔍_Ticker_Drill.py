@@ -16,6 +16,8 @@ Resolved ticker priority:
 
 from __future__ import annotations
 
+import hashlib
+
 import pandas as pd
 import streamlit as st
 import yfinance as yf
@@ -353,6 +355,20 @@ def _yf_info(t: str) -> dict:
         return {}
 
 
+@st.cache_data(ttl=3600)
+def _summary_cn(ticker: str, en_text: str) -> str | None:
+    """Cached Chinese translation of the business summary (jobs/translate_profiles.py),
+    but only if its en_hash still matches the current English text (else it's stale →
+    return None so the page shows the English source)."""
+    df = db.query("SELECT en_hash, summary_cn FROM profile_cn WHERE ticker = ?", (ticker,))
+    if df.empty:
+        return None
+    row = df.iloc[0]
+    if row["en_hash"] == hashlib.sha256((en_text or "").encode("utf-8")).hexdigest():
+        return row["summary_cn"]
+    return None
+
+
 with st.expander(i18n.t("drill.ext.expander"), expanded=False):
     btn_key = f"fetch_yf_info_{ticker}"
     fetched_key = f"fetched_yf_info_{ticker}"
@@ -409,9 +425,14 @@ with st.expander(i18n.t("drill.ext.expander"), expanded=False):
 
             if info.get("longBusinessSummary"):
                 st.markdown(f"##### {i18n.t('drill.ext.biz_summary')}")
-                if i18n.get_lang() == "zh":
-                    st.caption(i18n.t("drill.ext.biz_summary_note"))
-                st.markdown(info["longBusinessSummary"])
+                en_summary = info["longBusinessSummary"]
+                cn_summary = _summary_cn(ticker, en_summary) if i18n.get_lang() == "zh" else None
+                if cn_summary:
+                    st.markdown(cn_summary)
+                else:
+                    if i18n.get_lang() == "zh":
+                        st.caption(i18n.t("drill.ext.biz_summary_note"))
+                    st.markdown(en_summary)
 
 # ---------- Cross-sector tags ----------
 st.markdown(f"##### {i18n.t('drill.membership')}")

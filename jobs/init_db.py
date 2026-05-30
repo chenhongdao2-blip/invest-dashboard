@@ -110,6 +110,19 @@ CREATE TABLE IF NOT EXISTS company_profile (
     longBusinessSummary   TEXT
 );
 
+-- Chinese translation of company_profile.longBusinessSummary. SEPARATE table so the
+-- daily fetch_eod INSERT OR REPLACE on company_profile never wipes translations.
+-- en_hash = sha256 of the English text at translation time → detects staleness when
+-- the cron refreshes the English summary (mismatch → page falls back to English).
+-- Populated locally by jobs/translate_profiles.py (needs GLM key + proxy; NOT run on
+-- the US Actions runner).
+CREATE TABLE IF NOT EXISTS profile_cn (
+    ticker        TEXT PRIMARY KEY,
+    en_hash       TEXT,
+    summary_cn    TEXT,
+    translated_at TEXT
+);
+
 -- ── SEC Company Facts (auto-grown by fetch_sec_facts.py) ──
 -- ticker→CIK mapping + fetch status + raw snapshot (audit/re-parse)
 CREATE TABLE IF NOT EXISTS sec_company (

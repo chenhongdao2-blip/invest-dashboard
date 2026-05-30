@@ -89,15 +89,23 @@ def main() -> None:
             cov = domain.get("coverage")
             if cov:
                 uni = load_universe_file(cov["universe_file"])
-                # 用 sector="_coverage" 标识 cover list（不是 sector）
-                n = upsert_members(
-                    conn,
-                    domain_id,
-                    "_coverage",
-                    uni.get("tickers") or [],
-                )
+                cov_tickers = uni.get("tickers") or []
+                # 1) mark every cover name with the _coverage pseudo-sector
+                n = upsert_members(conn, domain_id, "_coverage", cov_tickers)
                 total += n
                 print(f"[load_universe] {domain_id} / _coverage: {n} tickers")
+                # 2) also write each cover name into its REAL sector (entry's
+                #    `sector:` field) so the dashboard shows e.g. "生物科技 / 覆盖"
+                #    instead of a bare "_coverage". Group by sector → one upsert each.
+                by_sector: dict[str, list[dict]] = {}
+                for entry in cov_tickers:
+                    sec = entry.get("sector")
+                    if sec:
+                        by_sector.setdefault(sec, []).append(entry)
+                for sec, entries in sorted(by_sector.items()):
+                    m = upsert_members(conn, domain_id, sec, entries)
+                    total += m
+                    print(f"[load_universe] {domain_id} / {sec} (from coverage): {m} tickers")
         conn.commit()
         # Summary
         cur = conn.execute(

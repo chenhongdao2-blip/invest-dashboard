@@ -69,13 +69,15 @@ mults = db.latest_multiples(tickers)
 # --- Find cross-sector membership ---
 # Query all sectors each ticker belongs to (excluding _coverage)
 @st.cache_data(ttl=300)
-def cross_membership(_tickers: tuple[str, ...]) -> dict[str, list[str]]:
-    placeholders = ",".join("?" * len(_tickers))
+def cross_membership(tickers: tuple[str, ...]) -> dict[str, list[str]]:
+    # param must NOT start with '_' — underscore-prefixed args are excluded from
+    # the Streamlit cache key, so different ticker tuples would collide.
+    placeholders = ",".join("?" * len(tickers))
     df = db.query(
         f"SELECT ticker, sector FROM universe_member "
         f"WHERE ticker IN ({placeholders}) AND sector != '_coverage' "
         f"ORDER BY ticker, sector",
-        tuple(_tickers),
+        tuple(tickers),
     )
     out: dict[str, list[str]] = {}
     for _, row in df.iterrows():

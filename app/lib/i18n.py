@@ -108,6 +108,7 @@ _SECTOR_ZH = {
     "hospital_care": "医院服务",
     "managed_care": "管理式医疗",
     "cxo": "CXO 与生命科学",
+    "_coverage": "覆盖",          # CMSI cover-list marker (pseudo-sector, not a real sector)
 }
 _SECTOR_EN = {
     "biotech": "Biotech",
@@ -117,6 +118,7 @@ _SECTOR_EN = {
     "hospital_care": "Hospital Care",
     "managed_care": "Managed Care",
     "cxo": "CXO & Life Sciences",
+    "_coverage": "Coverage",     # CMSI cover-list marker (pseudo-sector, not a real sector)
 }
 _DOMAIN = {"healthcare": {"zh": "医疗健康", "en": "Healthcare"}}
 

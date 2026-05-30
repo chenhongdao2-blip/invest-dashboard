@@ -47,15 +47,10 @@ STRINGS = {
     "home.col.sector": "Sector",
     "home.col.tickers": "Tickers",
     "home.caveat.data": (
-        "**Data caveat**: valuation multiples are from **yfinance** (trailing P/E + 12M "
-        "forward P/E). Multi-year forward (25E / 26E / 27E) needs Bloomberg / FactSet and "
-        "is **out of scope**. Use this for a quick visual scan; rely on your manual Excel "
-        "comp tables for precise consensus."
-    ),
-    "home.caveat.repo": (
-        "Repo: [github.com/chenhongdao2-blip/invest-dashboard]"
-        "(https://github.com/chenhongdao2-blip/invest-dashboard) · "
-        "Data: SQLite committed in repo · Auto-update: GitHub Actions cron (22:30 UTC US + 09:00 UTC HK)"
+        "**Data caveat**: valuation multiples come from **yfinance** — trailing P/E and "
+        "12M forward P/E only. Multi-year consensus (25E / 26E / 27E) is **out of scope** "
+        "here. Treat this board as a quick visual scan; defer to your Bloomberg / FactSet "
+        "terminal for precise consensus."
     ),
 
     # ── CMSI Coverage ──
@@ -205,6 +200,59 @@ STRINGS = {
     "drill.col.value": "Value",
     "drill.ext.expander": "Extended fundamentals (live yfinance.info — click to fetch)",
     "drill.ext.fetch": "Fetch live",
+    "drill.ext.fetch_help": "Calls yfinance.info; result cached 1 hour.",
+    "drill.ext.hint": (
+        "Click *Fetch live* to pull EBITDA / margins / shares / business summary "
+        "from yfinance.info. Avoided by default to keep the page snappy on "
+        "Streamlit Cloud (cold-start visits skip the live call)."
+    ),
+    "drill.ext.empty": "yfinance.info returned empty — network issue, rate limit, or ticker delisted.",
+    "drill.ext.biz_summary": "Business summary",
+    "drill.ext.f.ebitda": "EBITDA (TTM)",
+    "drill.ext.f.total_cash": "Total cash",
+    "drill.ext.f.total_debt": "Total debt",
+    "drill.ext.f.total_rev": "Total revenue (TTM)",
+    "drill.ext.f.rev_growth": "Revenue growth (YoY)",
+    "drill.ext.f.gross_margin": "Gross margin",
+    "drill.ext.f.op_margin": "Operating margin",
+    "drill.ext.f.profit_margin": "Profit margin",
+    "drill.ext.f.roe": "Return on equity",
+    "drill.ext.f.peg": "PEG ratio",
+    "drill.ext.f.div_yield": "Dividend yield",
+    "drill.ext.f.beta": "Beta",
+    "drill.ext.f.shares_out": "Shares outstanding",
+    "drill.ext.f.float_shares": "Float shares",
+    "drill.ext.col.metric": "Metric",
+    "drill.ext.col.value": "Value",
+    "drill.ext.biz_summary_note": "yfinance English source text (no official Chinese profile provided).",
+    # wiki memo block
+    "drill.wiki.none": (
+        "No LLM Wiki memo for this ticker. Drop a `companies/*.md` file in "
+        "`~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
+    ),
+    "drill.wiki.memo_title": "Research memo",
+    "drill.wiki.rating": "Rating",
+    "drill.wiki.tp": "TP",
+    "drill.wiki.updated": "Updated",
+    "drill.wiki.sectors": "Wiki sectors",
+    "drill.wiki.summary": "Summary",
+    "drill.wiki.thesis": "Thesis",
+    "drill.wiki.sources": "Sources",
+    "drill.wiki.source_file": "Source file",
+    # warnings / empty states
+    "drill.warn.no_price": "No price history in snapshots.db — backfill needed for this ticker.",
+    "drill.warn.price_nan": "Price series all-NaN.",
+    "drill.warn.no_return": "No return data.",
+    "drill.warn.no_mult_snap": "No multiples snapshot.",
+    "drill.no_sector": "Ticker is not in any configured sector universe.",
+    "drill.chart.title": "{bbg} · USD close ({n} obs)",
+    # multiples panel labels
+    "drill.mult.trailing_pe": "Trailing P/E",
+    "drill.mult.forward_pe": "Forward P/E",
+    "drill.mult.ev_ebitda": "EV/EBITDA",
+    "drill.mult.ev_sales": "EV/Sales",
+    "drill.mult.pb": "P/B",
+    "drill.mult.fcf_yield": "FCF Yield",
     "drill.membership": "Universe membership",
     "drill.onboarding.title": "How to read this page",
     "drill.onboarding.body": (
@@ -216,5 +264,85 @@ STRINGS = {
         "out of scope.\n\n"
         "**Extended fundamentals**: live yfinance.info, cached 1h. '—' = field not provided.\n\n"
         "**Deep-link**: jump straight to a name via the `?ticker=LLY` URL param."
+    ),
+
+    # ── Market Data (full-universe quote table) ──
+    "market.title": "Market Data",
+    "market.caption": "Full-universe quote table — all {n} tickers across every domain. Latest: {date}",
+    "market.filters.domain": "Domain",
+    "market.filters.sector": "Sector",
+    "market.filters.region": "Region",
+    "market.metric.universe": "Universe size",
+    "market.metric.shown": "Rows shown",
+    "market.section.table": "Quotes & Multiples",
+    "market.col.sector": "Sector",
+    "market.col.region": "Region",
+    "market.dl.quotes": "⬇ Download quote table (CSV)",
+    "market.dl.master": "⬇ Download security master (CSV)",
+    "market.dl.master_help": "The full universe_member table — ticker / name / domain / sector / region.",
+    "market.onboarding.title": "How to read this page",
+    "market.onboarding.body": (
+        "**Scope**: every ticker in the dashboard universe, all domains — a single-page market scan.\n\n"
+        "**Prices / multiples**: from `snapshots.db` (daily cron). Same source as the other pages.\n\n"
+        "**Downloads**: *quote table* = the rows you see now (post-filter); *security master* = "
+        "the universe roster itself, for syncing into your own tools."
+    ),
+
+    # ── SEC Company Facts ──
+    "sec.title": "SEC Company Facts",
+    "sec.caption": "SEC XBRL filings (us-gaap / ifrs-full) for US-listed names. Source: data.sec.gov.",
+    "sec.choose": "Choose a US-listed ticker",
+    "sec.pick_prompt": "Pick a ticker above to load its SEC company facts.",
+    "sec.warn.non_us": "**{ticker}** is not in the US-listed pool — SEC company facts cover US filers only.",
+    "sec.warn.no_xbrl": "**{ticker}** files no SEC XBRL facts (likely an OTC Level-I ADR). Nothing to show.",
+    "sec.warn.not_fetched": "No SEC facts cached for **{ticker}** yet. Run `jobs/fetch_sec_facts.py` or wait for the weekly refresh.",
+    "sec.badge.fetched": "Cached {fetched}",
+    "sec.badge.latest_filed": "Latest filing {filed}",
+    "sec.badge.taxonomy": "Taxonomy: {tax}",
+    "sec.period.annual": "Annual (FY)",
+    "sec.period.quarterly": "Quarterly",
+    "sec.period.label": "Period basis",
+    "sec.section.kpi": "Key Company Facts",
+    "sec.kpi.na": "—",
+    "sec.kpi.fallback": "fallback concept",
+    "sec.kpi.trace": "Source: {concept} · {form} · FY{fy} {fp} · period end {end} · filed {filed} · {accn}",
+    "sec.section.timeseries": "Concept Time-Series",
+    "sec.ts.pick": "Concept",
+    "sec.ts.freq": "Frequency",
+    "sec.ts.yoy": "YoY %",
+    "sec.ts.qoq": "QoQ %",
+    "sec.ts.empty": "No time-series for this concept at the chosen frequency.",
+    "sec.section.browser": "All Company Facts",
+    "sec.browser.search": "Filter concept / label",
+    "sec.browser.form": "Form",
+    "sec.browser.taxonomy": "Taxonomy",
+    "sec.browser.shown": "{shown} shown / {total} facts",
+    "sec.browser.dl": "⬇ Download filtered facts (CSV)",
+    "sec.col.concept": "Concept",
+    "sec.col.concept_cn": "中文名",
+    "sec.col.taxonomy": "Taxonomy",
+    "sec.col.unit": "Unit",
+    "sec.col.value": "Value",
+    "sec.col.start": "Start",
+    "sec.col.end": "End",
+    "sec.col.form": "Form",
+    "sec.col.fy": "FY",
+    "sec.col.filed": "Filed",
+    "sec.section.comp": "Comp Table Export",
+    "sec.comp.pick_tickers": "Tickers to compare",
+    "sec.comp.pick_kpis": "Metrics (latest annual)",
+    "sec.comp.dl": "⬇ Download comp table (CSV)",
+    "sec.comp.hint": "Latest annual fiscal-year value per ticker. FY-end column flags period mismatch across filers.",
+    "sec.col.fy_end": "FY End",
+    "sec.onboarding.title": "How to read this page",
+    "sec.onboarding.body": (
+        "**Source**: SEC Company Facts API (full XBRL). US-listed names only — HK / A-share / "
+        "OTC-ADR filers aren't in SEC and are flagged accordingly.\n\n"
+        "**Taxonomy**: US domestic filers report under `us-gaap`; foreign filers (e.g. AstraZeneca, "
+        "Novartis) report under `ifrs-full`. KPI cards fall back across both so foreign names don't blank out.\n\n"
+        "**KPI cards**: each shows the latest reported value with a full source trace (concept / form / "
+        "period / filing). A *fallback concept* badge means a non-primary tag supplied the number "
+        "(e.g. concept migrations).\n\n"
+        "**Refresh**: cached in `snapshots.db`, refreshed weekly by GitHub Actions — no manual fetch needed."
     ),
 }

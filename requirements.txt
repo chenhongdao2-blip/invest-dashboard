@@ -4,3 +4,4 @@ pandas>=2.2,<3
 pyyaml>=6.0,<7
 plotly>=5.22,<6
 numpy>=1.26,<3
+requests>=2.31,<3            # SEC companyfacts fetch (jobs/fetch_sec_facts.py); also a yfinance transitive dep

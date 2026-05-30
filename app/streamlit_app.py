@@ -43,6 +43,11 @@ ticker_drill = st.Page(
     title="Ticker Drill 个股详情",
     url_path="Ticker_Drill",
 )
+market_data = st.Page(
+    "pages/7_📊_Market_Data.py",
+    title="Market Data 行情总表",
+    url_path="Market_Data",
+)
 
 # --- Healthcare children ---
 cmsi_coverage = st.Page(
@@ -70,15 +75,21 @@ valuation_scanner = st.Page(
     title="Valuation Scanner 估值扫描器",
     url_path="Valuation_Scanner",
 )
+sec_facts = st.Page(
+    "pages/8_📋_SEC_Facts.py",
+    title="SEC Company Facts 财报数据",
+    url_path="SEC_Facts",
+)
 
 pg = st.navigation(
     {
-        "": [home, ticker_drill, strategy_picks],
+        "": [home, ticker_drill, market_data, strategy_picks],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,
             sector_heatmap,
             valuation_scanner,
+            sec_facts,
         ],
     }
 )

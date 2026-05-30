@@ -47,14 +47,9 @@ STRINGS = {
     "home.col.sector": "板块",
     "home.col.tickers": "标的数",
     "home.caveat.data": (
-        "**数据口径**：估值倍数来自 **yfinance**（静态 P/E + 12 个月动态 P/E）。"
-        "多年期预测（25E / 26E / 27E）需 Bloomberg / FactSet，**不在本看板范围**。"
-        "本看板用于快速目视扫描；精确一致预期请以你的 Excel 对照表为准。"
-    ),
-    "home.caveat.repo": (
-        "仓库：[github.com/chenhongdao2-blip/invest-dashboard]"
-        "(https://github.com/chenhongdao2-blip/invest-dashboard) · "
-        "数据：SQLite 随仓库提交 · 自动更新：GitHub Actions 定时（美股 22:30 UTC + 港股 09:00 UTC）"
+        "**数据口径**：估值倍数取自 **yfinance**，仅含静态 P/E 与 12 个月动态 P/E。"
+        "多年期一致预期（25E / 26E / 27E）**不在本看板范围内**。"
+        "本看板定位为快速目视扫描工具；精确一致预期请以 Bloomberg / FactSet 终端为准。"
     ),
 
     # ── CMSI Coverage ──
@@ -199,6 +194,58 @@ STRINGS = {
     "drill.col.value": "数值",
     "drill.ext.expander": "扩展基本面（yfinance.info 实时——点击获取）",
     "drill.ext.fetch": "实时获取",
+    "drill.ext.fetch_help": "调用 yfinance.info；结果缓存 1 小时。",
+    "drill.ext.hint": (
+        "点击 *实时获取* 从 yfinance.info 拉取 EBITDA / 利润率 / 股本 / 业务简介。"
+        "默认不获取，以保证页面在 Streamlit Cloud 上的加载速度（冷启动访问跳过实时调用）。"
+    ),
+    "drill.ext.empty": "yfinance.info 返回为空——网络问题、限流，或标的已退市。",
+    "drill.ext.biz_summary": "公司业务简介",
+    "drill.ext.f.ebitda": "EBITDA（TTM）",
+    "drill.ext.f.total_cash": "现金及等价物总额",
+    "drill.ext.f.total_debt": "总有息负债",
+    "drill.ext.f.total_rev": "营业收入（TTM）",
+    "drill.ext.f.rev_growth": "营收同比增速",
+    "drill.ext.f.gross_margin": "毛利率",
+    "drill.ext.f.op_margin": "营业利润率",
+    "drill.ext.f.profit_margin": "净利率",
+    "drill.ext.f.roe": "净资产收益率（ROE）",
+    "drill.ext.f.peg": "PEG",
+    "drill.ext.f.div_yield": "股息率",
+    "drill.ext.f.beta": "Beta",
+    "drill.ext.f.shares_out": "总股本",
+    "drill.ext.f.float_shares": "流通股本",
+    "drill.ext.col.metric": "指标",
+    "drill.ext.col.value": "数值",
+    "drill.ext.biz_summary_note": "以下为 yfinance 英文原文（公司未提供中文官方简介）。",
+    # wiki memo block
+    "drill.wiki.none": (
+        "该标的暂无 LLM Wiki memo。在 `~/Documents/LLM Wiki/Wiki/` 下放一个 "
+        "`companies/*.md` 文件即可在此展示投资逻辑。"
+    ),
+    "drill.wiki.memo_title": "研究备忘",
+    "drill.wiki.rating": "评级",
+    "drill.wiki.tp": "目标价",
+    "drill.wiki.updated": "更新于",
+    "drill.wiki.sectors": "Wiki 板块",
+    "drill.wiki.summary": "摘要",
+    "drill.wiki.thesis": "投资逻辑",
+    "drill.wiki.sources": "来源",
+    "drill.wiki.source_file": "源文件",
+    # warnings / empty states
+    "drill.warn.no_price": "snapshots.db 中无价格历史——该标的需要回补数据。",
+    "drill.warn.price_nan": "价格序列全为空值。",
+    "drill.warn.no_return": "无收益数据。",
+    "drill.warn.no_mult_snap": "无估值倍数快照。",
+    "drill.no_sector": "该标的不在任何已配置的板块股票池中。",
+    "drill.chart.title": "{bbg} · 美元收盘价（{n} 个观测）",
+    # multiples panel labels
+    "drill.mult.trailing_pe": "静态市盈率",
+    "drill.mult.forward_pe": "动态市盈率",
+    "drill.mult.ev_ebitda": "EV/EBITDA",
+    "drill.mult.ev_sales": "EV/销售额",
+    "drill.mult.pb": "市净率",
+    "drill.mult.fcf_yield": "自由现金流收益率",
     "drill.membership": "所属板块",
     "drill.onboarding.title": "如何阅读本页",
     "drill.onboarding.body": (
@@ -209,5 +256,83 @@ STRINGS = {
         "**估值倍数**：仅 yfinance 静态 + 12 个月动态。多年期预测（25E/26E/27E）不在范围。\n\n"
         "**扩展基本面**：yfinance.info 实时获取，缓存 1 小时。「—」表示该字段未提供。\n\n"
         "**深链**：可通过 `?ticker=LLY` URL 参数直接跳到该票。"
+    ),
+
+    # ── 行情总表 ──
+    "market.title": "行情总表",
+    "market.caption": "全股票池行情一览——覆盖全部 {n} 只标的（跨所有行业）。最新：{date}",
+    "market.filters.domain": "领域",
+    "market.filters.sector": "板块",
+    "market.filters.region": "地区",
+    "market.metric.universe": "股票池规模",
+    "market.metric.shown": "当前行数",
+    "market.section.table": "行情与估值倍数",
+    "market.col.sector": "板块",
+    "market.col.region": "地区",
+    "market.dl.quotes": "⬇ 下载行情表（CSV）",
+    "market.dl.master": "⬇ 下载证券主表（CSV）",
+    "market.dl.master_help": "完整 universe_member 表——代码 / 名称 / 领域 / 板块 / 地区。",
+    "market.onboarding.title": "如何阅读本页",
+    "market.onboarding.body": (
+        "**范围**：看板股票池内全部标的、所有行业——一页扫全市场。\n\n"
+        "**价格 / 倍数**：来自 `snapshots.db`（每日 cron），与其他页同源。\n\n"
+        "**下载**：*行情表* = 当前筛选后所见行；*证券主表* = 股票池名册本身，便于同步进你自己的工具。"
+    ),
+
+    # ── SEC 财报数据 ──
+    "sec.title": "SEC 财报数据",
+    "sec.caption": "美股标的的 SEC XBRL 申报（us-gaap / ifrs-full）。来源：data.sec.gov。",
+    "sec.choose": "选择一只美股标的",
+    "sec.pick_prompt": "在上方选择标的以加载其 SEC 财报数据。",
+    "sec.warn.non_us": "**{ticker}** 不在美股池内——SEC 财报数据仅覆盖美股申报人。",
+    "sec.warn.no_xbrl": "**{ticker}** 未向 SEC 申报 XBRL 数据（多为 OTC 一级 ADR），无数据可显示。",
+    "sec.warn.not_fetched": "**{ticker}** 的 SEC 数据尚未缓存。请运行 `jobs/fetch_sec_facts.py` 或等待每周刷新。",
+    "sec.badge.fetched": "缓存于 {fetched}",
+    "sec.badge.latest_filed": "最新申报 {filed}",
+    "sec.badge.taxonomy": "会计准则：{tax}",
+    "sec.period.annual": "年度（FY）",
+    "sec.period.quarterly": "季度",
+    "sec.period.label": "期间口径",
+    "sec.section.kpi": "核心财报指标",
+    "sec.kpi.na": "—",
+    "sec.kpi.fallback": "回退概念",
+    "sec.kpi.trace": "来源：{concept} · {form} · FY{fy} {fp} · 期末 {end} · 申报 {filed} · {accn}",
+    "sec.section.timeseries": "概念时间序列",
+    "sec.ts.pick": "概念",
+    "sec.ts.freq": "频率",
+    "sec.ts.yoy": "同比 %",
+    "sec.ts.qoq": "环比 %",
+    "sec.ts.empty": "该概念在所选频率下无时间序列。",
+    "sec.section.browser": "全量财报数据",
+    "sec.browser.search": "筛选概念 / 标签",
+    "sec.browser.form": "申报表",
+    "sec.browser.taxonomy": "会计准则",
+    "sec.browser.shown": "显示 {shown} / 共 {total} 条",
+    "sec.browser.dl": "⬇ 下载筛选结果（CSV）",
+    "sec.col.concept": "概念",
+    "sec.col.concept_cn": "中文名",
+    "sec.col.taxonomy": "准则",
+    "sec.col.unit": "单位",
+    "sec.col.value": "数值",
+    "sec.col.start": "起始",
+    "sec.col.end": "截止",
+    "sec.col.form": "申报表",
+    "sec.col.fy": "财年",
+    "sec.col.filed": "申报日",
+    "sec.section.comp": "可比表导出",
+    "sec.comp.pick_tickers": "选择对比标的",
+    "sec.comp.pick_kpis": "指标（最新年度）",
+    "sec.comp.dl": "⬇ 下载可比表（CSV）",
+    "sec.comp.hint": "各标的取最新年度财年值。FY End 列标示不同申报人的期间差异。",
+    "sec.col.fy_end": "财年截止",
+    "sec.onboarding.title": "如何阅读本页",
+    "sec.onboarding.body": (
+        "**来源**：SEC Company Facts API（完整 XBRL）。仅美股标的——港股 / A 股 / "
+        "OTC-ADR 申报人不在 SEC，会相应标注。\n\n"
+        "**会计准则**：美国本土申报人用 `us-gaap`；外国申报人（如阿斯利康、诺华）"
+        "用 `ifrs-full`。KPI 卡在两套准则间回退，外国标的不会空白。\n\n"
+        "**KPI 卡**：每张显示最新申报值并附完整来源溯源（概念 / 申报表 / 期间 / 申报日）。"
+        "*回退概念* 徽标表示由非主概念提供数值（如概念迁移）。\n\n"
+        "**刷新**：缓存于 `snapshots.db`，由 GitHub Actions 每周自动刷新——无需手动抓取。"
     ),
 }

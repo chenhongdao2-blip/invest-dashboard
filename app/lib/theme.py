@@ -349,6 +349,37 @@ hr {{ border-color: {PAPER_RULE} !important; border-width: 0 0 1px 0 !important;
   box-shadow: none !important;
 }}
 
+/* download buttons — LIGHT secondary style. Streamlit's stDownloadButton is a
+   separate testid from .stButton and was uncovered → OS dark-mode bled through
+   (button rendered black). Pin it to the cream/ink FT-editorial surface and lock
+   all interaction states so no dark focus/active shadow leaks back in. */
+[data-testid="stDownloadButton"] button {{
+  background: {PAPER_BAND} !important;
+  color: {INK} !important;
+  border: 1px solid {PAPER_EDGE} !important;
+  font-family: {FONT_STACK} !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+  border-radius: 2px !important;
+  padding: 0 16px !important;
+  height: 32px !important;
+}}
+[data-testid="stDownloadButton"] button:hover {{
+  background: {PAPER_EDGE} !important;
+  color: {INK} !important;
+  border-color: {CMSI_RED} !important;
+}}
+[data-testid="stDownloadButton"] button:active,
+[data-testid="stDownloadButton"] button:focus,
+[data-testid="stDownloadButton"] button:focus-visible {{
+  background: {PAPER_BAND} !important;
+  color: {INK} !important;
+  border: 1px solid {CMSI_RED} !important;
+  outline: none !important;
+  box-shadow: none !important;
+}}
+
 /* dataframe — outer frame only; cell colors come from config.toml */
 [data-testid="stDataFrame"] {{
   font-family: {FONT_STACK} !important;

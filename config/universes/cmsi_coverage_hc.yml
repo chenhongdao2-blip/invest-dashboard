@@ -1,5 +1,7 @@
 # Healthcare Coverage List — 28 tickers (HK + US + 3 CN A-share)
 # Note: 部分 ticker 与 sector universe cross-membership（dashboard 自动 dedup）
+# `sector:` 字段 = 该覆盖名的真实板块。load_universe 会同时写入一行真实 sector +
+# 一行 _coverage，于是 Market Data 等页面显示「真实板块 / 覆盖」而非只有 _coverage。
 sector_id: cmsi_coverage_hc
 domain: healthcare
 
@@ -9,115 +11,143 @@ tickers:
     name_cn: 石药集团
     name_en: CSPC Pharmaceutical
     region: HK
+    sector: pharma
   - ticker: 1177.HK
     name_cn: 中国生物制药
     name_en: Sino Biopharm
     region: HK
+    sector: pharma
   - ticker: 1530.HK
     name_cn: 三生制药
     name_en: 3SBio
     region: HK
+    sector: biotech
   - ticker: 1681.HK
     name_cn: 康臣药业
     name_en: Consun Pharma
     region: HK
+    sector: pharma
   - ticker: 1801.HK
     name_cn: 信达生物
     name_en: Innovent Bio
     region: HK
+    sector: biotech
   - ticker: 2162.HK
     name_cn: 康诺亚
     name_en: Keymed Biosciences
     region: HK
+    sector: biotech
   - ticker: 2256.HK
     name_cn: 和誉
     name_en: Abbisko
     region: HK
+    sector: biotech
   - ticker: 2269.HK
     name_cn: 药明生物
     name_en: WuXi Biologics
     region: HK
+    sector: cxo
   - ticker: 2359.HK
     name_cn: 药明康德
     name_en: WuXi AppTec
     region: HK
+    sector: cxo
   - ticker: 2506.HK
     name_cn: 讯飞医疗
     name_en: Xunfei Healthcare Tech
     region: HK
+    sector: hc_ai
   - ticker: 2616.HK
     name_cn: 基石药业
     name_en: CStone Pharmaceuticals
     region: HK
+    sector: biotech
   - ticker: 2666.HK
     name_cn: 环球医疗
     name_en: Universal Medical
     region: HK
+    sector: hospital_care
   - ticker: 3320.HK
     name_cn: 华润医药
     name_en: CR Pharm
     region: HK
+    sector: pharma
   - ticker: 3692.HK
     name_cn: 翰森制药
     name_en: Hansoh Pharma
     region: HK
+    sector: pharma
   - ticker: 9995.HK
     name_cn: 荣昌生物
     name_en: Remegen
     region: HK
+    sector: biotech
 
   # US Listed
   - ticker: ALNY
     name_cn: 艾拉伦制药
     name_en: Alnylam
     region: US
+    sector: biotech
   - ticker: BSX
     name_cn: 波士顿科学
     name_en: Boston Scientific
     region: US
+    sector: medtech
   - ticker: GPCR
     name_cn: 硕迪生物
     name_en: Structure Therapeutics
     region: US
+    sector: biotech
   - ticker: HCM
     name_cn: 和黄医药
     name_en: HUTCHMED
     region: US
+    sector: biotech
   - ticker: ISRG
     name_cn: 直觉外科
     name_en: Intuitive Surgical
     region: US
+    sector: medtech
   - ticker: LLY
     name_cn: 礼来制药
     name_en: Eli Lilly
     region: US
+    sector: pharma
   - ticker: NVS
     name_cn: 诺华制药
     name_en: Novartis
     region: US
+    sector: pharma
   - ticker: ONC
     name_cn: 百济神州
     name_en: BeOne Medicines
     region: US
+    sector: biotech
   - ticker: TMO
     name_cn: 赛默飞世尔
     name_en: Thermo Fisher
     region: US
+    sector: cxo
   - ticker: VEEV
     name_cn: Veeva Systems
     name_en: Veeva Systems
     region: US
+    sector: hc_ai
 
   # CN A-share (yfinance: .SS for Shanghai, .SZ for Shenzhen)
   - ticker: 300760.SZ
     name_cn: 迈瑞医疗
     name_en: Mindray
     region: CN
+    sector: medtech
   - ticker: 300832.SZ
     name_cn: 新产业
     name_en: SNIBE
     region: CN
+    sector: medtech
   - ticker: 688575.SS
     name_cn: 亚辉龙
     name_en: YHLO Biotech
     region: CN
+    sector: medtech

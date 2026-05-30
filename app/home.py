@@ -132,4 +132,3 @@ else:
 # --- Footer ---
 st.divider()
 st.caption(i18n.t("home.caveat.data"))
-st.caption(i18n.t("home.caveat.repo"))

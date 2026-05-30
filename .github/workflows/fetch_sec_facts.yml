@@ -1,0 +1,53 @@
+name: Fetch SEC company facts
+
+on:
+  schedule:
+    # SEC XBRL facts move slowly (only on new 10-Q/10-K/20-F filings).
+    # Weekly is plenty — Monday 06:17 UTC (off-peak, avoids the :00 stampede).
+    - cron: '17 6 * * 1'
+  workflow_dispatch:               # 允许手动从 Actions tab 触发
+
+permissions:
+  contents: write                  # 允许 bot push 数据 commit
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest         # US runner → reaches data.sec.gov directly, no proxy
+    concurrency:
+      group: fetch-sec-facts
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Init schema (idempotent)
+        run: python jobs/init_db.py
+
+      - name: Load universe
+        run: python jobs/load_universe.py
+
+      - name: Fetch SEC company facts
+        env:
+          # No SEC_PROXY here — Actions runners are in the US and reach SEC directly.
+          # SEC_UA can be set to a real name+email via repo secret/variable if desired.
+          SEC_UA: ${{ vars.SEC_UA || 'invest-dashboard CI (contact: research@invest-dashboard.local)' }}
+        run: python jobs/fetch_sec_facts.py
+
+      - name: Commit data
+        run: |
+          git config user.email "data-bot@github.com"
+          git config user.name "data-bot"
+          git add data/snapshots.db
+          if git diff-index --quiet HEAD; then
+            echo "No data changes to commit"
+          else
+            git commit -m "data: SEC facts refresh $(date -u +%Y-%m-%d) [skip ci]"
+            git push
+          fi

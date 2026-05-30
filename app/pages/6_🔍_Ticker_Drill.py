@@ -110,8 +110,12 @@ is_in_coverage = "_coverage" in sectors
 
 # Strategy pick badge.
 @st.cache_data(ttl=600)
-def _pick_membership(_t: str) -> list[str]:
-    """Return list of strategy names this ticker is in (e.g. ['v5 biotech', 'HK 高股息'])."""
+def _pick_membership(t: str) -> list[str]:
+    """Return list of strategy names this ticker is in (e.g. ['v5 biotech', 'HK 高股息']).
+
+    NB: param must NOT start with '_' — Streamlit excludes underscore-prefixed args
+    from the cache key, which would return the first ticker's result for every ticker.
+    """
     found: list[str] = []
     for sid, cfg in strat.STRATEGIES.items():
         try:
@@ -122,7 +126,7 @@ def _pick_membership(_t: str) -> list[str]:
             continue
         cols_to_check = [c for c in ("yf_sym", "ticker") if c in df.columns]
         for col in cols_to_check:
-            if _t in df[col].astype(str).values:
+            if t in df[col].astype(str).values:
                 # Strip leading emoji from cfg name for compact badge.
                 name = cfg.get("name", sid).lstrip("🧬💰🤖⚕️🏥🩺🧪 ").strip()
                 found.append(name)
@@ -186,10 +190,7 @@ st.divider()
 # ---------- LLM Wiki memo ----------
 wiki_page = wiki.find_wiki(ticker)
 if wiki_page is None:
-    st.caption(
-        "No LLM Wiki memo for this ticker. "
-        f"Drop a `companies/*.md` file in `~/Documents/LLM Wiki/Wiki/` to surface a thesis here."
-    )
+    st.caption(i18n.t("drill.wiki.none"))
 else:
     # Compliance gate — different banner for internal vs sanitized public view.
     if wiki_page.is_sanitized:
@@ -208,25 +209,25 @@ else:
             "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
             icon="⚠️",
         )
-    st.markdown(f"### Research memo · {wiki_page.title}")
+    st.markdown(f"### {i18n.t('drill.wiki.memo_title')} · {wiki_page.title}")
     meta_bits: list[str] = []
     if wiki_page.rating:
-        meta_bits.append(f"**Rating**: {wiki_page.rating}")
+        meta_bits.append(f"**{i18n.t('drill.wiki.rating')}**: {wiki_page.rating}")
     if wiki_page.tp:
-        meta_bits.append(f"**TP**: {wiki_page.tp}")
+        meta_bits.append(f"**{i18n.t('drill.wiki.tp')}**: {wiki_page.tp}")
     if wiki_page.last_updated:
-        meta_bits.append(f"**Updated**: {wiki_page.last_updated}")
+        meta_bits.append(f"**{i18n.t('drill.wiki.updated')}**: {wiki_page.last_updated}")
     if wiki_page.sectors:
-        meta_bits.append("**Wiki sectors**: " + ", ".join(f"`{s}`" for s in wiki_page.sectors))
+        meta_bits.append(f"**{i18n.t('drill.wiki.sectors')}**: " + ", ".join(f"`{s}`" for s in wiki_page.sectors))
     if meta_bits:
         st.markdown(" · ".join(meta_bits))
 
     if wiki_page.summary:
-        st.markdown(f"**Summary**: {wiki_page.summary}")
+        st.markdown(f"**{i18n.t('drill.wiki.summary')}**: {wiki_page.summary}")
     if wiki_page.thesis:
-        st.markdown(f"**Thesis**: {wiki_page.thesis}")
+        st.markdown(f"**{i18n.t('drill.wiki.thesis')}**: {wiki_page.thesis}")
     if wiki_page.sources:
-        st.caption(f"Sources: {wiki_page.sources}")
+        st.caption(f"{i18n.t('drill.wiki.sources')}: {wiki_page.sources}")
 
     # Pull the high-value sections to the top, leave the rest in expanders.
     priority_keys = ["核心投资逻辑", "催化剂", "风险点", "财务快照"]
@@ -243,24 +244,24 @@ else:
         with st.expander(f"{key}", expanded=False):
             st.markdown(body)
 
-    st.caption(f"Source file: `{wiki_page.file_path}`")
+    st.caption(f"{i18n.t('drill.wiki.source_file')}: `{wiki_page.file_path}`")
     st.divider()
 
 # ---------- Price chart ----------
 theme.section_header(i18n.t("drill.section.price"))
 closes = db.get_close_series_usd((ticker,))
 if closes.empty:
-    st.warning("No price history in snapshots.db — backfill needed for this ticker.")
+    st.warning(i18n.t("drill.warn.no_price"))
 else:
     ser = closes[ticker].dropna()
     if ser.empty:
-        st.warning("Price series all-NaN.")
+        st.warning(i18n.t("drill.warn.price_nan"))
     else:
         from lib import charts
         ydf = ser.to_frame(name=display_name)
         fig = charts.price_line_chart(
             ydf,
-            title=f"{bbg} · USD close (snapshots.db, {len(ser)} obs)",
+            title=i18n.t("drill.chart.title", bbg=bbg, n=len(ser)),
             ylabel="USD close",
         )
         st.plotly_chart(fig, width="stretch", theme=None)
@@ -271,7 +272,7 @@ col_perf, col_mult = st.columns(2)
 with col_perf:
     st.markdown(f"##### {i18n.t('drill.ret_windows')}")
     if rets.empty or ticker not in rets.index:
-        st.caption("No return data.")
+        st.caption(i18n.t("drill.warn.no_return"))
     else:
         r = rets.loc[ticker]
         perf_df = pd.DataFrame({
@@ -292,16 +293,16 @@ with col_perf:
 with col_mult:
     st.markdown(f"##### {i18n.t('drill.latest_mults')}")
     if mults_row is None:
-        st.caption("No multiples snapshot.")
+        st.caption(i18n.t("drill.warn.no_mult_snap"))
     else:
         mult_rows = []
         for label, key, kind in [
-            ("Trailing P/E", "trailing_pe", "x"),
-            ("Forward P/E", "forward_pe", "x"),
-            ("EV/EBITDA", "ev_ebitda", "x"),
-            ("EV/Sales", "ev_sales", "x"),
-            ("P/B", "pb", "x"),
-            ("FCF Yield", "fcf_yield", "pct_dec"),
+            (i18n.t("drill.mult.trailing_pe"), "trailing_pe", "x"),
+            (i18n.t("drill.mult.forward_pe"), "forward_pe", "x"),
+            (i18n.t("drill.mult.ev_ebitda"), "ev_ebitda", "x"),
+            (i18n.t("drill.mult.ev_sales"), "ev_sales", "x"),
+            (i18n.t("drill.mult.pb"), "pb", "x"),
+            (i18n.t("drill.mult.fcf_yield"), "fcf_yield", "pct_dec"),
         ]:
             v = mults_row.get(key)
             if pd.isna(v):
@@ -313,7 +314,12 @@ with col_mult:
             mult_rows.append({"Metric": label, "Value": disp})
         # st.table renders a static, non-sortable grid — correct for vertical
         # properties lists where Value column is mixed-type ($/%/x).
-        st.table(pd.DataFrame(mult_rows).set_index("Metric"))
+        _mlabel, _vlabel = i18n.t("drill.ext.col.metric"), i18n.t("drill.ext.col.value")
+        st.table(
+            pd.DataFrame(mult_rows)
+            .rename(columns={"Metric": _mlabel, "Value": _vlabel})
+            .set_index(_mlabel)
+        )
 
 st.divider()
 
@@ -322,9 +328,15 @@ st.divider()
 # don't pay a 30s+ yfinance.info round-trip on every page load. The button
 # triggers a single cached fetch — subsequent reruns hit the cache.
 @st.cache_data(ttl=3600, show_spinner="Fetching live fundamentals…")
-def _yf_info(_t: str) -> dict:
+def _yf_info(t: str) -> dict:
+    """Live yfinance.info, cached 1h PER TICKER.
+
+    NB: param must NOT start with '_' — Streamlit drops underscore-prefixed args
+    from the cache key. With `_t`, the first ticker fetched was cached and returned
+    for every other ticker (the "every company shows Innovent" bug).
+    """
     try:
-        info = yf.Ticker(_t).info or {}
+        info = yf.Ticker(t).info or {}
     except Exception:
         return {}
     return info or {}
@@ -335,19 +347,15 @@ with st.expander(i18n.t("drill.ext.expander"), expanded=False):
     fetched_key = f"fetched_yf_info_{ticker}"
 
     cols = st.columns([1, 3])
-    if cols[0].button(i18n.t("drill.ext.fetch"), key=btn_key, help="Calls yfinance.info; result cached 1 hour."):
+    if cols[0].button(i18n.t("drill.ext.fetch"), key=btn_key, help=i18n.t("drill.ext.fetch_help")):
         st.session_state[fetched_key] = True
 
     if not st.session_state.get(fetched_key):
-        st.caption(
-            "Click *Fetch live* to pull EBITDA / margins / shares / business summary "
-            "from yfinance.info. Avoided by default to keep the page snappy on "
-            "Streamlit Cloud (cold-start visits skip the live call)."
-        )
+        st.caption(i18n.t("drill.ext.hint"))
     else:
         info = _yf_info(ticker)
         if not info:
-            st.caption("yfinance.info returned empty — network issue, rate limit, or ticker delisted.")
+            st.caption(i18n.t("drill.ext.empty"))
         else:
             rows: list[dict[str, object]] = []
 
@@ -366,26 +374,32 @@ with st.expander(i18n.t("drill.ext.expander"), expanded=False):
                     disp = str(val)
                 rows.append({"Metric": label, "Value": disp})
 
-            _push("EBITDA (TTM)", info.get("ebitda"))
-            _push("Total cash", info.get("totalCash"))
-            _push("Total debt", info.get("totalDebt"))
-            _push("Total revenue (TTM)", info.get("totalRevenue"))
-            _push("Revenue growth (YoY)", info.get("revenueGrowth"), "pct")
-            _push("Gross margin", info.get("grossMargins"), "pct")
-            _push("Operating margin", info.get("operatingMargins"), "pct")
-            _push("Profit margin", info.get("profitMargins"), "pct")
-            _push("Return on equity", info.get("returnOnEquity"), "pct")
-            _push("PEG ratio", info.get("trailingPegRatio"), "x")
-            _push("Dividend yield", info.get("dividendYield"), "pct")
-            _push("Beta", info.get("beta"), "x")
-            _push("Shares outstanding", info.get("sharesOutstanding"), "int")
-            _push("Float shares", info.get("floatShares"), "int")
+            _push(i18n.t("drill.ext.f.ebitda"), info.get("ebitda"))
+            _push(i18n.t("drill.ext.f.total_cash"), info.get("totalCash"))
+            _push(i18n.t("drill.ext.f.total_debt"), info.get("totalDebt"))
+            _push(i18n.t("drill.ext.f.total_rev"), info.get("totalRevenue"))
+            _push(i18n.t("drill.ext.f.rev_growth"), info.get("revenueGrowth"), "pct")
+            _push(i18n.t("drill.ext.f.gross_margin"), info.get("grossMargins"), "pct")
+            _push(i18n.t("drill.ext.f.op_margin"), info.get("operatingMargins"), "pct")
+            _push(i18n.t("drill.ext.f.profit_margin"), info.get("profitMargins"), "pct")
+            _push(i18n.t("drill.ext.f.roe"), info.get("returnOnEquity"), "pct")
+            _push(i18n.t("drill.ext.f.peg"), info.get("trailingPegRatio"), "x")
+            _push(i18n.t("drill.ext.f.div_yield"), info.get("dividendYield"), "pct")
+            _push(i18n.t("drill.ext.f.beta"), info.get("beta"), "x")
+            _push(i18n.t("drill.ext.f.shares_out"), info.get("sharesOutstanding"), "int")
+            _push(i18n.t("drill.ext.f.float_shares"), info.get("floatShares"), "int")
 
             # st.table — static, no sort header (Value column is mixed-type).
-            st.table(pd.DataFrame(rows).set_index("Metric"))
+            ext_df = pd.DataFrame(rows).rename(columns={
+                "Metric": i18n.t("drill.ext.col.metric"),
+                "Value": i18n.t("drill.ext.col.value"),
+            }).set_index(i18n.t("drill.ext.col.metric"))
+            st.table(ext_df)
 
             if info.get("longBusinessSummary"):
-                st.markdown("##### Business summary")
+                st.markdown(f"##### {i18n.t('drill.ext.biz_summary')}")
+                if i18n.get_lang() == "zh":
+                    st.caption(i18n.t("drill.ext.biz_summary_note"))
                 st.markdown(info["longBusinessSummary"])
 
 # ---------- Cross-sector tags ----------
@@ -399,7 +413,7 @@ if sectors:
     tags = " · ".join(f"{icons.get(s, s)} `{s}`" for s in sectors)
     st.markdown(tags)
 else:
-    st.caption("Ticker is not in any configured sector universe.")
+    st.caption(i18n.t("drill.no_sector"))
 
 # ---------- Footer caveats ----------
 with st.expander(i18n.t("drill.onboarding.title")):

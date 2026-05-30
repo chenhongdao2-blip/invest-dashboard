@@ -76,7 +76,110 @@ CREATE TABLE IF NOT EXISTS meta (
     value       TEXT,
     updated_at  TEXT
 );
+
+-- ── SEC Company Facts (auto-grown by fetch_sec_facts.py) ──
+-- ticker→CIK mapping + fetch status + raw snapshot (audit/re-parse)
+CREATE TABLE IF NOT EXISTS sec_company (
+    ticker           TEXT PRIMARY KEY,     -- joins universe_member.ticker (region='US')
+    cik              INTEGER,
+    cik10            TEXT,                  -- zero-padded for API path
+    entity_name      TEXT,
+    taxonomy_primary TEXT,                  -- 'us-gaap' | 'ifrs-full' | NULL
+    sec_status       TEXT NOT NULL,         -- 'ok' | 'no_xbrl' | 'not_mapped' | 'failed'
+    fetched_at       TEXT,
+    latest_filed     TEXT,
+    facts_count      INTEGER,
+    last_error       TEXT,
+    payload_gzip     BLOB                   -- raw companyfacts JSON (gzip), audit/re-parse
+);
+
+-- NOTE: individual XBRL facts are NOT exploded into a flat table — at ~20k
+-- facts × ~75 companies that bloated the committed DB to 600MB+ (GitHub rejects
+-- >100MB). Instead the raw companyfacts JSON is stored gzip'd in
+-- sec_company.payload_gzip (~14MB total) and parsed on demand per company by
+-- app/lib/sec_facts.py (st.cache_data). Single source of truth, tiny on disk.
+
+-- KPI map — industry-agnostic layered; dual-taxonomy fallback chain.
+-- domain IS NULL => universal (all industries); else per-domain overlay.
+-- Drives SEC page KPI cards + comp-table columns. Seeded by seed_kpi_map().
+CREATE TABLE IF NOT EXISTS sec_kpi_map (
+    kpi_key       TEXT PRIMARY KEY,
+    display_order INTEGER NOT NULL,
+    domain        TEXT,                      -- NULL=universal; 'healthcare'/'ai'/...=overlay
+    label_en      TEXT NOT NULL,
+    label_cn      TEXT NOT NULL,
+    concepts_json TEXT NOT NULL,             -- JSON ["us-gaap:X","ifrs-full:Y",...] by priority
+    period_type   TEXT NOT NULL,             -- 'instant' | 'duration'
+    unit_hint     TEXT
+);
 """
+
+
+# ── SEC KPI map seed (industry-agnostic) ──
+# (kpi_key, display_order, domain, label_en, label_cn, [concept fallbacks], period_type, unit_hint)
+# domain=None => universal (every industry); domain='healthcare' => HC overlay.
+# Concept fallbacks span us-gaap AND ifrs-full so foreign filers (NVS/AZN/BNTX...) don't blank out.
+SEED_KPIS: list[tuple] = [
+    # ── universal layer (domain=None) — applies to ANY industry ──
+    ("revenue", 10, None, "Revenue", "营业收入",
+     ["us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+      "us-gaap:Revenues", "us-gaap:SalesRevenueNet", "ifrs-full:Revenue"],
+     "duration", "USD"),
+    ("gross_profit", 20, None, "Gross Profit", "毛利润",
+     ["us-gaap:GrossProfit", "ifrs-full:GrossProfit"], "duration", "USD"),
+    ("operating_income", 30, None, "Operating Income", "营业利润",
+     ["us-gaap:OperatingIncomeLoss", "ifrs-full:ProfitLossFromOperatingActivities"],
+     "duration", "USD"),
+    ("net_income", 40, None, "Net Income", "归母净利润",
+     ["us-gaap:NetIncomeLoss",
+      "ifrs-full:ProfitLossAttributableToOwnersOfParent", "ifrs-full:ProfitLoss"],
+     "duration", "USD"),
+    ("eps_diluted", 50, None, "Diluted EPS", "稀释每股收益",
+     ["us-gaap:EarningsPerShareDiluted", "ifrs-full:DilutedEarningsLossPerShare"],
+     "duration", "USD/shares"),
+    ("assets", 60, None, "Total Assets", "总资产",
+     ["us-gaap:Assets", "ifrs-full:Assets"], "instant", "USD"),
+    ("equity", 70, None, "Stockholders Equity", "股东权益",
+     ["us-gaap:StockholdersEquity",
+      "ifrs-full:EquityAttributableToOwnersOfParent", "ifrs-full:Equity"],
+     "instant", "USD"),
+    ("cash", 80, None, "Cash & Equivalents", "现金及现金等价物",
+     ["us-gaap:CashAndCashEquivalentsAtCarryingValue",
+      "ifrs-full:CashAndCashEquivalents"], "instant", "USD"),
+    # ── healthcare overlay (domain='healthcare') — only shown for HC tickers ──
+    ("rnd", 90, "healthcare", "R&D Expense", "研发费用",
+     ["us-gaap:ResearchAndDevelopmentExpense",
+      "us-gaap:ResearchAndDevelopmentExpenseExcludingAcquiredInProcessCost",
+      "ifrs-full:ResearchAndDevelopmentExpense"], "duration", "USD"),
+    ("sga", 100, "healthcare", "SG&A Expense", "销售及管理费用",
+     ["us-gaap:SellingGeneralAndAdministrativeExpense",
+      "us-gaap:GeneralAndAdministrativeExpense",
+      "ifrs-full:SellingGeneralAndAdministrativeExpense"], "duration", "USD"),
+    ("short_term_investments", 110, "healthcare", "Short-Term Investments", "短期投资",
+     ["us-gaap:ShortTermInvestments", "us-gaap:MarketableSecuritiesCurrent",
+      "ifrs-full:CurrentInvestments"], "instant", "USD"),
+    ("sbc", 120, "healthcare", "Stock-Based Comp", "股份支付",
+     ["us-gaap:ShareBasedCompensation",
+      "us-gaap:AllocatedShareBasedCompensationExpense"], "duration", "USD"),
+]
+
+
+def seed_kpi_map(conn: sqlite3.Connection) -> int:
+    """Idempotent canonical seed of sec_kpi_map (INSERT OR REPLACE by kpi_key)."""
+    import json
+
+    rows = [
+        (k, order, domain, en, cn, json.dumps(concepts, ensure_ascii=False), period, unit)
+        for (k, order, domain, en, cn, concepts, period, unit) in SEED_KPIS
+    ]
+    conn.executemany(
+        """INSERT OR REPLACE INTO sec_kpi_map
+           (kpi_key, display_order, domain, label_en, label_cn,
+            concepts_json, period_type, unit_hint)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        rows,
+    )
+    return len(rows)
 
 
 def _safe_alter(conn: sqlite3.Connection, sql: str) -> None:
@@ -97,7 +200,9 @@ def main() -> None:
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN target_price_mean REAL")
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN recommendation_mean REAL")
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN n_analysts INTEGER")
+        n_kpi = seed_kpi_map(conn)
         conn.commit()
+        print(f"[init_db] seeded sec_kpi_map: {n_kpi} rows")
         # Sanity log
         cur = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"

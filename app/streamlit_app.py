@@ -35,38 +35,6 @@ from lib import i18n
 # shares one st.session_state["lang"] — avoids half-translated pages (cccg gate #3).
 i18n.init_lang()
 
-# --- ops self-proof (TEMP: Streamlit Cloud staleness probe) ---
-# Surfaces exactly what the *running* cloud process sees: live commit, the DB
-# bytes it actually loaded, and the AI row count. Lets us collapse the
-# "stale code + empty data" ambiguity into one readable line. Safe (no secrets).
-# Remove once the cloud deploy is confirmed live. Baseline (local @03e72cb):
-# commit=03e72cb db=50.0MB md5=f615bf0914 ai_rows=135
-with st.sidebar.expander("🔍 runtime"):
-    try:
-        import hashlib
-        import os
-        import sqlite3
-        import subprocess
-
-        from lib import db as _db
-
-        _head = subprocess.run(
-            ["git", "rev-parse", "--short", "HEAD"],
-            cwd=os.path.dirname(__file__),
-            capture_output=True,
-            text=True,
-        ).stdout.strip()
-        _p = str(_db.DB_PATH)
-        _sz = os.path.getsize(_p)
-        _md5 = hashlib.md5(open(_p, "rb").read(4 * 1024 * 1024)).hexdigest()[:10]
-        with sqlite3.connect(f"file:{_p}?mode=ro", uri=True) as _c:
-            _ai = _c.execute(
-                "SELECT COUNT(*) FROM universe_member WHERE domain='ai'"
-            ).fetchone()[0]
-        st.caption(f"commit={_head} db={_sz/1e6:.1f}MB md5={_md5} ai_rows={_ai}")
-    except Exception as _e:  # never let the probe crash the app
-        st.caption(f"diag err: {_e}")
-
 # --- Top-level pages ---
 # Nav labels are bilingual (EN 中文) by user request — shown verbatim regardless
 # of the in-page language toggle. url_path kept stable so deep-links still work.
@@ -163,6 +131,11 @@ pg = st.navigation(
             ai_valuation,
             ai_sec,
         ],
-    }
+    },
+    # Force all sections fully expanded. Default behavior collapses overflow
+    # into a "View N more" button once total nav items exceed the height the
+    # sidebar leaves for the nav (we have 14 pages + sidebar search/probe), which
+    # was hiding the last 4 AI pages behind "View 4 more". expanded=True pins them open.
+    expanded=True,
 )
 pg.run()

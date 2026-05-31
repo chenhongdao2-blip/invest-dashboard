@@ -15,5 +15,12 @@ dataframeBorderColor = "#d9c7b6"
 headless = true
 enableXsrfProtection = true
 
+[client]
+# Do NOT leak source code / tracebacks to app viewers. On error show a generic
+# message; the owner still reads full errors in the Cloud logs console.
+# Valid: "full" | "stacktrace" | "type" | "none".
+showErrorDetails = "none"
+toolbarMode = "viewer"
+
 [browser]
 gatherUsageStats = false

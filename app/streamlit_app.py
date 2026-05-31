@@ -95,22 +95,22 @@ ai_coverage = st.Page(
 )
 ai_overview = st.Page(
     "pages/a2_ai_overview.py",
-    title="Overview 总览",
+    title="AI Overview 算力总览",
     url_path="AI_Overview",
 )
 ai_heatmap = st.Page(
     "pages/a3_ai_heatmap.py",
-    title="Sector Heatmap 板块热力图",
+    title="AI Heatmap 算力热力图",
     url_path="AI_Sector_Heatmap",
 )
 ai_valuation = st.Page(
     "pages/a4_ai_valuation.py",
-    title="Valuation Scanner 估值扫描器",
+    title="AI Valuation 算力估值",
     url_path="AI_Valuation_Scanner",
 )
 ai_sec = st.Page(
     "pages/a5_ai_sec.py",
-    title="SEC Company Facts 财报数据",
+    title="AI SEC Facts 算力财报",
     url_path="AI_SEC_Facts",
 )
 

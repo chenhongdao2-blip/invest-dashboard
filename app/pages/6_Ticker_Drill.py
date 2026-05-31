@@ -86,7 +86,7 @@ def _local_ccy(ticker: str) -> str:
         return "CNY"
     if ticker.endswith(".T"):
         return "JPY"
-    if ticker.endswith(".KS"):
+    if ticker.endswith((".KS", ".KQ")):   # KOSPI / KOSDAQ
         return "KRW"
     return "USD"
 
@@ -111,7 +111,20 @@ def _route_benchmarks(ticker: str, sectors: list[str]) -> list[str]:
       A股  → 中证医疗 512170                       (CNY)
       US   → most-specific US sector ETF + XLV     (USD)
     Other foreign listings (JP .T / KR .KS …) have no healthcare benchmark on file
-    → [] (caller falls back to the absolute local-currency price line)."""
+    → [] (caller falls back to the absolute local-currency price line).
+
+    AI-domain names (sector ids start with 'ai_') route to AI/semi benchmarks, NOT
+    healthcare — same-currency by listing region. All targets are in benchmarks_daily."""
+    if any(s.startswith("ai_") for s in sectors):
+        if ticker.endswith(".HK"):
+            return ["3191.HK", "^HSI"]
+        if ticker.endswith((".SS", ".SZ")):
+            return ["512480.SS", "159819.SZ"]    # 中证半导体 + 人工智能ETF (CNY)
+        if ticker.endswith(".T"):
+            return ["2644.T"]                     # Global X Japan Semiconductor (JPY)
+        if ticker.endswith((".KS", ".KQ")):
+            return ["091160.KS"]                  # KODEX Korea Semiconductor (KRW)
+        return ["^SOX", "SMH"]                     # US-listed AI/semi (USD)
     if ticker.endswith(".HK"):
         return ["HSHCI.HK", "^HSI"]
     if ticker.endswith((".SS", ".SZ")):
@@ -257,15 +270,14 @@ if mults_row is not None:
     if isinstance(_c, str) and _c:
         ccy = _c
 
-# Badges (coverage / strategy picks) — kept lightweight; the full chip system is a
-# follow-up design pass (P2).
-badge_bits: list[str] = []
+# Identity chips — coverage (CMSI-red accent) + strategy picks (teal). Unified into
+# the .cmsi-chip system (P2 design pass); replaces the old plain-caption badge line.
+_id_chips: list[tuple[str, str]] = []
 if is_in_coverage:
-    badge_bits.append(i18n.t("drill.badge.coverage"))
-if pick_strategies:
-    badge_bits.append(i18n.t("drill.badge.pick", names=' · '.join(pick_strategies)))
-if badge_bits:
-    st.caption(" · ".join(badge_bits))
+    _id_chips.append((i18n.t("drill.badge.coverage"), "coverage"))
+_id_chips += [(nm, "strategy") for nm in pick_strategies]
+if _id_chips:
+    theme.chips_tagged(_id_chips)
 
 # Consensus / multiples pulled ONCE here — reused by the KPI strip and the Variant
 # block below.
@@ -487,7 +499,7 @@ else:
 rets = db.compute_returns(closes)
 col_perf, col_mult = st.columns(2)
 with col_perf:
-    st.markdown(f"##### {i18n.t('drill.ret_windows')}")
+    theme.subsection(i18n.t("drill.ret_windows"))
     if rets.empty or ticker not in rets.index:
         st.caption(i18n.t("drill.warn.no_return"))
     else:
@@ -508,7 +520,7 @@ with col_perf:
         )
 
 with col_mult:
-    st.markdown(f"##### {i18n.t('drill.latest_mults')}")
+    theme.subsection(i18n.t("drill.latest_mults"))
     if mults_row is None:
         st.caption(i18n.t("drill.warn.no_mult_snap"))
     else:
@@ -564,7 +576,7 @@ else:
         with _cols[_i]:
             _valid = _ts.dropna(subset=["value"]) if not _ts.empty else _ts
             if _valid.empty:
-                st.markdown(f"##### {_label}")
+                theme.subsection(_label)
                 st.caption(i18n.t("drill.sec.no_concept"))
                 continue
             _tail = _valid.tail(6)
@@ -700,7 +712,7 @@ with st.expander(i18n.t("drill.ext.expander"), expanded=False):
             st.table(ext_df)
 
             if info.get("longBusinessSummary"):
-                st.markdown(f"##### {i18n.t('drill.ext.biz_summary')}")
+                theme.subsection(i18n.t("drill.ext.biz_summary"))
                 en_summary = info["longBusinessSummary"]
                 cn_summary = _summary_cn(ticker, en_summary) if i18n.get_lang() == "zh" else None
                 if cn_summary:
@@ -711,15 +723,12 @@ with st.expander(i18n.t("drill.ext.expander"), expanded=False):
                     st.markdown(en_summary)
 
 # ---------- Cross-sector tags ----------
-st.markdown(f"##### {i18n.t('drill.membership')}")
-if sectors:
-    icons = {
-        "biotech": "BIO", "pharma": "PHAR", "hc_ai": "AI",
-        "medtech": "MED", "hospital_care": "HOSP",
-        "managed_care": "MC", "cxo": "CXO", "_coverage": "COV",
-    }
-    tags = " · ".join(f"{icons.get(s, s)} `{s}`" for s in sectors)
-    st.markdown(tags)
+theme.subsection(i18n.t("drill.membership"))
+# Drop the synthetic "_coverage" pseudo-sector — it's surfaced as the red coverage
+# chip in the header now, so it would be redundant (and confusing) down here.
+_member_sectors = [s for s in sectors if s != "_coverage"]
+if _member_sectors:
+    theme.chips(_member_sectors)
 else:
     st.caption(i18n.t("drill.no_sector"))
 

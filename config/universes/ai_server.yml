@@ -1,0 +1,89 @@
+# Servers/ODM · Thermal/Liquid Cooling · Power · Racks — AI supply-chain L6; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_server
+domain: ai
+
+tickers:
+  # --- US ---
+  - ticker: SMCI
+    name_cn: 美超微
+    name_en: Super Micro Computer
+    region: US
+  - ticker: DELL
+    name_cn: 戴尔科技
+    name_en: Dell Technologies
+    region: US
+  - ticker: HPE
+    name_cn: 慧与科技
+    name_en: Hewlett Packard Enterprise
+    region: US
+  - ticker: VRT
+    name_cn: 维谛技术
+    name_en: Vertiv Holdings
+    region: US
+  - ticker: ETN
+    name_cn: 伊顿
+    name_en: Eaton Corporation
+    region: US
+  - ticker: CLS
+    name_cn: 天弘国际
+    name_en: Celestica
+    region: US
+  - ticker: JBL
+    name_cn: 捷普科技
+    name_en: Jabil
+    region: US
+  - ticker: FLEX
+    name_cn: 伟创力
+    name_en: Flex
+    region: US
+  - ticker: SANM
+    name_cn: 新美亚
+    name_en: Sanmina Corporation
+    region: US
+  - ticker: GEV
+    name_cn: GE威诺瓦
+    name_en: GE Vernova
+    region: US
+  - ticker: BE
+    name_cn: 博隆能源
+    name_en: Bloom Energy
+    region: US
+  # --- JP ---
+  - ticker: 6503.T
+    name_cn: 三菱电机
+    name_en: Mitsubishi Electric
+    region: JP
+  - ticker: 3132.T
+    name_cn: Macnica Holdings
+    name_en: Macnica Holdings
+    region: JP
+  # --- KR ---
+  - ticker: 009150.KS
+    name_cn: 三星电机
+    name_en: Samsung Electro-Mechanics
+    region: KR
+  # --- CN ---
+  - ticker: 601138.SS
+    name_cn: 工业富联
+    name_en: Foxconn Industrial Internet
+    region: CN
+  - ticker: 000977.SZ
+    name_cn: 浪潮信息
+    name_en: Inspur Electronic Information Industry
+    region: CN
+  - ticker: 603019.SS
+    name_cn: 中科曙光
+    name_en: Dawning Information Industry (Sugon)
+    region: CN
+  - ticker: 002837.SZ
+    name_cn: 英维克
+    name_en: Envicool Technology
+    region: CN
+  - ticker: 300499.SZ
+    name_cn: 高澜股份
+    name_en: Gaolan Co.
+    region: CN
+  - ticker: 002851.SZ
+    name_cn: 麦格米特
+    name_en: Megmeet Electric
+    region: CN

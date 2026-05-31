@@ -103,7 +103,8 @@ def main() -> None:
 
     if not DB_PATH.exists():
         sys.exit(f"DB not found at {DB_PATH}. Run jobs/init_db.py first.")
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(DB_PATH, timeout=120)
+    conn.execute("PRAGMA busy_timeout=120000")  # coexist with concurrent DB writers
     try:
         rows = conn.execute(
             "SELECT ticker, longBusinessSummary FROM company_profile "

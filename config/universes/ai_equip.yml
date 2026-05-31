@@ -1,0 +1,168 @@
+# Semiconductor Equipment + Materials + EDA/IP — AI supply-chain L1; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_equip
+domain: ai
+
+tickers:
+  # --- US ---
+  - ticker: AMAT
+    name_cn: 应用材料
+    name_en: Applied Materials
+    region: US
+  - ticker: LRCX
+    name_cn: 泛林半导体
+    name_en: Lam Research
+    region: US
+  - ticker: KLAC
+    name_cn: 科磊半导体
+    name_en: KLA Corporation
+    region: US
+  - ticker: ASML
+    name_cn: 阿斯麦
+    name_en: ASML
+    region: US
+  - ticker: SNPS
+    name_cn: 新思科技
+    name_en: Synopsys
+    region: US
+  - ticker: CDNS
+    name_cn: 铿腾电子
+    name_en: Cadence Design Systems
+    region: US
+  - ticker: ARM
+    name_cn: Arm Holdings
+    name_en: Arm Holdings
+    region: US
+  - ticker: ENTG
+    name_cn: 恩特格里斯
+    name_en: Entegris
+    region: US
+  # --- JP ---
+  - ticker: 8035.T
+    name_cn: 东京电子
+    name_en: Tokyo Electron (TEL)
+    region: JP
+  - ticker: 6857.T
+    name_cn: 爱德万测试
+    name_en: Advantest
+    region: JP
+  - ticker: 6146.T
+    name_cn: 迪思科
+    name_en: Disco Corporation
+    region: JP
+  - ticker: 7735.T
+    name_cn: 斯克林集团
+    name_en: SCREEN Holdings
+    region: JP
+  - ticker: 6920.T
+    name_cn: 激光泰克
+    name_en: Lasertec
+    region: JP
+  - ticker: 6525.T
+    name_cn: 国际电气
+    name_en: Kokusai Electric
+    region: JP
+  - ticker: 4063.T
+    name_cn: 信越化学
+    name_en: Shin-Etsu Chemical
+    region: JP
+  - ticker: 3436.T
+    name_cn: SUMCO
+    name_en: SUMCO Corporation
+    region: JP
+  # 4185.T (JSR) removed — taken private by JIC (2024-25), delisted, no yfinance data.
+  - ticker: 4186.T
+    name_cn: 东京应化工业
+    name_en: Tokyo Ohka Kogyo (TOK)
+    region: JP
+  - ticker: 2802.T
+    name_cn: 味之素
+    name_en: Ajinomoto
+    region: JP
+  - ticker: 4062.T
+    name_cn: 揖斐电
+    name_en: Ibiden
+    region: JP
+  - ticker: 4004.T
+    name_cn: 力森诺科技
+    name_en: Resonac Holdings
+    region: JP
+  - ticker: 5706.T
+    name_cn: 三井金属
+    name_en: Mitsui Mining & Smelting
+    region: JP
+  - ticker: 3110.T
+    name_cn: 日东纺
+    name_en: Nittobo (Nitto Boseki)
+    region: JP
+  # --- KR ---
+  - ticker: 042700.KS
+    name_cn: 韩美半导体
+    name_en: Hanmi Semiconductor
+    region: KR
+  - ticker: 403870.KQ
+    name_cn: HPSP
+    name_en: HPSP
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 357780.KQ
+    name_cn: 圣博莱
+    name_en: Soulbrain
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 240810.KQ
+    name_cn: 原益科技
+    name_en: Wonik IPS
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 036930.KQ
+    name_cn: 周成工程
+    name_en: Jusung Engineering
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 078000.KQ
+    name_cn: Leeno工业
+    name_en: Leeno Industrial
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 095340.KQ
+    name_cn: ISC
+    name_en: ISC
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  # --- CN ---
+  - ticker: 002371.SZ
+    name_cn: 北方华创
+    name_en: Naura Technology Group
+    region: CN
+  - ticker: 688012.SS
+    name_cn: 中微公司
+    name_en: Advanced Micro-Fabrication Equipment (AMEC)
+    region: CN
+  - ticker: 688072.SS
+    name_cn: 拓荆科技
+    name_en: Tuojing Technology
+    region: CN
+  - ticker: 688120.SS
+    name_cn: 华海清科
+    name_en: Huahaiqingke
+    region: CN
+  - ticker: 688082.SS
+    name_cn: 盛美上海
+    name_en: ACM Research (Shanghai)
+    region: CN
+  - ticker: 688126.SS
+    name_cn: 沪硅产业
+    name_en: Shanghai Silicon Industry Group
+    region: CN
+  - ticker: 688019.SS
+    name_cn: 安集科技
+    name_en: Anji Microelectronics Technology
+    region: CN
+  - ticker: 300054.SZ
+    name_cn: 鼎龙股份
+    name_en: Dinglong Culture
+    region: CN
+  - ticker: 002409.SZ
+    name_cn: 雅克科技
+    name_en: Yake Technology
+    region: CN

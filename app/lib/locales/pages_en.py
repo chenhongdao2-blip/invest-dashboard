@@ -21,6 +21,7 @@ STRINGS = {
     "common.col.1m": "1M %",
     "common.col.3m": "3M %",
     "common.col.6m": "6M %",
+    "common.col.vs_spx": "vs SPX",
     "common.col.ytd": "YTD %",
     "common.col.mcap_b": "Mcap USD ($B)",
     "common.col.trail_pe": "Trail P/E",
@@ -31,8 +32,17 @@ STRINGS = {
     "common.col.pb": "P/B",
     "common.warn.fetch_fail": "Live fetch failed (yfinance) — check network/proxy.",
 
+    # ── Home panels ──
+    "home.panel.broad_market": "Market Overview",
+    "home.panel.sp500_sector": "S&P 500 Sectors",
+    "home.panel.healthcare": "Healthcare Benchmarks",
+    "home.panel.ai": "AI Benchmarks (soon)",
+    "home.panel.empty": "Coming soon",
+    "home.panel.sp500_caption": "11 GICS sectors (SPDR Select Sector ETF proxies) + S&P 500 reference",
+    "home.sub.benchmarks": "Benchmarks",
+
     # ── Home ──
-    "home.title": "Multi-Domain Investment Dashboard",
+    "home.title": "Market Hub 行情中枢",
     "home.metric.latest_snapshot": "Latest snapshot",
     "home.metric.last_fetch": "Last fetch (UTC)",
     "home.metric.universe": "Universe tickers",
@@ -382,6 +392,7 @@ STRINGS = {
     "sec.col.end": "End",
     "sec.col.form": "Form",
     "sec.col.fy": "FY",
+    "sec.col.fp": "Period",
     "sec.col.filed": "Filed",
     "sec.section.comp": "Comp Table Export",
     "sec.comp.pick_tickers": "Tickers to compare",
@@ -400,4 +411,25 @@ STRINGS = {
         "(e.g. concept migrations).\n\n"
         "**Refresh**: cached in `snapshots.db`, refreshed weekly by GitHub Actions — no manual fetch needed."
     ),
+
+    # ── AI domain pages (a1–a5) — mirror healthcare pages with domain='ai' ──
+    "ai.cov.title": "AI Universe",
+    "ai.cov.caption": "Full AI supply-chain universe — 135 names across L1–L6 (US / JP / KR / CN-A). Latest data: {date}",
+    "ai.cov.col.vs_sox": "vs SOX YTD",
+    "ai.cov.caption.source": "Showing {n} AI names across 6 supply-chain layers. No CMSI cover list for AI yet — this is the full tracked universe.",
+    "ai.cov.onboarding.title": "How to read this page",
+    "ai.cov.onboarding.body": (
+        "**AI Universe** is the full AI-compute / semiconductor supply chain tracked here — there is no CMSI "
+        "cover list for AI yet, so this page surfaces every name (135) grouped by the 6 supply-chain layers "
+        "(L1 equipment → L6 server).\n\n"
+        "**vs SOX YTD** = the name's YTD return minus the ^SOX (Philadelphia Semiconductor Index) YTD — the "
+        "AI-domain primary benchmark, replacing HSI used on the HK-centric Healthcare coverage page.\n\n"
+        "**Defaults**: market-cap descending, Chinese name first. Prices / multiples from `snapshots.db` (daily cron)."
+    ),
+    "ai.ov.title": "AI Overview",
+    "ai.heat.title": "AI Sector Heatmap",
+    "ai.scan.title": "AI Valuation Scanner",
+    "ai.sec.title": "AI · SEC Company Facts",
+    "ai.sec.caption": "SEC XBRL filings (us-gaap / ifrs-full) for US-listed AI names. Source: data.sec.gov.",
+    "ai.section.benchmark": "Domain Benchmark (^SOX) & Peers",
 }

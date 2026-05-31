@@ -64,3 +64,785 @@ tickers:
     name_en: Recursion Pharmaceuticals
     region: US
     note: AI 制药/TechBio — 亦在 hc_ai；benchmark 走 biotech(XBI) 非软件
+
+  # ── +154 US biotech expansion (TSV import 2026-05-31) ──
+  - ticker: LQDA
+    name_cn: "利奎迪亚"
+    name_en: "Liquidia Corporation"
+    region: US
+    sub: ""
+  - ticker: QURE
+    name_cn: "优尼库尔"
+    name_en: "uniQure N.V."
+    region: US
+    sub: ""
+  - ticker: ABCL
+    name_cn: "阿布塞莱拉"
+    name_en: "AbCellera Biologics Inc."
+    region: US
+    sub: ""
+  - ticker: CORT
+    name_cn: "科赛普特"
+    name_en: "Corcept Therapeutics Incorporated"
+    region: US
+    sub: ""
+  - ticker: NBTX
+    name_cn: "纳米生物"
+    name_en: "Nanobiotix S.A."
+    region: US
+    sub: ""
+  - ticker: KALV
+    name_cn: "卡尔维斯塔"
+    name_en: "KalVista Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: AXSM
+    name_cn: "阿克索姆"
+    name_en: "Axsome Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: INBX
+    name_cn: "因希布瑞斯"
+    name_en: "Inhibrx Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: MRVI
+    name_cn: "马拉维生命科学"
+    name_en: "Maravai LifeSciences Holdings, Inc."
+    region: US
+    sub: ""
+  - ticker: CPRX
+    name_cn: "催化制药"
+    name_en: "Catalyst Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: IMVT
+    name_cn: "伊慕诺万特"
+    name_en: "Immunovant, Inc."
+    region: US
+    sub: ""
+  - ticker: JAZZ
+    name_cn: "爵士制药"
+    name_en: "Jazz Pharmaceuticals plc"
+    region: US
+    sub: ""
+  - ticker: VRDN
+    name_cn: "维里迪安"
+    name_en: "Viridian Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ANAB
+    name_cn: "阿纳普蒂斯"
+    name_en: "AnaptysBio, Inc."
+    region: US
+    sub: ""
+  - ticker: LEGN
+    name_cn: "传奇生物"
+    name_en: "Legend Biotech Corporation"
+    region: US
+    sub: ""
+  - ticker: CYTK
+    name_cn: "赛托金尼克斯"
+    name_en: "Cytokinetics, Incorporated"
+    region: US
+    sub: ""
+  - ticker: URGN
+    name_cn: "泌尿生殖制药"
+    name_en: "UroGen Pharma Ltd."
+    region: US
+    sub: ""
+  - ticker: CELC
+    name_cn: "赛尔修伊蒂"
+    name_en: "Celcuity Inc."
+    region: US
+    sub: ""
+  - ticker: EXEL
+    name_cn: "埃克塞利斯"
+    name_en: "Exelixis, Inc."
+    region: US
+    sub: ""
+  - ticker: TVTX
+    name_cn: "特拉维尔"
+    name_en: "Travere Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IOVA
+    name_cn: "爱万斯"
+    name_en: "Iovance Biotherapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: KRYS
+    name_cn: "克里斯托生物"
+    name_en: "Krystal Biotech, Inc."
+    region: US
+    sub: ""
+  - ticker: ARWR
+    name_cn: "箭头制药"
+    name_en: "Arrowhead Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: NVAX
+    name_cn: "诺瓦瓦克斯"
+    name_en: "Novavax, Inc."
+    region: US
+    sub: ""
+  - ticker: ABVX
+    name_cn: "阿比瓦克斯"
+    name_en: "ABIVAX Société Anonyme"
+    region: US
+    sub: ""
+  - ticker: SEPN
+    name_cn: "赛普特纳"
+    name_en: "Septerna, Inc."
+    region: US
+    sub: ""
+  - ticker: TGTX
+    name_cn: "TG制药"
+    name_en: "TG Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: NAMS
+    name_cn: "新阿姆斯特丹药业"
+    name_en: "NewAmsterdam Pharma Company N.V."
+    region: US
+    sub: ""
+  - ticker: AGIO
+    name_cn: "阿吉欧斯制药"
+    name_en: "Agios Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: IMTX
+    name_cn: "伊马提斯"
+    name_en: "Immatics N.V."
+    region: US
+    sub: ""
+  - ticker: PGEN
+    name_cn: "普瑞西根"
+    name_en: "Precigen, Inc."
+    region: US
+    sub: ""
+  - ticker: OCS
+    name_cn: "奥库里斯"
+    name_en: "Oculis Holding AG"
+    region: US
+    sub: ""
+  - ticker: MIRM
+    name_cn: "米鲁姆制药"
+    name_en: "Mirum Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: RCUS
+    name_cn: "阿库斯生物"
+    name_en: "Arcus Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: ROIV
+    name_cn: "罗万特科学"
+    name_en: "Roivant Sciences Ltd."
+    region: US
+    sub: ""
+  - ticker: GHRS
+    name_cn: "GH研究"
+    name_en: "GH Research PLC"
+    region: US
+    sub: ""
+  - ticker: NRIX
+    name_cn: "纽瑞克斯"
+    name_en: "Nurix Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: PHVS
+    name_cn: "法瓦里斯"
+    name_en: "Pharvaris N.V."
+    region: US
+    sub: ""
+  - ticker: HRMY
+    name_cn: "哈莫尼生物"
+    name_en: "Harmony Biosciences Holdings, Inc."
+    region: US
+    sub: ""
+  - ticker: MLTX
+    name_cn: "月湖免疫"
+    name_en: "MoonLake Immunotherapeutics"
+    region: US
+    sub: ""
+  - ticker: RAPP
+    name_cn: "拉波特生物"
+    name_en: "Rapport Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IONS
+    name_cn: "伊奥尼斯"
+    name_en: "Ionis Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: SYRE
+    name_cn: "斯派尔生物"
+    name_en: "Spyre Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: SRRK
+    name_cn: "斯卡拉 Rock"
+    name_en: "Scholar Rock Holding Corporation"
+    region: US
+    sub: ""
+  - ticker: ASND
+    name_cn: "阿森迪斯"
+    name_en: "Ascendis Pharma A/S"
+    region: US
+    sub: ""
+  - ticker: SLNO
+    name_cn: "索雷诺生物"
+    name_en: "Soleno Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: CNTA
+    name_cn: "森特萨"
+    name_en: "Centessa Pharmaceuticals plc"
+    region: US
+    sub: ""
+  - ticker: TERN
+    name_cn: "特恩斯"
+    name_en: "Terns Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: PRAX
+    name_cn: "普拉克西斯"
+    name_en: "Praxis Precision Medicines, Inc."
+    region: US
+    sub: ""
+  - ticker: DAWN
+    name_cn: "第一日生物"
+    name_en: "Day One Biopharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: APLS
+    name_cn: "阿佩利斯"
+    name_en: "Apellis Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: FOLD
+    name_cn: "阿米克斯"
+    name_en: "Amicus Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: RYTM
+    name_cn: "瑞斯姆"
+    name_en: "Rhythm Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: ACLX
+    name_cn: "阿赛尔克斯"
+    name_en: "Arcellx, Inc."
+    region: US
+    sub: ""
+  - ticker: MLYS
+    name_cn: "米内拉利斯"
+    name_en: "Mineralys Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: UTHR
+    name_cn: "联合治疗"
+    name_en: "United Therapeutics Corporation"
+    region: US
+    sub: ""
+  - ticker: XERS
+    name_cn: "泽里斯"
+    name_en: "Xeris Biopharma Holdings, Inc."
+    region: US
+    sub: ""
+  - ticker: LGND
+    name_cn: "立甘德"
+    name_en: "Ligand Pharmaceuticals Incorporated"
+    region: US
+    sub: ""
+  - ticker: HALO
+    name_cn: "海洛zyme"
+    name_en: "Halozyme Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: MDGL
+    name_cn: "马德里加尔"
+    name_en: "Madrigal Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: AKTS
+    name_cn: "阿克提斯"
+    name_en: "Aktis Oncology Inc."
+    region: US
+    sub: ""
+  - ticker: DFTX
+    name_cn: "德菲纽姆"
+    name_en: "Definium Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ARDX
+    name_cn: "阿德利克斯"
+    name_en: "Ardelyx, Inc."
+    region: US
+    sub: ""
+  - ticker: VCEL
+    name_cn: "维瑞赛尔"
+    name_en: "Vericel Corporation"
+    region: US
+    sub: ""
+  - ticker: SION
+    name_cn: "西昂纳"
+    name_en: "Sionna Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: EWTX
+    name_cn: "埃吉怀斯"
+    name_en: "Edgewise Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: MAZE
+    name_cn: "Maze Therapeutics"
+    name_en: "Maze Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: DMRA
+    name_cn: "Damora Therapeutics"
+    name_en: "Damora Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ACAD
+    name_cn: "ACADIA Pharmaceuticals"
+    name_en: "ACADIA Pharmaceuticals Inc."
+    region: US
+    sub: ""
+  - ticker: AUPH
+    name_cn: "Aurinia Pharmaceuticals"
+    name_en: "Aurinia Pharmaceuticals Inc."
+    region: US
+    sub: ""
+  - ticker: ADPT
+    name_cn: "Adaptive Biotechnologies"
+    name_en: "Adaptive Biotechnologies Corporation"
+    region: US
+    sub: ""
+  - ticker: PTCT
+    name_cn: "PTC Therapeutics"
+    name_en: "PTC Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: GLUE
+    name_cn: "Monte Rosa Therapeutics"
+    name_en: "Monte Rosa Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: XENE
+    name_cn: "Xenon Pharmaceuticals"
+    name_en: "Xenon Pharmaceuticals Inc."
+    region: US
+    sub: ""
+  - ticker: TYRA
+    name_cn: "Tyra Biosciences"
+    name_en: "Tyra Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: TARS
+    name_cn: "Tarsus Pharmaceuticals"
+    name_en: "Tarsus Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: NUVL
+    name_cn: "Nuvalent"
+    name_en: "Nuvalent, Inc."
+    region: US
+    sub: ""
+  - ticker: MBX
+    name_cn: "MBX Biosciences"
+    name_en: "MBX Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: DNTH
+    name_cn: "Dianthus Therapeutics"
+    name_en: "Dianthus Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: PTGX
+    name_cn: "Protagonist Therapeutics"
+    name_en: "Protagonist Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: INVA
+    name_cn: "Innoviva"
+    name_en: "Innoviva, Inc."
+    region: US
+    sub: ""
+  - ticker: GLPG
+    name_cn: "加拉帕戈斯"
+    name_en: "Galapagos NV"
+    region: US
+    sub: ""
+  - ticker: IRON
+    name_cn: "迪斯克医药"
+    name_en: "Disc Medicine, Inc."
+    region: US
+    sub: ""
+  - ticker: RARE
+    name_cn: "奥特拉吉尼克斯"
+    name_en: "Ultragenyx Pharmaceutical Inc."
+    region: US
+    sub: ""
+  - ticker: BCAX
+    name_cn: "比卡拉"
+    name_en: "Bicara Therapeutics Inc."
+    region: US
+    sub: ""
+  - ticker: NUVB
+    name_cn: "诺维森生物"
+    name_en: "Nuvation Bio Inc."
+    region: US
+    sub: ""
+  - ticker: ZYME
+    name_cn: "齐迈克斯"
+    name_en: "Zymeworks Inc."
+    region: US
+    sub: ""
+  - ticker: BEAM
+    name_cn: "比姆治疗"
+    name_en: "Beam Therapeutics Inc."
+    region: US
+    sub: ""
+  - ticker: TRVI
+    name_cn: "特雷维治疗"
+    name_en: "Trevi Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IMCR
+    name_cn: "免疫核心"
+    name_en: "Immunocore Holdings plc"
+    region: US
+    sub: ""
+  - ticker: MESO
+    name_cn: "美索布莱斯特"
+    name_en: "Mesoblast Limited"
+    region: US
+    sub: ""
+  - ticker: CRNX
+    name_cn: "克里内蒂克斯制药"
+    name_en: "Crinetics Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: CGON
+    name_cn: "CG肿瘤"
+    name_en: "CG Oncology, Inc."
+    region: US
+    sub: ""
+  - ticker: ZBIO
+    name_cn: "泽纳斯生物制药"
+    name_en: "Zenas BioPharma, Inc."
+    region: US
+    sub: ""
+  - ticker: KYMR
+    name_cn: "凯迈拉治疗"
+    name_en: "Kymera Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: DNLI
+    name_cn: "德纳利治疗"
+    name_en: "Denali Therapeutics Inc."
+    region: US
+    sub: ""
+  - ticker: IVA
+    name_cn: "万迪瓦"
+    name_en: "Inventiva S.A."
+    region: US
+    sub: ""
+  - ticker: BCRX
+    name_cn: "百奥结晶"
+    name_en: "BioCryst Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: BBIO
+    name_cn: "布里奇奥"
+    name_en: "BridgeBio Pharma, Inc."
+    region: US
+    sub: ""
+  - ticker: ELVN
+    name_cn: "恩利文"
+    name_en: "Enliven Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: SVRA
+    name_cn: "萨瓦拉"
+    name_en: "Savara Inc."
+    region: US
+    sub: ""
+  - ticker: CLDX
+    name_cn: "赛尔得"
+    name_en: "Celldex Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IMNM
+    name_cn: "伊缪诺姆"
+    name_en: "Immunome, Inc."
+    region: US
+    sub: ""
+  - ticker: APGE
+    name_cn: "阿波吉"
+    name_en: "Apogee Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ALMS
+    name_cn: "阿卢米斯"
+    name_en: "Alumis Inc."
+    region: US
+    sub: ""
+  - ticker: COGT
+    name_cn: "科金特"
+    name_en: "Cogent Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: ATAI
+    name_cn: "阿泰生命"
+    name_en: "Atai Life Sciences N.V."
+    region: US
+    sub: ""
+  - ticker: PVLA
+    name_cn: "帕尔韦拉"
+    name_en: "Palvella Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IBRX
+    name_cn: "免疫生物"
+    name_en: "ImmunityBio, Inc."
+    region: US
+    sub: ""
+  - ticker: ORKA
+    name_cn: "奥鲁卡"
+    name_en: "Oruka Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: BHVN
+    name_cn: "百威药业"
+    name_en: "Biohaven Ltd."
+    region: US
+    sub: ""
+  - ticker: CRSP
+    name_cn: "科伦斯"
+    name_en: "CRISPR Therapeutics AG"
+    region: US
+    sub: ""
+  - ticker: VKTX
+    name_cn: "维京"
+    name_en: "Viking Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: DYN
+    name_cn: "戴恩"
+    name_en: "Dyne Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: IDYA
+    name_cn: "艾达亚"
+    name_en: "IDEAYA Biosciences, Inc."
+    region: US
+    sub: ""
+  - ticker: DBVT
+    name_cn: "DBV科技"
+    name_en: "DBV Technologies S.A."
+    region: US
+    sub: ""
+  - ticker: OCUL
+    name_cn: "奥库拉"
+    name_en: "Ocular Therapeutix, Inc."
+    region: US
+    sub: ""
+  - ticker: EYPT
+    name_cn: "伊普特"
+    name_en: "EyePoint Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: ARQT
+    name_cn: "阿库提斯"
+    name_en: "Arcutis Biotherapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: AVBP
+    name_cn: "阿瑞文"
+    name_en: "ArriVent BioPharma, Inc."
+    region: US
+    sub: ""
+  - ticker: TSHA
+    name_cn: "泰莎"
+    name_en: "Taysha Gene Therapies, Inc."
+    region: US
+    sub: ""
+  - ticker: CAPR
+    name_cn: "卡普里科"
+    name_en: "Capricor Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: WVE
+    name_cn: "维福"
+    name_en: "Wave Life Sciences Ltd."
+    region: US
+    sub: ""
+  - ticker: PHAT
+    name_cn: "法索"
+    name_en: "Phathom Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: SNDX
+    name_cn: "辛达克斯"
+    name_en: "Syndax Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: BLTE
+    name_cn: "贝丽特"
+    name_en: "Belite Bio, Inc"
+    region: US
+    sub: ""
+  - ticker: VIR
+    name_cn: "维尔生物"
+    name_en: "Vir Biotechnology, Inc."
+    region: US
+    sub: ""
+  - ticker: NTLA
+    name_cn: "因蒂利亚"
+    name_en: "Intellia Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ANNX
+    name_cn: "安尼森"
+    name_en: "Annexon, Inc."
+    region: US
+    sub: ""
+  - ticker: OLMA
+    name_cn: "奥勒马"
+    name_en: "Olema Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: RLAY
+    name_cn: "瑞莱生物"
+    name_en: "Relay Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: GERN
+    name_cn: "杰龙"
+    name_en: "Geron Corporation"
+    region: US
+    sub: ""
+  - ticker: VERA
+    name_cn: "维拉生物"
+    name_en: "Vera Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: GPCR
+    name_cn: "硕迪生物"
+    name_en: "Structure Therapeutics Inc."
+    region: US
+    sub: ""
+  - ticker: CRVS
+    name_cn: "科维斯"
+    name_en: "Corvus Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: STOK
+    name_cn: "斯托克"
+    name_en: "Stoke Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: TECH
+    name_cn: "生物科技"
+    name_en: "Bio-Techne Corporation"
+    region: US
+    sub: ""
+  - ticker: SRPT
+    name_cn: "萨雷普塔"
+    name_en: "Sarepta Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: KOD
+    name_cn: "科迪亚克"
+    name_en: "Kodiak Sciences Inc."
+    region: US
+    sub: ""
+  - ticker: AMLX
+    name_cn: "艾米利克斯"
+    name_en: "Amylyx Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: CTMX
+    name_cn: "西托麦克斯"
+    name_en: "CytomX Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: TNGX
+    name_cn: "探戈生物"
+    name_en: "Tango Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: ORIC
+    name_cn: "奥里克"
+    name_en: "ORIC Pharmaceuticals, Inc."
+    region: US
+    sub: ""
+  - ticker: PCVX
+    name_cn: "瓦克斯赛特"
+    name_en: "Vaxcyte, Inc."
+    region: US
+    sub: ""
+  - ticker: ADMA
+    name_cn: "ADMA生物"
+    name_en: "ADMA Biologics, Inc."
+    region: US
+    sub: ""
+  - ticker: INSM
+    name_cn: "因斯梅德"
+    name_en: "Insmed Incorporated"
+    region: US
+    sub: ""
+  - ticker: ZLAB
+    name_cn: "再鼎医药"
+    name_en: "Zai Lab Limited"
+    region: US
+    sub: ""
+  - ticker: CAI
+    name_cn: "卡里斯生命科学"
+    name_en: "Caris Life Sciences, Inc."
+    region: US
+    sub: ""
+  - ticker: PHAR
+    name_cn: "法明"
+    name_en: "Pharming Group N.V."
+    region: US
+    sub: ""
+  - ticker: NKTR
+    name_cn: "内克塔"
+    name_en: "Nektar Therapeutics"
+    region: US
+    sub: ""
+  - ticker: SMMT
+    name_cn: "Summit Therapeutics"
+    name_en: "Summit Therapeutics Inc."
+    region: US
+    sub: ""
+  - ticker: ERAS
+    name_cn: "埃拉斯卡"
+    name_en: "Erasca, Inc."
+    region: US
+    sub: ""
+  - ticker: CMPX
+    name_cn: "康帕斯"
+    name_en: "Compass Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: RAPT
+    name_cn: "拉普特"
+    name_en: "RAPT Therapeutics, Inc."
+    region: US
+    sub: ""
+  - ticker: GLTO
+    name_cn: "加莱克托"
+    name_en: "Galecto, Inc."
+    region: US
+    sub: ""
+  - ticker: VTYX
+    name_cn: "文蒂克斯"
+    name_en: "Ventyx Biosciences, Inc."
+    region: US
+    sub: ""

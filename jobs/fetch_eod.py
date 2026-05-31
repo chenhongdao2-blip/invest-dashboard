@@ -36,12 +36,17 @@ FX_PAIRS = {
 
 # Benchmark indices — keep in sync with app/lib/benchmarks.py BENCHMARKS.
 # Cron-fetched into benchmarks_daily so the home page never makes a live call.
+# GICS sector ETFs (XLK..XLRE) added as S&P 500 sector-level RS proxies.
 BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
                      "^SP500-352020",   # S&P 500 Pharmaceuticals — US MNC big-pharma RS benchmark
                      "^NDX",            # Nasdaq 100 — tech 大盘 for hc_ai / health-tech RS benchmark
                      "IGV",             # iShares Tech-Software — US health-tech / SaaS RS benchmark
                      "XHS",             # SPDR Health Care Services — US hospital_care RS benchmark
-                     "512170.SS"]       # 中证医疗 ETF (CNY) — A-share healthcare RS benchmark
+                     "512170.SS",       # 中证医疗 ETF (CNY) — A-share healthcare RS benchmark
+                     "XLK", "XLF", "XLE", "XLB", "XLI", "XLY", "XLP", "XLC", "XLU", "XLRE",
+                     # AI / semiconductor supply-chain benchmarks (cross-market; LLM Wiki)
+                     "^SOX", "SMH", "AIQ", "2644.T", "091160.KS", "442580.KS",
+                     "512480.SS", "515880.SS", "159819.SZ", "588200.SS", "3191.HK"]
 # NB: 恒生医疗保健 (HSHCI.HK) is NOT here — yfinance has no pure HK healthcare index.
 # It is iFind-seeded via jobs/fetch_cn_benchmarks.py (cron can't reach iFind).
 

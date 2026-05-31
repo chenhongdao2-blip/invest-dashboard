@@ -188,6 +188,22 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   background: {PAPER} !important;
 }}
 [data-testid="stToolbar"] {{ background: {PAPER} !important; }}
+
+/* Segmented control (period toggle etc.) — Streamlit 1.58 real testids:
+   container stButtonGroup; buttons stBaseButton-segmented_control(+Active).
+   Kill default dark bg → cream pills, INK text, CMSI-red selected pill. */
+[data-testid="stButtonGroup"] {{ background: transparent !important; }}
+[data-testid="stBaseButton-segmented_control"] {{
+  background: {PAPER_DEEP} !important; border: 1px solid {PAPER_EDGE} !important;
+  color: {INK} !important; font-weight: 500;
+}}
+[data-testid="stBaseButton-segmented_control"] * {{ color: {INK} !important; }}
+[data-testid="stBaseButton-segmented_control"]:hover {{ background: {PAPER_BAND} !important; }}
+[data-testid="stBaseButton-segmented_controlActive"] {{
+  background: {CMSI_RED} !important; border: 1px solid {CMSI_RED} !important;
+  color: {PAPER} !important; font-weight: 500;
+}}
+[data-testid="stBaseButton-segmented_controlActive"] * {{ color: {PAPER} !important; }}
 /* Sidebar collapse + collapsed-state reopen chevrons.
    Real Streamlit 1.58 testids (verified against the shipped build + live Chrome
    DOM probe): stSidebarCollapseButton (open → collapse, « icon) and
@@ -253,6 +269,33 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   color: {INK} !important;
   font-weight: 600 !important;
 }}
+[data-testid="stSidebarNav"] a,
+[data-testid="stSidebarNav"] a span,
+[data-testid="stSidebarNav"] span {{
+  font-family: {FONT_STACK} !important;
+  letter-spacing: 0 !important;
+}}
+/* Red vertical rib (纵肋) on sidebar CATEGORY headers — st.navigation section
+   labels (Global / Healthcare / AI). Makes each domain read as an editorial
+   category, echoing the main-content section_header ▎red bar. */
+[data-testid="stNavSectionHeader"] {{
+  border-left: 3px solid {CMSI_RED} !important;
+  padding-left: 13px !important;
+  margin-left: 0 !important;
+  color: {INK} !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}}
+/* Hide Streamlit's nav "View more/less" toggle. All our pages fit (3 grouped
+   sections), so the collapser is unnecessary. */
+[data-testid="stSidebarNavViewButton"] {{ display: none !important; }}
+/* st.navigation section headers (Global / Healthcare / AI) are CLICKABLE collapse
+   toggles, each with a `:material/expand_more:` chevron. That chevron's ligature
+   leaked as raw rotated "expand_more" text on sidebar collapse. We want fixed,
+   always-expanded categories → hide the chevron (display:none works regardless of
+   icon-font rendering) and disable the toggle so sections never collapse. */
+[data-testid="stNavSectionHeader"] {{ pointer-events: none !important; }}
+[data-testid="stNavSectionHeader"] [data-testid="stIconMaterial"] {{ display: none !important; }}
 
 /* page typography — Claude Design §2 */
 /* padding-top clears the fixed 53px stHeader. 4.5rem (=72px) leaves ~19px gap
@@ -735,6 +778,25 @@ pre code {{
   border: 1px solid {PAPER_EDGE}; border-radius: 2px; background: {PAPER};
   white-space: nowrap;
 }}
+/* Chip variants — semantic, token-only (no new colors). default = sector (neutral).
+   coverage = CMSI-red accent (覆盖股). strategy = teal accent (选中策略). Kept as
+   outline+text recolor (no fill) so they stay editorial and don't shout. */
+.cmsi-chip--coverage {{ border-color: {CMSI_RED}; color: {CMSI_RED}; font-weight: 600; }}
+.cmsi-chip--strategy {{ border-color: {UP}; color: {UP_DEEP}; }}
+
+/* Section header — Tier 3 (▎red + 14px ink, no uppercase). For sub-blocks inside a
+   section (区间收益率 / 最新估值 …). Lighter than .cmsi-section (Tier-2, 21px + ink
+   top rule); CJK-safe vs .cmsi-eyebrow (which uppercases + wide-tracks → ugly on 中文).
+   Replaces the old unstyled `##### …` (h5 was never themed → browser default). */
+.cmsi-subsection {{
+  display: flex; align-items: center; gap: 8px;
+  margin: 1.2rem 0 0.6rem;
+  font-size: 14px; line-height: 20px; font-weight: 600; color: {INK};
+  letter-spacing: 0;
+}}
+.cmsi-subsection::before {{
+  content: ''; width: 3px; height: 15px; background: {CMSI_RED}; display: inline-block;
+}}
 """
 
 
@@ -858,8 +920,27 @@ def eyebrow(label: str) -> None:
                 unsafe_allow_html=True)
 
 
-def chips(items: list[str]) -> None:
-    """Hairline mono chips (sector tags etc) — no fill, no emoji. Replaces the old
-    `code`-backtick tag list."""
-    body = "".join(f'<span class="cmsi-chip">{_esc(str(c))}</span>' for c in items)
+def chips_tagged(items: list[tuple[str, str]]) -> None:
+    """Hairline mono chips with a PER-ITEM variant — [(text, variant), …] where
+    variant ∈ {'default', 'coverage', 'strategy'}. Lets one row mix semantics
+    (e.g. a red coverage chip beside teal strategy chips)."""
+    body = "".join(
+        f'<span class="cmsi-chip cmsi-chip--{v}">{_esc(str(t))}</span>'
+        for t, v in items
+    )
     st.markdown(f'<div class="cmsi-chips">{body}</div>', unsafe_allow_html=True)
+
+
+def chips(items: list[str], variant: str = "default") -> None:
+    """Hairline mono chips (sector tags etc) — no fill, no emoji. Replaces the old
+    `code`-backtick tag list. All items share one `variant`; use chips_tagged() for
+    a mixed row."""
+    chips_tagged([(c, variant) for c in items])
+
+
+def subsection(title: str) -> None:
+    """Tier-3 sub-section title (▎red + 14px ink, no uppercase) — for sub-blocks
+    inside a section (区间收益率 / 最新估值 …). Lighter than section_header; CJK-safe
+    vs eyebrow (which uppercases + wide-tracks). Replaces the old `##### …` markdown."""
+    st.markdown(f'<div class="cmsi-subsection">{_esc(str(title))}</div>',
+                unsafe_allow_html=True)

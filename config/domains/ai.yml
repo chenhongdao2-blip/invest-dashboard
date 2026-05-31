@@ -1,0 +1,46 @@
+# AI (semiconductor / AI-compute supply-chain) domain config
+name: AI
+emoji: 🤖
+description: |
+  AI 算力 / 半导体产业链 sell-side comps，按产业链 L1–L6 六层拆解
+  (L7 云/应用/模型 + 未上市标的暂不纳入，与 LLM Wiki 建页范围一致)。
+  跨 US / JP / KR / CN(A股) 四市场。来源：LLM Wiki
+  ai-supply-chain-cross-market-universe（外资投行 comps，MEDIUM/LOW，
+  只取事实不采信评级）。
+
+# 板块列表 = 产业链层级（按 universe YAML 命名）
+sectors:
+  - id: ai_equip
+    name: Semi Equipment & Materials
+    universe_file: ai_equip.yml
+    benchmark: SMH               # L1 设备/材料/EDA-IP
+  - id: ai_chip
+    name: Chip Design (GPU/ASIC)
+    universe_file: ai_chip.yml
+    benchmark: "^SOX"           # L2 芯片设计
+  - id: ai_memory
+    name: Memory (DRAM/HBM/NAND)
+    universe_file: ai_memory.yml
+    benchmark: 442580.KS         # L3 存储 (HBM 代理)
+  - id: ai_foundry
+    name: Foundry & OSAT
+    universe_file: ai_foundry.yml
+    benchmark: SMH               # L4 代工/封测/先进封装
+  - id: ai_interconnect
+    name: Interconnect (Optical/PCB)
+    universe_file: ai_interconnect.yml
+    benchmark: 515880.SS         # L5 光模块/CPO/PCB/铜连接
+  - id: ai_server
+    name: Server / Cooling / Power
+    universe_file: ai_server.yml
+    benchmark: AIQ               # L6 服务器/ODM/散热液冷/电源
+
+# Domain-level benchmarks (all already in benchmarks_daily)
+benchmarks:
+  primary: "^SOX"
+  secondary:
+    - SMH                        # VanEck Semiconductor
+    - AIQ                        # Global X AI & Tech
+    - 512480.SS                  # 中证半导体 (A股)
+
+# NB: 无 coverage list（AI 暂无 CMSI 覆盖名单）。L7 / 未上市标的暂不纳入。

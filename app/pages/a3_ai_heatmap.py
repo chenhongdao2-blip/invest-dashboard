@@ -1,0 +1,188 @@
+"""AI Sector Heatmap — multiples + returns per supply-chain layer with color gradient.
+
+Mirror of `3_🔥_Sector_Heatmap.py` with domain='ai', reading config/domains/ai.yml.
+Empty-data safe: a sector with no tickers / no rows after the min-mcap filter shows
+an info note instead of crashing.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pandas as pd
+import streamlit as st
+import yaml
+
+from lib import db
+from lib import format as fmt
+from lib import ui
+from lib import theme
+from lib import i18n
+
+st.set_page_config(page_title="AI Sector Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
+
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "ai.yml"
+
+
+@st.cache_data(ttl=600)
+def load_domain_cfg() -> dict:
+    with DOMAIN_CFG.open() as f:
+        return yaml.safe_load(f)
+
+
+cfg = load_domain_cfg()
+
+i18n.init_lang()
+i18n.render_lang_toggle()
+
+theme.page_header(i18n.t("ai.heat.title"))
+st.caption(i18n.t("heat.caption"))
+
+# --- Sidebar global search + filter ---
+with st.sidebar:
+    ui.sidebar_search(key_prefix="ai_heat")
+    st.divider()
+    st.subheader(i18n.t("heat.filter.header"))
+    min_mcap_b = st.slider(
+        i18n.t("heat.filter.min_mcap"), 0.0, 50.0, 0.0, 0.5,
+        help=i18n.t("heat.filter.min_mcap_help")
+    )
+    sort_col = st.selectbox(
+        i18n.t("heat.filter.sort_by"),
+        ["Mcap USD", "YTD %", "1M %", "Trail P/E", "Fwd P/E"],
+        index=0,
+        help=i18n.t("heat.filter.sort_help")
+    )
+
+
+def render_sector(sec: dict) -> None:
+    uni = db.sector_tickers("ai", sec["id"])
+    tickers = tuple(uni["ticker"].tolist())
+    if not tickers:
+        st.warning(f"No tickers in sector {sec['name']}")
+        return
+
+    closes = db.get_close_series_usd(tickers)
+    rets = db.compute_returns(closes)
+    mults = db.latest_multiples(tickers)
+    name_map = db.ticker_to_name(prefer_cn=True)
+    region_map = uni.set_index("ticker")["region"].to_dict()
+
+    # --- Merge numeric DataFrame (for gradient calc) ---
+    merged = rets.copy() if not rets.empty else pd.DataFrame(index=list(tickers))
+    if not mults.empty:
+        for col in ["market_cap_usd", "mcap_tier", "trailing_pe", "forward_pe",
+                    "ev_ebitda", "ev_sales", "fcf_yield", "pb"]:
+            if col in mults.columns:
+                merged[col] = mults[col]
+    merged["Name"] = pd.Series(name_map).reindex(merged.index)
+    merged["Region"] = pd.Series(region_map).reindex(merged.index)
+
+    # filter by min_mcap (in B) — only if the column exists (empty-data safe)
+    if min_mcap_b > 0 and "market_cap_usd" in merged.columns:
+        mcap_filter = merged["market_cap_usd"] >= (min_mcap_b * 1e9)
+        merged = merged[mcap_filter]
+
+    # default sort by market cap desc
+    sort_map = {
+        "Mcap USD": "market_cap_usd",
+        "YTD %": "ytd_%",
+        "1M %": "1m_%",
+        "Trail P/E": "trailing_pe",
+        "Fwd P/E": "forward_pe",
+    }
+    sort_field = sort_map.get(sort_col, "market_cap_usd")
+    ascending = "P/E" in sort_col   # cheaper first for P/E
+    if sort_field in merged.columns:
+        merged = merged.sort_values(sort_field, ascending=ascending, na_position="last")
+
+    if merged.empty:
+        st.info(f"No tickers in {sec['name']} after min-mcap filter (>= ${min_mcap_b:.1f}B)")
+        return
+
+    # --- Build NUMERIC display DataFrame (sort-bug fix) ---
+    def _col(name: str) -> pd.Series:
+        """Safe column accessor: missing column (data not yet fetched) → all-NaN."""
+        if name in merged.columns:
+            return merged[name]
+        return pd.Series([pd.NA] * len(merged), index=merged.index)
+
+    disp = pd.DataFrame(index=merged.index)
+    disp["Name"] = merged["Name"].fillna(merged.index.to_series())
+    disp["Mcap USD ($B)"] = _col("market_cap_usd") / 1e9
+    disp["YTD %"] = _col("ytd_%")
+    disp["1M %"] = _col("1m_%")
+    disp["5D %"] = _col("5d_%")
+    disp["1D %"] = _col("1d_%")
+    disp["Trail P/E"] = _col("trailing_pe")
+    disp["Fwd P/E"] = _col("forward_pe")
+    disp["EV/EBITDA"] = _col("ev_ebitda")
+    disp["EV/Sales"] = _col("ev_sales")
+    disp["FCF Yld"] = _col("fcf_yield")
+    disp["P/B"] = _col("pb")
+    disp.index.name = "Ticker"
+
+    ui.render_styled_table(
+        disp,
+        pct_cols=["YTD %", "1M %", "5D %", "1D %"],
+        pct_decimal_cols=["FCF Yld"],
+        mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "EV/Sales", "P/B"],
+        money_b_cols=["Mcap USD ($B)"],
+        text_cols=["Name"],
+        column_widths={"Name": "medium"},
+        height=540,
+        column_labels=i18n.common_cols(),
+        index_label=i18n.t("common.col.ticker"),
+    )
+
+    pct_num_map = {"YTD %": "ytd_%", "1M %": "1m_%", "5D %": "5d_%", "1D %": "1d_%"}
+    mult_num_map = {"Trail P/E": "trailing_pe", "Fwd P/E": "forward_pe",
+                    "EV/EBITDA": "ev_ebitda", "EV/Sales": "ev_sales", "P/B": "pb",
+                    "FCF Yld": "fcf_yield"}
+
+    # --- Sector aggregates ---
+    with st.expander(i18n.t("heat.agg.expander", sector=i18n.sector_name(sec['id']))):
+        agg_rows: dict[str, dict] = {}
+        for label, num_col in pct_num_map.items():
+            s = merged[num_col].dropna() if num_col in merged.columns else pd.Series(dtype=float)
+            agg_rows[label] = {
+                "Mean": fmt.fmt_pct(s.mean() if not s.empty else None),
+                "Median": fmt.fmt_pct(s.median() if not s.empty else None),
+                "Min": fmt.fmt_pct(s.min() if not s.empty else None),
+                "Max": fmt.fmt_pct(s.max() if not s.empty else None),
+            }
+        for label, num_col in mult_num_map.items():
+            s = merged[num_col].dropna() if num_col in merged.columns else pd.Series(dtype=float)
+            fmt_fn = fmt.fmt_pct_decimal if label == "FCF Yld" else fmt.fmt_ratio
+            agg_rows[label] = {
+                "Mean": fmt_fn(s.mean() if not s.empty else None),
+                "Median": fmt_fn(s.median() if not s.empty else None),
+                "Min": fmt_fn(s.min() if not s.empty else None),
+                "Max": fmt_fn(s.max() if not s.empty else None),
+            }
+        _agg = pd.DataFrame.from_dict(agg_rows, orient="index")
+        ui.render_html_table(
+            _agg,
+            text_cols=list(_agg.columns),
+            column_help={},
+            index_label=i18n.t("heat.agg.metric"),
+            height=460,
+        )
+
+
+# --- render tabs for piano-key navigation ---
+sector_tabs = st.tabs([f"{i18n.sector_name(sec['id'])} ({len(db.sector_tickers('ai', sec['id']))})"
+                       for sec in cfg["sectors"]])
+
+for tab, sec in zip(sector_tabs, cfg["sectors"]):
+    with tab:
+        render_sector(sec)
+
+st.divider()
+st.caption(i18n.t("heat.caption.legend", date=(db.latest_snapshot_date() or "—")))
+st.caption(i18n.t("heat.caption.filter_note"))
+
+# --- Onboarding ---
+with st.expander(i18n.t("heat.onboarding.title")):
+    st.markdown(i18n.t("heat.onboarding.body"))

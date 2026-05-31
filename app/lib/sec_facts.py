@@ -99,6 +99,14 @@ _CONCEPT_CN: dict[str, str] = {
 }
 
 
+# Merge curated sell-side concept→中文 dictionary (canonical terms win on collision).
+try:
+    from lib import sec_concept_cn as _sccn
+    _CONCEPT_CN.update(_sccn.CONCEPT_CN)
+except Exception:  # pragma: no cover - curated dict is optional enrichment
+    pass
+
+
 def concept_cn(concept: str) -> str:
     """Chinese name for a known XBRL concept, else '' (raw tag stays visible)."""
     return _CONCEPT_CN.get(concept, "")
@@ -232,6 +240,118 @@ def us_pool() -> pd.DataFrame:
            GROUP BY um.ticker
            ORDER BY um.ticker"""
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Peer-median overlay (precompiled by jobs/build_peer_medians.py)
+# ──────────────────────────────────────────────────────────────────────────
+# Metric keys are fixed and must match jobs/build_peer_medians.py + the page.
+_PEER_METRICS = ("gross_margin", "operating_margin", "net_margin",
+                 "fcf_margin", "roe", "debt_to_assets")
+
+
+@st.cache_data(ttl=600)
+def peer_medians(ticker: str, domain: str) -> dict:
+    """Precomputed sector peer-median derived ratios for a ticker's PRIMARY sector.
+
+    Reads table sec_peer_median (built offline by jobs/build_peer_medians.py).
+    PRIMARY sector = the sector among the ticker's (domain) sectors that has the
+    most peers (rows) in sec_peer_median; the ratios returned are the sector-level
+    medians (per fiscal year) for the 6 derived metrics, so a page can overlay a
+    name's own line against its sector to read the variance.
+
+    Returns
+    -------
+    dict with keys:
+      "sector_used": str   — the chosen primary sector (e.g. 'ai_chip'), '' if none
+      "n_peers":     int   — peer count for that sector (max n across its rows)
+      "metrics":     {metric: {year(int): median(float)}} for the 6 metric keys
+      "ns":          {metric: {year(int): n(int)}}  — peer count per metric per
+                     year, parallel to "metrics". Lets the UI guard against thin
+                     samples (DECISION 2: show a metric's peer column only when
+                     n>=3, else "样本不足"). n varies by metric/year because not
+                     every peer discloses every line in every year.
+    Empty dict ({}) if the ticker has no sectors in this domain or the table is
+    absent/empty for it. '_coverage' is never a candidate sector (DECISION 3).
+
+    Metric keys (exact): gross_margin, operating_margin, net_margin, fcf_margin,
+    roe, debt_to_assets. Uses a fresh read-only connection (offline-safe).
+    """
+    if not ticker or not domain:
+        return {}
+    t = str(ticker).upper()
+
+    # sectors this ticker belongs to in the domain
+    secs = db.query(
+        "SELECT DISTINCT sector FROM universe_member "
+        "WHERE domain = ? AND UPPER(ticker) = ?",
+        (domain, t),
+    )
+    if secs.empty:
+        return {}
+    sectors = [str(s) for s in secs["sector"].tolist() if s is not None]
+    # _coverage is a curated catch-all overlay, NOT a real industry sector →
+    # never a valid comparable basis. Exclude it from candidate primary sectors
+    # (DECISION 3). If the ticker has no REAL sector left, there are no comps.
+    sectors = [s for s in sectors if s != "_coverage"]
+    if not sectors:
+        return {}
+
+    placeholders = ",".join("?" * len(sectors))
+    pm = db.query(
+        f"SELECT sector, metric, year, median, n FROM sec_peer_median "
+        f"WHERE domain = ? AND sector IN ({placeholders})",
+        (domain, *sectors),
+    )
+    if pm.empty:
+        return {}
+
+    # PRIMARY sector = sector with the most peers (max n across its rows; tie ->
+    # most rows, then alphabetical for determinism).
+    best_sector, best_key = "", None
+    for sector, g in pm.groupby("sector"):
+        max_n = int(g["n"].max()) if not g["n"].isna().all() else 0
+        key = (max_n, len(g), sector)  # peers, coverage, name (asc tie-break)
+        if best_key is None or (key[0], key[1]) > (best_key[0], best_key[1]) or \
+           ((key[0], key[1]) == (best_key[0], best_key[1]) and sector < best_key[2]):
+            best_sector, best_key = str(sector), key
+
+    sub = pm[pm["sector"] == best_sector]
+    metrics: dict[str, dict[int, float]] = {m: {} for m in _PEER_METRICS}
+    ns: dict[str, dict[int, int]] = {m: {} for m in _PEER_METRICS}
+    n_peers = 0
+    # Sanity bounds: pre-revenue / near-zero-denominator biotech blow margins & ROE
+    # to absurd magnitudes that survive the n>=3 gate and corrupt the sector median.
+    # Omit out-of-range medians (cell renders "—") rather than show garbage comps.
+    _SANE = {
+        "gross_margin": (-200.0, 200.0), "operating_margin": (-300.0, 200.0),
+        "net_margin": (-300.0, 200.0), "fcf_margin": (-300.0, 200.0),
+        "roe": (-200.0, 200.0), "debt_to_assets": (0.0, 300.0),
+    }
+    for _, r in sub.iterrows():
+        m = str(r["metric"])
+        if m not in metrics:
+            continue
+        med = r["median"]
+        if med is None or pd.isna(med):
+            continue
+        _lo, _hi = _SANE.get(m, (None, None))
+        if _lo is not None and not (_lo <= float(med) <= _hi):
+            continue
+        yr = int(r["year"])
+        metrics[m][yr] = float(med)
+        if pd.notna(r["n"]):
+            ni = int(r["n"])
+            ns[m][yr] = ni
+            n_peers = max(n_peers, ni)
+
+    # drop empty metric buckets (and the parallel n buckets)
+    metrics = {m: yrs for m, yrs in metrics.items() if yrs}
+    ns = {m: yrs for m, yrs in ns.items() if yrs}
+    if not metrics:
+        return {}
+    return {"sector_used": best_sector, "n_peers": n_peers,
+            "metrics": metrics, "ns": ns}
 
 
 # ──────────────────────────────────────────────────────────────────────────

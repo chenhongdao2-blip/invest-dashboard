@@ -21,6 +21,7 @@ STRINGS = {
     "common.col.1m": "1月 %",
     "common.col.3m": "3月 %",
     "common.col.6m": "6月 %",
+    "common.col.vs_spx": "相对标普 pp",
     "common.col.ytd": "年初至今 %",
     "common.col.mcap_b": "市值（十亿美元 $B）",
     "common.col.trail_pe": "静态 P/E",
@@ -31,8 +32,17 @@ STRINGS = {
     "common.col.pb": "P/B",
     "common.warn.fetch_fail": "实时获取失败（yfinance）——检查网络/代理。",
 
+    # ── Home panels ──
+    "home.panel.broad_market": "市场总览",
+    "home.panel.sp500_sector": "标普500 子行业表现",
+    "home.panel.healthcare": "医疗健康基准",
+    "home.panel.ai": "AI 基准（预留）",
+    "home.panel.empty": "数据预留，敬请期待",
+    "home.panel.sp500_caption": "11 个 GICS 一级行业（SPDR Select Sector ETF 代理）+ 标普500 大盘对照",
+    "home.sub.benchmarks": "基准",
+
     # ── Home ──
-    "home.title": "多领域投资看板",
+    "home.title": "Market Hub 行情中枢",
     "home.metric.latest_snapshot": "最新快照",
     "home.metric.last_fetch": "最后获取（UTC）",
     "home.metric.universe": "股票池数量",
@@ -370,6 +380,7 @@ STRINGS = {
     "sec.col.end": "截止",
     "sec.col.form": "申报表",
     "sec.col.fy": "财年",
+    "sec.col.fp": "财季",
     "sec.col.filed": "申报日",
     "sec.section.comp": "可比表导出",
     "sec.comp.pick_tickers": "选择对比标的",
@@ -387,4 +398,24 @@ STRINGS = {
         "*回退概念* 徽标表示由非主概念提供数值（如概念迁移）。\n\n"
         "**刷新**：缓存于 `snapshots.db`，由 GitHub Actions 每周自动刷新——无需手动抓取。"
     ),
+
+    # ── AI 域页面（a1–a5）——以 domain='ai' 镜像 healthcare 各页 ──
+    "ai.cov.title": "AI 全景标的",
+    "ai.cov.caption": "AI 算力 / 半导体产业链全景——L1–L6 共 135 标的（美 / 日 / 韩 / A股）。最新数据：{date}",
+    "ai.cov.col.vs_sox": "vs SOX 年初至今",
+    "ai.cov.caption.source": "展示 {n} 只 AI 标的，跨 6 个产业链层级。AI 暂无 CMSI 覆盖名单——此处为完整跟踪股票池。",
+    "ai.cov.onboarding.title": "如何阅读本页",
+    "ai.cov.onboarding.body": (
+        "**AI 全景标的** 是本看板跟踪的 AI 算力 / 半导体产业链全景——AI 暂无 CMSI 覆盖名单，"
+        "故本页呈现全部标的（135 只），按 6 个产业链层级分组（L1 设备 → L6 服务器）。\n\n"
+        "**vs SOX 年初至今** = 该标的年初至今涨跌幅减去 ^SOX（费城半导体指数）年初至今——"
+        "AI 域主基准，替代以港股为中心的医疗覆盖页所用的恒指。\n\n"
+        "**默认**：按市值降序、中文名优先。价格 / 倍数来自 `snapshots.db`（每日 cron）。"
+    ),
+    "ai.ov.title": "AI 总览",
+    "ai.heat.title": "AI 板块热力图",
+    "ai.scan.title": "AI 估值扫描器",
+    "ai.sec.title": "AI · SEC 财报数据",
+    "ai.sec.caption": "美股 AI 标的的 SEC XBRL 申报（us-gaap / ifrs-full）。来源：data.sec.gov。",
+    "ai.section.benchmark": "域基准（^SOX）与同业",
 }

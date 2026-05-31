@@ -168,6 +168,144 @@ def relative_strength_chart(
     return theme.style_plotly(fig), anchor_iso
 
 
+def _diverging_color(pct: float, *, cap: float = 12.0) -> str:
+    """Map a signed % return to a diverging teal(up)/red(down) hex, centered at 0.
+
+    Saturation ramps linearly to `cap` (±%) then clamps — keeps the heatmap
+    readable instead of letting one outlier dominate the scale. 0% → near-neutral
+    paper-band so flat tiles don't shout. Colors: theme.UP teal / theme.DOWN red
+    (project LOCKED convention: teal up / red down).
+    """
+    if pct is None or pd.isna(pct):
+        return theme.PAPER_BAND
+    mag = min(abs(float(pct)) / cap, 1.0)            # 0..1 saturation
+    # Blend from a neutral cream band toward the full up/down hue.
+    n_r, n_g, n_b = 0xf2, 0xdf, 0xce                 # PAPER_BAND neutral anchor
+    if pct >= 0:
+        t_r, t_g, t_b = 0x0d, 0x76, 0x80            # theme.UP teal
+    else:
+        t_r, t_g, t_b = 0xcc, 0x00, 0x00            # theme.DOWN red
+    r = round(n_r + (t_r - n_r) * mag)
+    g = round(n_g + (t_g - n_g) * mag)
+    b = round(n_b + (t_b - n_b) * mag)
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def treemap_heatmap(
+    df: pd.DataFrame,
+    *,
+    size_col: str,
+    color_col: str,
+    group_col: str,
+    label_col: str,
+    title: str = "",
+    cap: float = 12.0,
+) -> go.Figure:
+    """Finviz-style treemap: tiles sized by `size_col` (market cap), colored by
+    `color_col` (signed % return, diverging teal/red centered at 0), grouped by
+    `group_col` (sub-sector). `label_col` is the display name shown on each tile.
+
+    Expected df columns (one row per stock):
+      - index or a column holding the ticker (we read it from df.index)
+      - size_col   : positive market cap (rows with NaN/≤0 are dropped by caller)
+      - color_col  : signed % return for the selected window
+      - group_col  : sub-sector bucket (treemap parent)
+      - label_col  : display name (中文 when prefer_cn)
+
+    Returns a go.Figure on the cream PAPER background. Caller is responsible for
+    the empty-data st.info fallback (we still return a valid empty figure if df
+    is empty so callers never crash).
+    """
+    fig = go.Figure()
+    if df is None or df.empty:
+        return theme.style_plotly(fig)
+
+    work = df.copy()
+    # Per-tile color from the signed return (diverging, capped).
+    colors = [_diverging_color(v, cap=cap) for v in work[color_col]]
+
+    # Tile text: ticker + signed % on two lines; hover adds name + mcap.
+    tickers = [str(t) for t in work.index]
+
+    def _fmt_pct(v) -> str:
+        return "—" if (v is None or pd.isna(v)) else f"{float(v):+.1f}%"
+
+    def _fmt_mcap(v) -> str:
+        # Real market cap (USD) for the hover. size_col is now |return| (abs_ret),
+        # so mcap must come from its own 'mcap' column — never from `sizes`.
+        if v is None or pd.isna(v):
+            return "—"
+        v = float(v)
+        if v >= 1e12:
+            return f"${v / 1e12:.1f}T"
+        if v >= 1e9:
+            return f"${v / 1e9:.1f}B"
+        if v >= 1e6:
+            return f"${v / 1e6:.1f}M"
+        return f"${v:,.0f}"
+
+    labels = list(work[label_col].astype(str))
+    groups = list(work[group_col].astype(str))
+    sizes = [float(x) for x in work[size_col]]
+    texts = [f"{tk}<br>{_fmt_pct(v)}" for tk, v in zip(tickers, work[color_col])]
+
+    # Build a flat go.Treemap with a synthetic root → group → leaf hierarchy.
+    # ids must be unique; labels can repeat. Leaf id = ticker, parent = group.
+    root_id = "ALL"
+    seen_groups: list[str] = []
+    for g in groups:
+        if g not in seen_groups:
+            seen_groups.append(g)
+
+    ids = [root_id] + [f"grp::{g}" for g in seen_groups] + tickers
+    parents = [""] + [root_id for _ in seen_groups] + [f"grp::{g}" for g in groups]
+    node_labels = [_clean_title(title) or "ALL"] + list(seen_groups) + texts
+    node_values = [0.0] + [0.0 for _ in seen_groups] + sizes  # branchvalues=remainder→leaves sum up
+    node_colors = [theme.PAPER] + [theme.PAPER_DEEP for _ in seen_groups] + colors
+    # Hover only for leaves; carry name + pct + REAL mcap via customdata.
+    # 3rd field = market cap (USD) from work['mcap'] when present — NOT the
+    # tile size (size_col is now |return|, so reusing `sizes` would mislabel
+    # |return| as mcap). Missing/NaN mcap → "—".
+    if "mcap" in work.columns:
+        mcap_strs = [_fmt_mcap(m) for m in work["mcap"]]
+    else:
+        mcap_strs = ["—" for _ in tickers]
+    customdata = (
+        [["", "", ""]]
+        + [[g, "", ""] for g in seen_groups]
+        + [[lab, _fmt_pct(v), mc] for lab, v, mc in zip(labels, work[color_col], mcap_strs)]
+    )
+
+    fig.add_trace(go.Treemap(
+        ids=ids,
+        labels=node_labels,
+        parents=parents,
+        values=node_values,
+        branchvalues="remainder",
+        marker=dict(colors=node_colors, line=dict(width=1, color=theme.PAPER)),
+        text=None,
+        textposition="middle center",
+        textfont=dict(size=12, color=theme.INK, family=theme.FONT_STACK),
+        customdata=customdata,
+        hovertemplate="%{customdata[0]}<br>%{customdata[1]} · mcap %{customdata[2]}<extra></extra>",
+        tiling=dict(pad=2),
+        sort=True,
+        pathbar=dict(visible=False),
+    ))
+    fig.update_layout(
+        title=_clean_title(title),
+        height=460,
+        margin=dict(l=8, r=8, t=56, b=8),
+    )
+    fig = theme.style_plotly(fig)
+    # Treemap has no x/y axes — strip the FT grid/axis layout style would add.
+    fig.update_layout(
+        xaxis=dict(visible=False), yaxis=dict(visible=False),
+        showlegend=False, hovermode="closest",
+    )
+    return fig
+
+
 def cumulative_return_chart(
     normed: pd.DataFrame,
     portfolio: pd.Series,

@@ -1,0 +1,63 @@
+# Foundry / OSAT / Advanced Packaging — AI supply-chain L4; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_foundry
+domain: ai
+
+tickers:
+  # --- US ---
+  - ticker: TSM
+    name_cn: 台积电
+    name_en: TSMC (ADR)
+    region: US
+  - ticker: GFS
+    name_cn: 格芯
+    name_en: GlobalFoundries
+    region: US
+  - ticker: AMKR
+    name_cn: 安靠科技
+    name_en: Amkor Technology
+    region: US
+  - ticker: ASX
+    name_cn: 日月光半导体
+    name_en: ASE Technology Holding (ADR)
+    region: US
+  # --- JP ---
+  - ticker: 6315.T
+    name_cn: TOWA
+    name_en: TOWA Corporation
+    region: JP
+  - ticker: 7911.T
+    name_cn: 凸版印刷
+    name_en: TOPPAN Holdings
+    region: JP
+  - ticker: 7912.T
+    name_cn: 大日本印刷
+    name_en: Dai Nippon Printing (DNP)
+    region: JP
+  # --- KR ---
+  - ticker: 067310.KQ
+    name_cn: Hana Micron
+    name_en: Hana Micron
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 036540.KQ
+    name_cn: SFA半导体
+    name_en: SFA Semiconductor
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  # --- CN ---
+  - ticker: 688981.SS
+    name_cn: 中芯国际
+    name_en: SMIC (Semiconductor Manufacturing International)
+    region: CN
+  - ticker: 688347.SS
+    name_cn: 华虹半导体
+    name_en: Hua Hong Semiconductor
+    region: CN
+  - ticker: 600584.SS
+    name_cn: 长电科技
+    name_en: JCET Group
+    region: CN
+  - ticker: 002156.SZ
+    name_cn: 通富微电
+    name_en: Tongfu Microelectronics
+    region: CN

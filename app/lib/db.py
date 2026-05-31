@@ -209,9 +209,19 @@ def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
 
 # ---------- top movers ----------
 @st.cache_data(ttl=300)
-def top_movers(n: int = 10) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Top n gainers and losers by 1-day return across all universe tickers."""
-    tickers = tuple(all_tickers())
+def top_movers(n: int = 10, domain: str | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Top n gainers and losers by 1-day return across universe tickers, optionally
+    scoped to a single `domain` (e.g. 'healthcare' / 'ai') so each home-page benchmark
+    category can show its OWN movers (HC movers under HC, AI movers under AI)."""
+    if domain:
+        tickers = tuple(
+            query("SELECT DISTINCT ticker FROM universe_member WHERE domain = ?",
+                  (domain,))["ticker"].tolist()
+        )
+    else:
+        tickers = tuple(all_tickers())
+    if not tickers:
+        return pd.DataFrame(), pd.DataFrame()
     closes = get_close_series(tickers)
     rets = compute_returns(closes)
     if rets.empty:

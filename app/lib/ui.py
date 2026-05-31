@@ -108,6 +108,7 @@ def render_styled_table(
     height: int = 500,
     hide_index: bool = False,
     heatmap: bool = False,
+    ref_rows: set | None = None,
 ) -> None:
     """DEPRECATED shim → render_html_table (kept so existing call sites work).
 
@@ -132,6 +133,7 @@ def render_styled_table(
         height=height,
         hide_index=hide_index,
         heatmap=heatmap,
+        ref_rows=ref_rows,
     )
 
 
@@ -190,6 +192,7 @@ def _cmsi_table_css() -> str:
     .nm-muted {{ color: {t.INK_3}; }}
     .gly {{ display: inline-block; width: 8px; text-align: center; margin-right: 1px;
             font-size: 8px; vertical-align: 1px; }}
+    table.cov tr.ref-row td {{ border-top: 2px solid {t.PAPER_EDGE}; font-style: italic; color: {t.INK_3}; }}
     """
 
 
@@ -248,6 +251,7 @@ def render_html_table(
     int_cols: list[str] | None = None,
     price_cols: list[str] | None = None,
     text_cols: list[str] | None = None,
+    right_text_cols: list[str] | None = None,
     extra_formats: dict[str, str] | None = None,
     column_help: dict[str, str] | None = None,
     column_labels: dict[str, str] | None = None,
@@ -255,6 +259,7 @@ def render_html_table(
     hide_index: bool = False,
     index_label: str | None = None,
     heatmap: bool = False,
+    ref_rows: set | None = None,
 ) -> None:
     """Render `df` as an FT-editorial HTML table inside an iframe (components.html).
 
@@ -287,6 +292,7 @@ def render_html_table(
     int_cols = set(int_cols or [])
     price_cols = set(price_cols or [])
     text_cols = set(text_cols or [])
+    right_text_cols = set(right_text_cols or [])
     extra_formats = extra_formats or {}
     column_help = COLUMN_HELP if column_help is None else column_help
     column_labels = column_labels or {}
@@ -320,6 +326,10 @@ def render_html_table(
         # extra_formats wins over kind lists — matches the old column_config
         # precedence (e.g. Valuation 'Sector P/E %ile' is in BOTH mult_cols and
         # extra_formats, and the printf format must win).
+        if col in right_text_cols:
+            # value already formatted by caller (unit-aware) — right-align + ink-strong
+            s = '<span class="flat">—</span>' if _na(v) else _html.escape(str(v))
+            return s, ("" if _na(v) else str(v).lower()), "strong", "s", ""
         if col in text_cols:
             s = "" if _na(v) else _html.escape(str(v))
             return s, ("" if _na(v) else str(v).lower()), "l nm", "s", ""
@@ -396,7 +406,8 @@ def render_html_table(
             cls_attr = f' class="{td_cls}"' if td_cls else ""
             style_attr = f' style="{bg}"' if bg else ""
             tds.append(f'<td{cls_attr}{style_attr} data-v="{sv_attr}">{inner}</td>')
-        tr_parts.append("<tr>" + "".join(tds) + "</tr>")
+        tr_cls = ' class="ref-row"' if (ref_rows is not None and idx in ref_rows) else ""
+        tr_parts.append(f"<tr{tr_cls}>" + "".join(tds) + "</tr>")
     tbody = "".join(tr_parts)
 
     nrows = len(df)
@@ -417,3 +428,53 @@ def render_html_table(
     # via srcdoc — keeps <script> alive (unlike st.html / st.markdown which strip
     # it). Replaces st.components.v1.html, removed after 2026-06-01.
     st.iframe(doc, height=iframe_h)
+
+
+def render_concept_table(
+    ts: pd.DataFrame,
+    *,
+    value_formatter,
+    labels: dict[str, str] | None = None,
+    max_rows: int = 12,
+) -> None:
+    """SEC concept time-series → house editorial HTML table (warm, not dark).
+
+    `ts` is sec_facts.concept_timeseries output: columns
+    [end_date, value, fy, fp, form, unit, yoy(, qoq)] with yoy/qoq already in
+    percent units. `value_formatter(v) -> str` renders each value unit-aware
+    (pass the page's `_fmt_val` bound to the concept unit, so the table matches
+    the KPI cards). yoy/qoq stay numeric so they get teal-up / red-down coloring.
+    `labels` keys: end_date, fy, fp, value, yoy, qoq.
+    """
+    if ts is None or ts.empty:
+        return
+    labels = labels or {}
+    t = ts.sort_values("end_date", ascending=False).head(max_rows).copy()
+
+    fy_l = labels.get("fy", "FY")
+    fp_l = labels.get("fp", "FP")
+    val_l = labels.get("value", "Value")
+
+    disp = pd.DataFrame(index=t["end_date"].astype(str))
+    disp[fy_l] = [str(int(x)) if pd.notna(x) else "—" for x in t["fy"]]
+    disp[fp_l] = t["fp"].fillna("—").astype(str).to_numpy()
+    disp[val_l] = [value_formatter(v) for v in t["value"]]
+
+    pct_label_cols: list[str] = []
+    if "yoy" in t.columns:
+        yoy_l = labels.get("yoy", "YoY %")
+        disp[yoy_l] = t["yoy"].to_numpy()
+        pct_label_cols.append(yoy_l)
+    if "qoq" in t.columns:
+        qoq_l = labels.get("qoq", "QoQ %")
+        disp[qoq_l] = t["qoq"].to_numpy()
+        pct_label_cols.append(qoq_l)
+
+    disp.index.name = labels.get("end_date", "End")
+    render_html_table(
+        disp,
+        pct_cols=pct_label_cols,
+        text_cols=[fp_l, fy_l],
+        right_text_cols=[val_l],
+        index_label=labels.get("end_date", "End"),
+    )

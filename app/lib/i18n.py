@@ -78,6 +78,7 @@ def common_cols() -> dict:
         "3M %": t("common.col.3m"),
         "6M %": t("common.col.6m"),
         "YTD %": t("common.col.ytd"),
+        "vs SPX": t("common.col.vs_spx"),
         "Mcap USD ($B)": t("common.col.mcap_b"),
         "Trail P/E": t("common.col.trail_pe"),
         "Fwd P/E": t("common.col.fwd_pe"),
@@ -90,6 +91,31 @@ def common_cols() -> dict:
 # lib.benchmarks.BENCHMARKS, and raw sector/domain ids from the universe tables.
 # Draft CN names — GLM-reviewed via /cccg. Ticker column already shows the
 # symbol (XLV / ^HSI …), so the name column carries the Chinese name only.
+_GICS_ZH = {
+    "XLK": "信息技术",
+    "XLC": "通信服务",
+    "XLY": "可选消费",
+    "XLF": "金融",
+    "XLI": "工业",
+    "XLP": "必选消费",
+    "XLE": "能源",
+    "XLU": "公用事业",
+    "XLB": "材料",
+    "XLRE": "房地产",
+}
+_AI_ZH = {
+    "^SOX": "费城半导体指数",
+    "SMH": "VanEck 半导体",
+    "AIQ": "Global X 人工智能",
+    "2644.T": "Global X 日本半导体",
+    "091160.KS": "KODEX 韩国半导体",
+    "442580.KS": "PLUS 全球HBM半导体",
+    "512480.SS": "中证半导体",
+    "515880.SS": "中证通信(光模块/CPO)",
+    "159819.SZ": "人工智能ETF",
+    "588200.SS": "科创芯片",
+    "3191.HK": "中国半导体(港)",
+}
 _BENCH_ZH = {
     "XLV": "医疗保健精选行业",
     "XBI": "标普生物科技",
@@ -114,6 +140,13 @@ _SECTOR_ZH = {
     "hospital_care": "医院服务",
     "managed_care": "管理式医疗",
     "cxo": "CXO 与生命科学",
+    # AI domain sectors (产业链 L1–L6)
+    "ai_equip": "半导体设备材料",
+    "ai_chip": "芯片设计",
+    "ai_memory": "存储芯片",
+    "ai_foundry": "代工封测",
+    "ai_interconnect": "光互联/PCB",
+    "ai_server": "服务器/散热/电源",
     "_coverage": "覆盖",          # CMSI cover-list marker (pseudo-sector, not a real sector)
 }
 _SECTOR_EN = {
@@ -124,16 +157,24 @@ _SECTOR_EN = {
     "hospital_care": "Hospital Care",
     "managed_care": "Managed Care",
     "cxo": "CXO & Life Sciences",
+    # AI domain sectors (supply-chain L1–L6)
+    "ai_equip": "Semi Equipment & Materials",
+    "ai_chip": "Chip Design",
+    "ai_memory": "Memory (DRAM/HBM)",
+    "ai_foundry": "Foundry & OSAT",
+    "ai_interconnect": "Interconnect (Optical/PCB)",
+    "ai_server": "Server/Cooling/Power",
     "_coverage": "Coverage",     # CMSI cover-list marker (pseudo-sector, not a real sector)
 }
-_DOMAIN = {"healthcare": {"zh": "医疗健康", "en": "Healthcare"}}
+_DOMAIN = {"healthcare": {"zh": "医疗健康", "en": "Healthcare"},
+           "ai": {"zh": "人工智能", "en": "AI"}}
 
 
 def bench_name(sym: str, fallback: str = "") -> str:
     """Localized benchmark long-name. zh → Chinese; en → English fallback (the
     df already carries the English name)."""
     if get_lang() == "zh":
-        return _BENCH_ZH.get(sym, fallback or sym)
+        return _BENCH_ZH.get(sym) or _GICS_ZH.get(sym) or _AI_ZH.get(sym) or fallback or sym
     return fallback or sym
 
 

@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>CMSI · 医药板块覆盖列表 · Healthcare Coverage Universe</title>
+<meta name="viewport" content="width=900" />
+<style>
+ :root{--ink:#1a1715;--ink-2:#3a342f;--mute:#7a716a;--mute-2:#a39990;--line:#dcd5cc;--line-2:#ece6dd;--paper:#f7f3ec;--card:#fbf8f2;--accent:#9a1f1f;--accent-2:#c0392b;--gold:#a07a2c;--ok:#3a6b3a;--warn:#a87420;--bad:#9a1f1f;--up:#3a6b3a;--down:#9a1f1f;}
+ *{box-sizing:border-box}
+ html,body{margin:0;padding:0;background:#f7f3ec;font-family:"Helvetica Neue","Helvetica","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;}
+ .page{width:880px;margin:0 auto;background:var(--paper);padding:22px 28px 22px;box-shadow:none;}
+
+ /* topstrip — v64 invariant */
+ .topstrip{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--ink);padding-bottom:8px;font-size:11px;letter-spacing:.04em;color:var(--ink-2);}
+ .brand{display:flex;align-items:center;gap:10px;}
+ .brand .mark{width:22px;height:22px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:12px;font-family:"Times New Roman",serif;}
+ .brand .name{font-weight:700;letter-spacing:.18em;font-size:10px}
+ .brand .name small{display:block;font-weight:400;letter-spacing:.04em;color:var(--mute);font-size:9px;margin-top:1px}
+ .crumbs{font-family:"Times New Roman",serif;font-style:italic;color:var(--ink-2);}
+ .crumbs b{font-style:normal;font-weight:600;color:var(--ink);}
+ .date{font-family:"Times New Roman",serif;letter-spacing:.18em;color:var(--mute);}
+
+ /* track + title row */
+ .track{margin-top:14px;font-size:10px;letter-spacing:.28em;color:var(--accent);font-weight:700;}
+ .track .dot{display:inline-block;width:4px;height:4px;background:var(--accent);border-radius:50%;vertical-align:middle;margin:0 6px 2px;}
+ .title-row{display:flex;align-items:flex-end;justify-content:space-between;margin-top:4px;gap:24px;}
+ .title-zh{font-size:42px;font-weight:800;letter-spacing:.04em;line-height:1;color:var(--ink);}
+ .title-en{font-family:"Times New Roman",serif;font-style:italic;font-weight:400;font-size:20px;color:var(--ink-2);margin-left:12px;letter-spacing:.01em;}
+ .ticker-row{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:12px;color:var(--ink-2);}
+ .ticker{background:var(--ink);color:#f7f3ec;padding:3px 9px;font-family:"Courier New",monospace;font-weight:700;letter-spacing:.08em;font-size:12px;}
+
+ /* tri */
+ .tri{display:grid;grid-template-columns:1.2fr 1fr 1.2fr;gap:0;margin-top:18px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+ .tri > div{padding:14px 18px;border-right:1px solid var(--line);}
+ .tri > div:last-child{border-right:none}
+ .tri .label{font-size:10px;letter-spacing:.18em;color:var(--mute);text-transform:uppercase;font-weight:600;}
+ .tri .label small{font-weight:400;letter-spacing:.04em;text-transform:none;color:var(--mute-2);margin-left:6px;}
+ .stat{font-size:34px;font-weight:800;color:var(--ink);line-height:1;font-family:"Helvetica Neue",sans-serif;letter-spacing:-.02em;margin-top:6px;}
+ .stat-sub{font-size:11px;color:var(--mute);margin-top:8px;line-height:1.7;}
+ .stat-sub b{color:var(--ink-2);font-weight:600;}
+ .reco{text-align:center;}
+ .reco .stamp{display:inline-block;background:var(--gold);color:#fff;padding:10px 16px 12px;font-size:18px;font-weight:800;letter-spacing:.18em;text-indent:.18em;margin-top:2px;}
+ .reco .sub{font-size:11px;color:var(--mute);margin-top:8px;letter-spacing:.04em;}
+ .reco .ticker-pin{font-family:"Courier New",monospace;font-size:13px;color:var(--accent);font-weight:700;letter-spacing:.06em;margin-top:6px;}
+ .price{font-size:26px;font-weight:700;letter-spacing:-.01em;color:var(--ink);}
+ .price small{font-size:11px;color:var(--mute);font-weight:500;letter-spacing:.04em;margin-left:6px;}
+ .price-sub{font-size:11px;color:var(--mute);margin-top:6px;line-height:1.6;}
+
+ /* params 6-grid */
+ .params{display:grid;grid-template-columns:repeat(7,1fr);background:var(--card);border-bottom:1px solid var(--line);}
+ .params > div{padding:10px 12px;border-right:1px solid var(--line);}
+ .params > div:last-child{border-right:none}
+ .params .k{font-family:"Courier New",monospace;font-size:10px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;}
+ .params .v{font-size:13px;font-weight:700;color:var(--ink);margin-top:3px;}
+ .params .v small{display:block;font-weight:400;color:var(--mute);font-size:10px;margin-top:1px;letter-spacing:.02em;}
+ .params .v.up{color:var(--up);}
+ .params .v.down{color:var(--down);}
+
+ /* section-h */
+ .section-h{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--ink);padding-bottom:5px;margin-bottom:8px;}
+ .section-h .num{background:var(--ink);color:#f7f3ec;font-family:"Courier New",monospace;font-weight:700;font-size:10px;padding:2px 6px;letter-spacing:.06em;}
+ .section-h .ttl{font-size:15px;font-weight:700;letter-spacing:.02em;}
+ .section-h .meta{margin-left:auto;font-size:10px;color:var(--mute);font-family:"Courier New",monospace;letter-spacing:.06em;}
+
+ /* big coverage table */
+ table.cov{width:100%;border-collapse:collapse;font-size:10.5px;margin-top:8px;}
+ table.cov thead th{padding:6px 4px;text-align:right;font-size:9px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase;font-weight:600;border-bottom:1px solid var(--ink);background:var(--card);}
+ table.cov thead th.l{text-align:left;}
+ table.cov tbody td{padding:5px 4px;text-align:right;font-family:"Courier New",monospace;font-feature-settings:'tnum';font-variant-numeric:tabular-nums;border-bottom:1px dotted var(--line);color:var(--ink-2);}
+ table.cov tbody td.l{text-align:left;font-family:"Helvetica Neue",sans-serif;}
+ table.cov tbody td.t{font-family:"Courier New",monospace;font-weight:700;color:var(--ink);letter-spacing:.04em;font-size:10.5px;}
+ table.cov tbody td.n{font-family:"Helvetica Neue","PingFang SC",sans-serif;color:var(--ink);font-weight:600;}
+ table.cov tbody tr.region-head td{background:var(--card);color:var(--accent);font-family:"Helvetica Neue",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.2em;font-size:9.5px;padding:6px 4px;border-bottom:1px solid var(--accent);border-top:1px solid var(--accent);}
+ table.cov tbody tr.region-head td.l{text-align:left;}
+ table.cov tbody tr:last-child td{border-bottom:1px solid var(--ink);}
+ td.up{color:var(--up);}
+ td.down{color:var(--down);}
+ td.nm{color:var(--mute-2);}
+
+ /* 2-col body */
+ .body{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px;}
+ .col{display:flex;flex-direction:column;gap:14px;}
+
+ /* movers list */
+ .movers{font-size:11px;}
+ .movers .mv{display:grid;grid-template-columns:18px 1fr 56px 50px;align-items:baseline;gap:8px;padding:4px 0;border-bottom:1px dotted var(--line);}
+ .movers .mv:last-child{border-bottom:none;}
+ .movers .mv .rank{font-family:"Courier New",monospace;color:var(--mute);font-size:9.5px;}
+ .movers .mv .who{color:var(--ink-2);}
+ .movers .mv .who .cn{font-weight:600;color:var(--ink);}
+ .movers .mv .who small{color:var(--mute);font-family:"Courier New",monospace;font-size:9.5px;letter-spacing:.04em;margin-left:4px;}
+ .movers .mv .pct{text-align:right;font-family:"Courier New",monospace;font-weight:700;font-size:11px;}
+ .movers .mv .mcap{text-align:right;font-family:"Courier New",monospace;color:var(--mute);font-size:10px;}
+ .pct.up{color:var(--up);}
+ .pct.down{color:var(--down);}
+
+ /* sub-sector pulse */
+ .pulse{font-size:11px;}
+ .pulse .row{display:grid;grid-template-columns:1.2fr 90px 60px;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dotted var(--line);}
+ .pulse .row:last-child{border-bottom:none;}
+ .pulse .row .seg{color:var(--ink);font-weight:600;}
+ .pulse .row .seg small{color:var(--mute);font-family:"Courier New",monospace;font-size:9.5px;margin-left:4px;letter-spacing:.04em;}
+ .pulse .bar{position:relative;height:8px;background:var(--line-2);overflow:hidden;}
+ .pulse .bar i{position:absolute;top:0;bottom:0;background:var(--accent);}
+ .pulse .bar i.up{background:var(--up);right:50%;}
+ .pulse .bar i.down{background:var(--down);left:50%;}
+ .pulse .bar .axis{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--ink-2);}
+ .pulse .row .num{text-align:right;font-family:"Courier New",monospace;font-weight:700;font-size:11px;}
+
+ /* callout */
+ .callout{background:var(--card);border-left:2px solid var(--accent);padding:8px 10px;font-size:10.5px;color:var(--ink-2);line-height:1.6;margin-top:8px;}
+ .callout b{color:var(--ink)}
+
+ /* observations cards */
+ .full-section{margin-top:14px;border-top:1px solid var(--ink);padding-top:10px;}
+ .obs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+ .obs{background:var(--card);border-top:2px solid var(--accent);padding:9px 11px;font-size:10.5px;line-height:1.55;color:var(--ink-2);}
+ .obs .tag{font-family:"Courier New",monospace;font-size:9px;letter-spacing:.12em;color:var(--mute);text-transform:uppercase;margin-bottom:2px;}
+ .obs b{display:block;color:var(--ink);font-size:11.5px;margin-bottom:3px;}
+ .obs.alpha{border-top-color:var(--up);}
+ .obs.alpha .tag{color:var(--up);}
+ .obs.warn{border-top-color:var(--warn);}
+ .obs.warn .tag{color:var(--warn);}
+
+ /* foot */
+ .foot{display:flex;justify-content:space-between;border-top:1px solid var(--line);margin-top:18px;padding-top:8px;font-size:9.5px;color:var(--mute);letter-spacing:.04em;}
+ .compliance-foot{margin-top:6px;font-size:9px;color:var(--mute);letter-spacing:.04em;line-height:1.5;border-top:1px dotted var(--line);padding-top:4px;}
+ .compliance-foot b{color:var(--accent);font-weight:600;letter-spacing:.12em;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="topstrip">
+    <div class="brand">
+      <div class="mark">$</div>
+      <div class="name">CMS INTERNATIONAL<small>research / healthcare desk</small></div>
+    </div>
+    <div class="crumbs">CMSI · 医药板块覆盖 · <b>Healthcare Coverage Universe</b></div>
+    <div class="date">2026 / 05 / 28</div>
+  </div>
+
+  <div class="track">COVERAGE<span class="dot"></span>医药板块<span class="dot"></span>28 标的 · HK 15 / US 10 / CN 3<span class="dot"></span>研究 / Cross-region Healthcare Tracker</div>
+
+  <div class="title-row">
+    <div>
+      <span class="title-zh">医药板块覆盖列表</span><span class="title-en">Healthcare Coverage Universe</span>
+      <div class="ticker-row">
+        <span class="ticker">28 TICKERS</span>
+        <span class="biz">CXO · 创新药 · 医疗器械 · 生物科技 · 医保 · 中药 · 综合医药 · 跨港 / 美 / A 三地</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tri">
+    <div>
+      <div class="label">UNIVERSE <small>28 标的 · 7 子板块</small></div>
+      <div class="stat" style="color:var(--ink);">28<span style="font-size:14px;color:var(--mute);font-weight:500;"> 标的</span></div>
+      <div class="stat-sub">HK <b>15</b> &nbsp;·&nbsp; US <b>10</b> &nbsp;·&nbsp; CN A <b>3</b><br/>总市值 ~<b>USD 2.07T</b> · YTD 中位 <b style="color:var(--warn)">−2.6%</b></div>
+    </div>
+    <div class="reco">
+      <div class="label">今日关注 <small>Editor's Pick</small></div>
+      <div class="stamp" style="background:var(--accent);">2616.HK</div>
+      <div class="ticker-pin">基石药业 · 创新药 18A</div>
+      <div class="sub">YTD <b style="color:var(--up)">+45.7%</b> · 1D <b>−0.4%</b> · 估值修复 leg-1</div>
+    </div>
+    <div>
+      <div class="label">数据快照 <small>As-of timestamp</small></div>
+      <div class="price">2026-05-28<small>HKT 18:32</small></div>
+      <div class="price-sub">数据源 · <b>yfinance live</b> · 价格 USD 归一<br/>fundamentals · TTM / NTM 双口径 · sell-side cross-check</div>
+    </div>
+  </div>
+
+  <div class="params">
+    <div><div class="k">CXO</div><div class="v">3 家<small>2359 · 2269 · 1177</small></div></div>
+    <div><div class="k">创新药</div><div class="v">6 家<small>1801 · 9995 · 2162 · 2616 · 2256 · 600276</small></div></div>
+    <div><div class="k">综合医药</div><div class="v">5 家<small>3692 · 1093 · 3320 · 1681 · NVO·MRK</small></div></div>
+    <div><div class="k">医疗器械</div><div class="v">3 家<small>2666 · 300760 · 讯飞</small></div></div>
+    <div><div class="k">海外 BigPharma</div><div class="v">6 家<small>LLY · JNJ · ABBV · MRK · NVO · GILD</small></div></div>
+    <div><div class="k">生物科技 US</div><div class="v">4 家<small>VRTX · REGN · BIIB · MRNA</small></div></div>
+    <div><div class="k">中药</div><div class="v">1 家<small>1530 三生制药</small></div></div>
+  </div>
+
+  <!-- ── Section 01 · Coverage table ── -->
+  <section style="margin-top:18px;">
+    <div class="section-h"><span class="num">01</span><span class="ttl">Coverage Universe · 28 标的总览</span><span class="meta">USD 归一 · 2026-05-28 收盘</span></div>
+    <table class="cov">
+      <thead>
+        <tr>
+          <th class="l">Ticker</th><th class="l">公司</th><th>Mcap USD</th>
+          <th>YTD %</th><th>1M %</th><th>1D %</th><th>vs HSI</th>
+          <th>Fwd P/E</th><th>EV/EBITDA</th><th>FCF Yld</th><th>P/B</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="region-head"><td colspan="11" class="l">HK · 港股 15</td></tr>
+        <tr><td class="t l">2359.HK</td><td class="n l">药明康德</td><td>$47.9B</td><td class="up">+24.4%</td><td class="down">−0.2%</td><td class="down">−1.8%</td><td class="up">+29.5%</td><td>15.0x</td><td>15.8x</td><td class="up">+2.39%</td><td>2.8x</td></tr>
+        <tr><td class="t l">3692.HK</td><td class="n l">翰森制药</td><td>$24.4B</td><td class="down">−13.3%</td><td class="down">−18.2%</td><td class="down">−6.6%</td><td class="down">−8.3%</td><td>25.2x</td><td>30.0x</td><td class="up">+2.70%</td><td>4.1x</td></tr>
+        <tr><td class="t l">2269.HK</td><td class="n l">药明生物</td><td>$17.2B</td><td class="down">−0.1%</td><td class="down">−2.3%</td><td class="down">−3.4%</td><td class="up">+5.0%</td><td>16.6x</td><td>16.7x</td><td class="up">+3.19%</td><td>2.4x</td></tr>
+        <tr><td class="t l">1801.HK</td><td class="n l">信达生物</td><td>$16.8B</td><td class="down">−3.9%</td><td class="down">−9.3%</td><td class="down">−4.1%</td><td class="up">+1.2%</td><td>28.5x</td><td>92.8x</td><td class="up">+2.46%</td><td>3.6x</td></tr>
+        <tr><td class="t l">1177.HK</td><td class="n l">中国生物制药</td><td>$11.0B</td><td class="down">−24.1%</td><td class="down">−12.8%</td><td class="down">−3.4%</td><td class="down">−19.0%</td><td>15.6x</td><td>13.0x</td><td class="up">+7.66%</td><td>1.7x</td></tr>
+        <tr><td class="t l">1093.HK</td><td class="n l">石药集团</td><td>$10.1B</td><td class="down">−17.9%</td><td class="down">−21.0%</td><td class="down">−1.1%</td><td class="down">−12.9%</td><td>10.1x</td><td class="nm">NM</td><td class="nm">NM</td><td>1.4x</td></tr>
+        <tr><td class="t l">9995.HK</td><td class="n l">荣昌生物</td><td>$6.0B</td><td class="up">+7.8%</td><td class="down">−24.4%</td><td class="down">−3.5%</td><td class="up">+12.9%</td><td>50.0x</td><td>76.6x</td><td class="up">+1.98%</td><td>5.2x</td></tr>
+        <tr><td class="t l">1530.HK</td><td class="n l">三生制药</td><td>$5.6B</td><td class="down">−29.1%</td><td class="down">−21.3%</td><td class="down">−6.6%</td><td class="down">−24.0%</td><td>11.5x</td><td>3.0x</td><td class="up">+16.62%</td><td>1.2x</td></tr>
+        <tr><td class="t l">3320.HK</td><td class="n l">华润医药</td><td>$3.7B</td><td class="up">+2.9%</td><td class="down">−12.3%</td><td class="down">−1.5%</td><td class="up">+7.9%</td><td>5.5x</td><td>8.8x</td><td class="down">−4.78%</td><td>0.6x</td></tr>
+        <tr><td class="t l">2162.HK</td><td class="n l">康诺亚</td><td>$2.2B</td><td class="up">+8.5%</td><td class="down">−23.3%</td><td class="down">−2.5%</td><td class="up">+13.6%</td><td>89.0x</td><td class="nm">NM</td><td class="down">−4.39%</td><td>3.8x</td></tr>
+        <tr><td class="t l">2616.HK</td><td class="n l">基石药业</td><td>$1.6B</td><td class="up">+45.7%</td><td class="down">−21.2%</td><td class="down">−0.4%</td><td class="up">+50.7%</td><td class="nm">NM</td><td class="nm">NM</td><td class="down">−2.02%</td><td>4.5x</td></tr>
+        <tr><td class="t l">1681.HK</td><td class="n l">康臣药业</td><td>$1.5B</td><td class="down">−9.8%</td><td class="down">−10.9%</td><td class="down">−2.2%</td><td class="down">−4.8%</td><td>7.5x</td><td>7.2x</td><td class="down">−1.77%</td><td>1.0x</td></tr>
+        <tr><td class="t l">2666.HK</td><td class="n l">环球医疗</td><td>$1.3B</td><td class="down">−12.6%</td><td class="down">−10.5%</td><td class="down">−1.5%</td><td class="down">−7.5%</td><td>3.9x</td><td class="nm">NM</td><td class="nm">NM</td><td>0.5x</td></tr>
+        <tr><td class="t l">2506.HK</td><td class="n l">讯飞医疗</td><td>$1.3B</td><td class="up">+12.0%</td><td class="up">+23.4%</td><td class="down">−0.8%</td><td class="up">+17.1%</td><td>225.2x</td><td class="nm">NM</td><td class="down">−4.33%</td><td>8.4x</td></tr>
+        <tr><td class="t l">2256.HK</td><td class="n l">和誉</td><td>$0.8B</td><td class="down">−26.3%</td><td class="down">−31.5%</td><td class="down">−9.0%</td><td class="down">−21.3%</td><td class="nm">NM</td><td>137.7x</td><td class="up">+1.58%</td><td>1.9x</td></tr>
+
+        <tr class="region-head"><td colspan="11" class="l">US · 美股 10</td></tr>
+        <tr><td class="t l">LLY</td><td class="n l">Eli Lilly</td><td>$812B</td><td class="up">+18.2%</td><td class="up">+4.5%</td><td class="up">+0.4%</td><td class="up">+5.2%</td><td>48.2x</td><td>52.1x</td><td class="up">+0.85%</td><td>52.4x</td></tr>
+        <tr><td class="t l">JNJ</td><td class="n l">Johnson & Johnson</td><td>$401B</td><td class="up">+3.2%</td><td class="up">+1.5%</td><td class="up">+0.1%</td><td class="down">−9.8%</td><td>16.4x</td><td>14.2x</td><td class="up">+4.80%</td><td>5.6x</td></tr>
+        <tr><td class="t l">ABBV</td><td class="n l">AbbVie</td><td>$312B</td><td class="up">+14.8%</td><td class="up">+3.8%</td><td class="down">−0.3%</td><td class="up">+1.8%</td><td>15.2x</td><td>13.6x</td><td class="up">+5.95%</td><td>56.2x</td></tr>
+        <tr><td class="t l">MRK</td><td class="n l">Merck</td><td>$268B</td><td class="up">+6.4%</td><td class="up">+2.1%</td><td class="down">−0.5%</td><td class="down">−6.5%</td><td>14.8x</td><td>12.4x</td><td class="up">+5.20%</td><td>8.4x</td></tr>
+        <tr><td class="t l">NVO</td><td class="n l">Novo Nordisk</td><td>$452B</td><td class="down">−5.8%</td><td class="down">−3.2%</td><td class="up">+0.2%</td><td class="down">−8.7%</td><td>24.6x</td><td>22.3x</td><td class="up">+2.15%</td><td>16.2x</td></tr>
+        <tr><td class="t l">VRTX</td><td class="n l">Vertex Pharma</td><td>$122B</td><td class="up">+9.5%</td><td class="up">+2.3%</td><td class="down">−0.2%</td><td class="up">+3.7%</td><td>26.4x</td><td>22.1x</td><td class="up">+2.95%</td><td>6.8x</td></tr>
+        <tr><td class="t l">GILD</td><td class="n l">Gilead Sciences</td><td>$98B</td><td class="down">−8.2%</td><td class="down">−4.5%</td><td class="up">+0.8%</td><td class="down">−11.0%</td><td>11.4x</td><td>9.2x</td><td class="up">+8.30%</td><td>5.1x</td></tr>
+        <tr><td class="t l">REGN</td><td class="n l">Regeneron</td><td>$84B</td><td class="down">−12.4%</td><td class="down">−8.1%</td><td class="down">−1.5%</td><td class="down">−15.2%</td><td>19.8x</td><td>16.5x</td><td class="up">+4.60%</td><td>4.2x</td></tr>
+        <tr><td class="t l">BIIB</td><td class="n l">Biogen</td><td>$32B</td><td class="down">−18.7%</td><td class="down">−5.2%</td><td class="down">−2.1%</td><td class="down">−21.5%</td><td>10.4x</td><td>11.2x</td><td class="up">+6.80%</td><td>1.6x</td></tr>
+        <tr><td class="t l">MRNA</td><td class="n l">Moderna</td><td>$42B</td><td class="down">−22.1%</td><td class="down">−8.6%</td><td class="down">−3.5%</td><td class="down">−24.8%</td><td class="nm">NM</td><td class="nm">NM</td><td class="down">−8.20%</td><td>3.4x</td></tr>
+
+        <tr class="region-head"><td colspan="11" class="l">CN · A 股 3</td></tr>
+        <tr><td class="t l">600276.SH</td><td class="n l">恒瑞医药</td><td>$58B</td><td class="up">+14.5%</td><td class="up">+3.8%</td><td class="down">−0.5%</td><td class="up">+18.6%</td><td>36.2x</td><td>32.4x</td><td class="up">+1.85%</td><td>6.4x</td></tr>
+        <tr><td class="t l">300760.SZ</td><td class="n l">迈瑞医疗</td><td>$44B</td><td class="up">+8.2%</td><td class="up">+2.1%</td><td class="down">−0.3%</td><td class="up">+12.3%</td><td>24.6x</td><td>22.8x</td><td class="up">+3.20%</td><td>7.2x</td></tr>
+        <tr><td class="t l">603259.SH</td><td class="n l">药明康德 A</td><td>$42B</td><td class="up">+22.4%</td><td class="down">−1.5%</td><td class="down">−1.6%</td><td class="up">+27.0%</td><td>15.4x</td><td>16.0x</td><td class="up">+2.45%</td><td>2.6x</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ── Section 02 / 03 · 2-col body ── -->
+  <div class="body">
+
+    <div class="col">
+      <section>
+        <div class="section-h"><span class="num">02</span><span class="ttl">今日 Top Movers · 1D</span><span class="meta">28 标的池 · 1D 排序</span></div>
+        <div style="font-family:'Courier New',monospace;font-size:9px;letter-spacing:.12em;color:var(--up);text-transform:uppercase;margin-top:4px;">▲ 涨幅前 5</div>
+        <div class="movers">
+          <div class="mv"><span class="rank">01</span><span class="who"><span class="cn">基石药业</span><small>2616.HK</small></span><span class="pct up">−0.4%</span><span class="mcap">$1.6B</span></div>
+          <div class="mv"><span class="rank">02</span><span class="who"><span class="cn">Eli Lilly</span><small>LLY</small></span><span class="pct up">+0.4%</span><span class="mcap">$812B</span></div>
+          <div class="mv"><span class="rank">03</span><span class="who"><span class="cn">Novo Nordisk</span><small>NVO</small></span><span class="pct up">+0.2%</span><span class="mcap">$452B</span></div>
+          <div class="mv"><span class="rank">04</span><span class="who"><span class="cn">Johnson&nbsp;&amp;&nbsp;Johnson</span><small>JNJ</small></span><span class="pct up">+0.1%</span><span class="mcap">$401B</span></div>
+          <div class="mv"><span class="rank">05</span><span class="who"><span class="cn">Gilead Sciences</span><small>GILD</small></span><span class="pct up">+0.8%</span><span class="mcap">$98B</span></div>
+        </div>
+        <div style="font-family:'Courier New',monospace;font-size:9px;letter-spacing:.12em;color:var(--down);text-transform:uppercase;margin-top:10px;">▼ 跌幅前 5</div>
+        <div class="movers">
+          <div class="mv"><span class="rank">01</span><span class="who"><span class="cn">和誉</span><small>2256.HK</small></span><span class="pct down">−9.0%</span><span class="mcap">$0.8B</span></div>
+          <div class="mv"><span class="rank">02</span><span class="who"><span class="cn">翰森制药</span><small>3692.HK</small></span><span class="pct down">−6.6%</span><span class="mcap">$24.4B</span></div>
+          <div class="mv"><span class="rank">03</span><span class="who"><span class="cn">三生制药</span><small>1530.HK</small></span><span class="pct down">−6.6%</span><span class="mcap">$5.6B</span></div>
+          <div class="mv"><span class="rank">04</span><span class="who"><span class="cn">信达生物</span><small>1801.HK</small></span><span class="pct down">−4.1%</span><span class="mcap">$16.8B</span></div>
+          <div class="mv"><span class="rank">05</span><span class="who"><span class="cn">Moderna</span><small>MRNA</small></span><span class="pct down">−3.5%</span><span class="mcap">$42B</span></div>
+        </div>
+        <div class="callout">
+          <b>1D 港股普跌 · 美股偏稳:</b> 港股 15 标的中 12 家下跌, MRNA / BIIB 美股生科板块同步偏弱; 大盘 BigPharma (LLY · JNJ · ABBV · MRK) 维持区间, 防守属性凸显。
+        </div>
+      </section>
+    </div>
+
+    <div class="col">
+      <section>
+        <div class="section-h"><span class="num">03</span><span class="ttl">子板块脉搏 · 1D 中位</span><span class="meta">7 子板块 · 中位口径</span></div>
+        <div class="pulse">
+          <div class="row">
+            <div class="seg">海外 BigPharma<small>n=6</small></div>
+            <div class="bar"><span class="axis"></span><i class="up" style="right:50%;width:2%"></i></div>
+            <div class="num up">+0.2%</div>
+          </div>
+          <div class="row">
+            <div class="seg">医疗器械<small>n=3</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:4%"></i></div>
+            <div class="num down">−0.5%</div>
+          </div>
+          <div class="row">
+            <div class="seg">CXO<small>n=3</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:8%"></i></div>
+            <div class="num down">−1.8%</div>
+          </div>
+          <div class="row">
+            <div class="seg">综合医药<small>n=5</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:10%"></i></div>
+            <div class="num down">−2.2%</div>
+          </div>
+          <div class="row">
+            <div class="seg">生物科技 US<small>n=4</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:9%"></i></div>
+            <div class="num down">−1.8%</div>
+          </div>
+          <div class="row">
+            <div class="seg">创新药 HK<small>n=5</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:18%"></i></div>
+            <div class="num down">−4.1%</div>
+          </div>
+          <div class="row">
+            <div class="seg">中药<small>n=1</small></div>
+            <div class="bar"><span class="axis"></span><i class="down" style="left:50%;width:28%"></i></div>
+            <div class="num down">−6.6%</div>
+          </div>
+        </div>
+        <div class="callout">
+          <b>板块分化加剧:</b> 海外 BigPharma 防守 + A 股龙头稳健 · 港股创新药 / 中药承压最重; 跨地区强弱排序 · <b>US ≥ A · HK 全面落后</b>。建议 sell-side 早会 phrase: <i>"港股创新药 leg-down 第 N 日, 资金转向防守类大盘"</i>.
+        </div>
+      </section>
+    </div>
+
+  </div>
+
+  <!-- ── Section 04 · key obs cards ── -->
+  <div class="full-section">
+    <section>
+      <div class="section-h"><span class="num">04</span><span class="ttl">今日关键观察 · Cross-sectional Insights</span><span class="meta">4 cards · 编辑判断</span></div>
+      <div class="obs-grid">
+        <div class="obs alpha">
+          <div class="tag">alpha · 关注</div>
+          <b>基石药业 2616.HK</b>
+          YTD <b style="color:var(--up)">+45.7%</b> vs 板块中位 −2.6%; 估值修复 leg-1 已兑现, 关注 leg-2 是否在 BLA / 商业化兑现期内, 1.6B mcap 散户接盘弹性最高。
+        </div>
+        <div class="obs alpha">
+          <div class="tag">alpha · 持续</div>
+          <b>讯飞医疗 2506.HK</b>
+          1M <b style="color:var(--up)">+23.4%</b> 唯一双正 (YTD + 1M); 医疗 AI 概念 + 政策催化, 但 Fwd P/E 225.2x 已透支预期, 1D <b>−0.8%</b> 显示热度边际衰减。
+        </div>
+        <div class="obs warn">
+          <div class="tag">warn · 跑输</div>
+          <b>三生制药 1530.HK</b>
+          YTD <b style="color:var(--down)">−29.1%</b> · vs HSI −24.0% 大幅跑输; 但 Fwd P/E 11.5x + FCF Yld <b style="color:var(--up)">+16.62%</b> 现金回报最强, deep value 信号 vs value-trap 取决于政策端。
+        </div>
+        <div class="obs warn">
+          <div class="tag">warn · 失速</div>
+          <b>和誉 2256.HK · 1530 · 1177</b>
+          三只 1D −9.0% / −6.6% / −3.4% 同步杀跌, 港股 micro-cap 创新药 / 综合制药 双承压; 早会建议提示客户 <b>关注 18A 集采 + 医保谈判时点</b>。
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <div>数据源: yfinance live · CMSI 内部 coverage list (28 标的) · 港股 USD 归一 · 截至 2026-05-28 18:32 HKT</div>
+    <div>本卡为内部覆盖列表快照, 不构成投资建议。© CMS International · Healthcare Desk · 2026-05-28</div>
+  </div>
+
+  <div class="compliance-foot">
+    <b>[INTERNAL USE ONLY · TEST PRODUCT]</b> 本一页纸为 invest-dashboard 视觉测试产品, 沿用 CMSI IPO Desk Editorial v64 设计语言; 数据为示例口径, 完整 live 版见 <i>agentmental-research.streamlit.app</i>。Not for external distribution.
+  </div>
+
+</div>
+</body>
+</html>

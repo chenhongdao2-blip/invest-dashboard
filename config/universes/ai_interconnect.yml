@@ -1,0 +1,139 @@
+# Interconnect: Optical Modules/CPO · Optical Components · PCB/CCL · Copper · Connectors — AI supply-chain L5; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_interconnect
+domain: ai
+
+tickers:
+  # --- US ---
+  - ticker: COHR
+    name_cn: 相干公司
+    name_en: Coherent Corp
+    region: US
+  - ticker: LITE
+    name_cn: 朗美通
+    name_en: Lumentum Holdings
+    region: US
+  - ticker: CIEN
+    name_cn: 晶科网络
+    name_en: Ciena
+    region: US
+  - ticker: ANET
+    name_cn: 思科竞争者
+    name_en: Arista Networks
+    region: US
+  - ticker: APH
+    name_cn: 安费诺
+    name_en: Amphenol
+    region: US
+  - ticker: FN
+    name_cn: 法布里耐特
+    name_en: Fabrinet
+    region: US
+  - ticker: AAOI
+    name_cn: 应用光电
+    name_en: Applied Optoelectronics (AOI)
+    region: US
+  - ticker: VIAV
+    name_cn: 威亚维解决方案
+    name_en: Viavi Solutions
+    region: US
+  - ticker: GLW
+    name_cn: 康宁
+    name_en: Corning
+    region: US
+  - ticker: TEL
+    name_cn: 泰科电子
+    name_en: TE Connectivity
+    region: US
+  # --- JP ---
+  - ticker: 5803.T
+    name_cn: 藤仓
+    name_en: Fujikura
+    region: JP
+  - ticker: 5801.T
+    name_cn: 古河电工
+    name_en: Furukawa Electric
+    region: JP
+  - ticker: 6981.T
+    name_cn: 村田制作所
+    name_en: Murata Manufacturing
+    region: JP
+  - ticker: 6762.T
+    name_cn: TDK
+    name_en: TDK Corporation
+    region: JP
+  - ticker: 6976.T
+    name_cn: 太阳诱电
+    name_en: Taiyo Yuden
+    region: JP
+  - ticker: 6806.T
+    name_cn: 广濑电机
+    name_en: Hirose Electric
+    region: JP
+  # --- KR ---
+  - ticker: 011070.KS
+    name_cn: LG伊诺特
+    name_en: LG Innotek
+    region: KR
+  - ticker: 007660.KS
+    name_cn: ISU Petasys
+    name_en: ISU Petasys
+    region: KR
+  - ticker: 000150.KS
+    name_cn: 斗山
+    name_en: Doosan Corporation
+    region: KR
+  - ticker: 036710.KQ
+    name_cn: Simmtech
+    name_en: Simmtech
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 353200.KQ
+    name_cn: Daeduck Electronics
+    name_en: Daeduck Electronics
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  # --- CN ---
+  - ticker: 300308.SZ
+    name_cn: 中际旭创
+    name_en: Innolight Technology
+    region: CN
+  - ticker: 300502.SZ
+    name_cn: 新易盛
+    name_en: Hisense Broadband (XRS)
+    region: CN
+  - ticker: 300394.SZ
+    name_cn: 天孚通信
+    name_en: T&S Communications
+    region: CN
+  - ticker: 002281.SZ
+    name_cn: 光迅科技
+    name_en: Accelink Technologies
+    region: CN
+  - ticker: 603083.SS
+    name_cn: 剑桥科技
+    name_en: Cambridge Technology
+    region: CN
+  - ticker: 688498.SS
+    name_cn: 源杰科技
+    name_en: Yuanjie Semiconductor Technology
+    region: CN
+  - ticker: 300476.SZ
+    name_cn: 胜宏科技
+    name_en: Shengyi Electronics (Shenghong)
+    region: CN
+  - ticker: 002463.SZ
+    name_cn: 沪电股份
+    name_en: Shennan Circuits / Shanghai Electric PCB
+    region: CN
+  - ticker: 600183.SS
+    name_cn: 生益科技
+    name_en: Shengyi Technology
+    region: CN
+  - ticker: 002130.SZ
+    name_cn: 沃尔核材
+    name_en: Woer Heat-Shrinkable Material
+    region: CN
+  - ticker: 300913.SZ
+    name_cn: 兆龙互连
+    name_en: Zhaolong Interconnect
+    region: CN

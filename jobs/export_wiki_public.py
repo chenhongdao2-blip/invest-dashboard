@@ -37,6 +37,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 INTERNAL_WIKI_DIR = Path.home() / "Documents" / "LLM Wiki" / "Wiki" / "companies"
+INTERNAL_AI_WIKI_DIR = Path.home() / "Documents" / "LLM Wiki" / "Wiki" / "AI" / "companies"
 PUBLIC_WIKI_DIR = REPO_ROOT / "data" / "wiki" / "companies"
 
 # Section headers to STRIP entirely (heading + content until next ## or EOF).
@@ -169,22 +170,49 @@ def main() -> int:
     ap.add_argument("--show", type=str, default=None, help="Print sanitized output for one filename (no write)")
     args = ap.parse_args()
 
-    if not INTERNAL_WIKI_DIR.exists():
-        print(f"❌ Internal wiki dir not found: {INTERNAL_WIKI_DIR}", file=sys.stderr)
+    if not INTERNAL_WIKI_DIR.exists() and not INTERNAL_AI_WIKI_DIR.exists():
+        print(f"❌ No internal wiki dir found: {INTERNAL_WIKI_DIR} nor {INTERNAL_AI_WIKI_DIR}",
+              file=sys.stderr)
         return 1
+    if not INTERNAL_WIKI_DIR.exists():
+        # HC internal dir is a non-resident sync drive that can be offline. Don't bail —
+        # the existing data/wiki/companies HC mirror stays (export_one never wipes the dst),
+        # and we still export the AI pages so cloud gets them.
+        print(f"⚠️  HC wiki dir absent (sync drive offline?) — exporting AI only: {INTERNAL_WIKI_DIR}")
 
-    files = sorted(INTERNAL_WIKI_DIR.glob("*.md"))
+    # Collect HC files (flat) + AI files (nested, recursive).
+    # Use stem (filename without suffix) as dedup key; AI files won't collide with
+    # HC files since the code namespaces are disjoint (NVDA vs 01093-, etc.).
+    seen_stems: set[str] = set()
+    all_files: list[Path] = []
+
+    for src in sorted(INTERNAL_WIKI_DIR.glob("*.md")):
+        if src.stem not in seen_stems:
+            seen_stems.add(src.stem)
+            all_files.append(src)
+
+    if INTERNAL_AI_WIKI_DIR.exists():
+        for src in sorted(INTERNAL_AI_WIKI_DIR.rglob("*.md")):
+            if src.stem not in seen_stems:
+                seen_stems.add(src.stem)
+                all_files.append(src)
+    else:
+        print(f"⚠️  AI wiki dir not found (skipping): {INTERNAL_AI_WIKI_DIR}")
+
+    files = all_files
     if args.limit:
         files = files[: args.limit]
     if not files:
-        print(f"⚠️  No .md files found under {INTERNAL_WIKI_DIR}")
+        print(f"⚠️  No .md files found under {INTERNAL_WIKI_DIR} or {INTERNAL_AI_WIKI_DIR}")
         return 0
 
     if args.show:
+        # Search HC dir first, then AI dir recursively.
         target = INTERNAL_WIKI_DIR / args.show
         if not target.exists():
-            # Try glob
             matches = list(INTERNAL_WIKI_DIR.glob(f"*{args.show}*"))
+            if not matches and INTERNAL_AI_WIKI_DIR.exists():
+                matches = list(INTERNAL_AI_WIKI_DIR.rglob(f"*{args.show}*"))
             if not matches:
                 print(f"❌ Not found: {args.show}")
                 return 1
@@ -200,6 +228,7 @@ def main() -> int:
     total_orig = 0
     total_san = 0
     for src in files:
+        # All exports land flat in PUBLIC_WIKI_DIR regardless of source subdir.
         dst = PUBLIC_WIKI_DIR / src.name
         if args.dry_run:
             original = src.read_text(encoding="utf-8")

@@ -1,0 +1,95 @@
+# Chip Design: GPU / AI ASIC / CPU / Interconnect / Power — AI supply-chain L2; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_chip
+domain: ai
+
+tickers:
+  # --- US ---
+  - ticker: NVDA
+    name_cn: 英伟达
+    name_en: NVIDIA
+    region: US
+  - ticker: AMD
+    name_cn: 超微半导体
+    name_en: AMD
+    region: US
+  - ticker: AVGO
+    name_cn: 博通
+    name_en: Broadcom
+    region: US
+  - ticker: MRVL
+    name_cn: 迈威尔科技
+    name_en: Marvell Technology
+    region: US
+  - ticker: ALAB
+    name_cn: 阿斯特拉半导体
+    name_en: Astera Labs
+    region: US
+  - ticker: CRDO
+    name_cn: 科锐多
+    name_en: Credo Technology
+    region: US
+  - ticker: MPWR
+    name_cn: 美国单片电源
+    name_en: Monolithic Power Systems
+    region: US
+  - ticker: ADI
+    name_cn: 亚德诺半导体
+    name_en: Analog Devices
+    region: US
+  - ticker: "ON"          # quoted — YAML parses bare ON as boolean True → ticker '1' bug
+    name_cn: 安森美
+    name_en: ON Semiconductor
+    region: US
+  - ticker: INTC
+    name_cn: 英特尔
+    name_en: Intel
+    region: US
+  # --- JP ---
+  - ticker: 6723.T
+    name_cn: 瑞萨电子
+    name_en: Renesas Electronics
+    region: JP
+  - ticker: 6526.T
+    name_cn: Socionext
+    name_en: Socionext
+    region: JP
+  - ticker: 6963.T
+    name_cn: 罗姆半导体
+    name_en: ROHM
+    region: JP
+  # --- KR ---
+  - ticker: 108320.KQ
+    name_cn: LX半导体
+    name_en: LX Semicon
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  - ticker: 399720.KQ
+    name_cn: Gaonchips
+    name_en: Gaonchips
+    region: KR
+    note: "KOSDAQ .KQ — yfinance 待验证"
+  # --- CN ---
+  - ticker: 688256.SS
+    name_cn: 寒武纪
+    name_en: Cambricon Technologies
+    region: CN
+  - ticker: 688041.SS
+    name_cn: 海光信息
+    name_en: Hygon Information Technology
+    region: CN
+  - ticker: 688008.SS
+    name_cn: 澜起科技
+    name_en: Montage Technology
+    region: CN
+  - ticker: 688047.SS
+    name_cn: 龙芯中科
+    name_en: Loongson Technology
+    region: CN
+  - ticker: 300474.SZ
+    name_cn: 景嘉微
+    name_en: Jing Jia Micro
+    region: CN
+  - ticker: 688521.SS
+    name_cn: 芯原股份
+    name_en: VeriSilicon
+    region: CN

@@ -13,6 +13,12 @@ Layout:
         Overview
         Sector Heatmap
         Valuation Scanner
+    ── AI 人工智能 ──
+        Coverage
+        Overview
+        Sector Heatmap
+        Valuation Scanner
+        SEC Facts
 
 The `url_path` arguments preserve the slugs created by the prior
 auto-discovery layout so existing deep-links (e.g. /Ticker_Drill?ticker=LLY)
@@ -34,62 +40,96 @@ i18n.init_lang()
 # of the in-page language toggle. url_path kept stable so deep-links still work.
 home = st.Page(
     "home.py",
-    title="Home 首页",
+    title="Market Hub 行情中枢",
     url_path="",
     default=True,
 )
 ticker_drill = st.Page(
-    "pages/6_🔍_Ticker_Drill.py",
+    "pages/6_Ticker_Drill.py",
     title="Ticker Drill 个股详情",
     url_path="Ticker_Drill",
 )
 market_data = st.Page(
-    "pages/7_📊_Market_Data.py",
+    "pages/7_Market_Data.py",
     title="Market Data 行情总表",
     url_path="Market_Data",
 )
 
 # --- Healthcare children ---
 cmsi_coverage = st.Page(
-    "pages/1_💎_CMSI_Coverage.py",
+    "pages/1_CMSI_Coverage.py",
     title="CMSI Coverage 覆盖名单",
     url_path="CMSI_Coverage",
 )
 healthcare_overview = st.Page(
-    "pages/2_🏥_Healthcare.py",
+    "pages/2_Healthcare.py",
     title="Overview 总览",
     url_path="Healthcare",
 )
 sector_heatmap = st.Page(
-    "pages/3_🔥_Sector_Heatmap.py",
+    "pages/3_Sector_Heatmap.py",
     title="Sector Heatmap 板块热力图",
     url_path="Sector_Heatmap",
 )
 strategy_picks = st.Page(
-    "pages/4_🧬_Strategy_Picks.py",
+    "pages/4_Strategy_Picks.py",
     title="Strategy Picks 策略表现",
     url_path="Strategy_Picks",
 )
 valuation_scanner = st.Page(
-    "pages/5_💰_Valuation_Scanner.py",
+    "pages/5_Valuation_Scanner.py",
     title="Valuation Scanner 估值扫描器",
     url_path="Valuation_Scanner",
 )
 sec_facts = st.Page(
-    "pages/8_📋_SEC_Facts.py",
+    "pages/8_SEC_Facts.py",
     title="SEC Company Facts 财报数据",
     url_path="SEC_Facts",
 )
 
+# --- AI children ---
+ai_coverage = st.Page(
+    "pages/a1_ai_coverage.py",
+    title="Universe 全景标的",
+    url_path="AI_Coverage",
+)
+ai_overview = st.Page(
+    "pages/a2_ai_overview.py",
+    title="Overview 总览",
+    url_path="AI_Overview",
+)
+ai_heatmap = st.Page(
+    "pages/a3_ai_heatmap.py",
+    title="Sector Heatmap 板块热力图",
+    url_path="AI_Sector_Heatmap",
+)
+ai_valuation = st.Page(
+    "pages/a4_ai_valuation.py",
+    title="Valuation Scanner 估值扫描器",
+    url_path="AI_Valuation_Scanner",
+)
+ai_sec = st.Page(
+    "pages/a5_ai_sec.py",
+    title="SEC Company Facts 财报数据",
+    url_path="AI_SEC_Facts",
+)
+
 pg = st.navigation(
     {
-        "": [home, ticker_drill, market_data, strategy_picks],
+        "Global 全局": [home, ticker_drill, market_data, strategy_picks],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,
             sector_heatmap,
             valuation_scanner,
             sec_facts,
+        ],
+        "AI 人工智能": [
+            ai_coverage,
+            ai_overview,
+            ai_heatmap,
+            ai_valuation,
+            ai_sec,
         ],
     }
 )

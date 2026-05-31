@@ -1,0 +1,53 @@
+# Memory: DRAM / HBM / NAND — AI supply-chain L3; from LLM Wiki ai-supply-chain-cross-market-universe
+sector_id: ai_memory
+domain: ai
+
+tickers:
+  # --- KR ---
+  - ticker: 000660.KS
+    name_cn: SK海力士
+    name_en: SK Hynix
+    region: KR
+  - ticker: 005930.KS
+    name_cn: 三星电子
+    name_en: Samsung Electronics
+    region: KR
+  # --- US ---
+  - ticker: MU
+    name_cn: 美光科技
+    name_en: Micron Technology
+    region: US
+  - ticker: SNDK
+    name_cn: 闪迪
+    name_en: SanDisk
+    region: US
+  - ticker: STX
+    name_cn: 希捷科技
+    name_en: Seagate Technology
+    region: US
+  - ticker: WDC
+    name_cn: 西部数据
+    name_en: Western Digital
+    region: US
+  # --- JP ---
+  - ticker: 285A.T
+    name_cn: 铠侠
+    name_en: Kioxia Holdings
+    region: JP
+  # --- CN ---
+  - ticker: 603986.SS
+    name_cn: 兆易创新
+    name_en: GigaDevice Semiconductor
+    region: CN
+  - ticker: 301308.SZ
+    name_cn: 江波龙
+    name_en: Longsys Electronics
+    region: CN
+  - ticker: 688525.SS
+    name_cn: 佰维存储
+    name_en: BIWIN Storage Technology
+    region: CN
+  - ticker: 300223.SZ
+    name_cn: 北京君正
+    name_en: Beijing SINO Microelectronics (ISSI)
+    region: CN

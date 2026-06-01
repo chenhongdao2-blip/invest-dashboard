@@ -7,9 +7,28 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
+
+
+@st.cache_data(ttl=600)
+def load_domain_cfg(cfg_path: str) -> dict:
+    """Load a domain YAML config (e.g. config/domains/{healthcare,ai}.yml).
+
+    cfg_path is a HASHED argument, so each domain gets a DISTINCT cache entry.
+    This is load-bearing: Streamlit keys @st.cache_data by
+    (func.__module__, func.__qualname__, source_text) ONLY — module globals are
+    invisible to the key. Pages are all exec'd under module "__main__", so the
+    previous per-page `def load_domain_cfg()` (no args, identical body, differing
+    only by a module-global DOMAIN_CFG) collapsed into ONE shared bucket across
+    every page. Whichever page loaded first won for the whole TTL, and siblings
+    silently got the wrong domain's sectors. Keying on the path fixes it by
+    construction; centralizing here removes the duplicated def that bred the bug.
+    """
+    with open(cfg_path) as f:
+        return yaml.safe_load(f)
 
 
 def connect() -> sqlite3.Connection:

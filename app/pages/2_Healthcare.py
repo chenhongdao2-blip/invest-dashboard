@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
-import yaml
 from pathlib import Path
 
 from lib import benchmarks as bm
@@ -44,13 +43,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "healthcare.yml"
 
 
-@st.cache_data(ttl=600)
-def load_domain_cfg() -> dict:
-    with DOMAIN_CFG.open() as f:
-        return yaml.safe_load(f)
-
-
-cfg = load_domain_cfg()
+cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 i18n.init_lang()
 i18n.render_lang_toggle()
 theme.page_header(i18n.t("hc.title"))

@@ -17,6 +17,7 @@ from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import heatmap as hm
 
 st.set_page_config(
     page_title="invest-dashboard",
@@ -125,114 +126,54 @@ def _render_movers(domain: str) -> None:
         _render_pct_table(l, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"], column_labels=i18n.common_cols())
 
 
-# ---- Healthcare stock heatmap (finviz-style treemap) ----
-# Candidate market-cap columns in multiples_daily (defensive: schema name varies
-# across snapshots). First present, positive value wins.
-_MCAP_CANDIDATES = (
-    "market_cap_usd", "mcap_usd", "marketcap_usd",
-    "market_cap", "marketcap", "mktcap_usd", "mktcap",
-)
-
-
-@st.cache_data(ttl=300)
-def _healthcare_sectors() -> list[str]:
-    """Healthcare sub-sectors from the universe (skips '_coverage' pseudo-sector)."""
-    df = db.query(
-        "SELECT DISTINCT sector FROM universe_member "
-        "WHERE domain = 'healthcare' AND sector != '_coverage' ORDER BY sector"
-    )
-    return df["sector"].tolist()
-
-
-def _build_heatmap_df(window_col: str) -> tuple[pd.DataFrame, str]:
-    """Assemble per-stock heatmap rows for ALL healthcare sub-sectors.
-
-    Returns (df, mcap_col_used). df is indexed by ticker with columns
-    [sector, name, ret_pct, mcap]. Rows with no/≤0 market cap are dropped.
-    """
-    sectors = _healthcare_sectors()
-    frames: list[pd.DataFrame] = []
-    for sec in sectors:
-        members = db.sector_tickers("healthcare", sec)
-        if members.empty:
-            continue
-        sub = members[["ticker"]].copy()
-        sub["sector"] = sec
-        frames.append(sub)
-    if not frames:
-        return pd.DataFrame(), ""
-    base = pd.concat(frames, ignore_index=True).drop_duplicates("ticker")
-    tickers = tuple(base["ticker"].tolist())
-    if not tickers:
-        return pd.DataFrame(), ""
-
-    # Returns over the selected window.
-    closes = db.get_close_series_usd(tickers)
-    rets = db.compute_returns(closes)
-    if rets.empty or window_col not in rets.columns:
-        return pd.DataFrame(), ""
-
-    # Latest multiples → market cap (pick first present candidate column).
-    mult = db.latest_multiples(tickers)
-    mcap_col = ""
-    for cand in _MCAP_CANDIDATES:
-        if not mult.empty and cand in mult.columns:
-            mcap_col = cand
-            break
-    if not mcap_col:
-        return pd.DataFrame(), ""
-
+# ---- Single-stock heatmap v2 — ranked bento grid (Healthcare + AI) ----
+# Data assembly + self-contained HTML render live in lib/heatmap.py
+# (build_domain_bento / render_bento_html). Replaces the v1 go.Treemap
+# (area = |return|, which let one outlier eat the canvas) per the 2026-06-01
+# design-team + 4-way /cccg review. Sub-sectors are ranked by MEDIAN member
+# return; the best book gets the most tile "slots" (declutters cold books).
+# Window/domain toggles are Streamlit segmented_controls (Python re-runs); the
+# board is server-rendered HTML in an iframe (st.markdown strips <script>,
+# st.dataframe is a dark canvas — same reason ui.render_html_table uses iframes).
+def _render_stock_heatmap() -> None:
     prefer_cn = i18n.get_lang() == "zh"
-    names = db.ticker_to_name(prefer_cn=prefer_cn)
+    theme.section_header("个股热力图" if prefer_cn else "Single-Stock Heatmap")
 
-    base = base.set_index("ticker")
-    base["name"] = [names.get(t, t) for t in base.index]
-    base["ret_pct"] = rets[window_col].reindex(base.index)
-    base["mcap"] = pd.to_numeric(mult[mcap_col].reindex(base.index), errors="coerce")
-    # tile SIZE = |return| (George: big movers big, mega-caps small). Keep names
-    # that have a return (mcap kept for hover only); floor |ret| so a near-flat
-    # name still shows a small tile instead of vanishing.
-    base = base[base["ret_pct"].notna()]
-    base["abs_ret"] = base["ret_pct"].abs().clip(lower=0.05)
-    return base, mcap_col
+    cw = st.columns([1, 1.5])
+    with cw[0]:
+        win = st.segmented_control(
+            "时间窗口" if prefer_cn else "Window",
+            ["1D", "5D", "1M"], default="1D",
+            key="hc_heatmap_window", label_visibility="collapsed",
+        ) or "1D"
+    all_lbl = "全部" if prefer_cn else "All"
+    dom_map = {
+        all_lbl: ["healthcare", "ai"],
+        ("医疗" if prefer_cn else "Healthcare"): ["healthcare"],
+        "AI": ["ai"],
+    }
+    with cw[1]:
+        dom_choice = st.segmented_control(
+            "范围" if prefer_cn else "Domain",
+            list(dom_map.keys()), default=all_lbl,
+            key="hc_heatmap_domain", label_visibility="collapsed",
+        ) or all_lbl
 
-
-def _render_healthcare_heatmap() -> None:
-    """Finviz-style treemap of healthcare single stocks: size=mcap, color=window
-    return (teal up / red down), grouped by sub-sector. Window switch via
-    st.segmented_control (1D / 5D / 1M)."""
-    prefer_cn = i18n.get_lang() == "zh"
-    theme.section_header(
-        "医疗个股热力图" if prefer_cn else "Healthcare Stock Heatmap"
-    )
-    win_options = ["1D", "5D", "1M"]
-    win = st.segmented_control(
-        i18n.t("home.section.movers") if False else ("时间窗口" if prefer_cn else "Window"),
-        win_options,
-        default="1D",
-        key="hc_heatmap_window",
-        label_visibility="collapsed",
-    ) or "1D"
-    win_to_col = {"1D": "1d_%", "5D": "5d_%", "1M": "1m_%"}
-    window_col = win_to_col.get(win, "1d_%")
-
-    hdf, mcap_col = _build_heatmap_df(window_col)
-    if hdf.empty:
+    window_col = hm.WIN_TO_COL.get(win, "1d_%")
+    domains = []
+    for did in dom_map.get(dom_choice, ["healthcare", "ai"]):
+        d = hm.build_domain_bento(did, window_col, prefer_cn)
+        if d and d["sectors"]:
+            domains.append(d)
+    if not domains:
         st.info(i18n.t("home.panel.empty"))
         return
-    fig = charts.treemap_heatmap(
-        hdf,
-        size_col="abs_ret",
-        color_col="ret_pct",
-        group_col="sector",
-        label_col="name",
-        title=("医疗个股热力图 · " if prefer_cn else "Healthcare Heatmap · ") + win,
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    doc, h = hm.render_bento_html(domains, prefer_cn=prefer_cn, window_label=win, as_of=latest)
+    st.iframe(doc, height=h)
     st.caption(
-        (f"瓦片面积 = 涨跌幅绝对值（动得越大块越大）· 颜色 = {win} 涨跌 · 青涨/红跌 · 截至 {latest}"
+        (f"子行业按中位涨跌排名分配席位 · 青绿涨/红跌（港美股惯例，与 A 股相反）· 截至 {latest}"
          if prefer_cn else
-         f"Tile size = |{win} return| (bigger move = bigger tile) · color = {win} return · teal up / red down · as of {latest}")
+         f"Slots by sub-sector median-return rank · teal up / red down (HK/US convention) · as of {latest}")
     )
 
 
@@ -297,10 +238,10 @@ else:
         ))
     theme.kpi_strip(cards)
 
-# --- 1b. Healthcare stock heatmap (finviz-style treemap) — sits directly under the
+# --- 1b. Single-stock heatmap v2 (ranked bento grid, Healthcare + AI) — sits under the
 #     KPI strip, high on the page. Size = market cap, color = selectable-window
 #     return (teal up / red down), grouped by healthcare sub-sector. ---
-_render_healthcare_heatmap()
+_render_stock_heatmap()
 
 # --- 2. S&P 500 sectors (hero) — collapsible (expanded by default) ---
 with st.expander(i18n.t("home.panel.sp500_sector"), expanded=True):

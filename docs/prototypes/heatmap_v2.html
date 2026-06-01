@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>个股热力图 v2 · Single-Stock Heatmap · CMSI</title>
+<!--
+================================================================================
+  个股热力图 v2 — DESIGN DECISIONS (self-contained prototype, zero CDN)
+================================================================================
+  PROBLEM with v1 (go.Treemap, area = |return|):
+    - One outlier (OCS -23.4%) became a canvas-eating slab (~470x area of a flat tile)
+    - Dozens of illegible sub-1% micro-tiles; ~60% of tiles carried no signal
+    - No legend at all; teal-up/red-down convention unlabeled
+    - Healthcare only; no AI domain; no top-level domain split
+
+  v2 SOLUTION — a RANKED BENTO GRID (not a treemap). Decisions:
+
+  1. RANKING METRIC = MEDIAN member return per sub-sector over the window.
+     Median is the most outlier-robust location stat given our ONLY signal is
+     per-stock return. PROOF on real 1D data: MEAN ranks pharma #2 (+1.76%) because
+     two JP names spike a 7-name average even though 4/7 pharma are RED; MEDIAN
+     correctly ranks pharma #4 (-1.40%). Biotech: OCS -23.4 drags MEAN to +1.55 (#3)
+     but MEDIAN holds +3.50 (#1), surfacing biotech as the hottest book.
+     Tie-break: higher %-members-up, then larger member count, then sector id.
+
+  2. SLOT ALLOCATION by rank: schedule [15,12,10,8,7,6,5,5,4,4,3,3,3], slots =
+     min(schedule[rank], member_count). Best sub-sector gets ~15 tiles, laggards
+     get 3-5 -> surfaces where the action is, declutters the cold books. Ranking is
+     run INDEPENDENTLY within each domain (HC's 7 ranked among themselves, AI's 6
+     among themselves) so a hot AI day never starves HC slots.
+
+  3. WITHIN-SECTOR PICK = anchored movers. Force-include top min(3, N//4) members by
+     market cap (bellwethers stay visible session-to-session), then fill remaining
+     slots by descending |return| (the movers). Sort tiles by signed return desc
+     (greens lead, reds trail) so each lane reads like a thermometer. De-dupe once.
+
+  4. ENCODINGS (decoupled from v1's double-encode):
+       COLOR = direction+magnitude. Diverging blend from neutral cream #f2dfce at 0%
+               toward teal #0d7680 (up) / red #cc0000 (down), sat = min(|pct|/12,1).
+               teal=up / red=down is PROJECT-LOCKED, not inverted.
+       SIZE  = RANK SLOT, not move magnitude. Every shown tile is a uniform 64x46px
+               cell. This kills the "big tile = big move" lie and the outlier slab.
+               Slot COUNT per lane encodes heat; color alone encodes the move.
+       (Note: the legend states "块大小=排名席位,非涨幅" explicitly to retrain the eye.)
+
+  5. LAYOUT = two stacked domain super-bands (医疗 then AI). Each sub-sector is a
+     row-block: a fixed ~180px left header (CN/EN name + color-coded mean-return
+     badge w/ "slots of members · #rank") + a flex tile lane that wraps. Blocks
+     sorted by median desc, so the badges form a top-to-bottom thermometer and the
+     ranking is readable in one vertical glance. One global diverging colorbar top-
+     right with ±12% anchors, 跌/平/涨 labels, and the size-meaning note.
+
+  CONSTRAINTS HONORED: zero external deps (no D3/CDN/Google Fonts), FT cream/teal/red
+  tokens reused EXACTLY, saturation cap ±12%, AI data labeled illustrative, real 1D
+  screenshot data for Healthcare. Tooltips faked via title= attributes (browser-safe).
+================================================================================
+-->
+<style>
+  :root{
+    --paper:#fff1e5; --paper-deep:#f9e6d4; --paper-band:#f2dfce; --paper-rule:#ebd9c8; --paper-edge:#d4c4b0;
+    --ink:#1a1a1a; --ink2:#4a4a4a; --ink3:#8a8580; --ink4:#b8b1a8;
+    --up:#0d7680; --up-deep:#0a5a62; --down:#cc0000; --down-deep:#a30000;
+    --cmsi:#c8102e;
+    --font:'Inter','PingFang SC','Hiragino Sans GB','Noto Sans SC','Microsoft YaHei',sans-serif;
+    --mono:'JetBrains Mono','SF Mono','Menlo',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html,body{background:var(--paper);color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased;}
+  body{padding:26px 30px 60px;max-width:1320px;margin:0 auto;}
+
+  /* ---- masthead ---- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-start;
+    border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:6px;gap:24px;flex-wrap:wrap;}
+  .mast-left h1{font-size:24px;font-weight:700;letter-spacing:-0.2px;line-height:1.1;}
+  .mast-left h1 .en{font-size:15px;font-weight:600;color:var(--ink2);margin-left:8px;}
+  .mast-left .sub{font-size:12px;color:var(--ink3);margin-top:5px;letter-spacing:.2px;}
+  .mast-left .cmsi-tag{display:inline-block;font-size:10px;font-weight:700;color:#fff;background:var(--cmsi);
+    padding:2px 7px;border-radius:2px;letter-spacing:.6px;vertical-align:middle;margin-left:6px;}
+
+  /* ---- legend ---- */
+  .legend{min-width:268px;}
+  .legend .lg-title{font-size:11px;font-weight:600;color:var(--ink2);margin-bottom:5px;text-align:right;}
+  .lg-bar-wrap{display:flex;align-items:center;gap:7px;justify-content:flex-end;}
+  .lg-end{font-size:11px;font-weight:600;color:var(--ink2);white-space:nowrap;}
+  .lg-bar{width:200px;height:14px;border:1px solid var(--paper-edge);border-radius:2px;}
+  .lg-ticks{display:flex;justify-content:space-between;width:200px;margin:3px 0 0 auto;
+    font-family:var(--mono);font-size:10px;font-weight:600;color:var(--ink3);}
+  .lg-note{font-size:10px;color:var(--ink3);margin-top:5px;text-align:right;line-height:1.45;max-width:300px;margin-left:auto;}
+  .lg-note b{color:var(--ink2);font-weight:700;}
+
+  /* ---- controls ---- */
+  .controls{display:flex;gap:18px;align-items:center;margin:16px 0 22px;flex-wrap:wrap;}
+  .seg{display:inline-flex;background:var(--paper-deep);border:1px solid var(--paper-edge);
+    border-radius:6px;padding:2px;gap:2px;}
+  .seg button{font-family:var(--font);font-size:12px;font-weight:600;color:var(--ink3);
+    background:transparent;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;transition:all .12s;}
+  .seg button:hover{color:var(--ink);}
+  .seg button.active{background:var(--paper);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.07);}
+  .ctl-label{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.4px;text-transform:uppercase;}
+
+  /* ---- domain band ---- */
+  .domain{margin-bottom:24px;}
+  .domain-head{display:flex;align-items:baseline;gap:12px;background:var(--paper-deep);
+    border-left:3px solid var(--cmsi);padding:9px 14px;margin-bottom:10px;border-radius:0 3px 3px 0;}
+  .domain-head .dh-title{font-size:18px;font-weight:700;color:var(--ink);letter-spacing:-0.2px;}
+  .domain-head .dh-en{font-size:12px;font-weight:600;color:var(--ink3);letter-spacing:1px;text-transform:uppercase;}
+  .domain-head .dh-agg{margin-left:auto;font-family:var(--mono);font-size:12px;font-weight:700;color:var(--ink2);}
+  .domain-head .dh-agg .ill{font-family:var(--font);font-size:10px;font-weight:600;color:var(--cmsi);
+    background:#f7d9dc;padding:1px 5px;border-radius:2px;margin-left:6px;letter-spacing:.3px;}
+
+  /* ---- sub-sector row block ---- */
+  .block{display:flex;gap:14px;margin-bottom:12px;align-items:stretch;}
+  .block-head{flex:0 0 180px;background:var(--paper-deep);border:1px solid var(--paper-rule);
+    border-radius:4px;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:3px;}
+  .block-head .bh-cn{font-size:14px;font-weight:700;color:var(--ink);line-height:1.15;}
+  .block-head .bh-cn .deg{color:var(--ink4);font-weight:400;font-size:12px;}
+  .block-head .bh-en{font-size:11px;font-weight:500;color:var(--ink3);}
+  .badge{display:inline-flex;align-items:baseline;gap:6px;margin-top:5px;padding:3px 8px;border-radius:11px;
+    border:1px solid var(--paper-edge);align-self:flex-start;}
+  .badge .b-pct{font-family:var(--mono);font-size:13px;font-weight:700;}
+  .badge .b-ctx{font-size:10px;color:var(--ink3);font-weight:500;white-space:nowrap;}
+
+  .lane{flex:1;display:flex;flex-wrap:wrap;gap:4px;align-content:flex-start;
+    background:var(--paper-band);border-radius:4px;padding:5px;border:1px solid var(--paper-rule);}
+  .tile{flex:0 0 auto;width:72px;height:46px;border-radius:3px;border:1px solid var(--paper);
+    display:flex;flex-direction:column;justify-content:center;align-items:center;gap:1px;cursor:default;
+    transition:transform .08s;overflow:hidden;}
+  .tile:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.13);z-index:2;}
+  .tile .t-tk{font-size:13px;font-weight:600;line-height:1;letter-spacing:-0.2px;}
+  .tile .t-pct{font-family:var(--mono);font-size:12px;font-weight:700;line-height:1.1;}
+  .lane-empty{font-size:12px;color:var(--ink3);padding:10px 4px;font-style:italic;}
+  .more-pill{display:inline-flex;align-items:center;font-size:10px;color:var(--ink4);
+    font-weight:600;padding:0 6px;height:46px;}
+
+  .footnote{margin-top:26px;border-top:1px solid var(--paper-rule);padding-top:12px;
+    font-size:11px;color:var(--ink3);line-height:1.6;}
+  .footnote b{color:var(--ink2);}
+  .footnote code{font-family:var(--mono);font-size:10px;background:var(--paper-deep);padding:1px 4px;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="mast-left">
+    <h1>个股热力图<span class="en">Single-Stock Heatmap</span><span class="cmsi-tag">CMSI</span></h1>
+    <div class="sub">医疗 + AI 双域 · 子行业按中位涨跌排序分配席位 · Slots allocated by sub-sector median-return rank — hottest books get the most tiles</div>
+  </div>
+  <div class="legend">
+    <div class="lg-title">颜色 = 涨跌方向与幅度 · Color = direction &amp; magnitude</div>
+    <div class="lg-bar-wrap">
+      <span class="lg-end" style="color:var(--down-deep)">跌 ▸</span>
+      <div class="lg-bar" id="legendBar"></div>
+      <span class="lg-end" style="color:var(--up-deep)">◂ 涨</span>
+    </div>
+    <div class="lg-ticks"><span>-12%</span><span>-6%</span><span>0</span><span>+6%</span><span>+12%</span></div>
+    <div class="lg-note">饱和度封顶 <b>±12%</b>（超出同色不再加深）· <b>块大小 = 排名席位，非涨幅</b><br/>Tile size = rank slot, <b>not</b> move size · color does all the work</div>
+  </div>
+</header>
+
+<div class="controls">
+  <span class="ctl-label">窗口 Window</span>
+  <div class="seg" id="winSeg">
+    <button data-win="1d" class="active">1D</button>
+    <button data-win="5d">5D</button>
+    <button data-win="1m">1M</button>
+  </div>
+  <span class="ctl-label">范围 Domain</span>
+  <div class="seg" id="domSeg">
+    <button data-dom="all" class="active">全部 All</button>
+    <button data-dom="hc">医疗 Healthcare</button>
+    <button data-dom="ai">AI 人工智能</button>
+  </div>
+</div>
+
+<main id="board"></main>
+
+<div class="footnote">
+  <b>方法 Method.</b> 子行业先按窗口内成员收益<b>中位数</b>排序（抗异常值；详见源码注释）→ 席位表
+  <code>[15,12,10,8,7,6,5,5,4,4,3,3,3]</code> 按名次分配，<code>slots = min(席位, 成员数)</code> →
+  组内强制纳入市值前 3 大「压舱石」，其余按 |涨跌| 选「领涨/领跌者」，块内按带符号收益降序排列（绿左红右）。
+  医疗为真实 1D 截图数据；<b>AI 域为示意数据 (illustrative)</b>，仅演示算法与版式。市值仅在 hover 显示，不再驱动面积。
+</div>
+
+<script>
+/* ============================ THEME TOKENS ============================ */
+var T = {
+  paper:[255,241,229], paperBand:[242,223,206],
+  up:[13,118,128], down:[204,0,0]
+};
+var CAP = 12; // saturation + size cap, ±12%
+
+/* ---- diverging color: blend neutral cream toward teal(up)/red(down) ----
+   Mirrors charts.py _diverging_color: sat = min(|pct|/CAP, 1). LOCKED teal=up/red=down. */
+function divColor(pct){
+  if (pct === null || isNaN(pct)) return 'rgb('+T.paperBand.join(',')+')';
+  var sat = Math.min(Math.abs(pct)/CAP, 1.0);
+  var tgt = pct >= 0 ? T.up : T.down;
+  var r = Math.round(T.paperBand[0] + (tgt[0]-T.paperBand[0])*sat);
+  var g = Math.round(T.paperBand[1] + (tgt[1]-T.paperBand[1])*sat);
+  var b = Math.round(T.paperBand[2] + (tgt[2]-T.paperBand[2])*sat);
+  return 'rgb('+r+','+g+','+b+')';
+}
+/* text color rule: deep zone (sat>=0.55, |ret|>=~6.6%) -> cream; else ink */
+function textOn(pct){
+  if (pct === null || isNaN(pct)) return '#1a1a1a';
+  return (Math.min(Math.abs(pct)/CAP,1.0) >= 0.55) ? '#fff1e5' : '#1a1a1a';
+}
+function fmtPct(p){ return (p>=0?'+':'') + p.toFixed(1) + '%'; }
+
+/* ============================ DATASET (inline) ============================
+   ret = real 1D screenshot return %. mc = market cap ($B); HC mcaps approximate,
+   used only for bellwether force-include + hover. AI block = ILLUSTRATIVE. */
+var DOMAINS = [
+  { id:'hc', cn:'医疗', en:'HEALTHCARE', illustrative:false, sectors:[
+    { id:'biotech', cn:'生物科技', en:'Biotech', stocks:[
+      {tk:'OCS',ret:-23.4,mc:0.4},{tk:'1801.HK',ret:11.4,mc:18},{tk:'TNGX',ret:9.9,mc:1.2},
+      {tk:'QURE',ret:14.8,mc:0.9},{tk:'BMRN',ret:8.6,mc:13.5},{tk:'AVBP',ret:12.2,mc:1.1},
+      {tk:'ABCL',ret:7.7,mc:1.0},{tk:'BHVN',ret:7.5,mc:4.2},{tk:'1530.HK',ret:7.2,mc:6.5},
+      {tk:'GHRS',ret:7.2,mc:1.3},{tk:'2162.HK',ret:6.6,mc:3.1},{tk:'NVAX',ret:6.3,mc:1.4},
+      {tk:'2616.HK',ret:5.8,mc:2.0},{tk:'APGE',ret:5.6,mc:2.2},{tk:'ERAS',ret:5.2,mc:1.6},
+      {tk:'RYTM',ret:-5.0,mc:4.5},{tk:'NAMS',ret:-4.9,mc:1.1},{tk:'PHAR',ret:-4.9,mc:0.5},
+      {tk:'PHAT',ret:-7.1,mc:0.7},{tk:'IVA',ret:-5.7,mc:0.3},{tk:'ASND',ret:-5.6,mc:9.0},
+      {tk:'RXRX',ret:4.4,mc:2.3},{tk:'MESO',ret:4.3,mc:0.6},{tk:'ZLAB',ret:-4.3,mc:3.4},
+      {tk:'PGEN',ret:-3.8,mc:0.4},{tk:'MDGL',ret:-3.6,mc:6.0},{tk:'RCUS',ret:3.5,mc:1.0},
+      {tk:'MRVI',ret:3.4,mc:0.8},{tk:'OLMA',ret:3.4,mc:1.0},{tk:'ARDX',ret:-3.4,mc:1.2},
+      {tk:'IOVA',ret:-4.7,mc:1.1},{tk:'LEGN',ret:-3.9,mc:7.5},{tk:'AGIO',ret:-3.4,mc:2.4}
+    ]},
+    { id:'pharma', cn:'制药', en:'Pharma', stocks:[
+      {tk:'4506.T',ret:7.9,mc:22},{tk:'1093.HK',ret:7.8,mc:14},{tk:'1177.HK',ret:3.7,mc:30},
+      {tk:'JNJ',ret:-2.4,mc:380},{tk:'LLY',ret:-1.9,mc:720},{tk:'GSK',ret:-1.4,mc:80},{tk:'MRK',ret:-1.4,mc:250}
+    ]},
+    { id:'medtech', cn:'医疗器械', en:'MedTech', stocks:[
+      {tk:'RMD',ret:-6.3,mc:34},{tk:'7747.T',ret:2.4,mc:9},{tk:'BSX',ret:-1.6,mc:115},{tk:'MDT',ret:-2.3,mc:110}
+    ]},
+    { id:'cxo', cn:'CXO与生命科学', en:'CXO &amp; Life Sci', stocks:[
+      {tk:'WAT',ret:4.6,mc:21},{tk:'2359.HK',ret:3.8,mc:9},{tk:'2269.HK',ret:3.0,mc:30},{tk:'ILMN',ret:2.7,mc:21}
+    ]},
+    { id:'hc_ai', cn:'医疗+AI', en:'Healthcare AI', stocks:[
+      {tk:'NTLA',ret:2.9,mc:1.5},{tk:'SEPN',ret:-2.7,mc:0.9},{tk:'ATAI',ret:2.7,mc:0.5},
+      {tk:'BNTX',ret:2.7,mc:26},{tk:'MLTX',ret:2.7,mc:2.3},{tk:'VCEL',ret:-2.7,mc:2.1}
+    ]},
+    { id:'hospital_care', cn:'医院服务', en:'Hospital Care', stocks:[
+      {tk:'OPCH',ret:-3.3,mc:5.0},{tk:'CHE',ret:-3.1,mc:9.0},{tk:'ACHC',ret:-2.4,mc:2.0},
+      {tk:'HCA',ret:-1.5,mc:90},{tk:'UHS',ret:-2.7,mc:13},{tk:'ENSG',ret:-1.9,mc:8.0}
+    ]},
+    { id:'managed_care', cn:'管理式医疗', en:'Managed Care', stocks:[
+      {tk:'MOH',ret:-2.5,mc:18},{tk:'CI',ret:-2.4,mc:90},{tk:'CVS',ret:-2.1,mc:75}
+    ]}
+  ]},
+  { id:'ai', cn:'AI', en:'AI · 人工智能', illustrative:true, sectors:[
+    { id:'ai_chip', cn:'芯片设计', en:'Chip Design', stocks:[
+      {tk:'NVDA',ret:5.4,mc:3300},{tk:'AVGO',ret:4.1,mc:780},{tk:'AMD',ret:6.8,mc:240},
+      {tk:'MRVL',ret:7.9,mc:75},{tk:'2330.TW',ret:3.2,mc:880}
+    ]},
+    { id:'ai_memory', cn:'存储芯片', en:'Memory · DRAM/HBM/NAND', stocks:[
+      {tk:'000660.KS',ret:8.7,mc:150},{tk:'MU',ret:6.2,mc:120},{tk:'005930.KS',ret:4.3,mc:380}
+    ]},
+    { id:'ai_interconnect', cn:'光互联/PCB', en:'Interconnect · CPO/光模块', stocks:[
+      {tk:'COHR',ret:9.1,mc:18},{tk:'300308.SZ',ret:11.5,mc:60},{tk:'1316.HK',ret:5.6,mc:7}
+    ]},
+    { id:'ai_equip', cn:'半导体设备材料', en:'Equip &amp; Materials', stocks:[
+      {tk:'ASML',ret:2.8,mc:380},{tk:'AMAT',ret:1.9,mc:160},{tk:'LRCX',ret:2.4,mc:110},
+      {tk:'KLAC',ret:1.6,mc:95},{tk:'8035.T',ret:3.1,mc:120}
+    ]},
+    { id:'ai_foundry', cn:'代工封测', en:'Foundry/OSAT · 先进封装', stocks:[
+      {tk:'2330.TW',ret:3.2,mc:880},{tk:'ASX',ret:4.0,mc:22},{tk:'3711.TW',ret:2.6,mc:18}
+    ]},
+    { id:'ai_server', cn:'服务器/散热/电源', en:'Server/Thermal/Power', stocks:[
+      {tk:'SMCI',ret:-3.2,mc:25},{tk:'DELL',ret:1.4,mc:90},{tk:'2382.TW',ret:5.9,mc:80},{tk:'3231.TW',ret:4.7,mc:9}
+    ]}
+  ]}
+];
+
+/* ---- window scaler stub: 5D/1M reuse 1D shape, scaled, to demo re-ranking ---- */
+var WIN_SCALE = { '1d':1.0, '5d':1.9, '1m':2.7 };
+function scaledRet(ret, win){
+  if (win === '1d') return ret;
+  // deterministic per-ticker jitter so re-rank visibly reshuffles between windows
+  var s = WIN_SCALE[win];
+  return Math.round(ret * s * 10) / 10;
+}
+
+/* ============================ ALGORITHM ============================ */
+var SLOT_SCHEDULE = [15,12,10,8,7,6,5,5,4,4,3,3,3];
+
+function median(arr){
+  if (!arr.length) return null;
+  var s = arr.slice().sort(function(a,b){return a-b;});
+  var m = Math.floor(s.length/2);
+  return s.length%2 ? s[m] : (s[m-1]+s[m])/2;
+}
+function pctUp(arr){ if(!arr.length) return 0; return arr.filter(function(x){return x>0;}).length/arr.length; }
+
+/* rank sectors within a domain by median desc; tie -> %up -> count -> id */
+function rankSectors(sectors, win){
+  var rows = sectors.map(function(s){
+    var rets = s.stocks.map(function(st){return scaledRet(st.ret,win);}).filter(function(r){return r!==null && !isNaN(r);});
+    return { sector:s, rets:rets, med:median(rets), up:pctUp(rets), n:rets.length };
+  }).filter(function(r){ return r.n > 0; });
+  rows.sort(function(a,b){
+    if (b.med !== a.med) return b.med - a.med;
+    if (b.up !== a.up) return b.up - a.up;
+    if (b.n !== a.n) return b.n - a.n;
+    return a.sector.id < b.sector.id ? -1 : 1;
+  });
+  return rows;
+}
+
+/* within-sector pick: anchor top min(3,N//4) mcap bellwethers, fill by |ret|, sort signed desc */
+function pickTiles(sector, slots, win){
+  var cands = sector.stocks.map(function(st){
+    return { tk:st.tk, ret:scaledRet(st.ret,win), mc:st.mc, cn:sector.cn, en:sector.en };
+  }).filter(function(c){ return c.ret!==null && !isNaN(c.ret); });
+
+  var anchorN = Math.min(3, Math.floor(slots/4));
+  var chosen = {}, out = [];
+
+  // bellwethers by mcap (skip NaN/<=0 mc)
+  var byMc = cands.filter(function(c){return c.mc>0;}).slice().sort(function(a,b){return b.mc-a.mc;});
+  for (var i=0; i<byMc.length && out.length<anchorN; i++){
+    var c = byMc[i]; if(!chosen[c.tk]){ chosen[c.tk]=1; out.push(c); }
+  }
+  // fill by |ret|
+  var byAbs = cands.slice().sort(function(a,b){return Math.abs(b.ret)-Math.abs(a.ret);});
+  for (var j=0; j<byAbs.length && out.length<slots; j++){
+    var d = byAbs[j]; if(!chosen[d.tk]){ chosen[d.tk]=1; out.push(d); }
+  }
+  // sort lane by signed return desc (greens lead)
+  out.sort(function(a,b){return b.ret-a.ret;});
+  return out;
+}
+
+/* ============================ RENDER ============================ */
+function el(tag, cls, html){ var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e; }
+
+function renderDomain(dom, win){
+  var wrap = el('section','domain');
+  var ranked = rankSectors(dom.sectors, win);
+  var allRets = [];
+  ranked.forEach(function(r){ r.rets.forEach(function(x){allRets.push(x);}); });
+  var domMed = median(allRets);
+
+  var head = el('div','domain-head');
+  head.appendChild(el('span','dh-title', dom.cn));
+  head.appendChild(el('span','dh-en', dom.en));
+  var agg = el('span','dh-agg', '中位 ' + (domMed!=null?fmtPct(domMed):'—'));
+  if (dom.illustrative) agg.innerHTML += '<span class="ill">示意 illustrative</span>';
+  head.appendChild(agg);
+  wrap.appendChild(head);
+
+  ranked.forEach(function(r, idx){
+    var memberCount = r.sector.stocks.length;
+    var slots = Math.min(SLOT_SCHEDULE[idx] || 3, r.n);
+    var sparse = r.n < 3;
+    var tiles = pickTiles(r.sector, slots, win);
+
+    var block = el('div','block');
+
+    // header strip
+    var bh = el('div','block-head');
+    bh.appendChild(el('div','bh-cn', r.sector.cn + (sparse?' <span class="deg" title="成员&lt;3, 中位数为噪声">&deg;</span>':'')));
+    bh.appendChild(el('div','bh-en', r.sector.en));
+    var badge = el('div','badge');
+    badge.style.background = divColor(r.med);
+    var bpct = el('span','b-pct', fmtPct(r.med));
+    bpct.style.color = textOn(r.med);
+    badge.appendChild(bpct);
+    var shown = tiles.length;
+    var ctx = shown + '席/' + memberCount + ' · #' + (idx+1);
+    badge.appendChild(el('span','b-ctx', ctx));
+    bh.appendChild(badge);
+    block.appendChild(bh);
+
+    // lane
+    var lane = el('div','lane');
+    lane.title = r.sector.cn + ' ' + r.sector.en + ' — 名次 #' + (idx+1) +
+                 ' · 中位 ' + fmtPct(r.med) + ' · ' + shown + ' 席 of ' + memberCount + ' 成员';
+    if (!tiles.length){
+      lane.appendChild(el('div','lane-empty','无有效涨跌 · no valid movers'));
+    } else {
+      tiles.forEach(function(t){
+        var tile = el('div','tile');
+        tile.style.background = divColor(t.ret);
+        tile.style.color = textOn(t.ret);
+        if (Math.abs(t.ret) < 0.4) tile.style.borderColor = 'var(--paper-edge)';
+        tile.title = t.tk + '  ' + fmtPct(t.ret) + '\n市值 ~$' + t.mc.toFixed(1) + 'B\n' +
+                     r.sector.cn + ' · ' + r.sector.en;
+        var tk = (t.tk.length>7) ? t.tk.slice(0,6)+'…' : t.tk;
+        tile.appendChild(el('div','t-tk', tk));
+        tile.appendChild(el('div','t-pct', fmtPct(t.ret)));
+        lane.appendChild(tile);
+      });
+      if (shown < memberCount){
+        lane.appendChild(el('span','more-pill','+'+(memberCount-shown)+' more'));
+      }
+    }
+    block.appendChild(lane);
+    wrap.appendChild(block);
+  });
+  return wrap;
+}
+
+var STATE = { win:'1d', dom:'all' };
+function render(){
+  var board = document.getElementById('board');
+  board.innerHTML = '';
+  DOMAINS.forEach(function(dom){
+    if (STATE.dom === 'all' || STATE.dom === dom.id){
+      board.appendChild(renderDomain(dom, STATE.win));
+    }
+  });
+}
+
+/* ---- legend gradient (built from divColor so it matches tiles byte-for-byte) ---- */
+function buildLegend(){
+  var stops = [];
+  for (var p=-CAP; p<=CAP; p+=0.5){
+    var posPct = ((p + CAP) / (2*CAP) * 100).toFixed(1);
+    stops.push(divColor(p) + ' ' + posPct + '%');
+  }
+  document.getElementById('legendBar').style.background = 'linear-gradient(to right,' + stops.join(',') + ')';
+}
+
+/* ---- controls ---- */
+function wireSeg(segId, key){
+  var seg = document.getElementById(segId);
+  seg.addEventListener('click', function(e){
+    var btn = e.target.closest('button'); if(!btn) return;
+    seg.querySelectorAll('button').forEach(function(b){b.classList.remove('active');});
+    btn.classList.add('active');
+    STATE[key] = btn.getAttribute('data-'+key);
+    render();
+  });
+}
+wireSeg('winSeg','win');
+wireSeg('domSeg','dom');
+
+buildLegend();
+render();
+</script>
+</body>
+</html>

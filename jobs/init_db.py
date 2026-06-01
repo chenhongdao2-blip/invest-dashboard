@@ -98,6 +98,7 @@ CREATE TABLE IF NOT EXISTS company_profile (
     totalDebt             REAL,
     totalRevenue          REAL,
     revenueGrowth         REAL,
+    freeCashflow          REAL,
     grossMargins          REAL,
     operatingMargins      REAL,
     profitMargins         REAL,

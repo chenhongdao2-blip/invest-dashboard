@@ -55,6 +55,8 @@ BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
 # Ticker Drill page can keep using info.get('ebitda') etc unchanged).
 PROFILE_FIELDS = [
     "ebitda", "totalCash", "totalDebt", "totalRevenue", "revenueGrowth",
+    "freeCashflow",   # FCF margin = freeCashflow/totalRevenue (Rule-of-40 matrix);
+                      # both reporting-currency → ratio is currency-neutral.
     "grossMargins", "operatingMargins", "profitMargins", "returnOnEquity",
     "trailingPegRatio", "dividendYield", "beta", "sharesOutstanding",
     "floatShares", "longBusinessSummary",
@@ -91,11 +93,19 @@ def parse_args() -> argparse.Namespace:
                    help="Skip yfinance.info multiples fetch (faster, prices only).")
     p.add_argument("--limit", type=int, default=0,
                    help="Process only first N tickers (debug).")
+    p.add_argument("--only", type=str, default="",
+                   help="Comma-separated tickers to process only (targeted refresh, "
+                        "e.g. a new comp group). Overrides --limit.")
     return p.parse_args()
 
 
 # ----- DB helpers -----
-def get_tickers(conn: sqlite3.Connection, limit: int = 0) -> list[str]:
+def get_tickers(conn: sqlite3.Connection, limit: int = 0, only: str = "") -> list[str]:
+    if only:
+        want = [t.strip() for t in only.split(",") if t.strip()]
+        have = {row[0] for row in conn.execute(
+            "SELECT DISTINCT ticker FROM universe_member").fetchall()}
+        return [t for t in want if t in have]
     q = "SELECT DISTINCT ticker FROM universe_member ORDER BY ticker"
     if limit > 0:
         q += f" LIMIT {limit}"
@@ -414,7 +424,7 @@ def main() -> None:
         raise SystemExit(f"DB not found at {DB_PATH}. Run init_db.py first.")
 
     conn = sqlite3.connect(DB_PATH)
-    tickers = get_tickers(conn, limit=args.limit)
+    tickers = get_tickers(conn, limit=args.limit, only=args.only)
     if not tickers:
         print("[fetch_eod] No tickers — run load_universe.py first.")
         return

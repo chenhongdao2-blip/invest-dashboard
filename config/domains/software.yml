@@ -1,0 +1,15 @@
+# Software (SaaS / AI-software) domain — comps-only, no home page.
+# Exists so load_universe + fetch_eod pull a software peer set for the "Rule of 40"
+# valuation matrix (Model Drill ③). No coverage list, no dashboard page; pages are
+# domain-scoped (healthcare / ai), so these names never surface in those views.
+name: Software
+emoji: 💾
+description: |
+  SaaS / AI-software 估值对标组(Rule of 40 矩阵用)。非覆盖名单、无独立页面;
+  仅供 fetch_eod 每日抓取 ev_sales / 营收增速 / FCF,driving charts.rule_of_40_scatter。
+
+sectors:
+  - id: saas_comps
+    name: SaaS / AI Software Comps
+    universe_file: saas_comps.yml
+    benchmark: IGV               # iShares Expanded Tech-Software ETF (ref only; no page)

@@ -42,3 +42,6 @@ data/external/_bak_*/
 data/snapshots.db.bak-*
 cov_*.txt
 cov_*.json
+
+# Analyst model extracts — confidential (TP/DCF). Local-only, NOT public Cloud (P0).
+data/models/*.json

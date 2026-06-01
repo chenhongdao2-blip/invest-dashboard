@@ -1,0 +1,40 @@
+# SaaS / AI-software valuation comps — the peer set for the "Rule of 40" matrix
+# (Model Drill ③). NOT a coverage list, NOT shown on any healthcare/AI page; this
+# group exists only so fetch_eod pulls ev_sales / revenueGrowth / freeCashflow /
+# totalRevenue daily → charts.rule_of_40_scatter reads the snapshot (dynamic).
+#
+# Seeded from the CMS HK VEEV Initiation (2026-10) Fig.8 21-name set + 5 current
+# AI-software names (CRWD/NET/MDB/HUBS/PANW). Edit freely — the chart auto-adapts.
+# All US-listed (SAP via ADR); ratios are currency-neutral.
+sector_id: saas_comps
+domain: software
+
+tickers:
+  # ── original Initiation Fig.8 set ──
+  - {ticker: VEEV, name_cn: Veeva, name_en: Veeva Systems, region: US}
+  - {ticker: PLTR, name_cn: Palantir, name_en: Palantir, region: US}
+  - {ticker: DDOG, name_cn: Datadog, name_en: Datadog, region: US}
+  - {ticker: NOW, name_cn: ServiceNow, name_en: ServiceNow, region: US}
+  - {ticker: SNOW, name_cn: Snowflake, name_en: Snowflake, region: US}
+  - {ticker: APP, name_cn: AppLovin, name_en: AppLovin, region: US}
+  - {ticker: MSFT, name_cn: 微软, name_en: Microsoft, region: US}
+  - {ticker: INTU, name_cn: Intuit, name_en: Intuit, region: US}
+  - {ticker: CRM, name_cn: Salesforce, name_en: Salesforce, region: US}
+  - {ticker: SHOP, name_cn: Shopify, name_en: Shopify, region: US}
+  - {ticker: WDAY, name_cn: Workday, name_en: Workday, region: US}
+  - {ticker: TEAM, name_cn: Atlassian, name_en: Atlassian, region: US}
+  - {ticker: TYL, name_cn: Tyler, name_en: Tyler Technologies, region: US}
+  - {ticker: ORCL, name_cn: 甲骨文, name_en: Oracle, region: US}
+  - {ticker: SAP, name_cn: SAP, name_en: SAP SE (ADR), region: US}
+  - {ticker: GWRE, name_cn: Guidewire, name_en: Guidewire, region: US}
+  - {ticker: SSNC, name_cn: SS&C, name_en: SS&C Technologies, region: US}
+  # DAY (Dayforce) dropped 2026-06 — taken private by Thoma Bravo, no longer listed.
+  - {ticker: WAY, name_cn: Waystar, name_en: Waystar, region: US}
+  - {ticker: PHR, name_cn: Phreesia, name_en: Phreesia, region: US}
+  - {ticker: DOCS, name_cn: Doximity, name_en: Doximity, region: US}
+  # ── 5 current AI-software adds (2026) ──
+  - {ticker: CRWD, name_cn: CrowdStrike, name_en: CrowdStrike, region: US}
+  - {ticker: NET, name_cn: Cloudflare, name_en: Cloudflare, region: US}
+  - {ticker: MDB, name_cn: MongoDB, name_en: MongoDB, region: US}
+  - {ticker: HUBS, name_cn: HubSpot, name_en: HubSpot, region: US}
+  - {ticker: PANW, name_cn: 派拓网络, name_en: Palo Alto Networks, region: US}

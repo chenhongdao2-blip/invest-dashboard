@@ -110,14 +110,13 @@ STRINGS = {
     "strategy.ipo.tab.intro": (
         "**HK IPO Subscription Backtest** — scores and tiers recent HK new listings via the "
         "CMSI Prism six-factor model (v6.7) and revisits how score relates to day-1 performance. "
-        "The KPI cards below use a **tiered break-rate contrast** and the **score-vs-magnitude "
-        "rank IC (ρ)** to show what this score is actually worth and where its power ends (they "
-        "update with the sample) — rather than letting a universal-pop regime's median return / "
-        "win-rate display market beta as if it were the score's edge. Key read: **the score is "
-        "good at direction (subscribe or not, avoiding breaks), not at magnitude (how much it "
-        "pops)** — score vs day-1 return is only weakly correlated (see the Spearman ρ at the "
-        "top-right of the scatter). The scatter below maps score × day-1; the mini-charts show "
-        "each name's intraday path; the dual leaderboard sorts by score or by day-1 return."
+        "The 3 cards up top show scale and the day-1 range (sample / best / worst); the "
+        "**by-tier table** below lists, from top tier to bottom, the count, median day-1, up-rate "
+        "and breaks — so you can see at a glance **whether a higher score actually does better**. "
+        "Key read: **the score is good at direction (subscribe or not, avoiding breaks), not at "
+        "magnitude (how much it pops)** — the middle tiers barely separating is the evidence. "
+        "Further down: mini-charts show each name's intraday path, and the dual leaderboard sorts "
+        "by score or by day-1 return."
     ),
     # KPI
     "strategy.ipo.kpi.sample": "Sample",

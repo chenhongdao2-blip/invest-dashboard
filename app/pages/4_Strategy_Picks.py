@@ -344,33 +344,6 @@ def render_ipo_strategy() -> None:
         )
     st.caption(i18n.t("strategy.ipo.tier.note"))
 
-    # --- Score × day-1 scatter (core trend; honest Spearman ρ annotation) ---
-    theme.section_header(i18n.t("strategy.ipo.scatter.title", n=n_listed))
-    rho = _spearman_rho(listed["score"], listed["ret_pct"])
-    pval = _spearman_pval(rho, n_listed)
-    p_str = f"{pval:.2f}" if math.isfinite(pval) else "n/a"
-    rho_text = i18n.t("strategy.ipo.scatter.rho", rho=rho, p=p_str)
-
-    def _hover(r) -> str:
-        return i18n.t("strategy.ipo.scatter.hover",
-                      name=str(r["name"]), code=str(r["code"]),
-                      score=float(r["score"]), ret=float(r["ret_pct"]),
-                      tier=i18n.ipo_tier(str(r["tier"])))
-
-    sc = listed.rename(columns={"name_cn": "name"})
-    fig_sc = charts.ipo_score_scatter(
-        sc, score_col="score", ret_col="ret_pct", tier_col="tier",
-        name_col="name", code_col="code", rho_text=rho_text,
-        title=i18n.t("strategy.ipo.scatter.title", n=n_listed),
-        x_label=i18n.t("strategy.ipo.scatter.x"),
-        y_label=i18n.t("strategy.ipo.scatter.y"),
-        trend_label=i18n.t("strategy.ipo.scatter.trend"),
-        tier_label_fn=lambda tt: i18n.ipo_tier(str(tt)),
-        hover_fn=_hover,
-    )
-    st.plotly_chart(fig_sc, width="stretch", theme=None)
-    st.caption(i18n.t("strategy.ipo.scatter.caption"))
-
     # --- Listing-day intraday small-multiples (open bar = 100, post-open path) ---
     theme.section_header(i18n.t("strategy.ipo.intraday.title"))
     intra = strat.load_ipo_intraday()

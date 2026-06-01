@@ -63,12 +63,12 @@ cmsi_coverage = st.Page(
 )
 healthcare_overview = st.Page(
     "pages/2_Healthcare.py",
-    title="Overview 总览",
+    title="HC Overview 总览",
     url_path="Healthcare",
 )
 sector_heatmap = st.Page(
     "pages/3_Sector_Heatmap.py",
-    title="Sector Heatmap 板块热力图",
+    title="HC Heatmap 板块热力图",
     url_path="Sector_Heatmap",
 )
 strategy_picks = st.Page(
@@ -78,17 +78,17 @@ strategy_picks = st.Page(
 )
 valuation_scanner = st.Page(
     "pages/5_Valuation_Scanner.py",
-    title="Valuation Scanner 估值扫描器",
+    title="HC Valuation 估值扫描器",
     url_path="Valuation_Scanner",
 )
 sec_facts = st.Page(
     "pages/8_SEC_Facts.py",
-    title="SEC Company Facts 财报数据",
+    title="HC SEC Facts 财报数据",
     url_path="SEC_Facts",
 )
 hc_capital = st.Page(
     "pages/9_HC_Capital_Markets.py",
-    title="Capital Markets 投融资",
+    title="HC Capital Markets 投融资",
     url_path="HC_Capital_Markets",
 )
 

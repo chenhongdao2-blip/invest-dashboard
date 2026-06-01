@@ -359,3 +359,161 @@ def mnc_by_year(df: pd.DataFrame) -> pd.DataFrame:
 def mnc_top_deals(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
     return df.nlargest(n, "deal_size_mn").copy()
 
+
+# ── BD / licensing insight layer (bd_deals.csv = the 99-row canonical BD set) ──
+# bd_deals.csv is the SINGLE source for BD insight. Do NOT union the 39 BD rows in
+# mnc_ma_deals.csv — 28 overlap by value → double-count (biotech-researcher verified).
+# The raw `ta` (45 free-text strings) and `phase` (20) must be canonicalized before
+# any group-by, else Oncology splits across 肿瘤/Oncology/实体瘤 and undercounts ~2×.
+# Canon TA maps to the M&A ta_group taxonomy (i18n._TA_ZH) so the M&A-by-TA and
+# BD-by-TA charts share one axis.
+
+BD_TA_CANON = {
+    # already-canonical English (2026 rows already use ta_group)
+    "Oncology": "Oncology", "Immunology": "Immunology",
+    "Cardiovascular/Metabolic": "Cardiovascular/Metabolic", "CNS/Neurology": "CNS/Neurology",
+    "Gene/Cell Therapy": "Gene/Cell Therapy", "Vaccines": "Vaccines",
+    "Rare Disease": "Rare Disease", "IO/CNS": "Oncology", "Other": "Other",
+    # Oncology
+    "肿瘤": "Oncology", "癌症": "Oncology", "实体瘤": "Oncology", "前列腺癌": "Oncology",
+    "慢阻塞肺病/肿瘤": "Oncology", "多发性骨髓瘤": "Oncology", "肿瘤 / 自免": "Oncology",
+    "肿瘤/自免": "Oncology", "免疫/肿瘤/代谢": "Oncology",
+    # Immunology & autoimmune
+    "自免": "Immunology", "自免疾病": "Immunology", "免疫介导疾病": "Immunology",
+    "炎症": "Immunology", "炎症(未指明)": "Immunology",
+    # Cardiovascular / metabolic / obesity
+    "代谢": "Cardiovascular/Metabolic", "代谢/CVD": "Cardiovascular/Metabolic",
+    "代谢/肥胖": "Cardiovascular/Metabolic", "代谢 / 肥胖": "Cardiovascular/Metabolic",
+    "代谢，肥胖": "Cardiovascular/Metabolic", "肥胖": "Cardiovascular/Metabolic",
+    "肥胖/2型糖尿病": "Cardiovascular/Metabolic", "血脂调控": "Cardiovascular/Metabolic",
+    "肥厚型心肌病 HCM": "Cardiovascular/Metabolic",
+    # CNS / neurology
+    "中枢神经": "CNS/Neurology", "神经科": "CNS/Neurology", "神经系统疾病": "CNS/Neurology",
+    "神经退行性疾病": "CNS/Neurology", "多发性硬化症": "CNS/Neurology",
+    "癫痫 Epilepsy": "CNS/Neurology", "肌萎缩侧索硬化症": "CNS/Neurology",
+    # Rare disease
+    "罕见病": "Rare Disease", "罕见血液/肾脏疾病": "Rare Disease", "遗传病": "Rare Disease",
+    # Respiratory / vaccines-ID / other
+    "呼吸系统疾病": "Respiratory", "传染病/细菌感染": "Vaccines", "未知": "Other",
+}
+
+BD_PHASE_CANON = {
+    "临床前": "Preclinical/Discovery", "先导筛选": "Preclinical/Discovery",
+    "发现阶段": "Preclinical/Discovery", "IND": "Preclinical/Discovery",
+    "IND 递交": "Preclinical/Discovery", "申报临床": "Preclinical/Discovery",
+    "IND/Ⅰ期": "Phase I", "Ⅰ期": "Phase I", "Ⅰ/Ⅱ期": "Phase I", "I/II期临床": "Phase I",
+    "Ⅱ期": "Phase II", "Ⅱ期临床": "Phase II", "Ⅱb期": "Phase II", "Ⅱ/Ⅲ期": "Phase II",
+    "Ⅲ期": "Phase III", "III期临床": "Phase III", "Phase 3": "Phase III",
+    "批准上市": "Approved/Filed", "未披露": "Undisclosed", "—": "Undisclosed",
+}
+BD_PHASE_ORDER = ["Preclinical/Discovery", "Phase I", "Phase II", "Phase III",
+                  "Approved/Filed", "Undisclosed"]
+
+# Licensees that are NOT genuine global-MNC inbound buyers (NewCo / small biotech) or
+# a reversed-direction deal (an MNC out-licensing) — biotech-flagged. Excluded ONLY
+# from the "MNC buyer league" + KPI so that ranking stays clean; still counted in
+# deal-count charts and the full detail table. (George: 稳妥+留痕)
+BD_LEAGUE_EXCLUDE = {
+    "Vor BioPharma", "Verdiva Bio", "Zenas BioPharma", "Radiance Bio", "Radiance",
+    "Sidera Bio", "Kalexo Bio", "Alfasigma",
+}
+
+
+def bd_canon_ta(s) -> str:
+    return BD_TA_CANON.get(str(s).strip(), "Other")
+
+
+def bd_canon_phase(s) -> str:
+    return BD_PHASE_CANON.get(str(s).strip(), "Undisclosed")
+
+
+@st.cache_data(ttl=600)
+def load_bd_enriched() -> pd.DataFrame:
+    """bd_deals.csv (99) + canonical/flag columns. All 99 rows retained; the flags
+    decide which aggregation includes a row.
+
+    Added columns:
+      ta_canon      free-text ta → M&A ta_group bucket (bd_canon_ta)
+      phase_canon   free-text phase → ordered stage (bd_canon_phase)
+      is_china_out  licensor name contains CJK → Chinese biotech out-licensing
+      mnc_buyer_ok  licensee is a real global-MNC inbound buyer (not in BD_LEAGUE_EXCLUDE)
+      value_ok      total>0 AND milestone<=total — drops the data-impossible Evaxion row
+                    (ms 1184 > total 600) and the total=0 option/collab rows from $-math
+    """
+    import re
+
+    df = load_bd_report().copy()
+    df["ta_canon"] = df["ta"].map(bd_canon_ta)
+    df["phase_canon"] = df["phase"].map(bd_canon_phase)
+    up = pd.to_numeric(df["upfront_musd"], errors="coerce")
+    ms = pd.to_numeric(df["milestone_musd"], errors="coerce")
+    tot = pd.to_numeric(df["total_musd"], errors="coerce")
+    df["upfront_musd"], df["milestone_musd"], df["total_musd"] = up, ms, tot
+    cjk = re.compile(r"[一-鿿]")
+    df["is_china_out"] = df["licensor"].astype(str).map(lambda s: bool(cjk.search(s)))
+    df["mnc_buyer_ok"] = ~df["licensee"].astype(str).str.strip().isin(BD_LEAGUE_EXCLUDE)
+    df["value_ok"] = tot.notna() & (tot > 0) & (ms.isna() | (ms <= tot))
+    return df
+
+
+def bd_by_licensee(df: pd.DataFrame, top: int = 12) -> pd.DataFrame:
+    """MNC buyer league (mnc_buyer_ok only). Ranked by DEAL COUNT — BD headline value
+    is milestone-inflated, so one $18.5B deal must not crown a one-deal buyer."""
+    sub = df[df["mnc_buyer_ok"]]
+    g = (sub.groupby("licensee")
+           .agg(n=("asset", "size"), total_bn=("total_musd", lambda x: x.sum() / 1000.0))
+           .reset_index().sort_values("n", ascending=False).head(top))
+    return g
+
+
+def bd_by_ta(df: pd.DataFrame) -> pd.DataFrame:
+    """By canonical TA, value-weighted (value_ok rows only). Desc by USD bn."""
+    sub = df[df["value_ok"]]
+    g = (sub.groupby("ta_canon")
+           .agg(n=("asset", "size"), total_bn=("total_musd", lambda x: x.sum() / 1000.0))
+           .reset_index().sort_values("total_bn", ascending=False))
+    return g
+
+
+def bd_by_phase(df: pd.DataFrame) -> pd.DataFrame:
+    """Deal COUNT per canonical phase, ordered Preclinical→Approved→Undisclosed
+    (the depth-of-reach view: how early MNCs reach into Chinese pipeline)."""
+    g = (df.groupby("phase_canon").agg(n=("asset", "size"))
+           .reindex(BD_PHASE_ORDER).fillna(0))
+    g["n"] = g["n"].astype(int)
+    return g.reset_index()
+
+
+def bd_by_year(df: pd.DataFrame) -> pd.DataFrame:
+    """Deal COUNT per year (value is milestone-inflated; count avoids cross-year distortion)."""
+    return (df.groupby("year").agg(n=("asset", "size"))
+              .reset_index().sort_values("year"))
+
+
+def bd_kpis(df: pd.DataFrame) -> dict:
+    """Headline BD KPI bundle. All $-figures use value_ok rows only (excludes total=0
+    options + the Evaxion data error). Milestones are CONTINGENT — total is an announced
+    ceiling, never realized cash; the page label MUST say 含里程碑/incl. milestones.
+
+    Keys: total_bn, upfront_bn, milestone_bn, med_upfront_pct, china_pct, china_bn,
+          biggest (Series|None), top_mnc (Series|None), n_all, n_2025, n_2026.
+    """
+    val = df[df["value_ok"]]
+    total_bn = float(val["total_musd"].sum()) / 1000.0
+    ratio = (val["upfront_musd"] / val["total_musd"]).dropna()
+    china_bn = float(val[val["is_china_out"]]["total_musd"].sum()) / 1000.0
+    lg = bd_by_licensee(df, top=1)
+    return {
+        "total_bn": total_bn,
+        "upfront_bn": float(val["upfront_musd"].sum()) / 1000.0,
+        "milestone_bn": float(val["milestone_musd"].sum()) / 1000.0,
+        "med_upfront_pct": float(ratio.median()) * 100.0 if len(ratio) else None,
+        "china_bn": china_bn,
+        "china_pct": china_bn / total_bn * 100.0 if total_bn else None,
+        "biggest": val.nlargest(1, "total_musd").iloc[0] if len(val) else None,
+        "top_mnc": lg.iloc[0] if len(lg) else None,
+        "n_all": len(df),
+        "n_2025": int((df["year"] == 2025).sum()),
+        "n_2026": int((df["year"] == 2026).sum()),
+    }
+

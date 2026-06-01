@@ -1,13 +1,16 @@
-"""Healthcare · Capital Markets 投融资 — Pharma MNC M&A (deal-level).
+"""Healthcare · Capital Markets 投融资 — Pharma MNC M&A + BD/licensing (deal-level).
 
-Centerpiece: the M&A history of 13 global pharma MNCs from the MNCs basket xlsx
-(mnc-deal-scanner skill). 2026-YTD M&A is surfaced at the top. CRITICAL: M&A
-(true acquisition / change of control) is kept SEPARATE from BD (license / option
-/ collaboration — no change of control). The Hengrui-BMS $15.2B is BD, not M&A.
-Complemented by the MNC dry-powder balance-sheet table (SEC XBRL).
+Two co-equal domains, split into tabs so "M&A is M&A, BD is BD":
+- **M&A** (control transfer): the acquisition history of 13 global pharma MNCs from the
+  MNCs basket xlsx (mnc-deal-scanner skill). 2026-YTD surfaced at the top.
+- **BD** (license / option / collaboration — NO control transfer): the 99-row
+  bd_deals.csv, given its own insight layer (KPI strip + MNC-buyer league + by-TA +
+  depth-of-reach by phase + timeline + filter table). Hengrui-BMS $15.2B is BD, not M&A.
 
-Data (copied into repo): data/external/mnc_ma_deals.csv (+ meta) carries a
-deal_type column {M&A | BD}. NO sell-side rating surfaced.
+CRITICAL: the two are never mixed in one scroll. BD value is milestone-CONTINGENT — the
+headline total is an announced ceiling, never realized cash (Σ upfront ≪ Σ total). The
+MNC dry-powder balance-sheet table (SEC XBRL) sits below both tabs — firepower for both.
+NO sell-side rating surfaced.
 """
 from __future__ import annotations
 
@@ -32,13 +35,28 @@ deals = funding.load_mnc_deals()
 meta = funding.mnc_ma_meta()
 mnc_bs = funding.load_mnc()
 
-ma = deals[deals["deal_type"] == "M&A"].copy()       # true acquisitions only
-bd = deals[deals["deal_type"] == "BD"].copy()         # license / option / collaboration
+ma = deals[deals["deal_type"] == "M&A"].copy()        # true acquisitions only
+mnc_bd = deals[deals["deal_type"] == "BD"].copy()      # 39-row BD subset — M&A-tab YTD count card only
 
-theme.page_header(i18n.t("capital.page.title"),
-                  meta=i18n.t("mnc_ma.page.asof", asof=meta.get("as_of", "")))
-st.caption(i18n.t("mnc_ma.intro"))
-st.info(i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
+BD_ACCENT = theme.SECTOR_PALETTE[3]   # "#4a6fa5" muted slate-blue — BD value bars (NOT teal/red)
+
+# ── Column labels ──────────────────────────────────────────────────────────
+c_tgt = i18n.t("mnc_ma.col.target")
+c_yr = i18n.t("mnc_ma.col.year")
+c_sz = i18n.t("mnc_ma.col.size")
+c_ta = i18n.t("mnc_ma.col.ta")
+c_basis = i18n.t("mnc_ma.col.basis")
+
+bd_lor = i18n.t("mnc_ma.bd.col.licensor")
+bd_lee = i18n.t("mnc_ma.bd.col.licensee")
+bd_ast = i18n.t("mnc_ma.bd.col.asset")
+bd_pha = i18n.t("mnc_ma.bd.col.phase")
+bd_ta = i18n.t("mnc_ma.col.ta")
+bd_up = i18n.t("mnc_ma.col.upfront")
+bd_ms = i18n.t("mnc_ma.col.milestone")
+bd_tot = i18n.t("mnc_ma.col.total")
+bd_dt = i18n.t("mnc_ma.bd.col.date")
+bd_src = i18n.t("mnc_ma.col.src")
 
 
 def _kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
@@ -49,13 +67,6 @@ def _kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
         f'<div class="cmsi-kpi-foot ink">{sub}</div>'
         '</div>'
     )
-
-
-c_tgt = i18n.t("mnc_ma.col.target")
-c_yr = i18n.t("mnc_ma.col.year")
-c_sz = i18n.t("mnc_ma.col.size")
-c_ta = i18n.t("mnc_ma.col.ta")
-c_basis = i18n.t("mnc_ma.col.basis")
 
 
 def _ym(d, y) -> str:
@@ -105,6 +116,30 @@ def _deal_table_b3(df: pd.DataFrame, height: int) -> None:
     )
 
 
+def _bd_table(df: pd.DataFrame, height: int) -> None:
+    """BD deal table: index = licensor(授权方); cols = asset / licensee / source ↗ /
+    canonical TA / canonical phase / upfront / milestone / total (USD bn) / date.
+    Mirrors _deal_table_b3 but for BD's licensor→asset→licensee economics."""
+    disp = pd.DataFrame({
+        bd_ast: df["asset"].astype(str),
+        bd_lee: df["licensee"].astype(str),
+        bd_src: df["source_url"].astype(str),
+        bd_ta: [i18n.ta_name(x) for x in df["ta_canon"]],
+        bd_pha: df["phase_canon"].astype(str),
+        bd_up: df["upfront_musd"] / 1000.0,
+        bd_ms: df["milestone_musd"] / 1000.0,
+        bd_tot: df["total_musd"] / 1000.0,
+        bd_dt: df["date"].astype(str),
+    })
+    disp.index = df["licensor"].astype(str)
+    disp.index.name = bd_lor
+    ui.render_html_table(
+        disp, extra_formats={bd_up: "%.2f", bd_ms: "%.2f", bd_tot: "%.2f"},
+        text_cols=[bd_lee, bd_ast, bd_ta, bd_pha], right_text_cols=[bd_dt], link_cols=[bd_src],
+        index_label=bd_lor, height=height,
+    )
+
+
 def _source_links(df: pd.DataFrame) -> None:
     """Clickable per-deal source links (render_html_table can't hold <a>, so list below)."""
     links = []
@@ -118,113 +153,187 @@ def _source_links(df: pd.DataFrame) -> None:
         st.markdown(" · ".join(links))
 
 
-# ══ 2026 YTD M&A (TOP) ════════════════════════════════════════════════════
-theme.section_header(i18n.t("mnc_ma.section.ytd"), meta=i18n.t("mnc_ma.section.ytd_meta"))
+# ══ Page header + taxonomy callout (above the tabs) ════════════════════════
+theme.page_header(i18n.t("capital.page.title"),
+                  meta=i18n.t("mnc_ma.page.asof", asof=meta.get("as_of", "")))
+st.caption(i18n.t("mnc_ma.intro"))
+st.info(i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
+st.info(i18n.t("capital.def"))
 
-ma26 = ma[ma["year"] == 2026].sort_values("deal_size_mn", ascending=False)
-bd26 = bd[bd["year"] == 2026]
-ma26_total_bn = ma26["deal_size_mn"].sum() / 1000.0
-cards = [
-    _kpi(i18n.t("mnc_ma.ytd.total"), f"${ma26_total_bn:,.1f}B",
-         i18n.t("mnc_ma.ytd.total_foot", n=len(ma26)), vcls="up-deep"),
-    _kpi(i18n.t("mnc_ma.ytd.count"), f"{len(ma26)}",
-         i18n.t("mnc_ma.ytd.count_foot", value=ma26_total_bn)),
-]
-if not ma26.empty:
-    big26 = ma26.iloc[0]
-    cards.append(_kpi(i18n.t("mnc_ma.ytd.biggest"), f"${big26['deal_size_mn'] / 1000:,.2f}B",
-                      i18n.t("mnc_ma.ytd.biggest_foot", acq=big26["ticker"], tgt=big26["target"]), vcls="up"))
-cards.append(_kpi(i18n.t("mnc_ma.ytd.bd_count"), f"{len(bd26)}",
-                  i18n.t("mnc_ma.ytd.bd_foot"), vcls="up"))
-theme.kpi_strip(cards)
-
-if not ma26.empty:
-    _deal_table_b3(ma26, height=min(820, 80 + 36 * len(ma26)))
+tab_ma, tab_bd = st.tabs([i18n.t("capital.tab.ma"), i18n.t("capital.tab.bd")])
 
 
-# ══ Lifetime M&A (true acquisitions only) ═════════════════════════════════
-ma_total_bn = meta["ma_total_mn"] / 1000.0
-by_co = funding.mnc_by_company(ma)
-by_ta = funding.mnc_by_ta(ma)
-by_yr = funding.mnc_by_year(ma)
-top_co = by_co.iloc[0]
-biggest = funding.mnc_top_deals(ma, 1).iloc[0]
-n_actual = int((ma["size_basis"] == "Actual").sum())
-n_est = int((ma["size_basis"] == "Estimated").sum())
+# ══════════════════════════════ M&A TAB ═══════════════════════════════════
+with tab_ma:
+    # ── 2026 YTD M&A ──
+    theme.section_header(i18n.t("mnc_ma.section.ytd"), meta=i18n.t("mnc_ma.section.ytd_meta"))
+    ma26 = ma[ma["year"] == 2026].sort_values("deal_size_mn", ascending=False)
+    bd26 = mnc_bd[mnc_bd["year"] == 2026]
+    ma26_total_bn = ma26["deal_size_mn"].sum() / 1000.0
+    cards = [
+        _kpi(i18n.t("mnc_ma.ytd.total"), f"${ma26_total_bn:,.1f}B",
+             i18n.t("mnc_ma.ytd.total_foot", n=len(ma26)), vcls="up-deep"),
+        _kpi(i18n.t("mnc_ma.ytd.count"), f"{len(ma26)}",
+             i18n.t("mnc_ma.ytd.count_foot", value=ma26_total_bn)),
+    ]
+    if not ma26.empty:
+        big26 = ma26.iloc[0]
+        cards.append(_kpi(i18n.t("mnc_ma.ytd.biggest"), f"${big26['deal_size_mn'] / 1000:,.2f}B",
+                          i18n.t("mnc_ma.ytd.biggest_foot", acq=big26["ticker"], tgt=big26["target"]), vcls="up"))
+    cards.append(_kpi(i18n.t("mnc_ma.ytd.bd_count"), f"{len(bd26)}",
+                      i18n.t("mnc_ma.ytd.bd_foot"), vcls="up"))
+    theme.kpi_strip(cards)
 
-theme.section_header(i18n.t("mnc_ma.section.league"),
-                     meta=i18n.t("mnc_ma.section.league_meta") + " " + i18n.t("mnc_ma.ma_only"))
-theme.kpi_strip([
-    _kpi(i18n.t("mnc_ma.kpi.total"), f"${ma_total_bn / 1000:,.2f}T",
-         i18n.t("mnc_ma.kpi.total_foot", n=meta["n_ma"], ymin=meta["year_min"], ymax=meta["year_max"]), vcls="up-deep"),
-    _kpi(i18n.t("mnc_ma.kpi.deals"), f"{meta['n_ma']:,}",
-         i18n.t("mnc_ma.kpi.deals_foot", actual=n_actual, est=n_est)),
-    _kpi(i18n.t("mnc_ma.kpi.top"), f"${top_co['total_bn']:,.0f}B",
-         i18n.t("mnc_ma.kpi.top_foot", company=top_co["company"], n=int(top_co["n"])), vcls="up"),
-    _kpi(i18n.t("mnc_ma.kpi.biggest"), f"${biggest['deal_size_mn'] / 1000:,.1f}B",
-         i18n.t("mnc_ma.kpi.biggest_foot", acq=biggest["ticker"], tgt=biggest["target"], year=int(biggest["year"])), vcls="up-deep"),
-])
-st.plotly_chart(charts.ranked_hbar(by_co["company"].tolist(), by_co["total_bn"].tolist(),
-                title=i18n.t("mnc_ma.chart.by_company"), xlabel=i18n.t("capital.unit.bn")),
-                width="stretch", theme=None)
+    if not ma26.empty:
+        _deal_table_b3(ma26, height=min(820, 80 + 36 * len(ma26)))
 
-theme.section_header(i18n.t("mnc_ma.section.ta"), meta=i18n.t("mnc_ma.section.ta_meta"))
-st.plotly_chart(charts.ranked_hbar([i18n.ta_name(t) for t in by_ta["ta_group"]], by_ta["total_bn"].tolist(),
-                title=i18n.t("mnc_ma.chart.by_ta"), xlabel=i18n.t("capital.unit.bn"), color=theme.UP_DEEP),
-                width="stretch", theme=None)
+    # ── Lifetime M&A (true acquisitions only) ──
+    ma_total_bn = meta["ma_total_mn"] / 1000.0
+    by_co = funding.mnc_by_company(ma)
+    by_ta = funding.mnc_by_ta(ma)
+    by_yr = funding.mnc_by_year(ma)
+    top_co = by_co.iloc[0]
+    biggest = funding.mnc_top_deals(ma, 1).iloc[0]
+    n_actual = int((ma["size_basis"] == "Actual").sum())
+    n_est = int((ma["size_basis"] == "Estimated").sum())
 
-theme.section_header(i18n.t("mnc_ma.section.timeline"), meta=i18n.t("mnc_ma.section.timeline_meta"))
-st.plotly_chart(charts.year_bar(by_yr["year"].tolist(), by_yr["total_bn"].tolist(),
-                title=i18n.t("mnc_ma.chart.by_year"), ylabel=i18n.t("capital.unit.bn")),
-                width="stretch", theme=None)
+    theme.section_header(i18n.t("mnc_ma.section.league"),
+                         meta=i18n.t("mnc_ma.section.league_meta") + " " + i18n.t("mnc_ma.ma_only"))
+    theme.kpi_strip([
+        _kpi(i18n.t("mnc_ma.kpi.total"), f"${ma_total_bn / 1000:,.2f}T",
+             i18n.t("mnc_ma.kpi.total_foot", n=meta["n_ma"], ymin=meta["year_min"], ymax=meta["year_max"]), vcls="up-deep"),
+        _kpi(i18n.t("mnc_ma.kpi.deals"), f"{meta['n_ma']:,}",
+             i18n.t("mnc_ma.kpi.deals_foot", actual=n_actual, est=n_est)),
+        _kpi(i18n.t("mnc_ma.kpi.top"), f"${top_co['total_bn']:,.0f}B",
+             i18n.t("mnc_ma.kpi.top_foot", company=top_co["company"], n=int(top_co["n"])), vcls="up"),
+        _kpi(i18n.t("mnc_ma.kpi.biggest"), f"${biggest['deal_size_mn'] / 1000:,.1f}B",
+             i18n.t("mnc_ma.kpi.biggest_foot", acq=biggest["ticker"], tgt=biggest["target"], year=int(biggest["year"])), vcls="up-deep"),
+    ])
+    st.plotly_chart(charts.ranked_hbar(by_co["company"].tolist(), by_co["total_bn"].tolist(),
+                    title=i18n.t("mnc_ma.chart.by_company"), xlabel=i18n.t("capital.unit.bn")),
+                    width="stretch", theme=None)
 
-theme.section_header(i18n.t("mnc_ma.section.top"))
-_deal_table(funding.mnc_top_deals(ma, 20), height=760)
+    theme.section_header(i18n.t("mnc_ma.section.ta"), meta=i18n.t("mnc_ma.section.ta_meta"))
+    st.plotly_chart(charts.ranked_hbar([i18n.ta_name(t) for t in by_ta["ta_group"]], by_ta["total_bn"].tolist(),
+                    title=i18n.t("mnc_ma.chart.by_ta"), xlabel=i18n.t("capital.unit.bn"), color=theme.UP_DEEP),
+                    width="stretch", theme=None)
 
-theme.section_header(i18n.t("mnc_ma.section.table"), meta=i18n.t("mnc_ma.section.table_meta"))
-_co_opts = [i18n.t("mnc_ma.filter.all")] + by_co["ticker"].tolist()
-_pick = st.selectbox(i18n.t("mnc_ma.filter.company"), _co_opts, key="mnc_ma_co")
-_sub = ma if _pick == i18n.t("mnc_ma.filter.all") else ma[ma["ticker"] == _pick]
-_deal_table(_sub.sort_values("deal_size_mn", ascending=False), height=620)
+    theme.section_header(i18n.t("mnc_ma.section.timeline"), meta=i18n.t("mnc_ma.section.timeline_meta"))
+    st.plotly_chart(charts.year_bar(by_yr["year"].tolist(), by_yr["total_bn"].tolist(),
+                    title=i18n.t("mnc_ma.chart.by_year"), ylabel=i18n.t("capital.unit.bn")),
+                    width="stretch", theme=None)
 
+    theme.section_header(i18n.t("mnc_ma.section.top"))
+    _deal_table(funding.mnc_top_deals(ma, 20), height=760)
 
-# ══ BD / partnerships — report format (licensor→licensee, upfront/milestone/total) ══
-theme.section_header(i18n.t("mnc_ma.section.bd"), meta=i18n.t("mnc_ma.section.bd_meta"))
-bd_rpt = funding.load_bd_report().sort_values("total_musd", ascending=False)
-bd_lor = i18n.t("mnc_ma.bd.col.licensor")
-bd_lee = i18n.t("mnc_ma.bd.col.licensee")
-bd_ast = i18n.t("mnc_ma.bd.col.asset")
-bd_pha = i18n.t("mnc_ma.bd.col.phase")
-bd_ta = i18n.t("mnc_ma.col.ta")
-bd_up = i18n.t("mnc_ma.col.upfront")
-bd_ms = i18n.t("mnc_ma.col.milestone")
-bd_tot = i18n.t("mnc_ma.col.total")
-bd_dt = i18n.t("mnc_ma.bd.col.date")
-bd_src = i18n.t("mnc_ma.col.src")
-bd_disp = pd.DataFrame({
-    bd_ast: bd_rpt["asset"].astype(str),       # 药物/技术 — between 授权方(index) and 被授权方
-    bd_lee: bd_rpt["licensee"].astype(str),
-    bd_src: bd_rpt["source_url"].astype(str),  # 来源 — right after the company
-    bd_ta: bd_rpt["ta"].astype(str),
-    bd_pha: bd_rpt["phase"].astype(str),
-    bd_up: bd_rpt["upfront_musd"] / 1000.0,
-    bd_ms: bd_rpt["milestone_musd"] / 1000.0,
-    bd_tot: bd_rpt["total_musd"] / 1000.0,
-    bd_dt: bd_rpt["date"].astype(str),
-})
-bd_disp.index = bd_rpt["licensor"].astype(str)
-bd_disp.index.name = bd_lor
-ui.render_html_table(
-    bd_disp,
-    extra_formats={bd_up: "%.2f", bd_ms: "%.2f", bd_tot: "%.2f"},
-    text_cols=[bd_lee, bd_ast, bd_ta, bd_pha],
-    right_text_cols=[bd_dt], link_cols=[bd_src],
-    index_label=bd_lor,
-    height=820,
-)
+    theme.section_header(i18n.t("mnc_ma.section.table"), meta=i18n.t("mnc_ma.section.table_meta"))
+    _co_opts = [i18n.t("mnc_ma.filter.all")] + by_co["ticker"].tolist()
+    _pick = st.selectbox(i18n.t("mnc_ma.filter.company"), _co_opts, key="mnc_ma_co")
+    _sub = ma if _pick == i18n.t("mnc_ma.filter.all") else ma[ma["ticker"] == _pick]
+    _deal_table(_sub.sort_values("deal_size_mn", ascending=False), height=620)
 
 
-# ══ MNC dry-powder (SEC XBRL — who can fund the next wave) ═════════════════
+# ══════════════════════════════ BD TAB ════════════════════════════════════
+with tab_bd:
+    bd = funding.load_bd_enriched()       # 99-row canonical BD set (NEVER union mnc_ma BD rows)
+    k = funding.bd_kpis(bd)
+
+    # ── 2026 YTD BD ──
+    theme.section_header(i18n.t("capital.bd.section.ytd"), meta=i18n.t("capital.bd.section.ytd_meta"))
+    bd26v = bd[(bd["year"] == 2026) & bd["value_ok"]]
+    bd26_all = bd[bd["year"] == 2026]
+    ytd_total_bn = bd26v["total_musd"].sum() / 1000.0
+    ytd_upfront_bn = bd26v["upfront_musd"].sum() / 1000.0
+    bd_cards = [
+        _kpi(i18n.t("capital.bd.ytd.total"), f"${ytd_total_bn:,.1f}B",
+             i18n.t("capital.bd.ytd.total_foot", n=len(bd26_all))),
+        _kpi(i18n.t("capital.bd.ytd.upfront"), f"${ytd_upfront_bn:,.1f}B",
+             i18n.t("capital.bd.ytd.upfront_foot")),
+        _kpi(i18n.t("capital.bd.ytd.count"), f"{len(bd26_all)}",
+             i18n.t("capital.bd.ytd.count_foot", y=k["n_2025"])),
+    ]
+    if len(bd26v):
+        big = bd26v.nlargest(1, "total_musd").iloc[0]
+        bd_cards.append(_kpi(i18n.t("capital.bd.ytd.biggest"), f"${big['total_musd'] / 1000:,.1f}B",
+                             i18n.t("capital.bd.ytd.biggest_foot", lor=str(big["licensor"]), lee=str(big["licensee"]))))
+    theme.kpi_strip(bd_cards)
+    st.caption(i18n.t("capital.bd.contingent"))
+    if not bd26_all.empty:
+        _bd_table(bd26_all.sort_values("total_musd", ascending=False),
+                  height=min(820, 80 + 36 * len(bd26_all)))
+
+    # ── BD League (full 2025–2026) — the risk-sharing + China-out economics ──
+    theme.section_header(i18n.t("capital.bd.section.league"), meta=i18n.t("capital.bd.section.league_meta"))
+    league_cards = [
+        _kpi(i18n.t("capital.bd.kpi.total"), f"${k['total_bn']:,.1f}B",
+             i18n.t("capital.bd.kpi.total_foot", u=k["upfront_bn"], m=k["milestone_bn"])),
+    ]
+    if k["med_upfront_pct"] is not None:
+        league_cards.append(_kpi(i18n.t("capital.bd.kpi.upfront_ratio"), f"{k['med_upfront_pct']:.1f}%",
+                                 i18n.t("capital.bd.kpi.upfront_ratio_foot")))
+    if k["china_pct"] is not None:
+        league_cards.append(_kpi(i18n.t("capital.bd.kpi.china"), f"{k['china_pct']:.1f}%",
+                                 i18n.t("capital.bd.kpi.china_foot", b=k["china_bn"])))
+    if k["top_mnc"] is not None:
+        league_cards.append(_kpi(i18n.t("capital.bd.kpi.topmnc"), f"{k['top_mnc']['licensee']}",
+                                 i18n.t("capital.bd.kpi.topmnc_foot", name=k["top_mnc"]["licensee"], n=int(k["top_mnc"]["n"]))))
+    theme.kpi_strip(league_cards)
+
+    # Chart 1 — MNC buyer league (by DEAL COUNT; value is milestone-inflated)
+    theme.section_header(i18n.t("capital.bd.section.bylicensee"), meta=i18n.t("capital.bd.section.bylicensee_meta"))
+    by_lee = funding.bd_by_licensee(bd, top=12)
+    st.plotly_chart(charts.ranked_hbar(by_lee["licensee"].tolist(), by_lee["n"].tolist(),
+                    title=i18n.t("capital.bd.chart.licensee"), xlabel=i18n.t("capital.bd.unit.deals"),
+                    color=BD_ACCENT, value_fmt="%d"),
+                    width="stretch", theme=None)
+    st.caption(i18n.t("capital.bd.note.league"))
+
+    # Chart 2 — by canonical TA (value; same axis taxonomy as the M&A by-TA chart)
+    theme.section_header(i18n.t("capital.bd.section.byta"), meta=i18n.t("capital.bd.section.byta_meta"))
+    by_ta_bd = funding.bd_by_ta(bd)
+    st.plotly_chart(charts.ranked_hbar([i18n.ta_name(t) for t in by_ta_bd["ta_canon"]], by_ta_bd["total_bn"].tolist(),
+                    title=i18n.t("capital.bd.chart.ta"), xlabel=i18n.t("capital.unit.bn"), color=BD_ACCENT),
+                    width="stretch", theme=None)
+
+    # Chart 3 — depth-of-reach by phase (COUNT, ordered Preclinical→Approved; M&A can't show this)
+    theme.section_header(i18n.t("capital.bd.section.byphase"), meta=i18n.t("capital.bd.section.byphase_meta"))
+    by_ph = funding.bd_by_phase(bd)
+    st.plotly_chart(charts.ranked_hbar(by_ph["phase_canon"].tolist(), by_ph["n"].tolist(),
+                    title=i18n.t("capital.bd.chart.phase"), xlabel=i18n.t("capital.bd.unit.deals"),
+                    color=BD_ACCENT, value_fmt="%d"),
+                    width="stretch", theme=None)
+
+    # Chart 4 — 2025→2026 timeline (COUNT; 2026 is partial)
+    theme.section_header(i18n.t("capital.bd.section.byyear"))
+    by_yr_bd = funding.bd_by_year(bd)
+    st.plotly_chart(charts.year_bar(by_yr_bd["year"].tolist(), by_yr_bd["n"].tolist(),
+                    title=i18n.t("capital.bd.chart.year"), ylabel=i18n.t("capital.bd.unit.deals"),
+                    color=BD_ACCENT, dtick=1, value_hover_fmt=",.0f"),
+                    width="stretch", theme=None)
+    st.caption(i18n.t("capital.bd.note.year"))
+
+    # ── TOP 20 + dual-filter detail table ──
+    theme.section_header(i18n.t("capital.bd.section.top"))
+    _bd_table(bd.sort_values("total_musd", ascending=False).head(20), height=760)
+
+    theme.section_header(i18n.t("capital.bd.section.table"))
+    _all = i18n.t("capital.bd.filter.all")
+    _fc1, _fc2 = st.columns(2)
+    with _fc1:
+        _lee_opts = [_all] + sorted(bd["licensee"].dropna().astype(str).unique().tolist())
+        _pick_lee = st.selectbox(i18n.t("capital.bd.filter.licensee"), _lee_opts, key="bd_flt_lee")
+    with _fc2:
+        _lor_opts = [_all] + sorted(bd["licensor"].dropna().astype(str).unique().tolist())
+        _pick_lor = st.selectbox(i18n.t("capital.bd.filter.licensor"), _lor_opts, key="bd_flt_lor")
+    _bsub = bd.copy()
+    if _pick_lee != _all:
+        _bsub = _bsub[_bsub["licensee"].astype(str) == _pick_lee]
+    if _pick_lor != _all:
+        _bsub = _bsub[_bsub["licensor"].astype(str) == _pick_lor]
+    _bd_table(_bsub.sort_values("total_musd", ascending=False), height=620)
+
+
+# ══ MNC dry-powder (SEC XBRL — who can fund the next wave, M&A or BD) ═══════
 theme.section_header(i18n.t("capital.section.mnc"), meta=i18n.t("capital.section.mnc_meta"))
 c_company = i18n.t("capital.mnc.col.company")
 c_cash = i18n.t("capital.mnc.col.cash")

@@ -607,22 +607,29 @@ def year_bar(
     title: str = "",
     ylabel: str = "USD bn",
     color: str | None = None,
+    dtick: int = 5,
+    value_hover_fmt: str = ",.1f",
 ) -> go.Figure:
-    """Vertical bars by year — M&A deal value per year (shows the deal waves)."""
+    """Vertical bars by year — M&A deal value per year (shows the deal waves).
+
+    dtick: x-axis tick spacing in years. Default 5 fits the long M&A timeline
+    (1986-2026); pass dtick=1 for a short 2-3 year series (e.g. BD 2025-2026) so
+    every year gets a tick. value_hover_fmt lets a count series drop the decimals.
+    """
     fig = go.Figure()
     if not years:
         return theme.style_plotly(fig)
     fig.add_trace(go.Bar(
         x=list(years), y=list(values),
         marker_color=color or theme.UP, marker_line_width=0,
-        hovertemplate="%{x}<br>%{y:,.1f} " + ylabel + "<extra></extra>",
+        hovertemplate="%{x}<br>%{y:" + value_hover_fmt + "} " + ylabel + "<extra></extra>",
     ))
     fig.update_layout(title=_clean_title(title), height=320, showlegend=False)
     fig = theme.style_plotly(fig)
     fig.update_layout(
         yaxis=dict(title=dict(text=ylabel, font=dict(size=12, color=theme.INK_2)),
                    tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2)),
-        xaxis=dict(tickfont=dict(size=10, color=theme.INK_2), dtick=5),
+        xaxis=dict(tickfont=dict(size=10, color=theme.INK_2), dtick=dtick),
     )
     return fig
 

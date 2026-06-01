@@ -7,14 +7,24 @@ description: |
 
 # 板块列表（按 universe YAML 命名）
 sectors:
+  # 顺序 = 卖方研究台习惯（制药/生物科技领先，医院服务收尾）。
+  # 此 yml 是单一数据源：tab 顺序 (3_Sector_Heatmap) 与 Healthcare 页 (2_Healthcare) 同源。
+  - id: pharma
+    name: Pharma
+    universe_file: hc_pharma.yml
+    benchmark: XPH            # SPDR S&P Pharmaceuticals
   - id: biotech
     name: Biotech
     universe_file: hc_biotech.yml
     benchmark: XBI            # SPDR S&P Biotech ETF
-  - id: hospital_care
-    name: Hospital Care
-    universe_file: hc_hospital_care.yml
-    benchmark: XLV            # Health Care Select Sector SPDR
+  - id: cxo
+    name: CXO & Life Sciences
+    universe_file: hc_cxo.yml
+    benchmark: XLV
+  - id: medtech
+    name: Medtech
+    universe_file: hc_medtech.yml
+    benchmark: IHI            # iShares US Medical Devices
   - id: hc_ai
     name: Healthcare + AI
     universe_file: hc_ai.yml
@@ -23,18 +33,10 @@ sectors:
     name: Managed Care
     universe_file: hc_managed_care.yml
     benchmark: IHF            # iShares US Healthcare Providers
-  - id: medtech
-    name: Medtech
-    universe_file: hc_medtech.yml
-    benchmark: IHI            # iShares US Medical Devices
-  - id: cxo
-    name: CXO & Life Sciences
-    universe_file: hc_cxo.yml
-    benchmark: XLV
-  - id: pharma
-    name: Pharma
-    universe_file: hc_pharma.yml
-    benchmark: XPH            # SPDR S&P Pharmaceuticals
+  - id: hospital_care
+    name: Hospital Care
+    universe_file: hc_hospital_care.yml
+    benchmark: XLV            # Health Care Select Sector SPDR
 
 # Domain-level benchmarks
 benchmarks:

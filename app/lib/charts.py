@@ -306,6 +306,369 @@ def treemap_heatmap(
     return fig
 
 
+# ── HK IPO 打新 backtest charts (static cross-section; teal up / red down) ──
+
+# Tier → discrete marker color (4 tiers, semantics consistent with the site).
+_IPO_TIER_COLORS = {
+    "重点申购+": theme.UP_DEEP,    # 深 teal
+    "推荐申购": theme.UP,          # teal
+    "谨慎申购": "#a07a2c",         # amber (FT muted)
+    "不申购": theme.INK_3,         # grey
+}
+
+
+def ipo_score_scatter(
+    df: pd.DataFrame,
+    *,
+    score_col: str = "score",
+    ret_col: str = "ret_pct",
+    tier_col: str = "tier",
+    name_col: str = "name",
+    code_col: str = "code",
+    rho_text: str = "",
+    title: str = "",
+    x_label: str = "Score",
+    y_label: str = "Day-1 %",
+    trend_label: str = "OLS trend",
+    tier_label_fn=None,
+    hover_fn=None,
+) -> go.Figure:
+    """Score × day-1-return scatter for the IPO backtest (listed names only).
+
+    Points colored by tier (discrete). Day-1 sign is encoded by marker FILL:
+    up = solid tier-color, down = solid red (symmetric weight) so the breakers
+    keep the teal/red signal. An OLS trend line (dashed, light grey —
+    deliberately NOT a strong solid line, to avoid implying a strong
+    correlation) is overlaid, and the Spearman ρ is annotated top-right (the
+    honest alpha of the page).
+
+    When `hover_fn` is passed it is called per-row and wins over `name_col` /
+    `code_col`; the caller must therefore have already renamed its display name
+    column to whatever `hover_fn` reads (the page renames `name_cn` → `name`).
+    """
+    fig = go.Figure()
+    if df is None or df.empty:
+        return theme.style_plotly(fig)
+    work = df.copy()
+    tier_label_fn = tier_label_fn or (lambda t: str(t))
+
+    # --- OLS trend line (least squares; dashed light grey, drawn UNDER points) ---
+    x = work[score_col].astype(float).to_numpy()
+    y = work[ret_col].astype(float).to_numpy()
+    if len(x) >= 2 and float(x.std()) > 0:
+        import numpy as _np
+        slope, intercept = _np.polyfit(x, y, 1)
+        xs = _np.array([x.min(), x.max()])
+        fig.add_trace(go.Scatter(
+            x=xs, y=slope * xs + intercept, mode="lines", name=trend_label,
+            line=dict(width=1.3, color=theme.INK_3, dash="dash"), opacity=0.6,
+            hoverinfo="skip",
+        ))
+
+    # --- One marker trace per tier (discrete legend); up=solid, down=hollow-red ---
+    for tier in work[tier_col].dropna().unique():
+        sub = work[work[tier_col] == tier]
+        color = _IPO_TIER_COLORS.get(str(tier), theme.INK_3)
+        up = sub[sub[ret_col] >= 0]
+        dn = sub[sub[ret_col] < 0]
+        if hover_fn is not None:
+            up_hover = [hover_fn(r) for _, r in up.iterrows()]
+            dn_hover = [hover_fn(r) for _, r in dn.iterrows()]
+        else:
+            up_hover = dn_hover = None
+        if not up.empty:
+            fig.add_trace(go.Scatter(
+                x=up[score_col], y=up[ret_col], mode="markers",
+                name=tier_label_fn(tier),
+                marker=dict(size=11, color=color, line=dict(width=1, color=theme.PAPER)),
+                text=up_hover, hovertemplate="%{text}<extra></extra>" if up_hover else None,
+                legendgroup=str(tier),
+            ))
+        if not dn.empty:
+            # 破发点: keep the TIER FILL colour (so a 推荐档 breaker like 馭勢 stays
+            # teal — NOT recoloured red, which the 4-way review flagged as making
+            # the model look like it "recommended a破发股"). The day-1 break is
+            # flagged by a bold RED RING instead: tier semantics preserved + break
+            # still salient. Merged into the tier legend item (no dup entry).
+            fig.add_trace(go.Scatter(
+                x=dn[score_col], y=dn[ret_col], mode="markers",
+                name=tier_label_fn(tier),
+                marker=dict(size=12, color=color,
+                            line=dict(width=2.5, color=theme.DOWN)),
+                text=dn_hover, hovertemplate="%{text}<extra></extra>" if dn_hover else None,
+                legendgroup=str(tier), showlegend=up.empty,
+            ))
+
+    fig.update_layout(
+        title=_clean_title(title),
+        xaxis_title=x_label, yaxis_title=y_label, height=460,
+    )
+    # Honest-alpha annotation: Spearman ρ top-right (not significant).
+    if rho_text:
+        # TOP-LEFT (not top-right): the highest-score / highest-return point
+        # (曦智 8.3 / +384%) sits in the top-right corner, so an opaque box there
+        # occludes it. Top-left is empty (low scores never post the top returns).
+        fig.add_annotation(
+            xref="paper", yref="paper", x=0.01, y=0.98,
+            xanchor="left", yanchor="top", showarrow=False,
+            text=rho_text, font=dict(size=12, color=theme.INK_2),
+            bgcolor=theme.PAPER, bordercolor=theme.PAPER_EDGE, borderwidth=1,
+            borderpad=4, opacity=0.92,
+        )
+    fig = theme.style_plotly(fig)
+    # Compliance: X tick ≥11, Y label ≥12, title ≥14. tickfont set explicitly
+    # (not relying on template inheritance); score axis tickformat=".1f".
+    fig.update_layout(
+        xaxis=dict(title=dict(text=x_label, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), tickformat=".1f"),
+        yaxis=dict(title=dict(text=y_label, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), tickformat=",.0f"),
+        title=dict(font=dict(size=15, color=theme.INK)),
+    )
+    return fig
+
+
+def ipo_intraday_facets(
+    paths: list[dict],
+    *,
+    ncols: int = 4,
+    title: str = "",
+    use_hover: bool = False,
+) -> go.Figure:
+    """Small-multiples grid of listing-day intraday paths (opening bar = 100).
+
+    `paths`: list of dicts, each {'title': str, 'x': index, 'y': normalized
+    series (open-bar=100), 'up': bool}. Line color keys off `up` = FULL day-1
+    sign (teal up / red down) — NOT the intraday path's own sign (which would
+    contradict the labelled day-1 return). Grid is decluttered: no legend, no
+    gridlines, no x tick labels; a faint y=100 baseline per cell. Shared y range
+    so amplitudes are comparable across names.
+    """
+    from plotly.subplots import make_subplots
+
+    n = len(paths)
+    if n == 0:
+        return theme.style_plotly(go.Figure())
+    nrows = (n + ncols - 1) // ncols
+    subplot_titles = [p.get("title", "") for p in paths]
+    fig = make_subplots(
+        rows=nrows, cols=ncols, subplot_titles=subplot_titles,
+        vertical_spacing=0.09, horizontal_spacing=0.04,
+    )
+    for i, p in enumerate(paths):
+        r, c = i // ncols + 1, i % ncols + 1
+        color = theme.UP if p.get("up", True) else theme.DOWN
+        ht = None
+        if use_hover and p.get("hover"):
+            ht = p["hover"]
+        fig.add_trace(go.Scatter(
+            x=list(range(len(p["y"]))), y=list(p["y"]), mode="lines",
+            line=dict(width=1.4, color=color), showlegend=False,
+            text=ht, hovertemplate="%{text}<extra></extra>" if ht else None,
+        ), row=r, col=c)
+        # faint 发行价 breakeven baseline (=0%); the path is now plotted as
+        # "% vs offer price" so it terminates at the labelled full day-1 return.
+        fig.add_hline(y=0, line=dict(width=0.8, color=theme.INK_4, dash="dot"),
+                      opacity=0.6, row=r, col=c)
+
+    fig = theme.style_plotly(fig)
+    # Declutter x (intraday tick index is meaningless): hide ticks/grid.
+    fig.update_xaxes(showgrid=False, showticklabels=False, zeroline=False,
+                     linecolor=theme.PAPER_RULE)
+    # KEEP y tick labels so the move's magnitude is readable (=100 open bar);
+    # only the gridlines are dropped to reduce clutter.
+    fig.update_yaxes(showgrid=False, showticklabels=True, zeroline=False,
+                     tickfont=dict(size=9, color=theme.INK_3),
+                     linecolor=theme.PAPER_RULE)
+    # Compliant subplot-title font (≥11pt); title ≥14. Color each subplot title
+    # by its day-1 sign (teal up / red down) so it matches its line color; the
+    # subplot titles occupy the first len(paths) annotations (the figure-level
+    # title is set separately below and is not in this list).
+    for i, ann in enumerate(fig.layout.annotations):
+        if i < len(paths):
+            color = theme.UP if paths[i].get("up", True) else theme.DOWN
+        else:
+            color = theme.INK_2
+        ann.font = dict(size=11, color=color, family=theme.FONT_STACK)
+    fig.update_layout(
+        title=dict(text=_clean_title(title), font=dict(size=15, color=theme.INK)),
+        height=180 * nrows + 60, showlegend=False,
+        margin=dict(l=24, r=24, t=92, b=24), hovermode="closest",
+    )
+    return fig
+
+
+def capital_dual_axis_chart(
+    df: pd.DataFrame,
+    *,
+    x_col: str,
+    bar_col: str,
+    line_col: str,
+    bar_unit: str = "USD mn",
+    title: str = "",
+    bar_label: str = "",
+    line_label: str = "",
+) -> go.Figure:
+    """ED-Funding signature chart: capital (bars, left axis) + deal count (line,
+    right axis). The sell-side funding-tracker idiom — lets 'dollars up but deal
+    count flat' (large-deal concentration) read at a glance.
+
+    df: a period-indexed-or-columned frame; `x_col` is the period (Timestamp or
+    label), `bar_col` the capital series (already in the unit named by `bar_unit`),
+    `line_col` the deal count. Bars are teal (theme.UP — gross magnitudes, not signed
+    returns, so the up/down convention does not apply); the count line is muted ink.
+
+    NOTE on units: `bar_unit` is passed by the caller per-series (总额=USD bn,
+    sub-segments=USD mn) and used for the bar hover + axis title — the chart never
+    hardcodes a unit, so the medtech panel can't mislabel by 1000x.
+    """
+    fig = go.Figure()
+    if df is None or df.empty:
+        return theme.style_plotly(fig)
+    x = df[x_col]
+    fig.add_trace(go.Bar(
+        x=x, y=df[bar_col], name=bar_label or bar_col,
+        marker_color=theme.UP, marker_line_width=0, yaxis="y",
+        hovertemplate="%{x|%Y-%m}<br>%{y:,.0f} " + bar_unit + "<extra></extra>",
+    ))
+    fig.add_trace(go.Scatter(
+        x=x, y=df[line_col], name=line_label or line_col,
+        mode="lines+markers", yaxis="y2",
+        line=dict(width=1.8, color=theme.INK_3),
+        marker=dict(size=5, color=theme.INK_3),
+        hovertemplate="%{x|%Y-%m}<br>%{y:,.0f}<extra></extra>",
+    ))
+    fig.update_layout(title=_clean_title(title), height=400, barmode="group")
+    fig = theme.style_plotly(fig)
+    # style_plotly merges PLOTLY_LAYOUT.yaxis (incl. tickformat ',.2f') but does NOT
+    # touch yaxis2 — set the left-axis integer format + the full right axis here so
+    # the overlay, side, and compliant fonts (≥11 tick / ≥12 title) are authoritative.
+    fig.update_layout(
+        yaxis=dict(
+            title=dict(text=bar_label or bar_unit, font=dict(size=12, color=theme.INK_2)),
+            tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2),
+        ),
+        yaxis2=dict(
+            title=dict(text=line_label, font=dict(size=12, color=theme.INK_2)),
+            overlaying="y", side="right", showgrid=False,
+            tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2),
+            linecolor=theme.INK, linewidth=1,
+        ),
+    )
+    return fig
+
+
+def ranked_hbar(
+    labels: list,
+    values: list,
+    *,
+    title: str = "",
+    xlabel: str = "USD bn",
+    color: str | None = None,
+    value_fmt: str = "$%.0fB",
+    height: int | None = None,
+) -> go.Figure:
+    """Horizontal ranked bar (league table) — e.g. M&A $ per MNC, or per TA.
+
+    Highest at the TOP. Bars are teal (gross magnitudes; up/down convention N/A).
+    Value labels printed at the bar end. Height auto-scales to bar count.
+    """
+    fig = go.Figure()
+    if not labels:
+        return theme.style_plotly(fig)
+    c = color or theme.UP
+    # Plotly draws the first category at the bottom; reverse so largest is on top.
+    labs = list(labels)[::-1]
+    vals = list(values)[::-1]
+    texts = [value_fmt % v for v in vals]
+    fig.add_trace(go.Bar(
+        x=vals, y=labs, orientation="h",
+        marker_color=c, marker_line_width=0,
+        text=texts, textposition="outside",
+        textfont=dict(size=11, color=theme.INK_2),
+        hovertemplate="%{y}<br>%{x:,.1f} " + xlabel + "<extra></extra>",
+    ))
+    h = height or max(220, 26 * len(labs) + 80)
+    fig.update_layout(title=_clean_title(title), height=h, showlegend=False)
+    fig = theme.style_plotly(fig)
+    fig.update_layout(
+        xaxis=dict(title=dict(text=xlabel, font=dict(size=12, color=theme.INK_2)),
+                   tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2)),
+        yaxis=dict(tickfont=dict(size=12, color=theme.INK), showgrid=False),
+        margin=dict(l=8, r=64, t=64, b=40),
+    )
+    return fig
+
+
+def year_bar(
+    years: list,
+    values: list,
+    *,
+    title: str = "",
+    ylabel: str = "USD bn",
+    color: str | None = None,
+) -> go.Figure:
+    """Vertical bars by year — M&A deal value per year (shows the deal waves)."""
+    fig = go.Figure()
+    if not years:
+        return theme.style_plotly(fig)
+    fig.add_trace(go.Bar(
+        x=list(years), y=list(values),
+        marker_color=color or theme.UP, marker_line_width=0,
+        hovertemplate="%{x}<br>%{y:,.1f} " + ylabel + "<extra></extra>",
+    ))
+    fig.update_layout(title=_clean_title(title), height=320, showlegend=False)
+    fig = theme.style_plotly(fig)
+    fig.update_layout(
+        yaxis=dict(title=dict(text=ylabel, font=dict(size=12, color=theme.INK_2)),
+                   tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2)),
+        xaxis=dict(tickfont=dict(size=10, color=theme.INK_2), dtick=5),
+    )
+    return fig
+
+
+def funding_yoy_bar(
+    rows: list[dict],
+    *,
+    label_key: str = "label",
+    cur_key: str = "cur_bn",
+    prior_key: str = "prior_bn",
+    cur_name: str = "Q1 2026",
+    prior_name: str = "Q1 2025",
+    title: str = "",
+    ylabel: str = "USD bn",
+) -> go.Figure:
+    """Grouped YoY bar for the venture / VC family (prior-year vs current).
+
+    Intended ONLY for similar-magnitude segments (the $3-9B venture/digital-health
+    set) so bars stay comparable — do NOT mix in M&A ($41B) / licensing ($83B) /
+    IPO ($1.8B), whose magnitudes + measures differ (non-additive). Prior year is
+    muted ink, current is teal; gross magnitudes so the up/down convention does not
+    apply.
+    """
+    fig = go.Figure()
+    if not rows:
+        return theme.style_plotly(fig)
+    labels = [r[label_key] for r in rows]
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[prior_key] for r in rows], name=prior_name,
+        marker_color=theme.INK_3, marker_line_width=0,
+        hovertemplate="%{x}<br>%{y:.1f} " + ylabel + "<extra>" + prior_name + "</extra>",
+    ))
+    fig.add_trace(go.Bar(
+        x=labels, y=[r[cur_key] for r in rows], name=cur_name,
+        marker_color=theme.UP, marker_line_width=0,
+        hovertemplate="%{x}<br>%{y:.1f} " + ylabel + "<extra>" + cur_name + "</extra>",
+    ))
+    fig.update_layout(title=_clean_title(title), height=360, barmode="group")
+    fig = theme.style_plotly(fig)
+    fig.update_layout(
+        yaxis=dict(title=dict(text=ylabel, font=dict(size=12, color=theme.INK_2)),
+                   tickformat=",.1f", tickfont=dict(size=11, color=theme.INK_2)),
+    )
+    return fig
+
+
 def cumulative_return_chart(
     normed: pd.DataFrame,
     portfolio: pd.Series,

@@ -127,6 +127,7 @@ _BENCH_ZH = {
     "^GSPC": "标普 500 指数",
     "^SP500-352020": "标普500医药",
     "^NDX": "纳斯达克100",
+    "000001.SS": "上证综指",
     "IGV": "美国科技软件",
     "XHS": "美国医院服务",
     "HSHCI.HK": "恒生医疗保健",
@@ -169,6 +170,42 @@ _SECTOR_EN = {
 _DOMAIN = {"healthcare": {"zh": "医疗健康", "en": "Healthcare"},
            "ai": {"zh": "人工智能", "en": "AI"}}
 
+# Therapeutic-area buckets (mnc_ma_deals ta_group) → 中文. On the zh page we show
+# bilingual ("肿瘤 Oncology"); on en, English only.
+_TA_ZH = {
+    "Oncology": "肿瘤",
+    "Cardiovascular/Metabolic": "心血管/代谢",
+    "Immunology": "免疫",
+    "Vaccines": "疫苗",
+    "Gene/Cell Therapy": "基因/细胞治疗",
+    "CNS/Neurology": "中枢神经",
+    "Rare Disease": "罕见病",
+    "Dermatology/Aesthetics": "皮肤/医美",
+    "Respiratory": "呼吸",
+    "Consumer Health": "消费保健",
+    "Ophthalmology": "眼科",
+    "Diagnostics": "诊断",
+    "Anti-Infectives": "抗感染",
+    "Other": "其他",
+}
+
+# IPO subscription tiers — CSV stores the Chinese label; map to EN for the
+# English view. Keys are the EXACT strings in ipo_picks.csv 'tier' column.
+_IPO_TIER_EN = {
+    "重点申购+": "Strong Buy+",
+    "推荐申购": "Subscribe",
+    "谨慎申购": "Cautious",
+    "不申购": "Avoid",
+}
+
+
+def ipo_tier(tier_cn: str) -> str:
+    """Localize an IPO subscription tier. zh → as-is (CSV is already Chinese);
+    en → mapped English label (falls back to the raw value)."""
+    if get_lang() == "zh":
+        return tier_cn
+    return _IPO_TIER_EN.get(tier_cn, tier_cn)
+
 
 def bench_name(sym: str, fallback: str = "") -> str:
     """Localized benchmark long-name. zh → Chinese; en → English fallback (the
@@ -182,6 +219,14 @@ def sector_name(sid: str) -> str:
     """Localized sector display name from a raw sector id (e.g. 'hc_ai')."""
     table = _SECTOR_ZH if get_lang() == "zh" else _SECTOR_EN
     return table.get(sid, sid)
+
+
+def ta_name(ta: str) -> str:
+    """Therapeutic-area display name. zh → bilingual '肿瘤 Oncology'; en → 'Oncology'."""
+    if get_lang() == "zh":
+        cn = _TA_ZH.get(ta)
+        return f"{cn} {ta}" if cn else ta
+    return ta
 
 
 def domain_name(d: str) -> str:

@@ -42,7 +42,7 @@ STRINGS = {
     "home.sub.benchmarks": "基准",
 
     # ── Home ──
-    "home.title": "Market Hub 行情中枢",
+    "home.title": "行情中枢",
     "home.metric.latest_snapshot": "最新快照",
     "home.metric.last_fetch": "最后获取（UTC）",
     "home.metric.universe": "股票池数量",
@@ -418,4 +418,241 @@ STRINGS = {
     "ai.sec.title": "AI · SEC 财报数据",
     "ai.sec.caption": "美股 AI 标的的 SEC XBRL 申报（us-gaap / ifrs-full）。来源：data.sec.gov。",
     "ai.section.benchmark": "域基准（^SOX）与同业",
+
+    # ── Healthcare · Capital Markets 投融资（P0a aggregate tracker）──
+    "capital.page.title": "投融资",
+    "capital.page.caption": "全球医疗健康资本市场——BD/许可、并购、VC/IPO 月度资金流追踪（医药 / 器械 / 数字医疗）。",
+    "capital.page.asof": "数据截至 {date}（滚动 12 月窗口）",
+    "capital.cadence_note": (
+        "口径：aggregate 资金流为**月度**策划数据（MEDIUM 可靠性），逐数字标来源与截至月；"
+        "MNC 资产负债为 SEC XBRL（HIGH）。本页只搬 deal 事实数字，**不含任何卖方评级**。"
+    ),
+    # KPI strip
+    "capital.kpi.ttm": "滚动12月总投融资额",
+    "capital.kpi.ttm_foot": "窗口 {first} → {last}",
+    "capital.kpi.latest": "最新月投融资额",
+    "capital.kpi.latest_foot": "{month} · 环比 {mom}",
+    "capital.kpi.deals": "最新月总成交笔数",
+    "capital.kpi.deals_foot": "{month} · 全窗口累计 {ttm:,} 笔",
+    "capital.kpi.chinaout": "China-OUT 最大单",
+    "capital.kpi.chinaout_foot": "头条 $15.2B → 真实现金 $950M（B3·恒瑞-BMS）",
+    # Trend section
+    "capital.section.trend": "资金流趋势",
+    "capital.section.trend_meta": "柱=投融资额 · 线=成交笔数",
+    "capital.segments.pick": "选择序列",
+    "capital.chart.capital": "投融资额",
+    "capital.chart.deals": "成交笔数",
+    "capital.series.hc_total": "总投融资额",
+    "capital.series.pharma_ma": "药 M&A",
+    "capital.series.pharma_vc": "药 VC&IPO",
+    "capital.series.device_ma": "器械 M&A",
+    "capital.series.device_vc": "器械 VC&IPO",
+    "capital.series.digital_vc": "数字医疗 VC&IPO",
+    "capital.unit.bn": "十亿美元",
+    "capital.unit.mn": "百万美元",
+    # Sub-sector sparkline grid
+    "capital.section.segments": "细分板块走势",
+    "capital.section.segments_meta": "近 12 月投融资额（USD mn）",
+    "capital.domain.pharma": "医药（M&A + VC&IPO）",
+    "capital.domain.device": "器械（M&A + VC&IPO）",
+    "capital.domain.digital": "数字医疗（仅 VC&IPO）",
+    "capital.domain.digital_foot": "注：数字医疗仅追踪 VC&IPO，无独立 M&A 序列。",
+    "capital.reconcile_note": (
+        "⚠️ 口径说明：5 个细分序列之和 **不等于**「总投融资额」——后者覆盖更广的 universe。"
+        "细分图仅反映所追踪的 5 个子板块（USD mn），勿读作总额的 100% 拆分。"
+    ),
+    # China-OUT
+    "capital.section.chinaout": "China-OUT 主线",
+    "capital.chinaout.eyebrow": "中国出海许可制度性拐点",
+    "capital.chinaout.body": (
+        "中国 license 已从「零星出海事件」变成 MNC 标准 pipeline 补给渠道。"
+        "**NextPharma 2025-01→09 Top 25 deals 中，中国 OUT 占 13/25 = 52%**"
+        "（来源: NextPharma 720 deals，截至 2025-09-04），2026 Q2 比例进一步上升。\n\n"
+        "**4-5 月中国 OUT 已知合计 $19.3B**（恒瑞-BMS $15.2B + Insilico-Lilly $2.75B + "
+        "海思科-AbbVie $745M + Amoytop-Aligos $445M + Huahui-BeOne $120M）——"
+        "仅 BMS-恒瑞一单已超 2025 全年多个月份的全行业 BD 总值。\n\n"
+        "⚠️ **合规口径**：恒瑞头条 $15.2B 含 $14.25B contingent milestones，"
+        "真实 structured cash 仅 $950M（B3 拆解）。下游估值须按 upfront / milestone 拆开建模，"
+        "不得用头条值直接加总。"
+    ),
+    # MNC dry-powder
+    "capital.section.mnc": "MNC 资产负债 · 干火药",
+    "capital.section.mnc_meta": "2026Q1 · SEC XBRL（HIGH）",
+    "capital.mnc.col.company": "公司",
+    "capital.mnc.col.cash": "现金 $bn",
+    "capital.mnc.col.debt": "总债务 $bn",
+    "capital.mnc.col.net": "净现金 $bn",
+    "capital.mnc.col.form": "申报表",
+    "capital.mnc.col.date": "申报日",
+    "capital.mnc.note": (
+        "6 家标「—」为无 us-gaap 现金披露（NVS/AZN/SNY/NVO/PHG 为 20-F ADR，GEHC 现金字段缺）——"
+        "**非零**，勿读作无现金。另：us-gaap 现金口径不含短期投资，PFE/MRK 等现金或被低估。"
+    ),
+    # Methodology + disclaimer
+    "capital.method_expander": "方法论与来源（B1-B7 cross-check）",
+    "capital.method_body": (
+        "**数据源分层（research-data.md）**：aggregate 月度资金流 = MEDIUM（策划口径，PitchBook 式）；"
+        "MNC 资产负债 = HIGH（SEC EDGAR 10-Q/20-F XBRL）。\n\n"
+        "**B3 拆解纪律**：任何头条 deal 金额须可拆到 upfront + milestone + structured/CVR；"
+        "sum-check 不过标 confidence=MEDIUM。\n\n"
+        "**B6 不对称源**：A股/HK 单源（HKEX/cninfo）可 HIGH；US private deal 需 3 源。\n\n"
+        "**单位归一**：总额原始为 USD bn、子序列为 USD mn，loader 已统一归一以防图表混标。"
+    ),
+    "capital.disclaimer": (
+        "本页为研究台多源 cross-check 数据底稿，非投资建议。头条 deal 金额按 B3 可拆解为真实现金；"
+        "MEDIUM 源仅取数字事实，**不采纳任何卖方评级**。数字均标（来源, 截至）。"
+    ),
+
+    # ── Capital Markets · Q1 2026 公开源季度快照（Option-2，替代月度 PitchBook）──
+    "capital.q.asof": "最新完整季度 Q1 2026 · 季度颗粒（非月度）",
+    "capital.q.freshness": (
+        "📅 **数据节奏**：公开源均为**季度**口径——最新完整季度 **Q1 2026**（Jan-Mar）。"
+        "Q2 2026（4-6月）报告 ~7 月中才出，在那之前 4/5 月只有 deal-level 不完整 tally。"
+        "原 PitchBook 月度颗粒已**无法复现**（免费源无月度）。"
+    ),
+    "capital.q.cadence_note": (
+        "口径：全部数字来自**公开已发布**报告（JPMorgan / DealForma / Rock Health / Galen Growth / "
+        "CB Insights / Renaissance / Bain），逐项带来源 URL + 发布日 + 口径标签 + HIGH/MEDIUM tier。"
+        "多源交叉验证 + 对抗式核源。**不采纳任何卖方评级**。"
+    ),
+    # KPI（4 张,各自口径不同,不可相加）
+    "capital.q.kpi.ma": "生物药 M&A",
+    "capital.q.kpi.ma_foot": "Q1'26 · upfront 现金口径 · JPM+DealForma 收敛 ±$0.1B · 25-32 笔",
+    "capital.q.kpi.lic": "生物药许可",
+    "capital.q.kpi.lic_foot": "Q1'26 · announced biobucks · upfront 仅 ~6%（milestone 为主）",
+    "capital.q.kpi.vc": "生物药风投",
+    "capital.q.kpi.vc_foot": "Q1'26 · 同比 −20%（vs $8.6B）· 全球 · 许可正替代 VC",
+    "capital.q.kpi.dh": "数字医疗 VC（全球）",
+    "capital.q.kpi.dh_foot": "Q1'26 · 全球 216 笔 · 美国子集 $4.0B(Rock) · Galen+CB 收敛 4%",
+    # Scorecard
+    "capital.q.section.scorecard": "Q1 2026 分段记分卡",
+    "capital.q.section.scorecard_meta": "每行带口径 / 地域 / tier / 来源",
+    "capital.q.col.segment": "分段",
+    "capital.q.col.value": "Q1'26 $B",
+    "capital.q.col.count": "笔数",
+    "capital.q.col.prior": "Q1'25 $B",
+    "capital.q.col.yoy": "同比 %",
+    "capital.q.col.measure": "口径",
+    "capital.q.col.geo": "地域",
+    "capital.q.col.tier": "可靠性",
+    "capital.q.col.source": "来源",
+    # 分段名
+    "capital.seg.biopharma_ma": "生物药 M&A",
+    "capital.seg.biopharma_licensing": "生物药许可（BD）",
+    "capital.seg.biopharma_venture": "生物药风投",
+    "capital.seg.digital_health_vc_us": "数字医疗 VC（美国）",
+    "capital.seg.digital_health_vc_global": "数字医疗 VC（全球）",
+    "capital.seg.us_biotech_ipo": "美股 biotech IPO",
+    "capital.seg.medtech_ma": "器械 M&A",
+    # 口径标签
+    "capital.measure.upfront_cash": "首付现金",
+    "capital.measure.incl_contingents": "含或有(CVR)",
+    "capital.measure.announced_biobucks": "公布总额",
+    "capital.measure.raised": "募集额",
+    "capital.measure.proceeds": "募资额",
+    "capital.measure.disclosed_value": "披露金额",
+    # 地域 badge
+    "capital.geo.global": "全球",
+    "capital.geo.us": "美国",
+    # YoY 图
+    "capital.q.section.yoy": "风投 / VC 同比",
+    "capital.q.section.yoy_meta": "仅同量级、有同比的分段（避免混口径）",
+    # Medtech 注
+    "capital.q.section.medtech": "器械 M&A（缺口）",
+    "capital.q.medtech_note": (
+        "⚠️ 免费公开源**无器械 M&A 季度序列**。唯一可引是 Bain **FY2025 不完整年**（1-11月）"
+        "**~$80B**（经 MedTech Dive 转引,MEDIUM,笔数未披露），超过前三年总和、H2≈2×H1。"
+        "**按 partial-FY 单点标注,不当季度柱**。器械占 Q1'26 全行业 M&A 31%(8 季新高,Biotechgate)。"
+        "大单:BSX-Penumbra $14.5B(H1'26 close)、Abbott-Exact Sciences $23B。"
+    ),
+    # FY baselines
+    "capital.q.section.baselines": "FY2025 基准（趋势背景）",
+    "capital.q.baselines.col.metric": "指标",
+    "capital.q.baselines.col.value": "FY2025 $B",
+    "capital.q.baselines.col.count": "笔数",
+    "capital.q.baselines.col.source": "来源",
+    # China-OUT 重定位(partial-Q2,围栏)
+    "capital.q.chinaout_wall": (
+        "⚠️ 以下为 **4-5 月 deal-level 不完整 tally**（非完整季度 aggregate，LOW/部分披露）——"
+        "与上方 Q1'26 公开季度数字**口径不同,勿混读**。保留因对你 China-OUT 主线有信息价值。"
+    ),
+    # 方法论(公开源)
+    "capital.q.method_body": (
+        "**数据源（全部公开已发布，逐项 URL 见下）**：\n\n"
+        "- 生物药 M&A / 许可 / 风投 / IPO：JPMorgan Q1 2026 Biopharma 报告、DealForma、Renaissance、BioPharma Dive\n"
+        "- 数字医疗 VC：Rock Health（美国）、Galen Growth（全球）、CB Insights（全球）\n"
+        "- 器械 M&A：Bain（经 MedTech Dive）— FY2025 不完整年\n\n"
+        "**口径纪律**：M&A 区分 upfront 现金 vs 含 contingent；许可是 announced biobucks（upfront 仅 ~6%）；"
+        "数字医疗美国(Rock)与全球(Galen/CB)分列不相加。**不同口径不可加总。**\n\n"
+        "**时效**：Q2 2026 报告 ~7 月中出,计划届时刷新。"
+    ),
+
+    # ── Pharma MNC M&A（deal-level，MNCs basket xlsx / mnc-deal-scanner）──
+    "mnc_ma.page.asof": "13 家药企 MNC · 历史并购",
+    "mnc_ma.intro": "13 家全球药企 MNC 的历史并购全集——deal-level，可按公司 / 治疗领域 / 年份切。数据来自 MNCs basket（mnc-deal-scanner skill 维护）。",
+    "mnc_ma.source_note": "来源：MNCs basket summary（{source}）。金额含已披露(Actual)与合理估算(Estimated)；deal-level 多源 cross-check。**不含任何卖方评级**。",
+    "mnc_ma.kpi.total": "历史并购总额",
+    "mnc_ma.kpi.total_foot": "{n} 笔 · {ymin}-{ymax} · 13 家药企 MNC",
+    "mnc_ma.kpi.deals": "并购笔数",
+    "mnc_ma.kpi.deals_foot": "已披露 {actual} · 估算 {est}",
+    "mnc_ma.kpi.top": "最活跃买家",
+    "mnc_ma.kpi.top_foot": "{company} · {n} 笔",
+    "mnc_ma.kpi.biggest": "史上最大单",
+    "mnc_ma.kpi.biggest_foot": "{acq} 收 {tgt} · {year}",
+    "mnc_ma.section.league": "各药企并购总额",
+    "mnc_ma.section.league_meta": "谁最爱买（USD bn，累计）",
+    "mnc_ma.section.ta": "按治疗领域",
+    "mnc_ma.section.ta_meta": "并购金额分布（USD bn）",
+    "mnc_ma.section.timeline": "并购历年走势",
+    "mnc_ma.section.timeline_meta": "各年并购总额（USD bn）",
+    "mnc_ma.section.top": "史上最大并购 TOP 20",
+    "mnc_ma.section.table": "并购明细",
+    "mnc_ma.section.table_meta": "可按公司筛选",
+    "mnc_ma.chart.by_company": "各药企历史并购总额",
+    "mnc_ma.chart.by_ta": "并购金额 · 按治疗领域",
+    "mnc_ma.chart.by_year": "历年并购总额",
+    "mnc_ma.col.ticker": "公司",
+    "mnc_ma.col.company": "收购方",
+    "mnc_ma.col.target": "标的",
+    "mnc_ma.col.year": "年月",
+    "mnc_ma.col.size": "金额 $B",
+    "mnc_ma.col.ta": "治疗领域",
+    "mnc_ma.col.basis": "口径",
+    "mnc_ma.filter.company": "筛选公司",
+    "mnc_ma.filter.all": "全部",
+    "mnc_ma.basis.Actual": "已披露",
+    "mnc_ma.basis.Estimated": "估算",
+    "mnc_ma.disclaimer": "本页为药企并购历史数据底稿，非投资建议。金额含估算项（已标注口径）；deal 事实数字，不采纳卖方评级。",
+    # 2026 YTD M&A（置顶）
+    "mnc_ma.section.ytd": "2026 年至今并购",
+    "mnc_ma.section.ytd_meta": "今年真收购（M&A，不含 BD/合作）",
+    "mnc_ma.ytd.count": "2026 M&A 笔数",
+    "mnc_ma.ytd.count_foot": "合计 ${value:.1f}B · 仅真收购",
+    "mnc_ma.ytd.total": "2026 M&A 总额",
+    "mnc_ma.ytd.total_foot": "{n} 笔 · 不含 BD/合作",
+    "mnc_ma.ytd.biggest": "今年最大收购",
+    "mnc_ma.ytd.biggest_foot": "{acq} 收 {tgt}",
+    "mnc_ma.ytd.bd_count": "2026 BD/合作",
+    "mnc_ma.ytd.bd_foot": "如恒瑞-BMS $15.2B · 单列下方,不计入 M&A",
+    "mnc_ma.ytd.bd_note": "⚠️ M&A = 真收购(控制权转移);BD = license/option/合作(无控制权转移)。恒瑞-BMS $15.2B 是 13-program 战略合作,属 **BD 不是 M&A**——见下方「BD/合作」区。",
+    # M&A-only 强调
+    "mnc_ma.ma_only": "（仅真收购 M&A，BD/合作单列）",
+    # BD 区
+    "mnc_ma.section.bd": "BD / 合作",
+    "mnc_ma.section.bd_meta": "授权交易（首付 / 里程碑 / 总对价）· 来自 ED Funding 报告 + 2026",
+    "mnc_ma.col.type": "类型",
+    "mnc_ma.bd.col.licensor": "授权方",
+    "mnc_ma.bd.col.licensee": "被授权方",
+    "mnc_ma.bd.col.asset": "药物/技术",
+    "mnc_ma.bd.col.phase": "阶段",
+    "mnc_ma.bd.col.region": "区域",
+    "mnc_ma.bd.col.date": "时间",
+    "mnc_ma.bd.sources": "2026 BD 来源（点击打开）：",
+    "mnc_ma.section.sources": "数据来源",
+    "mnc_ma.sources_note": "deal 官方公告发布于各药企 IR / newsroom，点击打开核对：",
+    "mnc_ma.col.total": "总额 $B",
+    "mnc_ma.col.upfront": "首付 $B",
+    "mnc_ma.col.milestone": "里程碑 $B",
+    "mnc_ma.ytd.sources": "2026 M&A 来源（点击打开公告）：",
+    "mnc_ma.col.src": "来源",
 }

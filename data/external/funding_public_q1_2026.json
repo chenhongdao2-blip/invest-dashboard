@@ -1,0 +1,91 @@
+{
+  "_meta": {
+    "title": "Healthcare capital markets — public-source interim dataset (Option 2)",
+    "purpose": "Replaces the unavailable PitchBook monthly aggregate. Quarterly, publicly-cited, multi-source triangulated + adversarially verified (workflow wf_a25d77a4, 2026-06-01).",
+    "freshest_complete_quarter": "Q1 2026 (Jan-Mar)",
+    "as_of": "2026-06-01",
+    "q2_2026_lands": "~2026-07-15 (Q2 reports publish 1-3 weeks after quarter-end)",
+    "granularity": "QUARTERLY (+ FY annual baselines). NO monthly source exists in the free set — the old PitchBook monthly cadence cannot be reproduced.",
+    "mandatory_badges": "Every figure carries: measure (upfront-cash | incl-contingents | announced-biobucks | proceeds | raised), geography (US-only | global), source_tier (HIGH primary | MEDIUM secondary).",
+    "no_rating": "Figures only — no sell-side stock rating adopted (research-data.md MEDIUM-tier rule).",
+    "known_gaps": [
+      "Medtech M&A: no quarterly free source — only Bain FY2025 PARTIAL-YEAR (Jan-Nov) ~$80B. Render as single partial-FY annotation, never faked quarterly.",
+      "Monthly granularity: none — all sources quarterly/annual.",
+      "HK/China healthcare IPO: ZERO coverage in US public sources (Renaissance/JPM are US-listed only) — material blind spot for a CMS HK desk. Candidate fill: iFind (connected) for A-share/HK IPO.",
+      "Quarterly digital-health M&A $ aggregate: not citable (CB Insights gives count only).",
+      "Full Q1'25->Q1'26 quarterly run: only YoY endpoints in hand; Q2-Q4 2025 need per-publisher archive backfill."
+    ]
+  },
+  "segments": {
+    "biopharma_ma": {
+      "period": "Q1 2026",
+      "geography": "global",
+      "figures": [
+        {"measure": "upfront-cash", "value_usd_bn": 40.9, "deal_count": 32, "tier": "HIGH", "source": "J.P. Morgan Q1 2026 Biopharma Licensing & Venture Report (PDF p.16, data as-of 2026-03-31)", "url": "https://www.jpmorgan.com/content/dam/jpmorgan/documents/cb/insights/outlook/jpm-biopharma-deck-q1-2026.pdf", "note": "upfront cash+equity excl. contingents; median upfront $1.4B"},
+        {"measure": "upfront-cash", "value_usd_bn": 40.8, "deal_count": 25, "tier": "HIGH", "source": "DealForma Biopharma Therapeutics & Platforms M&A Q1 2026 Review (pub 2026-05-18)", "url": "https://dealforma.com/biopharma-therapeutics-and-platforms-ma-q1-2026-review/", "note": "cash-only measure; avg upfront $2.6B, median deal $1.8B"},
+        {"measure": "incl-contingents", "value_usd_bn": 49.7, "deal_count": 25, "tier": "HIGH", "source": "DealForma Q1 2026 Review (pub 2026-05-18)", "url": "https://dealforma.com/biopharma-therapeutics-and-platforms-ma-q1-2026-review/", "note": "includes CVRs/contingents — the ~20% gap over the cash measure on identical deals"}
+      ],
+      "anchor": "~$41B committed upfront across 25-32 deals (JPM $40.9B & DealForma $40.8B converge to $0.1B — strongest cross-validated number in the dataset). 2-year low volume.",
+      "yoy_or_prior": "Q4 2025 comparator: DealForma $46.8B/33 incl-contingents -> Q1 2026 fewer/larger deals."
+    },
+    "biopharma_licensing": {
+      "period": "Q1 2026",
+      "geography": "global",
+      "figures": [
+        {"measure": "announced-biobucks", "value_usd_bn": 82.7, "deal_count": null, "tier": "HIGH", "source": "J.P. Morgan Q1 2026 (PDF p.9)", "url": "https://www.jpmorgan.com/content/dam/jpmorgan/documents/cb/insights/outlook/jpm-biopharma-deck-q1-2026.pdf", "note": "single-quarter license value, 2nd only to 2025 high; upfront only ~6% of total -> milestone-heavy"},
+        {"measure": "announced-biobucks", "value_usd_bn": 79.4, "deal_count": 112, "tier": "HIGH", "source": "DealForma licensing Q1 2026 (pub 2026-05-11)", "url": "https://dealforma.com/biopharma-therapeutics-and-platforms-ma-q1-2026-review/", "note": "incl-biobucks $79.4B; upfront only $4.9B across 112 deals"}
+      ],
+      "anchor": "~$80-83B announced biobucks; only ~$5B upfront (upfront ~6%). MUST label 'announced biobucks' — non-additive with M&A cash."
+    },
+    "biopharma_venture": {
+      "period": "Q1 2026",
+      "geography": "global (~70% US flows)",
+      "figures": [
+        {"measure": "raised", "value_usd_bn": 6.9, "deal_count": 101, "tier": "HIGH", "source": "J.P. Morgan Q1 2026 (PDF p.2-3)", "url": "https://www.jpmorgan.com/content/dam/jpmorgan/documents/cb/insights/outlook/jpm-biopharma-deck-q1-2026.pdf", "note": "seed+Series A $2.3B/50, Series B+ $4.5B/51"}
+      ],
+      "yoy": {"prior_period": "Q1 2025", "value_usd_bn": 8.6, "yoy_pct": -20.0, "note": "VC selectivity strengthening; licensing substituting for VC as capital source"}
+    },
+    "digital_health_vc_us": {
+      "period": "Q1 2026",
+      "geography": "US-only (nested subset of global)",
+      "figures": [
+        {"measure": "raised", "value_usd_bn": 4.0, "deal_count": 110, "tier": "HIGH", "source": "Rock Health Q1 2026 Funding Overview (pub 2026-04-06)", "url": "https://rockhealth.com/insights/q1-2026-funding-overview-capital-continues-concentrating-and-four-other-market-signals/", "note": "avg deal $36.7M; 12 megadeals = 59% of capital"}
+      ],
+      "yoy": {"prior_period": "Q1 2025", "value_usd_bn": 3.0, "yoy_pct": 33.0, "deal_count": 122}
+    },
+    "digital_health_vc_global": {
+      "period": "Q1 2026",
+      "geography": "global",
+      "figures": [
+        {"measure": "raised", "value_usd_bn": 7.1, "deal_count": 216, "tier": "HIGH", "source": "Galen Growth Digital Health Q1 2026 (pub 2026-04-08)", "url": "https://www.galengrowth.com/digital-health-q1-2026-trends/", "note": "avg deal $38.4M (+87% YoY); N.America $5.37B = 76%"},
+        {"measure": "raised", "value_usd_bn": 7.4, "deal_count": null, "tier": "HIGH", "source": "CB Insights State of Digital Health Q1'26 (pub 2026-04-16)", "url": "https://www.cbinsights.com/research/report/digital-health-trends-q1-2026/", "note": "19 mega-rounds = 60% of capital; avg $29.6M"}
+      ],
+      "anchor": "~$7.2B (Galen + CB Insights converge within 4%). Rock Health US $4.0B is the US slice — do NOT add.",
+      "yoy": {"prior_period": "Q1 2025", "value_usd_bn": 7.6, "yoy_pct": -6.6, "deal_count": 420, "note": "value -6.6% YoY, count -48.6% YoY -> capital concentrating into fewer larger rounds"}
+    },
+    "us_biotech_ipo": {
+      "period": "Q1 2026",
+      "geography": "US-listed only (NO HK/China coverage)",
+      "figures": [
+        {"measure": "proceeds", "value_usd_bn": 1.8, "deal_count": 6, "tier": "HIGH", "source": "J.P. Morgan Q1 2026 (PDF p.18)", "url": "https://www.jpmorgan.com/content/dam/jpmorgan/documents/cb/insights/outlook/jpm-biopharma-deck-q1-2026.pdf", "note": "6 biopharma IPOs $1.8B, already > full-year-2025 $1.6B"},
+        {"measure": "proceeds", "value_usd_bn": 1.7, "deal_count": 6, "tier": "MEDIUM", "source": "BioPharma Dive citing Renaissance Capital (pub 2026-03-31)", "url": "https://www.biopharmadive.com/news/biotech-ipo-performance-q1-2026/815879/", "note": "median $287.5M; highest biotech quarterly total since 2021"}
+      ],
+      "anchor": "$1.7-1.8B / 6 US biotech IPOs (JPM & Renaissance converge)."
+    },
+    "medtech_ma": {
+      "period": "FY2025 PARTIAL (Jan-Nov 30, 2025)",
+      "geography": "global",
+      "figures": [
+        {"measure": "disclosed-value", "value_usd_bn": 80, "deal_count": null, "tier": "MEDIUM", "source": "Bain & Company medtech M&A report via MedTech Dive (pub 2026-01-28)", "url": "https://www.medtechdive.com/news/medtech-ma-took-off-in-the-second-half-of-2025-report/810731/", "note": "PARTIAL-YEAR (11mo); surpassed prior 3 years combined; H2 nearly 2x H1. NO quarterly run exists in free set. Render as single annotation, never faked quarterly."}
+      ],
+      "context": "Biotechgate: medtech = 31% of all-industry M&A in Q1 2026 (highest in 8 quarters, a SHARE not $). Largest pending: BSX-Penumbra $14.5B; Abbott-Exact Sciences $23B (Q1'26)."
+    }
+  },
+  "fy2025_baselines": [
+    {"metric": "biopharma licensing", "value_usd_bn": 269.6, "tier": "HIGH", "source": "JPMorgan Q1 2026 PDF", "url": "https://www.jpmorgan.com/content/dam/jpmorgan/documents/cb/insights/outlook/jpm-biopharma-deck-q1-2026.pdf"},
+    {"metric": "US healthcare IPO", "value_usd_bn": 10.7, "deal_count": 34, "tier": "HIGH", "source": "Renaissance Capital US IPO 2025 Annual Review (pub 2025-12-18)", "url": "https://www.renaissancecapital.com/review/2025USReview_Press.pdf", "note": "Medline $6.265B led; sector avg +52%; NOT biotech-dominated"},
+    {"metric": "digital health VC (US)", "value_usd_bn": 14.2, "deal_count": 482, "tier": "HIGH", "source": "Rock Health FY2025", "url": "https://rockhealth.com/insights/q1-2026-funding-overview-capital-continues-concentrating-and-four-other-market-signals/"},
+    {"metric": "digital health VC (global)", "value_usd_bn": 28.8, "deal_count": 1335, "tier": "HIGH", "source": "Galen Growth FY2025", "url": "https://www.galengrowth.com/digital-health-q1-2026-trends/"},
+    {"metric": "all-healthcare VC", "value_usd_bn": 46.8, "deal_count": null, "tier": "HIGH", "source": "SVB 17th Healthcare Investments & Exits FY2025 (pub 2026-01-08)", "url": "https://www.svb.com/", "note": "-12% YoY; biopharma segment -19%; AI = 46% of total; medtech venture record $10.4B. Segment absolute $ are gated (only % public)."}
+  ]
+}

@@ -43,6 +43,7 @@ BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
                      "IGV",             # iShares Tech-Software — US health-tech / SaaS RS benchmark
                      "XHS",             # SPDR Health Care Services — US hospital_care RS benchmark
                      "512170.SS",       # 中证医疗 ETF (CNY) — A-share healthcare RS benchmark
+                     "000001.SS",  # 上证综指 — daily-report A-share gauge (沪深300/ChiNext dropped per George)
                      "XLK", "XLF", "XLE", "XLB", "XLI", "XLY", "XLP", "XLC", "XLU", "XLRE",
                      # AI / semiconductor supply-chain benchmarks (cross-market; LLM Wiki)
                      "^SOX", "SMH", "AIQ", "2644.T", "091160.KS", "442580.KS",

@@ -655,6 +655,26 @@ pre code {{
   font-weight: 500;
   font-family: {FONT_MONO};
 }}
+/* IPO-backtest KPI sub-line: INK (not muted grey) + readable CJK — the sub-text
+   here is real data (已上市/中位/收涨数), not a muted timestamp. Scoped by the
+   `.ink` modifier so cover-page / drill foot timestamps stay muted. (Inline
+   style attrs get stripped by Streamlit's HTML sanitiser, so this must be a
+   class rule, not inline.) */
+.cmsi-kpi-foot.ink {{
+  color: {INK} !important;
+  text-transform: none;
+  font-family: {FONT_STACK};
+  font-size: 12px;
+  letter-spacing: 0;
+  font-weight: 600;
+}}
+/* IPO-KPI accent palette (strip was too monochrome): eyebrow labels in CMSI
+   brand red (= house header-text colour), values semantic — teal for positive
+   return / win-rate, deep-teal for the hero stat, ink for the neutral count.
+   Modifier classes (inline styles get stripped by Streamlit's sanitiser). */
+.cmsi-kpi-label.ipo {{ color: {CMSI_RED} !important; }}
+.cmsi-kpi-num.up {{ color: {UP} !important; }}
+.cmsi-kpi-num.up-deep {{ color: {UP_DEEP} !important; }}
 
 /* Page hero header — [NN/07] code + title + 4px red bar */
 .cmsi-page-hero {{
@@ -892,8 +912,12 @@ def kpi_strip(cards: list[str]) -> None:
     """Render multiple KPI cards in a grid strip (1 row, N cols)."""
     n = len(cards) or 1
     body = "".join(cards)
+    # auto-fit + minmax so a wide ribbon (e.g. the 6-index Market Overview) wraps to a
+    # second row on narrow screens instead of clipping the 38px figures; ≤4-card strips
+    # still render as a single row wherever they fit (no regression to other pages).
+    cols = f"repeat({n},1fr)" if n <= 4 else "repeat(auto-fit,minmax(190px,1fr))"
     st.markdown(
-        f'<div class="cmsi-kpi-strip" style="grid-template-columns:repeat({n},1fr);">'
+        f'<div class="cmsi-kpi-strip" style="grid-template-columns:{cols};">'
         f'{body}</div>',
         unsafe_allow_html=True,
     )

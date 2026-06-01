@@ -72,7 +72,7 @@ _SECTOR_EN = {
     "ai_foundry": "Foundry & OSAT", "ai_interconnect": "Interconnect", "ai_server": "Server/Power",
 }
 _DOMAIN_CN = {"healthcare": "医疗", "ai": "AI"}
-_DOMAIN_EN = {"healthcare": "HEALTHCARE", "ai": "AI · 人工智能"}
+_DOMAIN_EN = {"healthcare": "HEALTHCARE", "ai": "AI"}
 
 
 # ── data layer ────────────────────────────────────────────────────────────
@@ -325,24 +325,24 @@ def _bento_css() -> str:
     """
 
 
-def _render_block(b: dict) -> str:
+def _render_block(b: dict, cn: bool) -> str:
     badge_color = _diverging_color(b["median"], cap=CAP)
     arr = "▲" if b["median"] >= 0 else "▼"
     arr_color = theme.UP_DEEP if b["median"] >= 0 else theme.DOWN_DEEP
     more = ""
     if b["n_shown"] < b["n_members"]:
         more = f" · {b['n_members'] - b['n_shown']}+"
+    seat = "席" if cn else ""
     badge = (
         f'<span class="badge" style="background:{badge_color}">'
         f'<span class="arr" style="color:{arr_color}">{arr}</span>'
         f'<span class="b-pct" style="color:{_text_on(b["median"])}">{_fmt_pct(b["median"])}</span>'
-        f'<span class="b-ctx">#{b["rank"]} · {b["n_shown"]}/{b["n_members"]}席{more}</span>'
+        f'<span class="b-ctx">#{b["rank"]} · {b["n_shown"]}/{b["n_members"]}{seat}{more}</span>'
         f'</span>'
     )
     head = (
         f'<div class="block-head">'
-        f'<span class="bh-cn">{_esc(b["cn"])}</span>'
-        f'<span class="bh-en">{_esc(b["en"])}</span>'
+        f'<span class="bh-cn">{_esc(b["cn"] if cn else b["en"])}</span>'
         f'{badge}</div>'
     )
     tiles = []
@@ -366,16 +366,17 @@ def _render_block(b: dict) -> str:
     return f'<div class="block">{head}{lane}</div>'
 
 
-def _render_domain(d: dict) -> str:
+def _render_domain(d: dict, cn: bool) -> str:
     agg = _fmt_pct(d["median"]) if d["median"] is not None else "—"
-    ill = '<span class="ill">示意 illustrative</span>' if d.get("illustrative") else ""
+    ill_txt = "示意" if cn else "illustrative"
+    ill = f'<span class="ill">{ill_txt}</span>' if d.get("illustrative") else ""
+    med_lbl = "中位" if cn else "Median"
     head = (
         f'<div class="domain-head">'
-        f'<span class="dh-title">{_esc(d["cn"])}</span>'
-        f'<span class="dh-en">{_esc(d["en"])}</span>'
-        f'<span class="dh-agg">中位 {agg}{ill}</span></div>'
+        f'<span class="dh-title">{_esc(d["cn"] if cn else d["en"])}</span>'
+        f'<span class="dh-agg">{med_lbl} {agg}{ill}</span></div>'
     )
-    blocks = "".join(_render_block(b) for b in d["sectors"])
+    blocks = "".join(_render_block(b, cn) for b in d["sectors"])
     return f'<div class="domain">{head}{blocks}</div>'
 
 
@@ -396,15 +397,15 @@ def render_bento_html(domains: list[dict], *, prefer_cn: bool, window_label: str
     """Build the self-contained HTML doc + an iframe height. `domains` is a list of
     build_domain_bento() payloads (already filtered to non-None)."""
     t = theme
-    title_cn, title_en = "个股热力图", "Single-Stock Heatmap"
+    title = "个股热力图" if prefer_cn else "Single-Stock Heatmap"
     sub = ("子行业按中位涨跌排序分配席位 · 最热的书席位最多"
            if prefer_cn else
            "Slots by sub-sector median-return rank — hottest books get the most tiles")
     legend = (
         f'<div class="legend"><div class="lg-title">'
         f'{"颜色 = 涨跌方向与幅度" if prefer_cn else "Color = direction &amp; magnitude"}</div>'
-        f'<div class="lg-bar-wrap"><span class="lg-end" style="color:{t.DOWN_DEEP}">跌</span>'
-        f'<div class="lg-bar"></div><span class="lg-end" style="color:{t.UP_DEEP}">涨</span></div>'
+        f'<div class="lg-bar-wrap"><span class="lg-end" style="color:{t.DOWN_DEEP}">{"跌" if prefer_cn else "Down"}</span>'
+        f'<div class="lg-bar"></div><span class="lg-end" style="color:{t.UP_DEEP}">{"涨" if prefer_cn else "Up"}</span></div>'
         f'<div class="lg-ticks"><span>-12%</span><span>0</span><span>+12%</span></div></div>'
     )
     # George's /cccg decision: keep teal-up/red-down, add a loud convention banner.
@@ -418,7 +419,7 @@ def render_bento_html(domains: list[dict], *, prefer_cn: bool, window_label: str
         f'<span class="up">teal = up</span> · <span class="dn">red = down</span>'
         f'<span class="sz">tile size = rank slot, not move size</span></div>'
     )
-    boards = "".join(_render_domain(d) for d in domains)
+    boards = "".join(_render_domain(d, prefer_cn) for d in domains)
     foot = (
         f'<div class="footnote"><b>方法.</b> 子行业按窗口内成员收益<b>中位数</b>排序（抗异常值）→ '
         f'席位 <code>[15,12,10,8,7,6,5…]</code> 按名次分配，<code>slots=min(席位,有效成员)</code> → '
@@ -431,7 +432,7 @@ def render_bento_html(domains: list[dict], *, prefer_cn: bool, window_label: str
     )
     body = (
         f'<header class="masthead"><div class="mast-left">'
-        f'<h1>{title_cn}<span class="en">{title_en}</span><span class="cmsi-tag">CMSI</span></h1>'
+        f'<h1>{title}<span class="cmsi-tag">CMSI</span></h1>'
         f'<div class="sub">{sub} · {window_label}</div></div>{legend}</header>'
         f'{conv}{boards}{foot}'
     )

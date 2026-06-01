@@ -118,12 +118,12 @@ if not bench_df.empty:
     if not sub.empty:
         sub = sub.rename(columns={
             "name": "Name", "last": "Last",
-            "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %",
+            "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "3m_%": "3M %", "ytd_%": "YTD %",
         })
         sub["Name"] = [i18n.bench_name(s, n) for s, n in zip(sub.index, sub["Name"])]
         _render_pct_table(
             sub,
-            pct_cols=["1D %", "5D %", "1M %", "YTD %"],
+            pct_cols=["1D %", "5D %", "1M %", "3M %", "YTD %"],
             num_cols=["Last"],
             column_labels=i18n.common_cols(),
         )

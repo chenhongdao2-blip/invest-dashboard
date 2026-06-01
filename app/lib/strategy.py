@@ -28,6 +28,8 @@ DATA_EXT = REPO_ROOT / "data" / "external"
 V4_CSV = DATA_EXT / "v4_picks.csv"
 V5_CSV = DATA_EXT / "v5_picks.csv"
 HD_CSV = DATA_EXT / "hd_picks.csv"
+IPO_CSV = DATA_EXT / "ipo_picks.csv"
+IPO_INTRADAY_CSV = DATA_EXT / "ipo_day1_intraday.csv"
 
 
 @st.cache_data(ttl=900)
@@ -50,6 +52,36 @@ def load_hd() -> pd.DataFrame:
     if not HD_CSV.exists():
         return pd.DataFrame()
     return pd.read_csv(HD_CSV)
+
+
+@st.cache_data(ttl=900)
+def load_ipo() -> pd.DataFrame:
+    """HK IPO 打新 backtest — STATIC cross-section snapshot (18 rows).
+
+    NOT a time-series strategy: this reads the frozen ipo_picks.csv only and is
+    NEVER routed through compute_strategy_returns / yfinance. `code` kept as str
+    so leading-zero HK codes (e.g. 0901) don't get coerced to int. `day1_ret` is
+    a DECIMAL (3.84 = +384%); ×100 happens at the render layer.
+    """
+    if not IPO_CSV.exists():
+        return pd.DataFrame()
+    return pd.read_csv(IPO_CSV, dtype={"code": str})
+
+
+@st.cache_data(ttl=900)
+def load_ipo_intraday() -> pd.DataFrame:
+    """Listing-day 5-min intraday closes for the IPO backtest (17 listed names).
+
+    Columns: code(str) / time(datetime) / close(float). `time` parsed once here;
+    used for the post-open intraday-path small-multiples. Missing file → empty DF
+    so the page degrades gracefully instead of crashing.
+    """
+    if not IPO_INTRADAY_CSV.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(IPO_INTRADAY_CSV, dtype={"code": str})
+    if "time" in df.columns:
+        df["time"] = pd.to_datetime(df["time"], errors="coerce")
+    return df
 
 
 STRATEGIES = {

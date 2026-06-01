@@ -37,6 +37,8 @@ _META: dict[str, dict] = {
     "^HSI":         {"name": "Hang Seng Index"},
     "^GSPC":        {"name": "S&P 500"},
     "^NDX":         {"name": "Nasdaq 100"},
+    # ---- A-share broad (native CNY) — daily-report Greater China gauge ------
+    "000001.SS":    {"name": "SSE Composite"},     # 上证综指 — Shanghai headline index
     # ---- S&P 500 GICS sector ETFs (10 non-healthcare) ---------------------
     "XLK":          {"name": "Information Technology"},
     "XLF":          {"name": "Financials"},
@@ -71,7 +73,8 @@ BENCHMARKS: dict[str, str] = {k: v["name"] for k, v in _META.items()}
 # ("ai", [...]) is reserved as a future placeholder (commented out).
 # ---------------------------------------------------------------------------
 PANELS = [
-    ("broad_market",  ["^GSPC", "^NDX", "^HSI"]),
+    # Daily-report market ribbon: US (S&P/Nasdaq) → HK (HSI) → A-share (上证综指).
+    ("broad_market",  ["^GSPC", "^NDX", "^HSI", "000001.SS"]),
     ("sp500_sector",  ["XLK", "XLC", "XLY", "XLF", "XLV", "XLI", "XLP", "XLE", "XLU", "XLB", "XLRE", "^GSPC"]),
     ("healthcare",    ["XLV", "XBI", "XPH", "^SP500-352020", "IHI", "IHF", "XHS", "IGV", "IXJ", "HSHCI.HK", "512170.SS"]),
     # AI / semiconductor supply-chain — cross-market headline set (ai-researcher reviewed:

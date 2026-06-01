@@ -189,6 +189,8 @@ def _cmsi_table_css() -> str:
     .up {{ color: {t.UP}; font-weight: 600; }}
     .down {{ color: {t.DOWN}; font-weight: 600; }}
     .flat {{ color: {t.INK_3}; }}
+    a.srclink {{ color: {t.CMSI_RED}; text-decoration: none; font-weight: 700; font-size: 14px; }}
+    a.srclink:hover {{ text-decoration: underline; }}
     .nm-muted {{ color: {t.INK_3}; }}
     .gly {{ display: inline-block; width: 8px; text-align: center; margin-right: 1px;
             font-size: 8px; vertical-align: 1px; }}
@@ -252,6 +254,7 @@ def render_html_table(
     price_cols: list[str] | None = None,
     text_cols: list[str] | None = None,
     right_text_cols: list[str] | None = None,
+    link_cols: list[str] | None = None,
     extra_formats: dict[str, str] | None = None,
     column_help: dict[str, str] | None = None,
     column_labels: dict[str, str] | None = None,
@@ -293,6 +296,7 @@ def render_html_table(
     price_cols = set(price_cols or [])
     text_cols = set(text_cols or [])
     right_text_cols = set(right_text_cols or [])
+    link_cols = set(link_cols or [])
     extra_formats = extra_formats or {}
     column_help = COLUMN_HELP if column_help is None else column_help
     column_labels = column_labels or {}
@@ -326,6 +330,13 @@ def render_html_table(
         # extra_formats wins over kind lists — matches the old column_config
         # precedence (e.g. Valuation 'Sector P/E %ile' is in BOTH mult_cols and
         # extra_formats, and the printf format must win).
+        if col in link_cols:
+            # value is a URL → clickable ↗ opening in a new tab (works inside the iframe)
+            s = "" if _na(v) else str(v)
+            if s.startswith("http"):
+                return (f'<a class="srclink" href="{_html.escape(s)}" target="_blank" '
+                        f'rel="noopener">↗</a>', "1", "", "s", "")
+            return '<span class="flat">—</span>', "", "", "s", ""
         if col in right_text_cols:
             # value already formatted by caller (unit-aware) — right-align + ink-strong
             s = '<span class="flat">—</span>' if _na(v) else _html.escape(str(v))

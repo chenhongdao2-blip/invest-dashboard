@@ -92,16 +92,126 @@ STRINGS = {
     # ── onboarding ──
     "strategy.onboarding.name": "Strategy page",
     "strategy.onboarding.body": (
-        "**Cumulative return chart**\n"
-        "- **Buy & hold (solid)**: equal weight at the pick date, then held — the curve "
-        "that already shipped to clients.\n"
-        "- **Monthly rebalance (dashed, optional)**: equal weight reset every month — the "
-        "reproducible-strategy view.\n"
-        "- **Benchmark (grey dashed)**: XBI or 3110.HK.\n"
-        "- **10th–90th %ile band**: spread of the 80% middle of holdings; a wide band "
-        "means big single-name dispersion.\n\n"
-        "**Metrics** — **Alpha (pp)** = portfolio return minus benchmark, in percentage "
-        "points. **Pick score** = the model's score at selection, where available."
+        "This dashboard tracks opportunities along two strategy lines:\n"
+        "- **(1) Catalyst-driven** — clinical readouts, FDA / NMPA approval milestones, "
+        "earnings and governance events around biotech names, capturing the re-rating around "
+        "the event; the first three tabs show real since-inception returns vs benchmark.\n"
+        "- **(2) Multi-factor IPO subscription** — a six-factor model (free-float scarcity, "
+        "cornerstone roster, sector momentum, subscription multiple, valuation, fundamentals) "
+        "that scores and tiers HK new listings to quantify day-1 subscription odds; the last "
+        "tab is a static cross-section backtest.\n\n"
+        "Both lines share one data discipline: every figure carries a source and timestamp, "
+        "sell-side consensus is kept separate from our own view, and conclusions are "
+        "actionable. More industry domains will be added over time."
+    ),
+
+    # ── IPO subscription strategy (static cross-section backtest) ──
+    "strategy.name.ipo": "HK IPO Subscription",
+    "strategy.ipo.tab.intro": (
+        "**HK IPO Subscription Backtest** — scores and tiers recent HK new listings via the "
+        "CMSI Prism six-factor model and revisits how score relates to day-1 performance. "
+        "The sample covers recent HK new listings; the median day-1 return and "
+        "direction hit-rate for listed names are shown in the KPI cards below (they update "
+        "with the sample). Key read: **the score is good at direction (subscribe or not), not "
+        "at magnitude (how much it pops)** — score vs day-1 return is only weakly correlated "
+        "(see the Spearman ρ at the top-right of the scatter). The scatter below maps score × "
+        "day-1; the mini-charts show each name's intraday path; the dual leaderboard sorts by "
+        "score or by day-1 return."
+    ),
+    # KPI
+    "strategy.ipo.kpi.sample": "Sample",
+    "strategy.ipo.kpi.sample_delta": "{listed} listed / {pending} pending",
+    "strategy.ipo.kpi.max": "Top day-1",
+    "strategy.ipo.kpi.max_delta": "{name}",
+    "strategy.ipo.kpi.med": "Median day-1 (listed)",
+    "strategy.ipo.kpi.med_delta": "range {lo:+.0f}% ~ {hi:+.0f}%",
+    "strategy.ipo.kpi.hitrate": "Day-1 win rate",
+    "strategy.ipo.kpi.hitrate_delta": "{up}/{n} closed up day-1",
+    "strategy.ipo.kpi.note": (
+        "Subscribe-tier & above (score ≥6.0) closed up **{rec_up}/{rec_n}**; full sample {up}/{n} "
+        "(incl. Cautious/Avoid). Day-1 is lifted by right-tail outliers (Lightelligence +384%, "
+        "DeepZero +266%, SUNMI +241%) — **median {median:+.1f}% better reflects the typical "
+        "outcome**. Internal research backtest; not a subscription recommendation."
+    ),
+    # scatter
+    "strategy.ipo.scatter.title": "Score × Day-1 Return (n={n} listed)",
+    "strategy.ipo.scatter.x": "Six-factor score",
+    "strategy.ipo.scatter.y": "Day-1 return %",
+    "strategy.ipo.scatter.trend": "OLS trend",
+    "strategy.ipo.scatter.rho": "Spearman ρ = {rho:.2f} (p={p}, not significant)",
+    "strategy.ipo.scatter.hover": "{name} ({code}) · score {score:.1f} · day-1 {ret:+.0f}% · {tier}",
+    "strategy.ipo.scatter.caption": (
+        "This is an ADMISSION FILTER, not a MAGNITUDE predictor — a high score locks in the "
+        "*win-rate* (avoiding breaks), not the *payoff*: score is only weakly, non-significantly "
+        "related to day-1 magnitude (Spearman ρ = 0.13, p = 0.62). Dots are coloured by "
+        "subscription tier; a **red ring marks day-1 breakers** (e.g. UISEE, a Subscribe-tier "
+        "name, still closed −4.6%). The trend line is a mean-level reference only (dashed; wide CI)."
+    ),
+    # intraday small-multiples
+    "strategy.ipo.intraday.title": "Listing-day intraday path (% vs offer; ends at the day-1 close)",
+    "strategy.ipo.intraday.caption": (
+        "Y-axis is **% vs the offer price**, so each line **ends exactly at the day-1 close "
+        "return shown in its mini-title**; the dashed line = offer price (0% breakeven). Most "
+        "day-1 gains are locked in at the opening auction, so high-open names trade nearly flat "
+        "intraday (e.g. Lightelligence is ~+384% by 09:35 and stays there), while names like "
+        "Top NC keep climbing post-open. Line color keys off the day-1 close sign (teal up / red down)."
+    ),
+    "strategy.ipo.intraday.mini_title": "{name} {ret:+.0f}%",
+    "strategy.ipo.intraday.hover": "{time} · {path:+.1f}% vs offer",
+    # dual leaderboard
+    "strategy.ipo.rank.toggle": "Sort by",
+    "strategy.ipo.rank.by_score": "By score",
+    "strategy.ipo.rank.by_ret": "By day-1 return",
+    "strategy.ipo.rank.pending": "Pending ({date})",
+    # rank table columns
+    "strategy.ipo.col.rank": "Rank",
+    "strategy.ipo.col.code": "Code",
+    "strategy.ipo.col.name": "Name",
+    "strategy.ipo.col.score": "Score",
+    "strategy.ipo.col.tier": "Subscription Tier",
+    "strategy.ipo.col.sub_sector": "Sub-sector",
+    "strategy.ipo.col.day1_ret": "Day-1 Return",
+    "strategy.ipo.col.source": "Source",
+    # methodology
+    "strategy.ipo.method_expander": "How this strategy works · Six-factor scoring",
+    "strategy.ipo.method": (
+        "**HK IPO Six-Factor Scoring Framework (CMSI Prism Subscription Card)**\n\n"
+        "Each new listing is weighted-scored across six dimensions (max 10) and mapped to a "
+        "four-tier subscription call. **This is distinct from the biotech-catalyst framework's "
+        "clinical / FDA / earnings / governance dimensions** — IPO scoring assesses listing-day "
+        "pricing dynamics and supply-demand, not long-run fundamentals.\n\n"
+        "| # | Factor | What it measures |\n"
+        "|---|---|---|\n"
+        "| ① | Free-float scarcity | Free-float mkt cap / public float; tighter float → sharper day-1 chip contest |\n"
+        "| ② | Cornerstone / institutional backing | Quality & subscription share of cornerstones; marquee long-only / strategic capital |\n"
+        "| ③ | Sector scarcity / momentum | Whether it's a scarce theme (e.g. photonic-AI, AI-drug discovery) and sector sentiment |\n"
+        "| ④ | Public-offer subscription multiple | Retail oversubscription multiple — proxy for heat and post-clawback supply-demand |\n"
+        "| ⑤ | Valuation reasonableness | Offer-price premium / discount vs comps and last private round |\n"
+        "| ⑥ | Fundamentals & financial quality | Revenue growth, margins, cash and path-to-profit underlying quality |\n\n"
+        "**Four tiers:**\n"
+        "- Score ≥ 7.5 → **Strong Buy+**\n"
+        "- 6.0 – 7.4 → **Subscribe**\n"
+        "- 5.0 – 5.9 → **Cautious**\n"
+        "- < 5.0 → **Avoid**\n\n"
+        "**Backtest read (n=17 listed):** names scoring ≥ 6.0 (Subscribe and above) closed up "
+        "on day 1 in **90.9% of cases (10/11)**; the full sample closed up 88.2% of the time. "
+        "Caveat: score shows only weak association with the *magnitude* of day-1 return "
+        "(Spearman ρ=0.13, not significant) — **the score is a filter for \"whether to "
+        "subscribe,\" not a predictor of \"how much it pops.\"** Day-1 magnitude is driven more "
+        "by scarcity, subscription heat and opening-auction dynamics."
+    ),
+    "strategy.ipo.caveat": (
+        "Day-1 figures are a snapshot frozen on the listing date and do not update with later "
+        "trading; this page is a strategy backtest, not a live-monitoring tool. Intraday "
+        "mini-charts are plotted as % vs the offer price, so each line ends exactly at its "
+        "labelled day-1 close return. With only 17 listed names, conclusions are sensitive to "
+        "small-sample and right-tail outliers and do not constitute investment advice."
+    ),
+    "strategy.ipo.source": (
+        "Source: CMSI Prism backtest card / Futu day-1 close / iFind pricing. Day-1 figures are a "
+        "frozen snapshot and do not update with subsequent trading. With ~18 names the tier "
+        "win-rates need more samples to confirm; past performance does not indicate future "
+        "results — internal quant research only, not investment or subscription advice."
     ),
 
     # ── strategy methodology (sourced) ──

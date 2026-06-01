@@ -86,6 +86,11 @@ sec_facts = st.Page(
     title="SEC Company Facts 财报数据",
     url_path="SEC_Facts",
 )
+hc_capital = st.Page(
+    "pages/9_HC_Capital_Markets.py",
+    title="Capital Markets 投融资",
+    url_path="HC_Capital_Markets",
+)
 
 # --- AI children ---
 ai_coverage = st.Page(
@@ -123,6 +128,7 @@ pg = st.navigation(
             sector_heatmap,
             valuation_scanner,
             sec_facts,
+            hc_capital,
         ],
         "AI 人工智能": [
             ai_coverage,

@@ -208,7 +208,11 @@ def _render_benchmark_table(panel_id: str, syms: list[str]) -> None:
         ref_rows=({"^GSPC"} if panel_id == "sp500_sector" else None),
         height=(520 if panel_id == "sp500_sector" else 360),
     )
-    st.caption(f"来源 Yahoo Finance cron EOD · 截至 {latest} · 仅供参考")
+    st.caption(
+        f"来源 Yahoo Finance cron EOD · 截至 {latest} · 仅供参考"
+        if i18n.get_lang() == "zh"
+        else f"Source: Yahoo Finance cron EOD · as of {latest} · reference only"
+    )
 
 
 # --- 1. Market Overview — KPI cards (^GSPC / ^NDX / ^HSI) ---

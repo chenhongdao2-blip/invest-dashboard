@@ -42,7 +42,7 @@ STRINGS = {
     "home.sub.benchmarks": "Benchmarks",
 
     # ── Home ──
-    "home.title": "Market Hub 行情中枢",
+    "home.title": "Market Hub",
     "home.metric.latest_snapshot": "Latest snapshot",
     "home.metric.last_fetch": "Last fetch (UTC)",
     "home.metric.universe": "Universe tickers",
@@ -432,4 +432,235 @@ STRINGS = {
     "ai.sec.title": "AI · SEC Company Facts",
     "ai.sec.caption": "SEC XBRL filings (us-gaap / ifrs-full) for US-listed AI names. Source: data.sec.gov.",
     "ai.section.benchmark": "Domain Benchmark (^SOX) & Peers",
+
+    # ── Healthcare · Capital Markets (P0a aggregate tracker) ──
+    "capital.page.title": "Capital Markets",
+    "capital.page.caption": "Global healthcare capital markets — monthly BD/licensing, M&A and VC/IPO flow tracker (pharma / medtech / digital health).",
+    "capital.page.asof": "Data as of {date} (trailing-12M window)",
+    "capital.cadence_note": (
+        "Scope: the aggregate flow data is a **monthly** curated export (MEDIUM reliability), every figure tagged with source + as-of month; "
+        "MNC balance sheets are SEC XBRL (HIGH). This page carries deal facts only — **no sell-side ratings**."
+    ),
+    # KPI strip
+    "capital.kpi.ttm": "Trailing-12M Total Funding",
+    "capital.kpi.ttm_foot": "Window {first} → {last}",
+    "capital.kpi.latest": "Latest-Month Funding",
+    "capital.kpi.latest_foot": "{month} · MoM {mom}",
+    "capital.kpi.deals": "Latest-Month Deal Count",
+    "capital.kpi.deals_foot": "{month} · {ttm:,} over full window",
+    "capital.kpi.chinaout": "China-OUT Top Deal",
+    "capital.kpi.chinaout_foot": "Headline $15.2B → real cash $950M (B3 · Hengrui-BMS)",
+    # Trend section
+    "capital.section.trend": "Capital Flow Trend",
+    "capital.section.trend_meta": "Bars = capital · Line = deal count",
+    "capital.segments.pick": "Select series",
+    "capital.chart.capital": "Capital Invested",
+    "capital.chart.deals": "Deal Count",
+    "capital.series.hc_total": "Total Funding",
+    "capital.series.pharma_ma": "Pharma M&A",
+    "capital.series.pharma_vc": "Pharma VC&IPO",
+    "capital.series.device_ma": "Device M&A",
+    "capital.series.device_vc": "Device VC&IPO",
+    "capital.series.digital_vc": "Digital-Health VC&IPO",
+    "capital.unit.bn": "USD bn",
+    "capital.unit.mn": "USD mn",
+    # Sub-sector sparkline grid
+    "capital.section.segments": "Sub-Sector Trends",
+    "capital.section.segments_meta": "Last 12 months, capital invested (USD mn)",
+    "capital.domain.pharma": "Pharma (M&A + VC&IPO)",
+    "capital.domain.device": "Medtech (M&A + VC&IPO)",
+    "capital.domain.digital": "Digital Health (VC&IPO only)",
+    "capital.domain.digital_foot": "Note: digital health tracks VC&IPO only — no separate M&A series.",
+    "capital.reconcile_note": (
+        "⚠️ Scope note: the 5 sub-series do **NOT** sum to Total Funding — the total covers a broader universe. "
+        "The sub-sector view shows only the 5 tracked segments (USD mn); do not read it as a 100% breakdown of the total."
+    ),
+    # China-OUT
+    "capital.section.chinaout": "China-OUT Theme",
+    "capital.chinaout.eyebrow": "China licensing — a structural regime shift",
+    "capital.chinaout.body": (
+        "China licensing has shifted from one-off out-licensing headlines into a standing MNC pipeline-sourcing channel. "
+        "**Of NextPharma's Top 25 deals (Jan–Sep 2025), China-OUT accounts for 13/25 = 52%** "
+        "(source: NextPharma 720 deals, as of 2025-09-04), and the share rose further into Q2 2026.\n\n"
+        "**Known China-OUT total for Apr–May = $19.3B** (Hengrui-BMS $15.2B + Insilico-Lilly $2.75B + "
+        "Haisco-AbbVie $745M + Amoytop-Aligos $445M + Huahui-BeOne $120M) — the single BMS-Hengrui deal "
+        "alone exceeds whole-industry BD totals for several months of 2025.\n\n"
+        "⚠️ **Compliance**: Hengrui's $15.2B headline includes $14.25B contingent milestones; real structured "
+        "cash is only $950M (B3 decomposition). Downstream valuation must model upfront / milestone separately "
+        "— never sum the headline figure directly."
+    ),
+    # MNC dry-powder
+    "capital.section.mnc": "MNC Balance Sheets · Dry Powder",
+    "capital.section.mnc_meta": "2026Q1 · SEC XBRL (HIGH)",
+    "capital.mnc.col.company": "Company",
+    "capital.mnc.col.cash": "Cash $bn",
+    "capital.mnc.col.debt": "Total Debt $bn",
+    "capital.mnc.col.net": "Net Cash $bn",
+    "capital.mnc.col.form": "Form",
+    "capital.mnc.col.date": "Filed",
+    "capital.mnc.note": (
+        "6 rows show \"—\" for no us-gaap cash disclosure (NVS/AZN/SNY/NVO/PHG are 20-F ADRs; GEHC cash field missing) — "
+        "this is **not zero**, do not read as no cash. Also: the us-gaap cash concept excludes short-term investments, "
+        "so PFE/MRK and others may be understated."
+    ),
+    # Methodology + disclaimer
+    "capital.method_expander": "Methodology & Sources (B1-B7 cross-check)",
+    "capital.method_body": (
+        "**Source tiers (research-data.md)**: aggregate monthly flow = MEDIUM (curated, PitchBook-style); "
+        "MNC balance sheets = HIGH (SEC EDGAR 10-Q/20-F XBRL).\n\n"
+        "**B3 decomposition**: any headline deal size must decompose to upfront + milestone + structured/CVR; "
+        "failing sum-check flags confidence = MEDIUM.\n\n"
+        "**B6 asymmetric sourcing**: A-share/HK single-source (HKEX/cninfo) can be HIGH; US-private deals need 3 sources.\n\n"
+        "**Unit normalization**: the total series is native USD bn while sub-series are USD mn — the loader normalizes "
+        "everything so charts never mix scales."
+    ),
+    "capital.disclaimer": (
+        "This page is a research-desk multi-source cross-check, not investment advice. Headline deal sizes decompose to "
+        "real cash per B3; MEDIUM sources contribute factual figures only — **no sell-side rating is adopted**. Every "
+        "figure carries (source, as-of)."
+    ),
+
+    # ── Capital Markets · Q1 2026 public-source quarterly snapshot (Option-2) ──
+    "capital.q.asof": "Freshest complete quarter Q1 2026 · quarterly (not monthly)",
+    "capital.q.freshness": (
+        "📅 **Cadence**: public sources are **quarterly** — freshest complete quarter is **Q1 2026** (Jan–Mar). "
+        "Q2 2026 (Apr–Jun) reports land ~mid-July; until then Apr/May are partial deal-level tallies only. "
+        "The old PitchBook **monthly** cadence **cannot be reproduced** (no free monthly source)."
+    ),
+    "capital.q.cadence_note": (
+        "Scope: every figure is from a **publicly-published** report (JPMorgan / DealForma / Rock Health / Galen Growth / "
+        "CB Insights / Renaissance / Bain), each carrying a source URL + publication date + measure tag + HIGH/MEDIUM tier. "
+        "Multi-source cross-checked + adversarially verified. **No sell-side rating adopted.**"
+    ),
+    "capital.q.kpi.ma": "Biopharma M&A",
+    "capital.q.kpi.ma_foot": "Q1'26 · upfront-cash measure · JPM+DealForma converge ±$0.1B · 25-32 deals",
+    "capital.q.kpi.lic": "Biopharma Licensing",
+    "capital.q.kpi.lic_foot": "Q1'26 · announced biobucks · upfront only ~6% (milestone-heavy)",
+    "capital.q.kpi.vc": "Biopharma Venture",
+    "capital.q.kpi.vc_foot": "Q1'26 · −20% YoY (vs $8.6B) · global · licensing substituting for VC",
+    "capital.q.kpi.dh": "Digital-Health VC (global)",
+    "capital.q.kpi.dh_foot": "Q1'26 · global 216 deals · US subset $4.0B (Rock) · Galen+CB converge 4%",
+    "capital.q.section.scorecard": "Q1 2026 Segment Scorecard",
+    "capital.q.section.scorecard_meta": "each row tagged measure / geography / tier / source",
+    "capital.q.col.segment": "Segment",
+    "capital.q.col.value": "Q1'26 $B",
+    "capital.q.col.count": "Deals",
+    "capital.q.col.prior": "Q1'25 $B",
+    "capital.q.col.yoy": "YoY %",
+    "capital.q.col.measure": "Measure",
+    "capital.q.col.geo": "Geo",
+    "capital.q.col.tier": "Tier",
+    "capital.q.col.source": "Source",
+    "capital.seg.biopharma_ma": "Biopharma M&A",
+    "capital.seg.biopharma_licensing": "Biopharma Licensing (BD)",
+    "capital.seg.biopharma_venture": "Biopharma Venture",
+    "capital.seg.digital_health_vc_us": "Digital-Health VC (US)",
+    "capital.seg.digital_health_vc_global": "Digital-Health VC (global)",
+    "capital.seg.us_biotech_ipo": "US Biotech IPO",
+    "capital.seg.medtech_ma": "Medtech M&A",
+    "capital.measure.upfront_cash": "upfront cash",
+    "capital.measure.incl_contingents": "incl. CVR",
+    "capital.measure.announced_biobucks": "announced",
+    "capital.measure.raised": "raised",
+    "capital.measure.proceeds": "proceeds",
+    "capital.measure.disclosed_value": "disclosed",
+    "capital.geo.global": "Global",
+    "capital.geo.us": "US",
+    "capital.q.section.yoy": "Venture / VC YoY",
+    "capital.q.section.yoy_meta": "only same-magnitude segments with a YoY comparator (avoids mixing measures)",
+    "capital.q.section.medtech": "Medtech M&A (gap)",
+    "capital.q.medtech_note": (
+        "⚠️ Free public sources have **no quarterly medtech-M&A series**. The only citable figure is Bain's "
+        "**FY2025 partial-year** (Jan–Nov) **~$80B** (via MedTech Dive, MEDIUM, deal count undisclosed) — surpassing "
+        "the prior three years combined, H2 ≈ 2× H1. **Shown as a single partial-FY annotation, not quarterly bars.** "
+        "Medtech = 31% of all-industry M&A in Q1'26 (8-quarter high, Biotechgate). Large deals: BSX-Penumbra $14.5B "
+        "(H1'26 close), Abbott-Exact Sciences $23B."
+    ),
+    "capital.q.section.baselines": "FY2025 Baselines (trend context)",
+    "capital.q.baselines.col.metric": "Metric",
+    "capital.q.baselines.col.value": "FY2025 $B",
+    "capital.q.baselines.col.count": "Deals",
+    "capital.q.baselines.col.source": "Source",
+    "capital.q.chinaout_wall": (
+        "⚠️ Below = **Apr–May deal-level partial tally** (NOT a complete-quarter aggregate; LOW / partial disclosure) — "
+        "a **different basis** from the Q1'26 public quarterly figures above, do not read together. Kept for its "
+        "information value on your China-OUT theme."
+    ),
+    "capital.q.method_body": (
+        "**Sources (all publicly published; per-figure URLs below)**:\n\n"
+        "- Biopharma M&A / licensing / venture / IPO: JPMorgan Q1 2026 Biopharma report, DealForma, Renaissance, BioPharma Dive\n"
+        "- Digital-health VC: Rock Health (US), Galen Growth (global), CB Insights (global)\n"
+        "- Medtech M&A: Bain (via MedTech Dive) — FY2025 partial-year\n\n"
+        "**Measure discipline**: M&A separates upfront-cash vs incl-contingents; licensing is announced biobucks "
+        "(upfront only ~6%); digital-health US (Rock) and global (Galen/CB) are listed separately, never added. "
+        "**Different measures are non-additive.**\n\n"
+        "**Freshness**: Q2 2026 reports land ~mid-July; refresh planned then."
+    ),
+
+    # ── Pharma MNC M&A (deal-level, MNCs basket xlsx / mnc-deal-scanner) ──
+    "mnc_ma.page.asof": "13 pharma MNCs · M&A history",
+    "mnc_ma.intro": "The full M&A history of 13 global pharma MNCs — deal-level, sliceable by company / therapeutic area / year. Data from the MNCs basket (maintained by the mnc-deal-scanner skill).",
+    "mnc_ma.source_note": "Source: MNCs basket summary ({source}). Values include disclosed (Actual) and reasonable estimates (Estimated); deal-level cross-checked. **No sell-side rating.**",
+    "mnc_ma.kpi.total": "Total M&A (lifetime)",
+    "mnc_ma.kpi.total_foot": "{n} deals · {ymin}-{ymax} · 13 pharma MNCs",
+    "mnc_ma.kpi.deals": "Deal Count",
+    "mnc_ma.kpi.deals_foot": "disclosed {actual} · estimated {est}",
+    "mnc_ma.kpi.top": "Most Acquisitive",
+    "mnc_ma.kpi.top_foot": "{company} · {n} deals",
+    "mnc_ma.kpi.biggest": "Largest Ever",
+    "mnc_ma.kpi.biggest_foot": "{acq} acq. {tgt} · {year}",
+    "mnc_ma.section.league": "M&A by Acquirer",
+    "mnc_ma.section.league_meta": "who buys most (USD bn, cumulative)",
+    "mnc_ma.section.ta": "By Therapeutic Area",
+    "mnc_ma.section.ta_meta": "M&A value distribution (USD bn)",
+    "mnc_ma.section.timeline": "M&A Over Time",
+    "mnc_ma.section.timeline_meta": "M&A value per year (USD bn)",
+    "mnc_ma.section.top": "Largest Deals Ever · Top 20",
+    "mnc_ma.section.table": "Deal Detail",
+    "mnc_ma.section.table_meta": "filter by company",
+    "mnc_ma.chart.by_company": "Lifetime M&A by pharma MNC",
+    "mnc_ma.chart.by_ta": "M&A value by therapeutic area",
+    "mnc_ma.chart.by_year": "M&A value per year",
+    "mnc_ma.col.ticker": "Co.",
+    "mnc_ma.col.company": "Acquirer",
+    "mnc_ma.col.target": "Target",
+    "mnc_ma.col.year": "Date",
+    "mnc_ma.col.size": "Size $B",
+    "mnc_ma.col.ta": "Therapeutic Area",
+    "mnc_ma.col.basis": "Basis",
+    "mnc_ma.filter.company": "Filter company",
+    "mnc_ma.filter.all": "All",
+    "mnc_ma.basis.Actual": "Disclosed",
+    "mnc_ma.basis.Estimated": "Estimated",
+    "mnc_ma.disclaimer": "This page is an M&A-history dataset, not investment advice. Values include estimates (basis tagged); deal facts only, no sell-side rating adopted.",
+    # 2026 YTD M&A (top)
+    "mnc_ma.section.ytd": "2026 YTD M&A",
+    "mnc_ma.section.ytd_meta": "this year's true acquisitions (M&A, excl. BD/partnerships)",
+    "mnc_ma.ytd.count": "2026 M&A Deals",
+    "mnc_ma.ytd.count_foot": "${value:.1f}B total · acquisitions only",
+    "mnc_ma.ytd.total": "2026 M&A Value",
+    "mnc_ma.ytd.total_foot": "{n} deals · excl. BD/partnerships",
+    "mnc_ma.ytd.biggest": "Largest 2026 Acquisition",
+    "mnc_ma.ytd.biggest_foot": "{acq} acq. {tgt}",
+    "mnc_ma.ytd.bd_count": "2026 BD/Partnerships",
+    "mnc_ma.ytd.bd_foot": "e.g. Hengrui-BMS $15.2B · listed below, NOT M&A",
+    "mnc_ma.ytd.bd_note": "⚠️ M&A = true acquisition (change of control); BD = license/option/collaboration (no change of control). The Hengrui-BMS $15.2B is a 13-program strategic COLLABORATION — it is **BD, not M&A** — see the BD/Partnerships section below.",
+    "mnc_ma.ma_only": "(true acquisitions only; BD/partnerships listed separately)",
+    "mnc_ma.section.bd": "BD / Partnerships",
+    "mnc_ma.section.bd_meta": "licensing deals (upfront / milestone / total) · from the ED Funding report + 2026",
+    "mnc_ma.col.type": "Type",
+    "mnc_ma.bd.col.licensor": "Licensor",
+    "mnc_ma.bd.col.licensee": "Licensee",
+    "mnc_ma.bd.col.asset": "Asset / Tech",
+    "mnc_ma.bd.col.phase": "Phase",
+    "mnc_ma.bd.col.region": "Region",
+    "mnc_ma.bd.col.date": "Date",
+    "mnc_ma.bd.sources": "2026 BD sources (click to open):",
+    "mnc_ma.section.sources": "Sources",
+    "mnc_ma.sources_note": "Deals are officially announced on each MNC's IR / newsroom — click to open and verify:",
+    "mnc_ma.col.total": "Total $B",
+    "mnc_ma.col.upfront": "Upfront $B",
+    "mnc_ma.col.milestone": "Milestone $B",
+    "mnc_ma.ytd.sources": "2026 M&A sources (click to open the press release):",
+    "mnc_ma.col.src": "Source",
 }

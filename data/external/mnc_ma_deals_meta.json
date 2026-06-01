@@ -1,0 +1,14 @@
+{
+  "source": "MNCs basket summary Mar26.xlsx (mnc-deal-scanner 维护)",
+  "as_of": "2026-06-01 (2026: biotech-researcher B3-verified)",
+  "n_deals": 430,
+  "n_ma": 391,
+  "n_bd": 39,
+  "total_mn": 1580633.8,
+  "ma_total_mn": 1497609.8,
+  "bd_total_mn": 83024.0,
+  "n_mncs": 13,
+  "year_min": 1986,
+  "year_max": 2026,
+  "tier": "MEDIUM-HIGH"
+}

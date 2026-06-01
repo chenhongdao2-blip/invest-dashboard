@@ -54,6 +54,11 @@ market_data = st.Page(
     title="Market Data 行情总表",
     url_path="Market_Data",
 )
+model_drill = st.Page(
+    "pages/model_drill.py",
+    title="Model Drill 分析师模型",
+    url_path="Model_Drill",
+)
 
 # --- Healthcare children ---
 cmsi_coverage = st.Page(
@@ -121,7 +126,7 @@ ai_sec = st.Page(
 
 pg = st.navigation(
     {
-        "Global 全局": [home, ticker_drill, market_data, strategy_picks],
+        "Global 全局": [home, ticker_drill, model_drill, market_data, strategy_picks],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,

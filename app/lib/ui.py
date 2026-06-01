@@ -255,6 +255,8 @@ def render_html_table(
     text_cols: list[str] | None = None,
     right_text_cols: list[str] | None = None,
     link_cols: list[str] | None = None,
+    nav_cols: list[str] | None = None,
+    nav_label: str = "↗",
     extra_formats: dict[str, str] | None = None,
     column_help: dict[str, str] | None = None,
     column_labels: dict[str, str] | None = None,
@@ -297,6 +299,7 @@ def render_html_table(
     text_cols = set(text_cols or [])
     right_text_cols = set(right_text_cols or [])
     link_cols = set(link_cols or [])
+    nav_cols = set(nav_cols or [])
     extra_formats = extra_formats or {}
     column_help = COLUMN_HELP if column_help is None else column_help
     column_labels = column_labels or {}
@@ -330,6 +333,17 @@ def render_html_table(
         # extra_formats wins over kind lists — matches the old column_config
         # precedence (e.g. Valuation 'Sector P/E %ile' is in BOTH mult_cols and
         # extra_formats, and the printf format must win).
+        if col in nav_cols:
+            # in-app nav: value is a root-relative url (e.g. "/Model_Drill?ticker=VEEV").
+            # We're inside a srcdoc iframe whose sandbox FORBIDS target="_top" (top
+            # navigation is silently dropped), so we use target="_blank" — allowed via
+            # allow-popups — opening the page in a new tab. The srcdoc doc inherits the
+            # parent's base URL, so the "/..."" path resolves against the app origin.
+            s = "" if _na(v) else str(v)
+            if s:
+                return (f'<a class="srclink" href="{_html.escape(s)}" target="_blank" '
+                        f'rel="noopener">{_html.escape(nav_label)}</a>', "1", "", "s", "")
+            return '<span class="flat">—</span>', "", "", "s", ""
         if col in link_cols:
             # value is a URL → clickable ↗ opening in a new tab (works inside the iframe)
             s = "" if _na(v) else str(v)

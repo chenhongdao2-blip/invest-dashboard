@@ -20,6 +20,7 @@ from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import model_view
 
 
 def _reco_label(v) -> str:
@@ -162,6 +163,11 @@ def render_region(df: pd.DataFrame) -> None:
     # Note: BBG column dropped — duplicates the ticker index. Name column uses
     # name_cn first, falls back to name_en, then ticker.
     disp = pd.DataFrame(index=df.index)
+    # Click-through to the analyst-model one-pager (Model Drill). Only covered
+    # names that actually have an extracted model get the 📊 link; others blank.
+    _mdl_col = "模型" if i18n.get_lang() == "zh" else "Model"
+    disp[_mdl_col] = [f"/Model_Drill?ticker={t}" if model_view.has_model(t) else ""
+                      for t in df.index]
     disp["Name"] = df["name_cn"].fillna(df["name_en"]).fillna(df.index.to_series())
     disp["Mcap USD ($B)"] = df["market_cap_usd"] / 1e9              # numeric, B
     disp["YTD %"] = df["ytd_%"]
@@ -193,6 +199,8 @@ def render_region(df: pd.DataFrame) -> None:
         pct2_cols=["FCF Yld"],
         mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"],
         text_cols=["Name"],
+        nav_cols=[_mdl_col],
+        nav_label="📊",
         height=620,
         column_labels={
             **i18n.common_cols(),

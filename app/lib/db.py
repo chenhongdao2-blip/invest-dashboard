@@ -190,6 +190,50 @@ def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=300)
+def rule_of_40_comps(tickers: tuple[str, ...]) -> pd.DataFrame:
+    """Rule-of-40 valuation-matrix inputs for a software comp set (Model Drill ③).
+
+    Joins the latest multiples_daily.ev_sales (Y axis) with company_profile's
+    revenueGrowth + freeCashflow/totalRevenue (X axis = Rule of 40 = revenue
+    growth % + FCF margin %). Everything comes from the daily snapshot, so the
+    matrix tracks the current market — re-run jobs/fetch_eod to refresh. Rows
+    missing any input (or with non-positive revenue) are dropped. Returns a frame
+    indexed by ticker with name_cn / name_en / ev_sales / rev_growth / fcf_margin /
+    rule40 (the last three already in PERCENT points)."""
+    if not tickers:
+        return pd.DataFrame()
+    ph = ",".join("?" * len(tickers))
+    df = query(
+        f"""
+        SELECT u.ticker,
+               MIN(u.name_cn) AS name_cn, MIN(u.name_en) AS name_en,
+               m.ev_sales, p.revenueGrowth, p.totalRevenue, p.freeCashflow
+        FROM universe_member u
+        INNER JOIN (
+          SELECT ticker, MAX(date) AS d FROM multiples_daily
+          WHERE ticker IN ({ph}) GROUP BY ticker
+        ) lm ON lm.ticker = u.ticker
+        INNER JOIN multiples_daily m ON m.ticker = u.ticker AND m.date = lm.d
+        LEFT JOIN company_profile p ON p.ticker = u.ticker
+        WHERE u.ticker IN ({ph})
+        GROUP BY u.ticker, m.ev_sales, p.revenueGrowth, p.totalRevenue, p.freeCashflow
+        """,
+        tuple(tickers) + tuple(tickers),
+    )
+    if df.empty:
+        return pd.DataFrame()
+    df = df.dropna(subset=["ev_sales", "revenueGrowth", "totalRevenue", "freeCashflow"])
+    df = df[df["totalRevenue"] > 0]
+    if df.empty:
+        return df
+    df["rev_growth"] = df["revenueGrowth"] * 100.0
+    df["fcf_margin"] = df["freeCashflow"] / df["totalRevenue"] * 100.0
+    df["rule40"] = df["rev_growth"] + df["fcf_margin"]
+    return df.set_index("ticker")[["name_cn", "name_en", "ev_sales",
+                                   "rev_growth", "fcf_margin", "rule40"]]
+
+
+@st.cache_data(ttl=300)
 def adv_20d(ticker: str) -> float | None:
     """20-trading-day average daily turnover (close × volume) in the stock's LOCAL
     currency — a liquidity gauge (small-cap HK/A names can be hard to build/exit).

@@ -757,3 +757,294 @@ def cumulative_return_chart(
         height=450,
     )
     return theme.style_plotly(fig)
+
+
+# ── Analyst-model views (Model Drill page) ──────────────────────────────────
+# All take `periods` = [{"label","actual_est"}] so the actual→forecast boundary
+# renders uniformly: actuals solid/opaque, forecast semi-transparent, with a
+# dotted "Forecast →" divider at the first "E" column.
+
+def _fc_boundary(periods):
+    return next((i for i, p in enumerate(periods) if p.get("actual_est") == "E"), None)
+
+
+def _fc_opacity(periods):
+    return [1.0 if p.get("actual_est") == "A" else 0.45 for p in periods]
+
+
+def _add_forecast_divider(fig, periods, prefer_cn, label=True):
+    fe = _fc_boundary(periods)
+    if fe is None or fe <= 0:   # all-forecast window → no actual region to divide
+        return
+    fig.add_vline(x=fe - 0.5, line=dict(width=1.2, color=theme.INK_3, dash="dot"))
+    if label:
+        fig.add_annotation(x=fe - 0.5, y=1.0, yref="paper", showarrow=False,
+                           text=("预测 →" if prefer_cn else "Forecast →"),
+                           font=dict(size=10, color=theme.INK_3), xanchor="left", yshift=2)
+
+
+_REV_LIGHT_TEAL = "#7fb0b3"   # non-dominant segment (mono-teal palette, George 2026-06-01)
+
+
+def model_revenue_chart(breakdown, periods, *, prefer_cn=True, window=None):
+    """Revenue 2×2 in ONE stacked bar, all on ONE teal hue (George 2026-06-01 —
+    the prior 2nd hue, amber then slate, clashed on cream): segment by DEPTH
+    (dominant-by-revenue → deep teal, others → light teal, data-driven — never
+    hardcode a name), basis by PATTERN (subscription = solid, professional
+    services = diagonal hatch over the same fill, NOT a 0.5α shade — α blurred the
+    four blocks together). Per-period top label = "{lead} NN%" (e.g. "R&D 53%"),
+    the lead segment's %-of-revenue, so the bare number isn't ambiguous. Values
+    shown in USD **billions**. `window` = period labels to show (default last ~6
+    incl. 2 forecast; the full 16y would crowd 64 blocks)."""
+    ps = [p for p in periods if p["label"] in set(window)] if window else periods
+    labels = [p["label"] for p in ps]
+    op = _fc_opacity(ps)
+    # dominant segment by total revenue over the WHOLE series (not the shown window)
+    # → the lead segment's deep-teal stays stable when the annual/quarterly toggle
+    # or window changes (cccg-Gemini: a window-local dominance could flip the hue).
+    seg_tot = {}
+    for s in breakdown:
+        seg_tot[s["segment"]] = seg_tot.get(s["segment"], 0.0) + sum(
+            (v or 0) for v in s["values"].values())
+    ranked = sorted(seg_tot, key=lambda s: -seg_tot[s])
+    dominant = ranked[0] if ranked else None
+    # mono-teal: lead = deep teal, every other segment = light teal. Segment read
+    # by depth, basis by hatch (below) — one cool family, no clashing 2nd hue.
+    hue = {dominant: theme.UP}
+    for s in ranked[1:]:
+        hue[s] = _REV_LIGHT_TEAL
+
+    def _val_bn(s, l):
+        v = s["values"].get(l)
+        return v / 1000.0 if v is not None else None   # USD millions → billions
+
+    # stack: non-dominant (bottom) → dominant (top); within a segment, services below subscription
+    order = sorted(breakdown, key=lambda s: (s["segment"] == dominant,
+                                             s["basis"] == "subscription"))
+    fig = go.Figure()
+    for s in order:
+        name = (s.get("label_cn") if prefer_cn else s.get("label_en")) or s.get("key", "")
+        seg_hue = hue.get(s["segment"], theme.INK_3)
+        is_sub = s["basis"] == "subscription"
+        # services = same fill + cream diagonal hatch; subscription = solid fill.
+        pattern = dict(shape="" if is_sub else "/",
+                       fgcolor=theme.PAPER, size=7, solidity=0.32)
+        fig.add_trace(go.Bar(
+            x=labels, y=[_val_bn(s, l) for l in labels], name=name, legendgroup=s["segment"],
+            marker=dict(color=seg_hue, opacity=op, line=dict(width=0), pattern=pattern),
+            hovertemplate="%{x} · " + str(name) + " $%{y:,.2f}B<extra></extra>"))
+    # lead-segment %-of-total annotation per period — labelled with the segment
+    # name ("R&D 53%") so the number's meaning is explicit (George 2026-06-01).
+    for l in labels:
+        tot = sum((s["values"].get(l) or 0) for s in breakdown)
+        dom = sum((s["values"].get(l) or 0) for s in breakdown if s["segment"] == dominant)
+        if tot:
+            fig.add_annotation(x=l, y=tot / 1000.0, yshift=11, showarrow=False,
+                               text=f"{dominant} {dom / tot * 100:.0f}%",
+                               font=dict(size=10, color=theme.UP_DEEP, family=theme.FONT_MONO))
+    fig.update_layout(barmode="stack", height=400,
+                      legend=dict(orientation="h", y=1.13, x=0),
+                      yaxis_title=("收入 ($B)" if prefer_cn else "Revenue ($B)"))
+    _add_forecast_divider(fig, ps, prefer_cn)
+    return theme.style_plotly(fig)
+
+
+def model_margin_chart(margins, periods, *, prefer_cn=True):
+    """Margin lines; GAAP = muted grey dashed, non-GAAP = solid coloured. Caller
+    chooses which margins to pass (keep it to ~4 for legibility)."""
+    labels = [p["label"] for p in periods]
+    pal = {"gross_margin": theme.UP_TINT, "operating_margin": theme.UP,
+           "net_margin": theme.SECTOR_PALETTE[2]}
+    fig = go.Figure()
+    for mg in margins:
+        is_gaap = mg["basis"] == "gaap"
+        nm = (mg.get("metric_cn") if prefer_cn else mg.get("metric_en")) or mg["metric"]
+        y = [mg["values"].get(l) for l in labels]
+        color = theme.INK_3 if is_gaap else pal.get(mg["metric"], theme.UP)
+        fig.add_trace(go.Scatter(
+            x=labels, y=y, mode="lines", name=nm,
+            line=dict(width=1.5 if is_gaap else 2.2, color=color,
+                      dash="dash" if is_gaap else "solid"),
+            hovertemplate="%{x} · " + nm + " %{y:.1%}<extra></extra>"))
+    fig.update_layout(height=360, yaxis=dict(tickformat=".0%"),
+                      legend=dict(orientation="h", y=1.14, x=0),
+                      yaxis_title=("利润率" if prefer_cn else "Margin"))
+    _add_forecast_divider(fig, periods, prefer_cn, label=False)
+    return theme.style_plotly(fig)
+
+
+def model_bridge_chart(bridge, *, prefer_cn=True):
+    """GAAP→Non-GAAP waterfall (one reported quarter). Neutral grey steps —
+    accounting add-backs are NOT market up/down, so no teal/red."""
+    items = bridge["items"]
+    names = [it["item"] if prefer_cn else it.get("item_en", it["item"]) for it in items]
+    vals = [it["value"] for it in items]
+    measure = ["absolute"] + ["relative"] * (len(items) - 2) + ["total"]
+    fig = go.Figure(go.Waterfall(
+        orientation="v", measure=measure, x=names, y=vals,
+        text=[f"{v:+.0f}" if m == "relative" else f"{v:.0f}" for v, m in zip(vals, measure)],
+        textposition="outside", textfont=dict(family=theme.FONT_MONO, size=11),
+        connector=dict(line=dict(color=theme.PAPER_RULE)),
+        increasing=dict(marker=dict(color=theme.INK_3)),
+        decreasing=dict(marker=dict(color=theme.INK_3)),
+        totals=dict(marker=dict(color=theme.UP)),
+    ))
+    per = bridge.get("period", "")
+    fig.update_layout(height=340,
+                      yaxis_title=("营业利润 ($M)" if prefer_cn else "Operating Income ($M)"),
+                      title=_clean_title(f"{per} " + ("GAAP → 非GAAP 桥" if prefer_cn else "GAAP → Non-GAAP Bridge")))
+    return theme.style_plotly(fig)
+
+
+def model_forecast_chart(forecast, periods, *, prefer_cn=True,
+                         bar_line="revenue", overlay_line="eps_nongaap"):
+    """Forecast lines. With a bar_line: revenue bars (actual/forecast opacity) + the
+    overlay line on a 2nd axis. With bar_line=None: the overlay line ALONE on the
+    primary axis (post-polish default — revenue already lives in the ① chart, so a
+    2nd revenue bar here would be redundant)."""
+    labels = [p["label"] for p in periods]
+    op = _fc_opacity(periods)
+    byk = {f["line"]: f for f in forecast}
+    bar = byk.get(bar_line)
+    line = byk.get(overlay_line)
+    fig = go.Figure()
+    if bar:
+        nm = bar["line_cn"] if prefer_cn else bar["line_en"]
+        fig.add_trace(go.Bar(x=labels, y=[bar["values"].get(l) for l in labels], name=nm,
+                             marker=dict(color=theme.UP, opacity=op),
+                             hovertemplate="%{x} · " + nm + " $%{y:,.0f}M<extra></extra>"))
+    if line:
+        nm = line["line_cn"] if prefer_cn else line["line_en"]
+        fig.add_trace(go.Scatter(x=labels, y=[line["values"].get(l) for l in labels], name=nm,
+                                 mode="lines+markers", yaxis=("y2" if bar else "y"),
+                                 line=dict(width=2.2, color=theme.CMSI_RED), marker=dict(size=6),
+                                 hovertemplate="%{x} · " + nm + " $%{y:.2f}<extra></extra>"))
+    layout = dict(height=360, legend=dict(orientation="h", y=1.1, x=0))
+    if bar:
+        layout["yaxis"] = dict(title=("收入 ($M)" if prefer_cn else "Revenue ($M)"))
+        layout["yaxis2"] = dict(title="EPS ($)", overlaying="y", side="right", showgrid=False)
+    else:
+        layout["yaxis"] = dict(title=("每股收益 (非GAAP, $)" if prefer_cn else "EPS (non-GAAP, $)"))
+    fig.update_layout(**layout)
+    _add_forecast_divider(fig, periods, prefer_cn)
+    return theme.style_plotly(fig)
+
+
+def model_dcf_sensitivity(dcf, *, prefer_cn=True):
+    """WACC×TG → TP heatmap. Sequential teal ramp (deep = higher TP); a TP grid
+    is NOT market up/down, so it deliberately does NOT use the diverging teal/red."""
+    s = dcf["sensitivity"]
+    x = [f"{v:.1%}" for v in s["x"]]
+    y = [f"{v:.1%}" for v in s["y"]]
+    fig = go.Figure(go.Heatmap(
+        x=x, y=y, z=s["grid"],
+        colorscale=[[0, theme.PAPER], [0.5, theme.UP_TINT], [1, theme.UP_DEEP]],
+        text=[[f"{v:.0f}" if v is not None else "" for v in row] for row in s["grid"]],
+        texttemplate="%{text}", textfont=dict(size=10, family=theme.FONT_MONO),
+        hovertemplate="WACC %{y} · TG %{x} · TP $%{z:.0f}<extra></extra>",
+        colorbar=dict(title="TP $")))
+    fig.update_layout(height=360,
+                      xaxis_title=("永续增长率" if prefer_cn else "Terminal Growth"),
+                      yaxis_title="WACC", yaxis=dict(autorange="reversed"))
+    bx, by = s.get("base_x"), s.get("base_y")
+    if bx in s["x"] and by in s["y"]:
+        fig.add_annotation(x=f"{bx:.1%}", y=f"{by:.1%}", text="◆", showarrow=False,
+                           font=dict(size=15, color=theme.CMSI_RED))
+    return theme.style_plotly(fig)
+
+
+def rule_of_40_scatter(df, *, highlight=None, prefer_cn=True, title="",
+                       x_label=None, y_label=None):
+    """Rule-of-40 valuation matrix (replaces the WACC×TG sensitivity in ③): X =
+    revenue growth + FCF margin (%), Y = EV/Sales (x) on a LOG axis. Software/SaaS
+    comps plot as hollow teal circles labelled by ticker (the sell-side comp-cloud
+    idiom); `highlight` (e.g. VEEV) is a filled CMSI-red point with a bold label.
+
+    De-crowding (George 2026-06-01): EV/Sales spans 1–70x and most comps sit in the
+    3–12x band, which a linear axis crushes together. A LOG y-axis stretches that
+    band apart and lets premium names (PLTR ~70x) sit naturally at the top — no cap
+    / outlier-pin needed. Dashed mean lines anchor both axes; a dotted Rule-of-40 =
+    40 line (the SaaS '优秀线') with a faint shade marks the >40 zone. All inputs are
+    live snapshot data, so positions move with the market — re-run fetch_eod."""
+    fig = go.Figure()
+    if df is None or df.empty:
+        return theme.style_plotly(fig)
+    work = df[df["ev_sales"] > 0].copy()   # log axis needs strictly positive y
+    if work.empty:
+        return theme.style_plotly(fig)
+    avg_y = float(work["ev_sales"].mean())
+    avg_x = float(work["rule40"].mean())
+    x_lo, x_hi = float(work["rule40"].min()), float(work["rule40"].max())
+    y_hi = float(work["ev_sales"].max())
+    import math
+    hl = highlight if (highlight and highlight in work.index) else None
+
+    def _hover(idx, row):
+        nm = (row["name_cn"] if prefer_cn else row["name_en"]) or idx
+        g, f = ("增速", "FCF margin") if prefer_cn else ("growth", "FCF margin")
+        return (f"<b>{idx}</b> {nm}<br>Rule of 40 {row['rule40']:.1f}% "
+                f"({g} {row['rev_growth']:.1f}% + {f} {row['fcf_margin']:.1f}%)"
+                f"<br>EV/Sales {row['ev_sales']:.1f}x")
+
+    # faint shade of the > 40 "优秀区间"
+    fig.add_vrect(x0=40, x1=x_hi + 15, fillcolor=theme.UP, opacity=0.04, line_width=0)
+
+    peers = work.drop(index=hl) if hl else work
+    # peers — hollow teal circles + ticker label
+    fig.add_trace(go.Scatter(
+        x=peers["rule40"], y=peers["ev_sales"], mode="markers+text",
+        text=list(peers.index), textposition="top center",
+        textfont=dict(size=11, color=theme.INK_2, family=theme.FONT_STACK),
+        marker=dict(size=12, color="rgba(0,0,0,0)", line=dict(width=1.6, color=theme.UP)),
+        customdata=[_hover(i, r) for i, r in peers.iterrows()],
+        hovertemplate="%{customdata}<extra></extra>", showlegend=False))
+    # highlight — filled CMSI-red, bold label
+    if hl:
+        r = work.loc[hl]
+        fig.add_trace(go.Scatter(
+            x=[r["rule40"]], y=[r["ev_sales"]], mode="markers+text",
+            text=[f"<b>{hl}</b>"], textposition="top center",
+            textfont=dict(size=14, color=theme.CMSI_RED, family=theme.FONT_STACK),
+            marker=dict(size=16, color=theme.CMSI_RED, symbol="circle",
+                        line=dict(width=1.5, color=theme.PAPER)),
+            customdata=[_hover(hl, r)],
+            hovertemplate="%{customdata}<extra></extra>", showlegend=False))
+
+    # mean lines (both axes) + Rule-of-40 = 40 reference
+    fig.add_hline(y=avg_y, line=dict(width=1, color=theme.INK_3, dash="dash"), opacity=0.6)
+    fig.add_vline(x=avg_x, line=dict(width=1, color=theme.INK_3, dash="dash"), opacity=0.6)
+    fig.add_vline(x=40, line=dict(width=1.2, color=theme.UP, dash="dot"), opacity=0.7)
+    # avg-EV/Sales label on the RIGHT edge (the left edge collides with ORCL)
+    fig.add_annotation(xref="paper", x=0.995, y=avg_y, yref="y", showarrow=False,
+                       text=(f"均值 {avg_y:.1f}x" if prefer_cn else f"Avg {avg_y:.1f}x"),
+                       font=dict(size=10, color=theme.INK_3), xanchor="right", yshift=9,
+                       bgcolor=theme.PAPER, opacity=0.85)
+    fig.add_annotation(x=avg_x, yref="paper", y=0.01, showarrow=False,
+                       text=(f"均值 {avg_x:.0f}%" if prefer_cn else f"Avg {avg_x:.0f}%"),
+                       font=dict(size=10, color=theme.INK_3), yanchor="bottom", xshift=3,
+                       bgcolor=theme.PAPER, opacity=0.85)
+    fig.add_annotation(x=40, yref="paper", y=0.99, showarrow=False, text="Rule of 40",
+                       font=dict(size=10, color=theme.UP_DEEP), xanchor="left",
+                       yanchor="top", xshift=3)
+
+    xl = x_label or ("Rule of 40 = 营收增速 + FCF Margin" if prefer_cn
+                     else "Rule of 40 = rev growth + FCF margin")
+    yl = y_label or ("EV / Sales（对数）" if prefer_cn else "EV / Sales (log)")
+    fig.update_layout(title=_clean_title(title), height=600,
+                      margin=dict(l=72, r=84, t=58, b=72))
+    fig = theme.style_plotly(fig)
+    # log y ticks at human-friendly multiples; clamp top to next tick above the max.
+    _tv = [v for v in (1, 2, 3, 5, 10, 20, 30, 50, 80, 120) if v <= y_hi * 1.25]
+    # hovermode AFTER style_plotly (which forces 'x unified' — that x-header was the
+    # raw "43.2956%" George flagged); 'closest' = one clean per-point tooltip.
+    fig.update_layout(
+        hovermode="closest",
+        xaxis=dict(title=dict(text=xl, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), ticksuffix="%",
+                   tickformat=".0f", hoverformat=".1f", range=[x_lo - 12, x_hi + 15]),
+        yaxis=dict(type="log", title=dict(text=yl, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), ticksuffix="x",
+                   tickmode="array", tickvals=_tv, hoverformat=".1f",
+                   range=[math.log10(0.9), math.log10(y_hi * 1.3)]),
+    )
+    return fig

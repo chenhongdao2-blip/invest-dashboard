@@ -109,29 +109,35 @@ STRINGS = {
     "strategy.name.ipo": "HK IPO Subscription",
     "strategy.ipo.tab.intro": (
         "**HK IPO Subscription Backtest** — scores and tiers recent HK new listings via the "
-        "CMSI Prism six-factor model and revisits how score relates to day-1 performance. "
-        "The sample covers recent HK new listings; the median day-1 return and "
-        "direction hit-rate for listed names are shown in the KPI cards below (they update "
-        "with the sample). Key read: **the score is good at direction (subscribe or not), not "
-        "at magnitude (how much it pops)** — score vs day-1 return is only weakly correlated "
-        "(see the Spearman ρ at the top-right of the scatter). The scatter below maps score × "
-        "day-1; the mini-charts show each name's intraday path; the dual leaderboard sorts by "
-        "score or by day-1 return."
+        "CMSI Prism six-factor model (v6.7) and revisits how score relates to day-1 performance. "
+        "The KPI cards below use a **tiered break-rate contrast** and the **score-vs-magnitude "
+        "rank IC (ρ)** to show what this score is actually worth and where its power ends (they "
+        "update with the sample) — rather than letting a universal-pop regime's median return / "
+        "win-rate display market beta as if it were the score's edge. Key read: **the score is "
+        "good at direction (subscribe or not, avoiding breaks), not at magnitude (how much it "
+        "pops)** — score vs day-1 return is only weakly correlated (see the Spearman ρ at the "
+        "top-right of the scatter). The scatter below maps score × day-1; the mini-charts show "
+        "each name's intraday path; the dual leaderboard sorts by score or by day-1 return."
     ),
     # KPI
     "strategy.ipo.kpi.sample": "Sample",
     "strategy.ipo.kpi.sample_delta": "{listed} listed / {pending} pending",
     "strategy.ipo.kpi.max": "Top day-1",
     "strategy.ipo.kpi.max_delta": "{name}",
-    "strategy.ipo.kpi.med": "Median day-1 (listed)",
-    "strategy.ipo.kpi.med_delta": "range {lo:+.0f}% ~ {hi:+.0f}%",
-    "strategy.ipo.kpi.hitrate": "Day-1 win rate",
-    "strategy.ipo.kpi.hitrate_delta": "{up}/{n} closed up day-1",
-    "strategy.ipo.kpi.note": (
-        "Subscribe-tier & above (score ≥6.0) closed up **{rec_up}/{rec_n}**; full sample {up}/{n} "
-        "(incl. Cautious/Avoid). Day-1 is lifted by right-tail outliers (Lightelligence +384%, "
-        "DeepZero +266%, SUNMI +241%) — **median {median:+.1f}% better reflects the typical "
-        "outcome**. Internal research backtest; not a subscription recommendation."
+    "strategy.ipo.kpi.worst": "Worst day-1",
+    "strategy.ipo.kpi.worst_delta": "{name}",
+    # By-tier staircase table (replaces the contrast cards — reads "does higher score = better?")
+    "strategy.ipo.tier.title": "By-tier performance — does a higher score do better?",
+    "strategy.ipo.tier.col.tier": "Tier",
+    "strategy.ipo.tier.col.n": "n",
+    "strategy.ipo.tier.col.med": "Median d1",
+    "strategy.ipo.tier.col.win": "Up rate",
+    "strategy.ipo.tier.col.brk": "Broke",
+    "strategy.ipo.tier.note": (
+        "Read top-to-bottom: the model nails the **extremes** (Strong-Buy+ best / Avoid broke) "
+        "but the middle tiers (Strong-Buy / Subscribe / Cautious) barely separate — the score is "
+        "useful for **direction (whether to subscribe), not for ranking magnitude**. Tiers are "
+        "small (n=17 total); pending more listings. Internal research backtest; not subscription advice."
     ),
     # scatter
     "strategy.ipo.scatter.title": "Score × Day-1 Return (n={n} listed)",
@@ -173,32 +179,39 @@ STRINGS = {
     "strategy.ipo.col.day1_ret": "Day-1 Return",
     "strategy.ipo.col.source": "Source",
     # methodology
-    "strategy.ipo.method_expander": "How this strategy works · Six-factor scoring",
+    "strategy.ipo.method_expander": "How this strategy works · Six-factor scoring v6.7",
     "strategy.ipo.method": (
-        "**HK IPO Six-Factor Scoring Framework (CMSI Prism Subscription Card)**\n\n"
-        "Each new listing is weighted-scored across six dimensions (max 10) and mapped to a "
-        "four-tier subscription call. **This is distinct from the biotech-catalyst framework's "
-        "clinical / FDA / earnings / governance dimensions** — IPO scoring assesses listing-day "
-        "pricing dynamics and supply-demand, not long-run fundamentals.\n\n"
-        "| # | Factor | What it measures |\n"
+        "**HK IPO Six-Factor Scoring Framework (CMSI Prism Subscription Card · v6.7)**\n\n"
+        "Each new listing is weighted-scored across six dimensions (max 10; v6.7 reweighting) and "
+        "mapped to a four-tier subscription call. **This is distinct from the biotech-catalyst "
+        "framework's clinical / FDA / earnings / governance dimensions** — IPO scoring assesses "
+        "listing-day pricing dynamics and supply-demand, not long-run fundamentals.\n\n"
+        "| # | Factor | What it measures (v6.7) |\n"
         "|---|---|---|\n"
-        "| ① | Free-float scarcity | Free-float mkt cap / public float; tighter float → sharper day-1 chip contest |\n"
-        "| ② | Cornerstone / institutional backing | Quality & subscription share of cornerstones; marquee long-only / strategic capital |\n"
-        "| ③ | Sector scarcity / momentum | Whether it's a scarce theme (e.g. photonic-AI, AI-drug discovery) and sector sentiment |\n"
-        "| ④ | Public-offer subscription multiple | Retail oversubscription multiple — proxy for heat and post-clawback supply-demand |\n"
-        "| ⑤ | Valuation reasonableness | Offer-price premium / discount vs comps and last private round |\n"
-        "| ⑥ | Fundamentals & financial quality | Revenue growth, margins, cash and path-to-profit underlying quality |\n\n"
+        "| ① | Free-float scarcity (FF master switch) | Tighter float = sharper contest; v6.7 uses a **piecewise curve** (steep bonus <5% / flattened 6–12% / stepped penalty >15%) and reads the **absolute free-float HK$**, not just the percentage |\n"
+        "| ② | Cornerstone / institutional backing | Cornerstone quality tier (A/B/C) × share of offering + intl-placement oversubscription + sovereign anchor capital + sponsor win-rate |\n"
+        "| ③ | Sector scarcity / momentum | Scarce theme (photonic-AI, AI-drug discovery) + sector sentiment + **secondary anchor** (peer 30-day break rate) |\n"
+        "| ④ | Public-offer subscription multiple | Retail oversubscription (bucketed); **downweighted in v6.7** — in a universal-pop regime everyone is >1000×, so the single factor's discrimination is flattened by β |\n"
+        "| ⑤ | Valuation reasonableness | v6.6+ uses **floor logic**: an inverted primary valuation (pre-IPO multiple too high) caps the total score, rather than simple weighting |\n"
+        "| ⑥ | Fundamentals & financial quality | Revenue growth, margins, cash, path-to-profit; weakly related to day-1, used mainly for the holding period |\n\n"
         "**Four tiers:**\n"
         "- Score ≥ 7.5 → **Strong Buy+**\n"
         "- 6.0 – 7.4 → **Subscribe**\n"
         "- 5.0 – 5.9 → **Cautious**\n"
         "- < 5.0 → **Avoid**\n\n"
-        "**Backtest read (n=17 listed):** names scoring ≥ 6.0 (Subscribe and above) closed up "
-        "on day 1 in **90.9% of cases (10/11)**; the full sample closed up 88.2% of the time. "
-        "Caveat: score shows only weak association with the *magnitude* of day-1 return "
-        "(Spearman ρ=0.13, not significant) — **the score is a filter for \"whether to "
-        "subscribe,\" not a predictor of \"how much it pops.\"** Day-1 magnitude is driven more "
-        "by scarcity, subscription heat and opening-auction dynamics."
+        "**Backtest read (n=17 listed):** as an **admission filter** the score has marginal value "
+        "— the Subscribe tier (≥6.0) broke issue on day 1 in **9.1%** of cases vs **16.7%** for "
+        "the Cautious/Avoid tiers (full sample 11.8%). But it has almost no power over the "
+        "*magnitude* of day-1 returns (Spearman ρ=0.13, p≈0.61; the two biggest winners — "
+        "DeepZero +266% / SUNMI +241% — both sit in the <6.0 tier): **the score is a filter for "
+        "\"whether to subscribe / avoid breaks,\" not a predictor of \"how much it pops.\"**\n\n"
+        "**Where day-1 alpha comes from (alpha attribution, vetted by a 4-way /cccg debate):** "
+        "day-1 moves are driven mainly by **primary-market microstructure** — A/H discount "
+        "(secondary listings anchored to the A-share price; Mabwell closed +0.6%, near-bottom), "
+        "**absolute free-float** (scarcer = easier squeeze), and the **intl-placement × deal-size** "
+        "balance. The company-quality score should **move off the day-1 card and serve the holding "
+        "period instead**. This rests on n=17 in a single universal-pop regime — "
+        "**hypothesis-generating, not validated** — pending confirmation at n≥30."
     ),
     "strategy.ipo.caveat": (
         "Day-1 figures are a snapshot frozen on the listing date and do not update with later "

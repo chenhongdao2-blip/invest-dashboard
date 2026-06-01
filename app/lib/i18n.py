@@ -193,6 +193,7 @@ _TA_ZH = {
 # English view. Keys are the EXACT strings in ipo_picks.csv 'tier' column.
 _IPO_TIER_EN = {
     "重点申购+": "Strong Buy+",
+    "重点申购": "Strong Buy",
     "推荐申购": "Subscribe",
     "谨慎申购": "Cautious",
     "不申购": "Avoid",

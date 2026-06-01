@@ -288,15 +288,13 @@ def render_ipo_strategy() -> None:
         st.caption(i18n.t("strategy.ipo.source"))
         return
 
-    # --- KPI strip (house cmsi-kpi cards — black sub-text + cream bg, replaces
-    # the native st.metric whose label/delta render grey). 命中率口径 = 全 17
-    # 只已上市的首日收涨率 (n_up/n_listed), 不再用推荐档 10/11 子样本. ---
+    # --- KPI strip: 3 dead-simple single numbers (规模 + 上行 + 下行). The
+    # "does a higher score actually do better?" question is answered by the
+    # by-tier staircase TABLE below — not by cramming a contrast into a card
+    # (contrast cards read as cryptic; user feedback 2026-06). ---
     n_total, n_listed, n_pending = len(picks), len(listed), len(pending)
-    med_ret = listed["ret_pct"].median()
-    lo_ret = listed["ret_pct"].min()
     top_row = listed.loc[listed["ret_pct"].idxmax()]
-    n_up = int((listed["ret_pct"] > 0).sum())          # 首日收涨数 (全 listed)
-    win_rate = (n_up / n_listed * 100) if n_listed else float("nan")
+    worst_row = listed.loc[listed["ret_pct"].idxmin()]
 
     def _ipo_kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
         return (
@@ -307,27 +305,44 @@ def render_ipo_strategy() -> None:
             '</div>'
         )
 
-    # Value colours are semantic: 样本数 neutral ink; 最高首日 deep-teal (hero);
-    # 中位首日 / 收涨率 teal (positive). Eyebrow labels carry the CMSI red accent.
     theme.kpi_strip([
         _ipo_kpi(i18n.t("strategy.ipo.kpi.sample"), str(n_total),
                  i18n.t("strategy.ipo.kpi.sample_delta", listed=n_listed, pending=n_pending)),
         _ipo_kpi(i18n.t("strategy.ipo.kpi.max"), f"{top_row['ret_pct']:+.0f}%",
                  i18n.t("strategy.ipo.kpi.max_delta", name=str(top_row["name_cn"])),
                  vcls="up-deep"),
-        _ipo_kpi(i18n.t("strategy.ipo.kpi.med"), f"{med_ret:+.1f}%",
-                 i18n.t("strategy.ipo.kpi.med_delta", lo=lo_ret, hi=top_row["ret_pct"]), vcls="up"),
-        _ipo_kpi(i18n.t("strategy.ipo.kpi.hitrate"), f"{win_rate:.1f}%",
-                 i18n.t("strategy.ipo.kpi.hitrate_delta", up=n_up, n=n_listed), vcls="up"),
+        _ipo_kpi(i18n.t("strategy.ipo.kpi.worst"), f"{worst_row['ret_pct']:+.1f}%",
+                 i18n.t("strategy.ipo.kpi.worst_delta", name=str(worst_row["name_cn"]))),
     ])
 
-    # KPI note (4-way review): surface the strategy-actionable cut (≥6.0 推荐档)
-    # alongside the full-sample win-rate, and flag the right-tail mean distortion.
-    rec = listed[listed["score"] >= 6.0]
-    rec_up, rec_n = int((rec["ret_pct"] > 0).sum()), len(rec)
-    st.caption(i18n.t("strategy.ipo.kpi.note",
-                      rec_up=rec_up, rec_n=rec_n, up=n_up, n=n_listed,
-                      median=med_ret))
+    # --- By-tier staircase: does a higher 申购档 actually perform better? Read it
+    # top-to-bottom. The data shows the model nails the EXTREMES (重点+ best / 不申购
+    # broke) but the middle tiers barely separate — honest, no clever single metric. ---
+    theme.section_header(i18n.t("strategy.ipo.tier.title"))
+    prefer_cn = i18n.get_lang() == "zh"
+    c_n = i18n.t("strategy.ipo.tier.col.n")
+    c_med = i18n.t("strategy.ipo.tier.col.med")
+    c_win = i18n.t("strategy.ipo.tier.col.win")
+    c_brk = i18n.t("strategy.ipo.tier.col.brk")
+    _trows: dict[str, dict] = {}
+    for _t in ["重点申购+", "重点申购", "推荐申购", "谨慎申购", "不申购"]:
+        g = listed[listed["tier"] == _t]
+        if g.empty:
+            continue
+        _up = int((g["ret_pct"] > 0).sum())
+        _trows[_t if prefer_cn else i18n.ipo_tier(_t)] = {
+            c_n: str(len(g)),
+            c_med: f"{g['ret_pct'].median():+.0f}%",
+            c_win: f"{_up}/{len(g)}",
+            c_brk: str(int((g["ret_pct"] < 0).sum())),
+        }
+    if _trows:
+        ui.render_html_table(
+            pd.DataFrame.from_dict(_trows, orient="index"),
+            text_cols=[c_n, c_med, c_win, c_brk], column_help={},
+            index_label=i18n.t("strategy.ipo.tier.col.tier"), height=260,
+        )
+    st.caption(i18n.t("strategy.ipo.tier.note"))
 
     # --- Score × day-1 scatter (core trend; honest Spearman ρ annotation) ---
     theme.section_header(i18n.t("strategy.ipo.scatter.title", n=n_listed))

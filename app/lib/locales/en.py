@@ -141,8 +141,9 @@ STRINGS = {
     "model.wiki_full": "Expand full Wiki",
     "model.see_thesis": "→ Full research view on Ticker Drill",
     "model.disclaimer": "Data from analyst model {src} (analyst view, not filing basis; FYxxE are estimates). TP/DCF is a single-model base case — internal research only, not investment advice.",
+    "model.public_desensitized": "📋 Public desensitized view — price target / DCF valuation removed; forecasts & ratios retained. Full valuation is internal/local only.",
     # ── ⑤ Analyst ratios (the divisions/multiples/forecasts SEC can't give) ──
-    "model.sec.ratios": "⑤ Analyst Ratios · what SEC can't give",
+    "model.sec.ratios": "⑤ Analyst Ratios",
     "model.ratios_cap": (
         "SEC gives only the atoms (receivables/revenue/net income/equity) — not the "
         "divisions, multiples or forecasts. This panel is the analyst model's incremental "

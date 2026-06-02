@@ -134,8 +134,9 @@ STRINGS = {
     "model.wiki_full": "展开完整 Wiki",
     "model.see_thesis": "→ 完整研究观点见「个股详情」",
     "model.disclaimer": "数据来自分析师模型 {src}（分析师 view，非财报口径；FYxxE 为估算）。目标价/DCF 为单一模型 base case，仅供内部研究，不构成投资建议。",
+    "model.public_desensitized": "📋 公开脱敏版：目标价 / DCF 估值结论已移除，预测与比率保留；完整估值仅本地内部版可见。",
     # ── ⑤ 分析师比率（SEC 给不出的除法/倍数/预测）──
-    "model.sec.ratios": "⑤ 分析师比率 · SEC 没有的",
+    "model.sec.ratios": "⑤ 分析师比率",
     "model.ratios_cap": (
         "SEC 只给原子（应收/营收/净利/权益），给不出除法、倍数与预测。本面板是分析师模型的"
         "增量价值：凡需股价/EV 的倍数、需预测的 FYxxE、或需口径选择的（非GAAP/周转天数/ROIC/"

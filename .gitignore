@@ -43,5 +43,8 @@ data/snapshots.db.bak-*
 cov_*.txt
 cov_*.json
 
-# Analyst model extracts — confidential (TP/DCF). Local-only, NOT public Cloud (P0).
+# Analyst model extracts — FULL versions are confidential (TP/DCF + Visible Alpha):
+# local-only, NEVER public Cloud. The desensitized copies under data/models_public/
+# (dcf/target stripped by jobs/export_public_model.py) ARE committed & shipped to Cloud.
 data/models/*.json
+!data/models_public/

@@ -78,6 +78,8 @@ def _card(label: str, value: str, sub: str, vcls: str = "") -> str:
 # ── header: company + model provenance + DCF cards ──
 st.markdown(f"### {meta.get('company', ticker)} · `{ticker}`")
 st.caption(i18n.t("model.as_of", ver=meta.get("model_version", "—"), src=meta.get("source", "")))
+if meta.get("public"):
+    st.caption(i18n.t("model.public_desensitized"))
 
 if dcf and dcf.get("target_price") and dcf.get("current_price"):
     tp = dcf["target_price"]

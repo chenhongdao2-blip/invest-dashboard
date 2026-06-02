@@ -7,8 +7,10 @@ import streamlit as st
 from pathlib import Path
 
 from lib import benchmarks as bm
+from lib import charts
 from lib import db
 from lib import format as fmt
+from lib import hc_overview as hco
 from lib import ui
 from lib import theme
 from lib import i18n
@@ -96,7 +98,7 @@ else:
 st.divider()
 
 # --- Domain benchmark snapshot ---
-theme.section_header(i18n.t("hc.section.benchmark"))
+theme.section_header(i18n.t("hc.section.benchmark"), meta=i18n.t("hc.section.benchmark_meta"))
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
     focus = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI"]
@@ -112,6 +114,114 @@ if not bench_df.empty:
         num_cols=["Last"],
         column_labels=i18n.common_cols(),
     )
+
+st.divider()
+
+# --- Relative performance: 3 paired index comparisons (Jonah) ----------------
+# HSHCI vs HSI/HSTECH · NBI vs Nasdaq · S&P HC vs S&P. Source series baked by
+# jobs/build_hc_overview_data.py (HK = iFind, US = yfinance) — cloud can't fetch live.
+theme.section_header(i18n.t("hc.rs.section"), meta=i18n.t("hc.rs.section_meta"))
+_idx = hco.load_index_comparison()
+if _idx.empty:
+    st.info(i18n.t("hc.rs.empty"))
+else:
+    _cn = i18n.get_lang() == "zh"
+    _asof = _idx["date"].max().date().isoformat()
+    _PANEL_TITLE = {"hk": "hc.rs.hk.title", "nbi": "hc.rs.nbi.title", "sphc": "hc.rs.sphc.title"}
+
+    def _render_rs_panel(panel_id: str, *, height: int = 360) -> None:
+        cfg = next((h, p) for pid, h, p in hco.PANELS if pid == panel_id)
+        hero_id, peer_ids = cfg
+        ser = hco.panel_series(_idx, panel_id)
+        if hero_id not in ser:
+            return
+        hero_nm = hco.series_name(_idx, hero_id, prefer_cn=_cn)
+        peers = {hco.series_name(_idx, p, prefer_cn=_cn): ser[p] for p in peer_ids if p in ser}
+        fig, meta = charts.index_compare_chart(
+            ser[hero_id], peers, hero_name=hero_nm, height=height,
+            title=i18n.t(_PANEL_TITLE[panel_id]), ylabel=i18n.t("hc.rs.ylabel"),
+        )
+        if fig is None:
+            return
+        st.plotly_chart(fig, width="stretch", theme=None, config={"displayModeBar": False})
+        # Scannable FT-style spread: "<peer> ±N.Npp" (vs hero, since anchor). −0.0 → 0.0.
+        parts = [f"{pn} {(pp if abs(pp) >= 0.05 else 0.0):+.1f}pp" for pn, pp in meta["spreads"].items()]
+        st.caption(i18n.t("hc.rs.caption", anchor=meta["anchor"], detail=" / ".join(parts),
+                          src="iFind · yfinance", asof=_asof))
+
+    _render_rs_panel("hk")                          # headline: 3-line HK comparison, full width
+    _c1, _c2 = st.columns(2)
+    with _c1:
+        _render_rs_panel("nbi", height=260)         # supporting pair: shorter (visual hierarchy)
+    with _c2:
+        _render_rs_panel("sphc", height=260)
+    theme.eyebrow(i18n.t("hc.read.eyebrow"))         # cross-market read (biotech-researcher Agent)
+    st.markdown(i18n.t("hc.rs.read"))
+
+st.divider()
+
+# --- Institutional positioning: offshore China funds OW/UW on healthcare ------
+# Audited fund-positioning xlsx → china_fund_hc_positioning.csv. Diverging bar uses
+# the LOCKED teal=OW / red=UW convention; caption spells it out (positioning, not return).
+theme.section_header(i18n.t("hc.pos.section"), meta=i18n.t("hc.pos.section_meta"))
+_pos = hco.load_fund_positioning()
+if _pos.empty:
+    st.info(i18n.t("hc.pos.empty"))
+else:
+    _v = hco.positioning_verdict(_pos)
+    _v["aum_pp"] = f"{_v.get('aum_wt_dev', 0.0) * 100:+.1f}"   # dynamic — never hardcode the tilt
+    st.markdown(i18n.t("hc.pos.verdict", **_v))                # counts headline — always valid
+    if _v.get("data_available"):                               # directional tilt only when real AUM backs it
+        st.markdown(i18n.t("hc.pos.verdict_tilt", **_v))
+
+    _cn = i18n.get_lang() == "zh"
+    _chart_col, _tbl_col = st.columns([5, 6])
+    with _chart_col:
+        _have = _pos.dropna(subset=["deviation_2026"]).copy()
+        fig_pos = charts.positioning_diverging_bar(
+            _have["fund"].tolist(), _have["deviation_2026"].tolist(),
+            title=i18n.t("hc.pos.chart.title"), xlabel=i18n.t("hc.pos.chart.xlabel"),
+        )
+        st.plotly_chart(fig_pos, width="stretch", theme=None, config={"displayModeBar": False})
+        st.caption(i18n.t("hc.pos.legend"))
+
+    with _tbl_col:
+        _stance_key = {"OW": "hc.pos.stance.OW", "UW": "hc.pos.stance.UW",
+                       "Neutral": "hc.pos.stance.Neutral", "Slightly OW": "hc.pos.stance.SlightlyOW",
+                       "N/A": "hc.pos.stance.NA"}
+        c_fund, c_aum = i18n.t("hc.pos.col.fund"), i18n.t("hc.pos.col.aum")
+        c_fhc, c_bhc = i18n.t("hc.pos.col.fund_hc"), i18n.t("hc.pos.col.bm_hc")
+        c_dev, c_st, c_chg = i18n.t("hc.pos.col.dev"), i18n.t("hc.pos.col.stance"), i18n.t("hc.pos.col.chg")
+
+        def _wpct(x) -> str:
+            return "—" if pd.isna(x) else f"{x * 100:.1f}%"
+
+        # House FT-editorial HTML table (NOT st.dataframe — DESIGN.md §5.1: glide-grid
+        # bleeds OS dark-mode). dev/chg as pct_decimal → sign-colored = OW-teal / UW-red.
+        _disp = pd.DataFrame({
+            c_fund: _pos["fund"],
+            c_aum: _pos["aum_2026"],
+            c_fhc: _pos["fund_hc_w"].map(_wpct),
+            c_bhc: _pos["bm_hc_w"].map(_wpct),
+            c_dev: _pos["deviation_2026"],
+            c_st: _pos["ow_uw_2026"].map(
+                lambda s: i18n.t(_stance_key.get(str(s).strip(), "hc.pos.stance.Neutral"))),
+            c_chg: _pos["change_dev"],
+        })
+        ui.render_styled_table(
+            _disp,
+            pct_decimal_cols=[c_dev, c_chg],
+            text_cols=[c_fund, c_aum, c_fhc, c_bhc, c_st],
+            hide_index=True,
+            height=460,
+        )
+
+    theme.eyebrow(i18n.t("hc.read.eyebrow"))   # institutional-flow read (financial-strategist Agent)
+    st.markdown(i18n.t("hc.pos.read"))
+    st.caption(i18n.t("hc.pos.note_ai"))
+    _src = hco.positioning_source()
+    if _src:
+        st.caption(i18n.t("hc.pos.source") + _src)
 
 st.divider()
 

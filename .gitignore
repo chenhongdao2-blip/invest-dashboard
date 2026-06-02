@@ -48,3 +48,12 @@ cov_*.json
 # (dcf/target stripped by jobs/export_public_model.py) ARE committed & shipped to Cloud.
 data/models/*.json
 !data/models_public/
+
+# China-fund HC positioning — FULL files carry real fund names (confidential):
+# local-only, NEVER public Cloud. The committed china_fund_hc_positioning.csv is the
+# ANONYMISED (Fund 1–12) copy emitted by jobs/build_hc_overview_data.py.
+data/external/china_fund_hc_positioning_full.csv
+data/external/china_fund_hc_positioning_source_full.txt
+
+# HC positioning runbook references real fund names (gotchas + leak-scan tokens) — local-only.
+docs/hc-positioning-pipeline.md

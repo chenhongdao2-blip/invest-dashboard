@@ -94,7 +94,8 @@ STRINGS = {
     "hc.caption_fallback": "医疗健康领域总览——7 个细分板块。",
     "hc.section.summary": "板块汇总",
     "hc.section.summary_meta": "各板块平均收益",
-    "hc.section.benchmark": "领域基准（XLV）及同业",
+    "hc.section.benchmark": "领域基准及同业",
+    "hc.section.benchmark_meta": "XLV · XBI · XPH · IXJ · IHF · IHI",
     "hc.section.movers": "各板块涨跌前 3 · 1日",
     "hc.col.sector": "板块",
     "hc.col.tickers": "标的数",
@@ -106,6 +107,61 @@ STRINGS = {
     "hc.movers.gainers": "涨幅前 3 · 1日",
     "hc.movers.drags": "跌幅前 3 · 1日",
     "hc.summary.empty": "暂无板块数据——需回补。",
+    # ── 相对表现（Jonah：HSHCI vs 恒生/恒科 · NBI vs 纳指 · 标普医疗 vs 标普）──
+    "hc.rs.section": "相对表现",
+    "hc.rs.section_meta": "去年 8 月以来 · rebased=100",
+    "hc.rs.hk.title": "恒生医疗保健 vs 恒生 vs 恒生科技",
+    "hc.rs.nbi.title": "纳斯达克生物科技 (NBI) vs 纳斯达克综合",
+    "hc.rs.sphc.title": "标普 500 医疗保健 vs 标普 500",
+    "hc.rs.ylabel": "rebased（起点 = 100）",
+    "hc.rs.caption": "锚定 {anchor}（去年 8 月）· {detail}。来源：{src}，截至 {asof}。",
+    "hc.rs.read": (
+        "港股医疗独熊（较恒指 −22.4pp），主因**中国医疗特有风险**（流动性虹吸 / 集采 VBP / "
+        "医保谈判），而非全球医疗 de-rating——佐证：NBI 与纳指基本持平，全球生科未同步走弱。"
+        "美股大医疗 −9.3pp 则属药价（IRA/PBM）与 managed-care 赔付压力的板块 de-rating。"
+    ),
+    "hc.rs.lag": "{hero}较{peer} 跑输 {pp}pp",
+    "hc.rs.lead": "{hero}较{peer} 跑赢 {pp}pp",
+    "hc.rs.flat": "{hero}与{peer} 基本持平",
+    "hc.rs.empty": "暂无指数对比数据——请运行 jobs/build_hc_overview_data.py 回补。",
+    # ── 机构持仓 · 离岸中国基金对 healthcare 超配/低配 ──
+    "hc.pos.section": "机构持仓 · 离岸中国基金对医疗的超配/低配",
+    "hc.pos.section_meta": "12 只离岸中国股票型基金 · vs 各自基准 · 截至 2026-03-31",
+    "hc.pos.chart.title": "医疗板块偏离度（基金权重 − 基准权重）",
+    "hc.pos.chart.xlabel": "相对基准的偏离（百分点）",
+    "hc.pos.legend": "🟢 青＝超配 (OW)　🔴 红＝低配 (UW)　·　此处颜色表**仓位倾斜**，非当日涨跌",
+    # 纯计数 headline — 永远有效, 不含方向/AUM倾斜/写死数字(无数据时也安全)。
+    "hc.pos.verdict": (
+        "**结论**：按基金只数接近中性——{n_ow} 超配 / {n_uw} 低配 / {n_neu} 中性"
+        "（另 {n_na} 只未披露 HC 权重）。"
+    ),
+    # 方向性倾斜 — 页面仅在 data_available(有真实 AUM 支撑) 时渲染。
+    "hc.pos.verdict_tilt": (
+        "**按 AUM 加权为小幅净低配（{aum_pp}pp）**——最大的一只（3.3bn）坚定低配 −3.8pp，"
+        "第二大的一只反而小幅超配 +1.1pp；真正的超配信仰集中在更小的几只户口（最高 +6.7pp）。"
+    ),
+    "hc.pos.read": (
+        "大户仍在加速减仓（最深者一年减 −3.4 ~ −3.8pp），与港股医疗同期较恒指跑输 −22pp "
+        "形成「机构去化 + 估值杀」共振；个别中小户开始向中性补仓，是逆向资金的试探，但拐点未到。"
+        "研判偏 **contrarian**——分步跟踪筹码见底，不抢左侧。"
+    ),
+    "hc.pos.col.fund": "基金",
+    "hc.pos.col.aum": "规模 (USD)",
+    "hc.pos.col.bm": "基准",
+    "hc.pos.col.fund_hc": "基金 HC%",
+    "hc.pos.col.bm_hc": "基准 HC%",
+    "hc.pos.col.dev": "偏离",
+    "hc.pos.col.stance": "超/低配",
+    "hc.pos.col.chg": "较去年 Δ",
+    "hc.read.eyebrow": "研判",
+    "hc.pos.stance.OW": "超配",
+    "hc.pos.stance.UW": "低配",
+    "hc.pos.stance.Neutral": "中性",
+    "hc.pos.stance.SlightlyOW": "略超配",
+    "hc.pos.stance.NA": "未披露",
+    "hc.pos.source": "来源：",
+    "hc.pos.note_ai": "解读由金融策略 / 医药研究 Agent 基于上表数据生成；不含也不采信任何评级 / 目标价。",
+    "hc.pos.empty": "暂无基金持仓数据——请运行 jobs/build_hc_overview_data.py 回补。",
     "hc.onboarding.title": "如何阅读本页",
     "hc.onboarding.body": (
         "**板块汇总**：展示医疗健康 7 个细分板块的平均涨跌幅。\n"

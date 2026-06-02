@@ -168,6 +168,64 @@ def relative_strength_chart(
     return theme.style_plotly(fig), anchor_iso
 
 
+def index_compare_chart(
+    hero: pd.Series,
+    peers: dict[str, pd.Series],
+    *,
+    hero_name: str,
+    title: str = "",
+    ylabel: str = "Rebased (start=100)",
+    height: int = 360,
+) -> tuple[go.Figure | None, dict | None]:
+    """Rebased=100 comparison of one 'hero' index vs peer index/indices.
+
+    `height` lets the caller drop subsidiary half-width panels (e.g. 260) below the
+    full-width hero (360) so the visual hierarchy reads hero → supporting pair.
+
+    Healthcare-analyst framing: the hero (a healthcare index — HSHCI / NBI / S&P
+    HC) is the solid CMSI-red emphasis line; peers (broad market) are muted-grey
+    dashed/dotted, distinguished by STYLE not color (DESIGN.md §4). All series are
+    inner-joined on common trading days and rebased to 100 at the first common
+    date (the anchor) — never each series' own start — so no spurious start-gap.
+
+    Returns (figure, meta) where meta = {"anchor": iso, "spreads": {peer: pp}}.
+    `spreads[peer]` = hero_final − peer_final in points of rebased index, i.e. the
+    hero's cumulative out/underperformance vs that peer since the anchor — the
+    headline number for the caption. Figure is None on too little history (<5 pts).
+    """
+    if hero is None or hero.dropna().empty or not peers:
+        return None, None
+    frame: dict[str, pd.Series] = {hero_name: hero.dropna()}
+    for name, ser in peers.items():
+        if ser is not None and not ser.dropna().empty:
+            frame[name] = ser.dropna()
+    wide = pd.DataFrame(frame).dropna()          # inner-join → common trading days
+    if len(wide) < 5 or wide.shape[1] < 2:
+        return None, None
+    rebased = wide.divide(wide.iloc[0]) * 100.0   # anchor = first common date
+    anchor_iso = wide.index[0].date().isoformat()
+
+    fig = go.Figure()
+    dash_cycle = ["dash", "dot", "dashdot"]
+    peer_cols = [c for c in rebased.columns if c != hero_name]
+    for i, col in enumerate(peer_cols):
+        fig.add_trace(go.Scatter(
+            x=rebased.index, y=rebased[col], mode="lines", name=col,
+            line=dict(width=1.4, color=theme.INK_3, dash=dash_cycle[i % len(dash_cycle)]),
+            hovertemplate="%{x|%Y-%m-%d}<br>" + col + " %{y:.1f}<extra></extra>",
+        ))
+    # Hero on top — solid CMSI-red emphasis.
+    fig.add_trace(go.Scatter(
+        x=rebased.index, y=rebased[hero_name], mode="lines", name=hero_name,
+        line=dict(width=2.0, color=theme.CMSI_RED),
+        hovertemplate="%{x|%Y-%m-%d}<br>" + hero_name + " %{y:.1f}<extra></extra>",
+    ))
+    fig.update_layout(title=_clean_title(title), yaxis_title=ylabel, height=height)
+    fig.add_hline(y=100, line=dict(width=1, color=theme.INK_3, dash="dash"), opacity=0.4)
+    spreads = {c: float(rebased[hero_name].iloc[-1] - rebased[c].iloc[-1]) for c in peer_cols}
+    return theme.style_plotly(fig), {"anchor": anchor_iso, "spreads": spreads}
+
+
 def _diverging_color(pct: float, *, cap: float = 12.0) -> str:
     """Map a signed % return to a diverging teal(up)/red(down) hex, centered at 0.
 
@@ -630,6 +688,53 @@ def year_bar(
         yaxis=dict(title=dict(text=ylabel, font=dict(size=12, color=theme.INK_2)),
                    tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2)),
         xaxis=dict(tickfont=dict(size=10, color=theme.INK_2), dtick=dtick),
+    )
+    return fig
+
+
+def positioning_diverging_bar(
+    labels: list,
+    deviations: list,           # signed FRACTION: -0.038 → −3.8pp underweight
+    *,
+    title: str = "",
+    xlabel: str = "Deviation from benchmark (pp)",
+    height: int | None = None,
+) -> go.Figure:
+    """Diverging horizontal bars — fund healthcare over/underweight vs its own BM.
+
+    x = deviation in PERCENTAGE POINTS (fund HC weight − benchmark HC weight).
+    Color is the LOCKED project convention: overweight (>0) → teal (theme.UP),
+    underweight (<0) → red (theme.DOWN). NOTE this is a *positioning* tilt, not a
+    price return — the page caption must spell out "teal = 超配 / red = 低配" so the
+    A-share red-is-up reflex doesn't misread it. Sorted most-OW at top. A vertical
+    zero line marks the benchmark weight. Funds with no disclosure (NaN) are
+    expected to be dropped by the caller.
+    """
+    fig = go.Figure()
+    if not labels:
+        return theme.style_plotly(fig)
+    order = sorted(range(len(labels)),
+                   key=lambda k: (deviations[k] if deviations[k] is not None else 0.0))
+    labs = [labels[k] for k in order]
+    pp = [round((deviations[k] or 0.0) * 100, 1) for k in order]
+    colors = [theme.UP if v >= 0 else theme.DOWN for v in pp]
+    texts = [(f"+{v:.1f}" if v > 0 else f"{v:.1f}") for v in pp]
+    fig.add_trace(go.Bar(
+        x=pp, y=labs, orientation="h",
+        marker_color=colors, marker_line_width=0,
+        text=texts, textposition="outside",
+        textfont=dict(size=11, color=theme.INK_2),
+        hovertemplate="%{y}<br>%{x:+.1f} pp vs benchmark<extra></extra>",
+    ))
+    h = height or max(240, 30 * len(labs) + 90)
+    fig.update_layout(title=_clean_title(title), height=h, showlegend=False)
+    fig = theme.style_plotly(fig)
+    fig.add_vline(x=0, line=dict(width=1.2, color=theme.INK_2), opacity=0.7)
+    fig.update_layout(
+        xaxis=dict(title=dict(text=xlabel, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), zeroline=False),
+        yaxis=dict(tickfont=dict(size=12, color=theme.INK), showgrid=False, automargin=True),
+        margin=dict(l=8, r=60, t=64, b=44),
     )
     return fig
 

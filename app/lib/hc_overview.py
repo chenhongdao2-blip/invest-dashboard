@@ -122,6 +122,10 @@ def positioning_verdict(df: pd.DataFrame) -> dict:
     Returns {n_ow, n_uw, n_neu, n_na, aum_wt_dev, tilt} where tilt ∈ {OW, UW, ~flat}.
     aum_wt_dev is the AUM-weighted mean of deviation_2026 over funds WITH data — the
     "real money" tilt that the headline verdict rests on.
+
+    When data_available, also emits the extremal figures the verdict narrates, all
+    computed from the data (never hardcoded prose): largest_aum_dev / largest_aum_label
+    (top-AUM fund), second_aum_dev (2nd-largest, if any), max_ow_dev (peak overweight).
     """
     if df.empty:
         return {}
@@ -158,7 +162,23 @@ def positioning_verdict(df: pd.DataFrame) -> dict:
 
     aum_wt_dev = float((have["deviation_2026"] * have["_aum"]).sum() / denom)
     tilt = "OW" if aum_wt_dev > 0.002 else "UW" if aum_wt_dev < -0.002 else "~flat"
-    return {**counts, "data_available": True, "aum_wt_dev": aum_wt_dev, "tilt": tilt}
+
+    # Emit the extremal/largest-fund figures the verdict narrates, computed FROM the
+    # data (data-narrative-coupling fix). The verdict_tilt template previously froze
+    # these as English prose ('largest fund 3.3bn ... -3.8pp', '2nd-largest +1.1pp',
+    # 'up to +6.7pp'); when build_hc_overview_data.py re-bakes a new quarter those
+    # literals silently diverge from the diverging-bar chart on the same screen.
+    # Surfacing them here lets the template be parameterised instead of hardcoded.
+    ranked = have.sort_values("_aum", ascending=False).reset_index(drop=True)
+    extremes: dict = {
+        "largest_aum_dev": float(ranked.loc[0, "deviation_2026"]),
+        "largest_aum_label": str(ranked.loc[0, "aum_2026"]),
+        "max_ow_dev": float(ranked["deviation_2026"].max()),
+    }
+    if len(ranked) > 1:
+        extremes["second_aum_dev"] = float(ranked.loc[1, "deviation_2026"])
+
+    return {**counts, "data_available": True, "aum_wt_dev": aum_wt_dev, "tilt": tilt, **extremes}
 
 
 def _parse_aum(s) -> float | None:

@@ -126,7 +126,7 @@ ratios:
       metrics:
         - {key: adj_pe,        row: 47, cn: "调整后市盈率",       en: "Adj P/E",              fmt: mult, freq: a}
         - {key: ev_sales,      row: 49, cn: "EV/Sales",          en: "EV/Sales",             fmt: mult, freq: a}
-        - {key: ev_ebitda_adj, row: 50, cn: "调整后EV/EBITDA",    en: "Adj EV/EBITDA",        fmt: mult, freq: a}
+        - {key: ev_ebitda_adj, row: 50, cn: "GAAP EV/EBITDA",     en: "GAAP EV/EBITDA",       fmt: mult, freq: a}  # row 50 = GAAP EBITDA (SBC 当费用); 非"加回"口径, 勿改回"调整后/Adj"——见 ev_ebitda_ng 才是加回SBC的非GAAP
         - {key: ev_ebitda_ng,  row: 51, cn: "EV/EBITDA(非GAAP)",  en: "EV/EBITDA(non-GAAP)",  fmt: mult, freq: a}
         - {key: ev_fcf,        row: 52, cn: "EV/FCF",             en: "EV/FCF",               fmt: mult, freq: a}
         - {key: p_fcf,         row: 53, cn: "P/FCF",              en: "P/FCF",                fmt: mult, freq: a}

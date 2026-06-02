@@ -398,7 +398,7 @@ def render_bento_html(domains: list[dict], *, prefer_cn: bool, window_label: str
     build_domain_bento() payloads (already filtered to non-None)."""
     t = theme
     title = "个股热力图" if prefer_cn else "Single-Stock Heatmap"
-    sub = ("子行业按中位涨跌排序分配席位 · 最热的书席位最多"
+    sub = ("子行业按中位涨跌排序分配席位 · 最热的子行业分到最多席位"
            if prefer_cn else
            "Slots by sub-sector median-return rank — hottest books get the most tiles")
     legend = (
@@ -413,11 +413,11 @@ def render_bento_html(domains: list[dict], *, prefer_cn: bool, window_label: str
         f'<div class="conv">⚠ <b>本图配色（港美股惯例）：</b>'
         f'<span class="up">青绿 = 涨</span> · <span class="dn">红 = 跌</span>'
         f'<b>（与 A 股红涨绿跌相反，请注意）</b>'
-        f'<span class="sz">块大小 = 排名席位，非涨幅 · 颜色干所有数据活</span></div>'
+        f'<span class="sz">块大小 = 排名席位（非涨幅） · 顶部红条 = 子行业市值龙头（锚定常驻）</span></div>'
         if prefer_cn else
         f'<div class="conv">⚠ <b>Color (HK/US convention):</b> '
         f'<span class="up">teal = up</span> · <span class="dn">red = down</span>'
-        f'<span class="sz">tile size = rank slot, not move size</span></div>'
+        f'<span class="sz">tile size = rank slot, not move size · red cap = sub-sector mcap bellwether (pinned)</span></div>'
     )
     boards = "".join(_render_domain(d, prefer_cn) for d in domains)
     foot = (

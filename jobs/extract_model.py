@@ -211,6 +211,78 @@ def main():
                          "basis": ln["basis"], "unit": ln.get("unit", "millions"),
                          "values": full_series(fs, ln["row"])})
 
+    # ── (d) analyst ratios + derived ─────────────────────────────────────────
+    # Raw rows via full_series (annual tracked by the None-gate + quarterly merged,
+    # quarterly NOT counted). Derived computed over the ANNUAL `periods` only, so
+    # their quarterly keys stay absent and the page greys them out naturally.
+    ratios = None
+    if "ratios" in cfg:
+        rc = cfg["ratios"]
+        rws = wb[rc["sheet"]]
+        ann = [p["label"] for p in periods]                 # annual axis labels
+
+        # raw metric value dicts, keyed by metric key — reused by the derived calcs.
+        raw_vals: dict[str, dict] = {}
+        groups = []
+        for g in rc.get("groups", []):
+            metrics = []
+            for mt in g["metrics"]:
+                vals = full_series(rws, mt["row"])           # annual + quarterly
+                raw_vals[mt["key"]] = vals
+                metrics.append({"key": mt["key"], "cn": mt["cn"], "en": mt["en"],
+                                "fmt": mt["fmt"], "freq": mt["freq"], "values": vals})
+            groups.append({"key": g["key"], "cn": g["cn"], "en": g["en"],
+                           "metrics": metrics})
+
+        # input-only rows (feed the derived calcs; NOT emitted as display metrics).
+        # Annual-only — tracked by the None-gate like any other mapped annual cell.
+        inputs = {name: track(_series(rws, row, periods))
+                  for name, row in rc.get("inputs", {}).items()}
+        # total-revenue YoY (already curated as revenue_total['yoy']) feeds rule40.
+        rev_yoy = revenue_total["yoy"]
+
+        def _safe_div(n, d):
+            return round(n / d, 4) if (n is not None and d not in (None, 0)) else None
+
+        def _feed(name):
+            """Resolve a derived feeder name → its annual period→value dict."""
+            if name == "__rev_yoy__":
+                return rev_yoy
+            return raw_vals.get(name) or inputs.get(name) or {}
+
+        gmap = {g["key"]: g for g in groups}
+        for d in rc.get("derived", []):
+            typ = d["type"]
+            vals = {}
+            if typ == "ratio":
+                num, den = _feed(d["num"]), _feed(d["den"])
+                for lbl in ann:
+                    vals[lbl] = _safe_div(num.get(lbl), den.get(lbl))
+            elif typ == "diff":
+                a, b = _feed(d["a"]), _feed(d["b"])
+                # freq=q derived (e.g. sbc_wedge): compute over annual + quarterly.
+                span = ann if d.get("freq") != "q" else \
+                    sorted(set(a) | set(b))
+                for lbl in span:
+                    av, bv = a.get(lbl), b.get(lbl)
+                    vals[lbl] = round(av - bv, 4) if (av is not None and bv is not None) else None
+            elif typ == "yoy":
+                src = _feed(d["src"])
+                for i, lbl in enumerate(ann):
+                    prev = ann[i - 1] if i > 0 else None
+                    cur, pv = src.get(lbl), (src.get(prev) if prev else None)
+                    vals[lbl] = round(cur / pv - 1, 4) if (cur is not None and pv not in (None, 0)) else None
+            elif typ == "rule40":
+                growth, margin = _feed(d["growth_src"]), _feed(d["margin_src"])
+                for lbl in ann:
+                    gv, mv = growth.get(lbl), margin.get(lbl)
+                    vals[lbl] = round(gv + mv, 4) if (gv is not None and mv is not None) else None
+            entry = {"key": d["key"], "cn": d["cn"], "en": d["en"], "fmt": d["fmt"],
+                     "freq": d.get("freq", "a"), "values": vals}
+            gmap[d["group"]]["metrics"].append(entry)
+
+        ratios = {"groups": groups}
+
     # ── GAAP → non-GAAP bridge ──
     gaap_bridge = None
     if "gaap_bridge" in cfg:
@@ -277,7 +349,7 @@ def main():
 
     doc = {"meta": meta, "periods": _ax(periods), "periods_q": _ax(periods_q),
            "revenue_total": revenue_total, "revenue_breakdown": revenue_breakdown,
-           "margins": margins, "forecast": forecast,
+           "margins": margins, "forecast": forecast, "ratios": ratios,
            "gaap_bridge": gaap_bridge, "dcf": dcf}
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -288,6 +360,10 @@ def main():
         print(f"   quarters: {len(periods_q)} ({periods_q[0]['label']}..{periods_q[-1]['label']}), first E = {first_e_q}")
     print(f"   revenue segs: {len(revenue_breakdown)}, margins: {len(margins)}, "
           f"forecast lines: {len(forecast)}, dcf: {'yes' if dcf else 'no'} (TP={dcf['target_price'] if dcf else '-'})")
+    if ratios:
+        _ng = len(ratios["groups"])
+        _nm = sum(len(g["metrics"]) for g in ratios["groups"])
+        print(f"   ratios: {_ng} groups, {_nm} metrics (incl. derived)")
 
 
 if __name__ == "__main__":

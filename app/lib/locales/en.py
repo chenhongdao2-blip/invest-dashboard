@@ -109,7 +109,7 @@ STRINGS = {
     # ── Model Drill (analyst-model visualization) ──
     "model.title": "Analyst Model",
     "model.intro": "Reads the analyst's Excel model and visualizes revenue breakdown / margins / forecast + DCF — the detail the GAAP filing page can't show. Figures are analyst view, tracked apart from GAAP; forecasts (FYxxE) are translucent, never bare.",
-    "model.none_any": "No analyst-model data in this environment (models are confidential, local-only, not on public Cloud).",
+    "model.none_any": "No analyst-model data in this environment yet.",
     "model.pick": "Company",
     "model.no_model": "No analyst model for {ticker}.",
     "model.fallback_link": "→ Ticker Drill / SEC Facts",
@@ -141,6 +141,26 @@ STRINGS = {
     "model.wiki_full": "Expand full Wiki",
     "model.see_thesis": "→ Full research view on Ticker Drill",
     "model.disclaimer": "Data from analyst model {src} (analyst view, not filing basis; FYxxE are estimates). TP/DCF is a single-model base case — internal research only, not investment advice.",
+    # ── ⑤ Analyst ratios (the divisions/multiples/forecasts SEC can't give) ──
+    "model.sec.ratios": "⑤ Analyst Ratios · what SEC can't give",
+    "model.ratios_cap": (
+        "SEC gives only the atoms (receivables/revenue/net income/equity) — not the "
+        "divisions, multiples or forecasts. This panel is the analyst model's incremental "
+        "value: any multiple needing price/EV, any forecast FYxxE, or any basis choice "
+        "(non-GAAP / turnover days / ROIC / cash conversion) is structurally absent from "
+        "SEC. Figures are analyst view, incl. forecast, tracked apart from GAAP filings."
+    ),
+    "model.ratios_tag": "Analyst view (incl. forecast)",
+    "model.ratios_annual_only": "annual only",
+    "model.ratios_annual_only_tip": "not annualized / basis not comparable quarterly",
+    "model.ratios_q_note": "Ratios default to the annual basis; quarterly shows only basis-comparable items (margins / Billings / customers).",
+    "model.ratios_metric_col": "Metric",
+    # group titles
+    "model.ratios.g.valuation": "Valuation multiples",
+    "model.ratios.g.profitability": "Profitability & returns",
+    "model.ratios.g.efficiency": "Efficiency & working capital",
+    "model.ratios.g.cash": "Cash & billings",
+    "model.ratios.g.operational": "Operational",
 
     "strategy.name.ipo": "HK IPO Subscription",
     "strategy.ipo.tab.intro": (

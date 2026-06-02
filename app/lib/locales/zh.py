@@ -102,7 +102,7 @@ STRINGS = {
     # ── Model Drill（分析师模型可视化）──
     "model.title": "分析师模型",
     "model.intro": "读取分析师 Excel 模型，把收入拆解 / 利润率 / 未来预测 + DCF 做成可视化——补足财报 GAAP「拆解不够细」的缺口。数字为分析师 view，与 GAAP 申报分轨标注；预测(FYxxE)半透明、不裸展示。",
-    "model.none_any": "当前环境无分析师模型数据（模型为机密，仅本地，不上公开云）。",
+    "model.none_any": "当前环境暂无分析师模型数据。",
     "model.pick": "选择公司",
     "model.no_model": "{ticker} 暂无分析师模型。",
     "model.fallback_link": "→ 去个股详情 / SEC 财报",
@@ -134,6 +134,24 @@ STRINGS = {
     "model.wiki_full": "展开完整 Wiki",
     "model.see_thesis": "→ 完整研究观点见「个股详情」",
     "model.disclaimer": "数据来自分析师模型 {src}（分析师 view，非财报口径；FYxxE 为估算）。目标价/DCF 为单一模型 base case，仅供内部研究，不构成投资建议。",
+    # ── ⑤ 分析师比率（SEC 给不出的除法/倍数/预测）──
+    "model.sec.ratios": "⑤ 分析师比率 · SEC 没有的",
+    "model.ratios_cap": (
+        "SEC 只给原子（应收/营收/净利/权益），给不出除法、倍数与预测。本面板是分析师模型的"
+        "增量价值：凡需股价/EV 的倍数、需预测的 FYxxE、或需口径选择的（非GAAP/周转天数/ROIC/"
+        "现金转化）——SEC 结构性没有。数字为分析师 view，含预测，与 GAAP 申报分轨。"
+    ),
+    "model.ratios_tag": "分析师 view（含预测）",
+    "model.ratios_annual_only": "仅年度口径",
+    "model.ratios_annual_only_tip": "季度未年化/口径不可比",
+    "model.ratios_q_note": "比率默认年度口径；季度仅展示利润率/Billings/客户数等口径可比项。",
+    "model.ratios_metric_col": "指标",
+    # 分组标题
+    "model.ratios.g.valuation": "估值倍数",
+    "model.ratios.g.profitability": "盈利与回报",
+    "model.ratios.g.efficiency": "效率与营运资本",
+    "model.ratios.g.cash": "现金与 Billings",
+    "model.ratios.g.operational": "经营指标",
 
     # ── IPO 打新策略（静态截面后测；与时间序列策略结构不同）──
     "strategy.name.ipo": "港股IPO打新",

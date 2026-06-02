@@ -111,3 +111,75 @@ dcf:
     npv_col: L
     pct_col: M
   scenario_note_cell: B24     # analyst Chinese commentary anchor
+
+# ── Analyst ratios (Summary sheet) — the divisions / multiples / 口径 choices SEC
+# GAAP can't give. Extractor reads raw rows via full_series (annual+quarterly merged)
+# then computes `derived` over the ANNUAL axis only (quarterly keys left absent →
+# they grey out in the UI). fmt ∈ {mult,pct,days,ps,ratio,int,bn}; freq ∈ {q,a}
+# (q = 口径-safe quarterly; a = annual_only → greyed in the page's 季度 mode).
+ratios:
+  sheet: Summary
+  groups:
+    - key: valuation
+      cn: "估值倍数"
+      en: "Valuation multiples"
+      metrics:
+        - {key: adj_pe,        row: 47, cn: "调整后市盈率",       en: "Adj P/E",              fmt: mult, freq: a}
+        - {key: ev_sales,      row: 49, cn: "EV/Sales",          en: "EV/Sales",             fmt: mult, freq: a}
+        - {key: ev_ebitda_adj, row: 50, cn: "调整后EV/EBITDA",    en: "Adj EV/EBITDA",        fmt: mult, freq: a}
+        - {key: ev_ebitda_ng,  row: 51, cn: "EV/EBITDA(非GAAP)",  en: "EV/EBITDA(non-GAAP)",  fmt: mult, freq: a}
+        - {key: ev_fcf,        row: 52, cn: "EV/FCF",             en: "EV/FCF",               fmt: mult, freq: a}
+        - {key: p_fcf,         row: 53, cn: "P/FCF",              en: "P/FCF",                fmt: mult, freq: a}
+        - {key: p_s,           row: 48, cn: "市销率(P/S)",        en: "P/S",                  fmt: mult, freq: a}
+    - key: profitability
+      cn: "盈利与回报"
+      en: "Profitability & returns"
+      metrics:
+        - {key: gross_margin,   row: 59, cn: "毛利率",            en: "Gross margin",            fmt: pct, freq: q}
+        - {key: op_margin_gaap, row: 60, cn: "营业利润率(GAAP)",   en: "Operating margin (GAAP)", fmt: pct, freq: q}
+        - {key: op_margin_ng,   row: 61, cn: "营业利润率(非GAAP)", en: "Operating margin (non-GAAP)", fmt: pct, freq: q}
+        - {key: net_margin,     row: 62, cn: "净利率",            en: "Net margin",              fmt: pct, freq: q}
+        - {key: roe,            row: 77, cn: "净资产收益率(ROE)",  en: "ROE",                     fmt: pct, freq: a}
+    - key: efficiency
+      cn: "效率与营运资本"
+      en: "Efficiency & working capital"
+      metrics:
+        - {key: receivable_days, row: 66, cn: "应收账款周转天数", en: "Receivable days (DSO)", fmt: days,  freq: a}
+        - {key: dpo,             row: 67, cn: "应付账款周转天数", en: "Days payable (DPO)",    fmt: days,  freq: a}
+        - {key: asset_turnover,  row: 68, cn: "总资产周转率",     en: "Total asset turnover",  fmt: ratio, freq: a}
+        - {key: current_ratio,   row: 56, cn: "流动比率",         en: "Current ratio",         fmt: ratio, freq: a}
+        - {key: net_debt_ratio,  row: 69, cn: "净负债率",         en: "Net debt ratio",        fmt: pct,   freq: a}
+    - key: cash
+      cn: "现金与 Billings"
+      en: "Cash & billings"
+      metrics:
+        - {key: fcf_margin,    row: 72, cn: "自由现金流利润率",  en: "FCF margin",       fmt: pct, freq: a}
+        - {key: fcf_yield_mcap, row: 70, cn: "FCF收益率(对市值)", en: "FCF yield (mcap)", fmt: pct, freq: a}
+        - {key: fcf_yield_ev,  row: 71, cn: "FCF收益率(对EV)",   en: "FCF yield (EV)",   fmt: pct, freq: a}
+        - {key: ocf_ps,        row: 37, cn: "经营现金流/股",     en: "OCF per share",    fmt: ps,  freq: a}
+        - {key: fcf_ps,        row: 38, cn: "自由现金流/股",     en: "FCF per share",    fmt: ps,  freq: a}
+        - {key: billings,      row: 26, cn: "Billings(测算)",    en: "Billings (calc)",  fmt: bn,  freq: q}
+    - key: operational
+      cn: "经营指标"
+      en: "Operational"
+      metrics:
+        - {key: comm_cust, row: 19, cn: "商业化客户数", en: "Commercial customers", fmt: int, freq: q}
+        - {key: rd_cust,   row: 20, cn: "R&D客户数",    en: "R&D customers",        fmt: int, freq: q}
+  # Input rows feeding the derived calcs (NOT emitted as display metrics).
+  inputs:
+    nopat:             79   # NOPAT
+    avg_equity:        76   # Average Shareholder's Equity
+    adj_net_income:    74   # Adj Net Income
+    avg_total_assets:  81   # Average Total Assets
+  # Derived metrics — computed in the extractor over the ANNUAL axis only; each is
+  # appended into the named group. fmt as given. type drives the formula.
+  derived:
+    - {key: roic,            group: profitability, fmt: pct,   type: ratio,    num: nopat,        den: avg_equity,       cn: "投入资本回报率(ROIC)", en: "ROIC"}
+    - {key: roa,             group: profitability, fmt: pct,   type: ratio,    num: adj_net_income, den: avg_total_assets, cn: "总资产回报率(ROA)",   en: "ROA"}
+    - {key: ccc,             group: efficiency,    fmt: days,  type: diff,     a: receivable_days, b: dpo,               cn: "现金转换周期(CCC)",   en: "Cash conversion cycle"}
+    - {key: fcf_conversion,  group: cash,          fmt: ratio, type: ratio,    num: fcf_margin,   den: net_margin,       cn: "现金流转化率",         en: "FCF conversion"}
+    - {key: billings_growth, group: cash,          fmt: pct,   type: yoy,      src: billings,                            cn: "Billings 增速",        en: "Billings growth"}
+    - {key: sbc_wedge,       group: profitability, fmt: pct,   type: diff,     a: op_margin_ng,   b: op_margin_gaap,     freq: q, cn: "SBC 利润率楔差",  en: "SBC margin wedge"}
+    # rule40 intentionally NOT here — the dedicated ④ Rule-of-40 scatter owns it
+    # (yfinance口径, cross-comp consistent). A 2nd model-基准 number (~60% vs the
+    # scatter's ~49%) on the same page would confuse. (George/4-way review 2026-06-02)

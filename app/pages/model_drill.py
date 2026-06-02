@@ -1,15 +1,17 @@
 """Model Drill — analyst-model financial visualization + LLM Wiki, one company per page.
 
 Deep-linked: /Model_Drill?ticker=VEEV (click-through from CMSI Coverage etc.).
-Reads data/models/<TICKER>.json (produced by jobs/extract_model.py). Model data is
-confidential (TP/DCF) and gitignored → on public Cloud has_model() is False and the
-page degrades gracefully to a pointer at Ticker Drill / SEC Facts.
+Reads data/models/<TICKER>.json (produced by jobs/extract_model.py). Model data
+SHIPS to public Cloud ("上云透明", George 2026-06-02) — the analyst view is the
+product. When a ticker has no extract, has_model() is False and the page degrades
+gracefully to a pointer at Ticker Drill / SEC Facts.
 
 Three honesty tiers run through the page (design doc 2026-06-01):
   GAAP 申报 (HIGH) · 分析师 model view (MEDIUM) · forecast (FYxxE, never bare).
 """
 from __future__ import annotations
 
+import pandas as pd
 import streamlit as st
 
 from lib import charts
@@ -181,6 +183,124 @@ if dcf:
     if note:
         with st.expander(i18n.t("model.scenario")):
             st.markdown(note)
+
+# ── ⑤ Analyst ratios — the divisions / multiples / forecasts SEC GAAP can't give.
+# Annual is the source of truth; in 季度 mode we keep it simple (spec §GROUPED
+# TABLES v1): always show the annual table, add a note, and show quarterly columns
+# only for 口径-safe (freq="q") metrics. No per-cell greying.
+_ratios = m.get("ratios")
+if _ratios and _ratios.get("groups"):
+
+    def _ratio_axis():
+        """Last 3 annual periods (FY n-2 · n-1 · nE) ending at the first forecast."""
+        _fe_a = next((i for i, p in enumerate(periods) if p["actual_est"] == "E"),
+                     len(periods))
+        return periods[max(0, _fe_a - 2):_fe_a + 1]
+
+    def _fmt_ratio(v, fmt: str) -> str:
+        if v is None or (isinstance(v, float) and v != v):
+            return "—"
+        if fmt == "mult":
+            return f"{v:.1f}x"
+        if fmt == "pct":
+            return f"{v * 100:.1f}%"
+        if fmt == "days":
+            return f"{v:.0f}{'天' if prefer_cn else 'd'}"
+        if fmt == "ps":
+            return f"${v:.2f}"
+        if fmt == "ratio":
+            return f"{v:.2f}x"
+        if fmt == "int":
+            return f"{int(round(v)):,}"
+        if fmt == "bn":
+            return f"${v / 1000:.2f}B"
+        return f"{v:.2f}"
+
+    def _mname(mt) -> str:
+        return mt["cn"] if prefer_cn else mt["en"]
+
+    # last 3-4 quarters ending at the first forecast quarter (for q-safe metrics).
+    def _q_axis():
+        if not _periods_q:
+            return []
+        _feq = next((i for i, p in enumerate(_periods_q) if p["actual_est"] == "E"),
+                    len(_periods_q))
+        return _periods_q[max(0, _feq - 3):_feq + 1]
+
+    theme.section_header(i18n.t("model.sec.ratios"))
+    st.caption(f"**{i18n.t('model.ratios_tag')}** · {i18n.t('model.ratios_cap')}")
+
+    # ── 6 hero cards: latest ACTUAL annual big number + FY(n-2)→(n-1)→(n)E path ──
+    _ann = _ratio_axis()
+    _ann_lbls = [p["label"] for p in _ann]
+    _by_key = {mt["key"]: mt for g in _ratios["groups"] for mt in g["metrics"]}
+    # latest ACTUAL annual label (last non-E in the full annual axis).
+    _last_actual = next((p["label"] for p in reversed(periods)
+                         if p["actual_est"] == "A"), _ann_lbls[-1] if _ann_lbls else None)
+    _hero = ["adj_pe", "ev_sales", "op_margin_ng", "fcf_margin", "roic", "billings_growth"]
+    _cards = []
+    for hk in _hero:
+        mt = _by_key.get(hk)
+        if not mt:
+            continue
+        vals = mt["values"]
+        big = _fmt_ratio(vals.get(_last_actual), mt["fmt"]) if _last_actual else "—"
+        # mini path: strip the unit suffix so "59→43→43x" reads cleanly.
+        path_raw = [_fmt_ratio(vals.get(l), mt["fmt"]) for l in _ann_lbls]
+        suf = ""
+        for s in ("x", "%", "天", "d", "B"):
+            if path_raw and path_raw[-1].endswith(s):
+                suf = s
+                break
+        nums = []
+        for s in path_raw:
+            if s == "—":
+                nums.append("—")
+            else:
+                t_ = s
+                for s2 in ("x", "%", "天", "d", "B", "$"):
+                    t_ = t_.replace(s2, "")
+                nums.append(t_.strip())
+        sub = "→".join(nums) + suf
+        _cards.append(_card(_mname(mt), big, sub, "up-deep"))
+    if _cards:
+        theme.kpi_strip(_cards)
+
+    # ── grouped tables (one per group) ──
+    _gtitle = {"valuation": "model.ratios.g.valuation",
+               "profitability": "model.ratios.g.profitability",
+               "efficiency": "model.ratios.g.efficiency",
+               "cash": "model.ratios.g.cash",
+               "operational": "model.ratios.g.operational"}
+    _metric_col = i18n.t("model.ratios_metric_col")
+    if _quarterly:
+        st.caption(i18n.t("model.ratios_q_note"))
+    for g in _ratios["groups"]:
+        gt = i18n.t(_gtitle.get(g["key"], "")) or (g["cn"] if prefer_cn else g["en"])
+        st.markdown(f"**{gt}**")
+        if _quarterly and _q_axis():
+            # q-safe subset only, quarterly columns
+            qax = _q_axis()
+            qlbls = [p["label"] for p in qax]
+            rows = {}
+            qmetrics = [mt for mt in g["metrics"] if mt.get("freq") == "q"]
+            if not qmetrics:
+                st.caption(i18n.t("model.ratios_annual_only"))
+                continue
+            for mt in qmetrics:
+                rows[_mname(mt)] = [_fmt_ratio(mt["values"].get(l), mt["fmt"]) for l in qlbls]
+            df = pd.DataFrame.from_dict(rows, orient="index", columns=qlbls)
+            df.index.name = _metric_col
+            ui.render_html_table(df, right_text_cols=qlbls, index_label=_metric_col,
+                                 height=60 + len(df) * 36)
+        else:
+            rows = {}
+            for mt in g["metrics"]:
+                rows[_mname(mt)] = [_fmt_ratio(mt["values"].get(l), mt["fmt"]) for l in _ann_lbls]
+            df = pd.DataFrame.from_dict(rows, orient="index", columns=_ann_lbls)
+            df.index.name = _metric_col
+            ui.render_html_table(df, right_text_cols=_ann_lbls, index_label=_metric_col,
+                                 height=60 + len(df) * 36)
 
 # ── Rule-of-40 valuation matrix (replaces the WACC×TG sensitivity grid; George
 # 2026-06-01). Software/SaaS comp cloud (EV/Sales vs growth+FCF margin) read live

@@ -33,13 +33,35 @@ PANELS = [
 ]
 
 
+def _resolve(*candidates: Path) -> tuple[str, float]:
+    """Pick the first existing path (preference order) and snapshot its mtime.
+
+    Returns (path_str, mtime) where path_str == "" when none exists. Both values are
+    HASHED ARGUMENTS into the cached readers below, so the @st.cache_data key tracks
+    BOTH the chosen path (full-vs-anon selection) AND the file's mtime — fixing the
+    zero-arg cache trap where neither was in the key (cache-key-omits-input-state).
+    Streamlit keys cache_data on (module, qualname, source_text) + hashed args ONLY
+    (see lib/db.py:20-25); filesystem state is invisible unless passed as an arg.
+    Resolution runs OUTSIDE any cache, so it re-evaluates on every render and an
+    in-place rebuild (new mtime) or a freshly-landed full file (new path) invalidates.
+    """
+    for p in candidates:
+        if p.exists():
+            return str(p), p.stat().st_mtime
+    return "", 0.0
+
+
 @st.cache_data(ttl=3600)
+def _read_index_comparison(path_str: str, mtime: float) -> pd.DataFrame:
+    if not path_str:
+        return pd.DataFrame()
+    return pd.read_csv(path_str, parse_dates=["date"])
+
+
 def load_index_comparison() -> pd.DataFrame:
     """date-indexed long frame: date, series_id, name_en, name_cn, panel, close, source."""
-    if not IDX_PATH.exists():
-        return pd.DataFrame()
-    df = pd.read_csv(IDX_PATH, parse_dates=["date"])
-    return df
+    path_str, mtime = _resolve(IDX_PATH)
+    return _read_index_comparison(path_str, mtime)
 
 
 def panel_series(df: pd.DataFrame, panel: str) -> dict[str, pd.Series]:
@@ -56,11 +78,10 @@ def series_name(df: pd.DataFrame, series_id: str, *, prefer_cn: bool) -> str:
 
 
 @st.cache_data(ttl=3600)
-def load_fund_positioning() -> pd.DataFrame:
-    path = POS_PATH_FULL if POS_PATH_FULL.exists() else POS_PATH   # local real names → else anon
-    if not path.exists():
+def _read_fund_positioning(path_str: str, mtime: float) -> pd.DataFrame:
+    if not path_str:
         return pd.DataFrame()
-    df = pd.read_csv(path)
+    df = pd.read_csv(path_str)
     # The builder writes the literal sentinel "N/A" into ow_uw_2026 for the one fund
     # that discloses no HC weight. pandas' DEFAULT na_values
     # includes "N/A", so read_csv silently coerces that token to float NaN — which
@@ -75,10 +96,24 @@ def load_fund_positioning() -> pd.DataFrame:
     return df
 
 
+def load_fund_positioning() -> pd.DataFrame:
+    # Prefer the local full (real-names) file, else the committed anon one. Path +
+    # mtime are resolved OUTSIDE the cache and passed in, so a full file landing
+    # mid-process (path change) or an in-place rebuild (mtime change) invalidates.
+    path_str, mtime = _resolve(POS_PATH_FULL, POS_PATH)
+    return _read_fund_positioning(path_str, mtime)
+
+
 @st.cache_data(ttl=3600)
+def _read_positioning_source(path_str: str, mtime: float) -> str:
+    if not path_str:
+        return ""
+    return Path(path_str).read_text(encoding="utf-8").strip()
+
+
 def positioning_source() -> str:
-    path = POS_SRC_PATH_FULL if POS_SRC_PATH_FULL.exists() else POS_SRC_PATH
-    return path.read_text(encoding="utf-8").strip() if path.exists() else ""
+    path_str, mtime = _resolve(POS_SRC_PATH_FULL, POS_SRC_PATH)
+    return _read_positioning_source(path_str, mtime)
 
 
 def positioning_verdict(df: pd.DataFrame) -> dict:

@@ -44,6 +44,7 @@ STRINGS = {
     "strategy.metric.port_rebal": "组合 · 月度再平衡",
     "strategy.metric.benchmark_ret": "基准 · {sym}",
     "strategy.metric.alpha": "超额收益 (pp)",
+    "strategy.metric.totalreturn_note": "组合与基准均为**复权总回报**（含息 · 毛股息按除息日再投 · 未计红利税）；除息日股价机械下跌已由复权抵消，apples-to-apples。",
     "strategy.delta.outperform": "跑赢",
     "strategy.delta.underperform": "跑输",
     "strategy.delta.tied": "持平",

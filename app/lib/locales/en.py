@@ -44,6 +44,7 @@ STRINGS = {
     "strategy.metric.port_rebal": "Portfolio · monthly rebal.",
     "strategy.metric.benchmark_ret": "Benchmark · {sym}",
     "strategy.metric.alpha": "Alpha (pp)",
+    "strategy.metric.totalreturn_note": "Portfolio and benchmark are both **total return** (dividends included, gross, reinvested at ex-date; withholding tax not deducted); ex-dividend price drops are offset by the adjustment — apples-to-apples.",
     "strategy.delta.outperform": "outperform",
     "strategy.delta.underperform": "underperform",
     "strategy.delta.tied": "tied",

@@ -154,6 +154,9 @@ def render_strategy(strat_id: str) -> None:
                 delta=delta_word,
                 delta_color="normal" if alpha and alpha > 0 else "inverse" if alpha else "off",
             )
+        # 口径声明: auto_adjust=True → "Close" 是复权总回报(含息); 组合与基准同口径
+        # (lib/strategy.py fetch_picks_closes)。高息股除息日股价机械下跌已被复权抵消。
+        st.caption(i18n.t("strategy.metric.totalreturn_note"))
 
     # --- Cumulative return chart (consumes precomputed series) ---
     if not portfolio.empty:

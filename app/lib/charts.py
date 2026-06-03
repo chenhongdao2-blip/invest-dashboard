@@ -784,6 +784,52 @@ def headcount_diverging_bar(
     return fig
 
 
+def hshci_history_chart(
+    dates: list,
+    closes: list,
+    annotations: list[dict],     # [{x, y, text, ax, ay}] — ax/ay = label px offset
+    *,
+    title: str = "",
+    ylabel: str = "Index level",
+    height: int = 380,
+) -> go.Figure:
+    """Single calendar-time line of an index's absolute level, with milestone labels.
+
+    Used for HSHCI's full-cycle context (2021.7 high → 2024 trough → 2025 recovery →
+    pullback). CMSI-red line + faint fill; annotation callouts at start/trough/peak/
+    now. Absolute points (not rebased), so no up/down colour convention applies.
+    """
+    fig = go.Figure()
+    if not dates:
+        return theme.style_plotly(fig)
+    fig.add_trace(go.Scatter(
+        x=list(dates), y=list(closes), mode="lines",
+        line=dict(color=theme.CMSI_RED, width=2.4),
+        fill="tozeroy", fillcolor="rgba(200,16,46,0.05)",
+        hovertemplate="%{x|%Y-%m}<br>%{y:,.0f}<extra></extra>", name="HSHCI",
+    ))
+    for a in annotations:
+        fig.add_trace(go.Scatter(
+            x=[a["x"]], y=[a["y"]], mode="markers",
+            marker=dict(color=theme.CMSI_RED, size=8), showlegend=False,
+            hovertemplate="%{x|%Y-%m}<br>%{y:,.0f}<extra></extra>",
+        ))
+        fig.add_annotation(
+            x=a["x"], y=a["y"], text=a["text"], showarrow=True, arrowhead=0,
+            arrowwidth=1, arrowcolor=theme.INK_3, ax=a.get("ax", 0), ay=a.get("ay", -28),
+            font=dict(size=10, color=theme.INK_2), align="left",
+        )
+    fig.update_layout(title=_clean_title(title), height=height, showlegend=False)
+    fig = theme.style_plotly(fig)
+    fig.update_layout(
+        yaxis=dict(title=dict(text=ylabel, font=dict(size=12, color=theme.INK_2)),
+                   tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2)),
+        xaxis=dict(tickfont=dict(size=11, color=theme.INK_2), dtick="M12", tickformat="%Y"),
+        margin=dict(l=8, r=20, t=64, b=36),
+    )
+    return fig
+
+
 def funding_yoy_bar(
     rows: list[dict],
     *,

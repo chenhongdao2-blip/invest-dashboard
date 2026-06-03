@@ -128,6 +128,19 @@ STRINGS = {
     "hc.rs.lead": "{hero} led {peer} by {pp}pp",
     "hc.rs.flat": "{hero} ≈ flat vs {peer}",
     "hc.rs.empty": "No index-comparison data — run jobs/build_hc_overview_data.py to backfill.",
+    # HSHCI full-cycle path (−70% → doubled → pullback)
+    "hc.rs.hshci.title": "Hang Seng Healthcare: full cycle since Jul 2021 (index level)",
+    "hc.rs.hshci.ylabel": "Index level",
+    "hc.rs.hshci.ann.start": "High {c:,.0f}",
+    "hc.rs.hshci.ann.trough": "Trough {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.ann.peak": "Rebound {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.ann.now": "Now {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.caption": (
+        "Full path: {start_d} high {start_c:,.0f} → {trough_d} trough {trough_c:,.0f} "
+        "({trough_pct:+.0%} from high) → {peak_d} rebound {peak_c:,.0f} ({peak_pct:+.0%} off the low) "
+        "→ {now_d} {now_c:,.0f} ({now_peak:+.0%} vs peak; {now_start:+.0%} vs start). "
+        "Source: iFind monthly close, as of {asof}."
+    ),
     # ── Institutional positioning · offshore China funds' OW/UW on healthcare ──
     "hc.pos.section": "Institutional Positioning · Offshore China Funds' OW/UW on Healthcare",
     "hc.pos.section_meta": "12 offshore China-equity funds · vs own benchmark · as of 31 Mar 2026",
@@ -200,6 +213,7 @@ STRINGS = {
     ),
     "hc.hc.empty": "No headcount data — run jobs/cn_pharma_headcount_2025.py to backfill.",
     "hc.dl.xlsx": "⬇ Download this section (Excel)",
+    "hc.stale.warn": "⚠ This section's data is {days} days old (as of {asof}). Re-bake per docs/healthcare-data-pipeline.md.",
     "hc.onboarding.title": "How to read this page",
     "hc.onboarding.body": (
         "**Sector summary**: mean return across the 7 healthcare sub-sectors.\n"

@@ -124,6 +124,19 @@ STRINGS = {
     "hc.rs.lead": "{hero}较{peer} 跑赢 {pp}pp",
     "hc.rs.flat": "{hero}与{peer} 基本持平",
     "hc.rs.empty": "暂无指数对比数据——请运行 jobs/build_hc_overview_data.py 回补。",
+    # HSHCI 长周期完整轨迹（−70% → 翻倍 → 回调）
+    "hc.rs.hshci.title": "恒生医疗保健指数：2021.7 以来完整轨迹（绝对点位）",
+    "hc.rs.hshci.ylabel": "指数点位",
+    "hc.rs.hshci.ann.start": "高位 {c:,.0f}",
+    "hc.rs.hshci.ann.trough": "见底 {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.ann.peak": "反弹 {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.ann.now": "今 {c:,.0f} ({p:+.0%})",
+    "hc.rs.hshci.caption": (
+        "完整轨迹：{start_d} 高位 {start_c:,.0f} → {trough_d} 见底 {trough_c:,.0f}"
+        "（自高位 {trough_pct:+.0%}）→ {peak_d} 反弹 {peak_c:,.0f}（较底 {peak_pct:+.0%}）"
+        "→ {now_d} {now_c:,.0f}（较峰 {now_peak:+.0%}；较起点仍 {now_start:+.0%}）。"
+        "来源：iFind 指数月收盘，截至 {asof}。"
+    ),
     # ── 机构持仓 · 离岸中国基金对 healthcare 超配/低配 ──
     "hc.pos.section": "机构持仓 · 离岸中国基金对医疗的超配/低配",
     "hc.pos.section_meta": "12 只离岸中国股票型基金 · vs 各自基准 · 截至 2026-03-31",
@@ -191,6 +204,7 @@ STRINGS = {
     ),
     "hc.hc.empty": "暂无员工人数数据——请运行 jobs/cn_pharma_headcount_2025.py 回补。",
     "hc.dl.xlsx": "⬇ 下载本节数据 (Excel)",
+    "hc.stale.warn": "⚠ 本节数据已 {days} 天未更新（截至 {asof}）。按 docs/healthcare-data-pipeline.md 回补。",
     "hc.onboarding.title": "如何阅读本页",
     "hc.onboarding.body": (
         "**板块汇总**：展示医疗健康 7 个细分板块的平均涨跌幅。\n"

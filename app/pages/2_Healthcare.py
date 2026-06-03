@@ -46,6 +46,26 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "healthcare.yml"
 _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
+# Per-section staleness thresholds (days) — mirror .claude/hooks/hc-staleness.mjs so the
+# in-app ⚠ and the SessionStart reminder agree. These sources (iFind / local xlsx /
+# hand-curated annuals) can't auto-refresh on Cloud, so the badge guarantees stale data
+# never silently reads as live. See docs/healthcare-data-pipeline.md.
+from datetime import date as _date
+_STALE_DAYS = {"rs": 35, "hshci": 45, "pos": 135, "hc": 300}
+
+
+def _stale_note(latest_iso, key: str) -> None:
+    """Render a ⚠ if this section's latest data date is past its cadence threshold."""
+    if not latest_iso:
+        return
+    try:
+        d = _date.fromisoformat(str(latest_iso)[:10])
+    except ValueError:
+        return
+    age = (_date.today() - d).days
+    if age > _STALE_DAYS.get(key, 10**9):
+        st.warning(i18n.t("hc.stale.warn", days=age, asof=str(latest_iso)[:10]))
+
 
 cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 i18n.init_lang()
@@ -157,6 +177,45 @@ else:
         _render_rs_panel("nbi", height=260)         # supporting pair: shorter (visual hierarchy)
     with _c2:
         _render_rs_panel("sphc", height=260)
+
+    # HSHCI full-cycle context (calendar time, absolute level): −70% → 翻倍 → 回调.
+    # Milestones (start/trough/recovery-peak/now) computed from data — never hardcoded.
+    _hist = hco.load_hshci_history()
+    if not _hist.empty:
+        _hd = _hist.sort_values("date").reset_index(drop=True)
+        _itr = int(_hd["close"].idxmin())
+        _ipk = int(_hd["close"].iloc[_itr:].idxmax())
+        _inow = len(_hd) - 1
+        _ms = hco.hshci_milestones(_hd)
+        _anns = [
+            {"x": _hd["date"].iloc[0], "y": float(_hd["close"].iloc[0]),
+             "text": i18n.t("hc.rs.hshci.ann.start", c=float(_hd["close"].iloc[0])), "ax": 0, "ay": -26},
+            {"x": _hd["date"].iloc[_itr], "y": float(_hd["close"].iloc[_itr]),
+             "text": i18n.t("hc.rs.hshci.ann.trough", c=float(_hd["close"].iloc[_itr]),
+                            p=_ms["trough"]["pct_start"]), "ax": 0, "ay": 36},
+            {"x": _hd["date"].iloc[_ipk], "y": float(_hd["close"].iloc[_ipk]),
+             "text": i18n.t("hc.rs.hshci.ann.peak", c=float(_hd["close"].iloc[_ipk]),
+                            p=_ms["peak"]["pct_trough"]), "ax": -44, "ay": -24},
+            {"x": _hd["date"].iloc[_inow], "y": float(_hd["close"].iloc[_inow]),
+             "text": i18n.t("hc.rs.hshci.ann.now", c=float(_hd["close"].iloc[_inow]),
+                            p=_ms["now"]["pct_peak"]), "ax": 20, "ay": 0},
+        ]
+        fig_hist = charts.hshci_history_chart(
+            _hd["date"].tolist(), _hd["close"].tolist(), _anns,
+            title=i18n.t("hc.rs.hshci.title"), ylabel=i18n.t("hc.rs.hshci.ylabel"),
+        )
+        st.plotly_chart(fig_hist, width="stretch", theme=None, config={"displayModeBar": False})
+        _hist_asof = str(_hd["asof"].iloc[0]) if "asof" in _hd.columns else _hd["date"].max().date().isoformat()
+        st.caption(i18n.t(
+            "hc.rs.hshci.caption",
+            start_d=_ms["start"]["date"], start_c=_ms["start"]["close"],
+            trough_d=_ms["trough"]["date"], trough_c=_ms["trough"]["close"], trough_pct=_ms["trough"]["pct_start"],
+            peak_d=_ms["peak"]["date"], peak_c=_ms["peak"]["close"], peak_pct=_ms["peak"]["pct_trough"],
+            now_d=_ms["now"]["date"], now_c=_ms["now"]["close"],
+            now_peak=_ms["now"]["pct_peak"], now_start=_ms["now"]["pct_start"], asof=_hist_asof,
+        ))
+        _stale_note(_hist_asof, "hshci")
+
     theme.eyebrow(i18n.t("hc.read.eyebrow"))         # cross-market read (biotech-researcher Agent)
     st.markdown(i18n.t("hc.rs.read"))
     st.download_button(
@@ -164,6 +223,7 @@ else:
         file_name="HC_相对表现_relative_performance.xlsx",
         mime=_XLSX_MIME, key="dl_hc_relative",
     )
+    _stale_note(_asof, "rs")   # _asof = 相对表现指数序列最新日期
 
 st.divider()
 
@@ -234,6 +294,8 @@ else:
         file_name="HC_机构持仓_fund_positioning.xlsx",
         mime=_XLSX_MIME, key="dl_hc_positioning",
     )
+    _pos_asof = _pos["data_date"].dropna().astype(str).str[:10].max() if "data_date" in _pos.columns else None
+    _stale_note(_pos_asof, "pos")
 
 st.divider()
 
@@ -292,6 +354,8 @@ else:
         file_name="HC_员工人数变化_headcount_2025.xlsx",
         mime=_XLSX_MIME, key="dl_hc_headcount",
     )
+    _hc_asof = str(_hc["asof"].iloc[0]) if "asof" in _hc.columns and len(_hc) else None
+    _stale_note(_hc_asof, "hc")
 
 st.divider()
 

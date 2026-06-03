@@ -26,6 +26,7 @@ from lib import hc_overview as hco
 # Colours mirror the app's LOCKED convention (teal = up/OW/hire, red = down/UW/cut).
 TEAL = "0D7680"
 RED = "CC0000"
+CMSI_RED = "C8102E"
 GREY = "8A8A8A"
 HEAD_FILL = "F0E9DE"
 INK = "1A1A1A"
@@ -112,6 +113,37 @@ def _build_relative(wb) -> None:
             ser.smooth = False
         chart.x_axis.delete = chart.y_axis.delete = False
         ws.add_chart(chart, f"{get_column_letter(3 + 2 * n + 1)}2")
+
+    # --- HSHCI long-history sheet: 2021.7→now absolute level + rebased + line chart ---
+    hist = hco.load_hshci_history()
+    if not hist.empty:
+        hd = hist.sort_values("date").reset_index(drop=True)
+        wsh = wb.create_sheet("HSHCI 长周期 2021.7-今")
+        wsh.append(["日期", "收盘点位", "rebased(起点=100)"])
+        _style_header(wsh, 3)
+        base = float(hd["close"].iloc[0])
+        for _, r in hd.iterrows():
+            wsh.append([r["date"].date(), float(r["close"]), round(float(r["close"]) / base * 100, 2)])
+        lasth = wsh.max_row
+        for rr in range(2, lasth + 1):
+            wsh.cell(rr, 1).number_format = "yyyy-mm-dd"
+            wsh.cell(rr, 2).number_format = "#,##0.00"
+            wsh.cell(rr, 3).number_format = "0.00"
+        wsh.column_dimensions["A"].width = 12
+        wsh.column_dimensions["B"].width = 14
+        wsh.column_dimensions["C"].width = 16
+        wsh.freeze_panes = "A2"
+        ch = LineChart()
+        ch.title = "恒生医疗保健指数：2021.7 以来完整轨迹(绝对点位)"
+        ch.height, ch.width = 9, 22
+        ch.y_axis.title = "指数点位"
+        ch.x_axis.number_format = "yyyy-mm"
+        ch.x_axis.majorTimeUnit = "months"
+        ch.add_data(Reference(wsh, min_col=2, min_row=1, max_row=lasth), titles_from_data=True)
+        ch.set_categories(Reference(wsh, min_col=1, min_row=2, max_row=lasth))
+        ch.series[0].graphicalProperties.line = LineProperties(solidFill=CMSI_RED, w=26000)
+        ch.x_axis.delete = ch.y_axis.delete = False
+        wsh.add_chart(ch, "E2")
 
     ws0 = wb.create_sheet("说明", 0)
     asof = df["date"].max().date().isoformat()

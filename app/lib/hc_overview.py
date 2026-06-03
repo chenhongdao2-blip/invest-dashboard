@@ -16,6 +16,9 @@ import streamlit as st
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 _EXT = REPO_ROOT / "data" / "external"
 IDX_PATH = _EXT / "hc_index_comparison.csv"
+# HSHCI long-history monthly close (2021.7→now), baked by jobs/hshci_history.py —
+# the "−70% → 翻倍 → 回调" full-cycle context line for the relative-performance section.
+HSHCI_HIST_PATH = _EXT / "hshci_history_monthly.csv"
 # Fund positioning: the FULL file (real fund names) is gitignored / local-only; the
 # committed file is ANONYMISED (Fund 1–12) and is the only one that reaches Cloud.
 # The loaders prefer the full file when it exists, else fall back to the public one —
@@ -65,6 +68,44 @@ def load_index_comparison() -> pd.DataFrame:
     """date-indexed long frame: date, series_id, name_en, name_cn, panel, close, source."""
     path_str, mtime = _resolve(IDX_PATH)
     return _read_index_comparison(path_str, mtime)
+
+
+@st.cache_data(ttl=3600)
+def _read_hshci_history(path_str: str, mtime: float) -> pd.DataFrame:
+    if not path_str:
+        return pd.DataFrame()
+    return pd.read_csv(path_str, parse_dates=["date"])
+
+
+def load_hshci_history() -> pd.DataFrame:
+    """HSHCI monthly close 2021.7→now (committed CSV). Path+mtime outside cache."""
+    path_str, mtime = _resolve(HSHCI_HIST_PATH)
+    return _read_hshci_history(path_str, mtime)
+
+
+def hshci_milestones(df: pd.DataFrame) -> dict:
+    """start / trough / recovery-peak(after trough) / now — all computed from data.
+
+    Returns {start, trough, peak, now} where each is a dict with date/close and the
+    relevant pct (trough vs start, peak vs trough, now vs peak & vs start). Drives
+    both the chart annotations and the bilingual caption — never hardcoded prose.
+    """
+    if df.empty:
+        return {}
+    d = df.sort_values("date").reset_index(drop=True)
+    c = d["close"]
+    i_tr = int(c.idxmin())
+    i_pk = int(c.iloc[i_tr:].idxmax())
+    i_now = len(d) - 1
+    s, t, p, n = c.iloc[0], c.iloc[i_tr], c.iloc[i_pk], c.iloc[i_now]
+    fmt = lambda i: d["date"].iloc[i].strftime("%Y-%m")
+    return {
+        "start": {"date": fmt(0), "close": float(s)},
+        "trough": {"date": fmt(i_tr), "close": float(t), "pct_start": float(t / s - 1)},
+        "peak": {"date": fmt(i_pk), "close": float(p), "pct_trough": float(p / t - 1)},
+        "now": {"date": fmt(i_now), "close": float(n),
+                "pct_peak": float(n / p - 1), "pct_start": float(n / s - 1)},
+    }
 
 
 def panel_series(df: pd.DataFrame, panel: str) -> dict[str, pd.Series]:

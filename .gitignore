@@ -57,3 +57,9 @@ data/external/china_fund_hc_positioning_source_full.txt
 
 # HC positioning runbook references real fund names (gotchas + leak-scan tokens) — local-only.
 docs/hc-positioning-pipeline.md
+
+# Healthcare headcount/relative-perf standalone deliverables (regenerable via jobs/*.py; app uses the CSV)
+data/external/cn_pharma_headcount_2025.png
+data/external/cn_pharma_headcount_2025.xlsx
+data/external/hc_relative_performance.xlsx
+~$*.xlsx

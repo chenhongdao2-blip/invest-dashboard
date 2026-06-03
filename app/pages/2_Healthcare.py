@@ -11,6 +11,7 @@ from lib import charts
 from lib import db
 from lib import format as fmt
 from lib import hc_overview as hco
+from lib import hc_exports as hcx
 from lib import ui
 from lib import theme
 from lib import i18n
@@ -43,6 +44,7 @@ with st.sidebar:
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "healthcare.yml"
+_XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 cfg = db.load_domain_cfg(str(DOMAIN_CFG))
@@ -157,6 +159,11 @@ else:
         _render_rs_panel("sphc", height=260)
     theme.eyebrow(i18n.t("hc.read.eyebrow"))         # cross-market read (biotech-researcher Agent)
     st.markdown(i18n.t("hc.rs.read"))
+    st.download_button(
+        i18n.t("hc.dl.xlsx"), data=hcx.relative_bytes(),
+        file_name="HC_相对表现_relative_performance.xlsx",
+        mime=_XLSX_MIME, key="dl_hc_relative",
+    )
 
 st.divider()
 
@@ -222,6 +229,69 @@ else:
     _src = hco.positioning_source()
     if _src:
         st.caption(i18n.t("hc.pos.source") + _src)
+    st.download_button(
+        i18n.t("hc.dl.xlsx"), data=hcx.positioning_bytes(),
+        file_name="HC_机构持仓_fund_positioning.xlsx",
+        mime=_XLSX_MIME, key="dl_hc_positioning",
+    )
+
+st.divider()
+
+# --- Headcount change: China innovative-pharma hirers vs cutters --------------
+# 12 names' FY2024→FY2025 GROUP headcount, baked by jobs/cn_pharma_headcount_2025.py
+# from 年报业绩公告 / ESG / iFind (cloud can't fetch live). Diverging bar uses the
+# LOCKED teal=扩招 / red=收缩 convention; caption spells it out (headcount, not return).
+theme.section_header(i18n.t("hc.hc.section"), meta=i18n.t("hc.hc.section_meta"))
+_hc = hco.load_headcount()
+if _hc.empty:
+    st.info(i18n.t("hc.hc.empty"))
+else:
+    _cn = i18n.get_lang() == "zh"
+    _hv = hco.headcount_verdict(_hc)
+    # narrated extremes: pick the lang-appropriate company name (verdict returns both)
+    _hv["top_hire_name"] = _hv["top_hire_name_cn"] if _cn else _hv["top_hire_name_en"]
+    _hv["top_cut_name"] = _hv["top_cut_name_cn"] if _cn else _hv["top_cut_name_en"]
+    st.markdown(i18n.t("hc.hc.verdict", **_hv))
+
+    _name_col = "name_cn" if _cn else "name_en"
+    _chart_col, _tbl_col = st.columns([5, 6])
+    with _chart_col:
+        fig_hc = charts.headcount_diverging_bar(
+            _hc[_name_col].tolist(), _hc["delta"].tolist(),
+            title=i18n.t("hc.hc.chart.title"), xlabel=i18n.t("hc.hc.chart.xlabel"),
+        )
+        st.plotly_chart(fig_hc, width="stretch", theme=None, config={"displayModeBar": False})
+        st.caption(i18n.t("hc.hc.legend"))
+
+    with _tbl_col:
+        c_co, c_tk = i18n.t("hc.hc.col.company"), i18n.t("hc.hc.col.ticker")
+        c_a, c_b = i18n.t("hc.hc.col.fy24"), i18n.t("hc.hc.col.fy25")
+        c_d, c_p = i18n.t("hc.hc.col.delta"), i18n.t("hc.hc.col.pct")
+        _disp = pd.DataFrame({
+            c_co: _hc[_name_col],
+            c_tk: _hc["ticker"],
+            c_a: _hc["fy2024"],
+            c_b: _hc["fy2025"],
+            c_d: _hc["delta"],
+            c_p: _hc["pct"],
+        })
+        ui.render_styled_table(
+            _disp,
+            int_cols=[c_a, c_b, c_d],
+            pct_decimal_cols=[c_p],
+            text_cols=[c_co, c_tk],
+            hide_index=True,
+            height=460,
+        )
+
+    theme.eyebrow(i18n.t("hc.read.eyebrow"))
+    st.markdown(i18n.t("hc.hc.read"))
+    st.caption(i18n.t("hc.hc.source"))
+    st.download_button(
+        i18n.t("hc.dl.xlsx"), data=hcx.headcount_bytes(),
+        file_name="HC_员工人数变化_headcount_2025.xlsx",
+        mime=_XLSX_MIME, key="dl_hc_headcount",
+    )
 
 st.divider()
 

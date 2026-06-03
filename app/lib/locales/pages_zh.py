@@ -162,6 +162,35 @@ STRINGS = {
     "hc.pos.source": "来源：",
     "hc.pos.note_ai": "解读由金融策略 / 医药研究 Agent 基于上表数据生成；不含也不采信任何评级 / 目标价。",
     "hc.pos.empty": "暂无基金持仓数据——请运行 jobs/build_hc_overview_data.py 回补。",
+    # --- 员工人数变化（扩招 vs 收缩）---
+    "hc.hc.section": "员工人数变化 · 中国创新药企扩招 vs 收缩",
+    "hc.hc.section_meta": "12 家中国创新药 / biotech · FY2024 → FY2025 · 集团合并在职员工",
+    "hc.hc.chart.title": "员工人数变化（FY2024 → FY2025）",
+    "hc.hc.chart.xlabel": "员工人数变化（人）",
+    "hc.hc.legend": "🟢 青＝扩招　🔴 红＝收缩　·　此处颜色表**人力增减**，非当日涨跌",
+    "hc.hc.verdict": (
+        "**结论**：12 家中 {n_hire} 家扩招 / {n_cut} 家收缩，净 {net:+,} 人。"
+        "最猛扩招 {top_hire_name}（{top_hire_delta:+,} 人），最大收缩 {top_cut_name}（{top_cut_delta:+,} 人）。"
+    ),
+    "hc.hc.read": (
+        "与西方大药企 2025 年普遍裁员（Sanofi / Novo / Pfizer 各减数千）相反，国产创新药 "
+        "**10/12 仍在扩招**——商业化放量的 biotech（信达 +33%、康方 +24%、康诺亚 +17%）扩得最猛，"
+        "印证国产创新药仍处放量周期而非收缩周期。两家收缩的都是传统大票（中生、石药），"
+        "属成熟仿制 + 转型期的产线 / 销售队伍优化，与 biotech 扩张是两种叙事。"
+        "研判：**人力是经营姿态的领先信号**——扩招最集中处，即管理层放量信心所在。"
+    ),
+    "hc.hc.col.company": "公司",
+    "hc.hc.col.ticker": "代码",
+    "hc.hc.col.fy24": "FY2024",
+    "hc.hc.col.fy25": "FY2025",
+    "hc.hc.col.delta": "变化",
+    "hc.hc.col.pct": "变化%",
+    "hc.hc.source": (
+        "来源：港交所年度业绩公告 / 年报「雇员及薪酬」段、公司 ESG 报告、iFind；"
+        "口径＝集团合并在职员工总数（FY 年末）。"
+    ),
+    "hc.hc.empty": "暂无员工人数数据——请运行 jobs/cn_pharma_headcount_2025.py 回补。",
+    "hc.dl.xlsx": "⬇ 下载本节数据 (Excel)",
     "hc.onboarding.title": "如何阅读本页",
     "hc.onboarding.body": (
         "**板块汇总**：展示医疗健康 7 个细分板块的平均涨跌幅。\n"

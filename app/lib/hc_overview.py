@@ -24,6 +24,9 @@ POS_PATH_FULL = _EXT / "china_fund_hc_positioning_full.csv"
 POS_PATH = _EXT / "china_fund_hc_positioning.csv"
 POS_SRC_PATH_FULL = _EXT / "china_fund_hc_positioning_source_full.txt"
 POS_SRC_PATH = _EXT / "china_fund_hc_positioning_source.txt"
+# Headcount FY2024→FY2025 for 12 China innovative-pharma names (扩招 vs 收缩).
+# Committed CSV baked by jobs/cn_pharma_headcount_2025.py from 年报公告 / ESG / iFind.
+HC_PATH = _EXT / "cn_pharma_headcount.csv"
 
 # Panel layout: (panel_id, hero_series_id, [peer_series_ids]).
 PANELS = [
@@ -179,6 +182,49 @@ def positioning_verdict(df: pd.DataFrame) -> dict:
         extremes["second_aum_dev"] = float(ranked.loc[1, "deviation_2026"])
 
     return {**counts, "data_available": True, "aum_wt_dev": aum_wt_dev, "tilt": tilt, **extremes}
+
+
+@st.cache_data(ttl=3600)
+def _read_headcount(path_str: str, mtime: float) -> pd.DataFrame:
+    if not path_str:
+        return pd.DataFrame()
+    return pd.read_csv(path_str)
+
+
+def load_headcount() -> pd.DataFrame:
+    """12 China innovative-pharma names' FY2024→FY2025 headcount (committed CSV).
+
+    Path + mtime resolved OUTSIDE the cache so an in-place re-bake invalidates.
+    """
+    path_str, mtime = _resolve(HC_PATH)
+    return _read_headcount(path_str, mtime)
+
+
+def headcount_verdict(df: pd.DataFrame) -> dict:
+    """Counts + net + the extremal hirer/cutter the headline narrates — all from data.
+
+    Returns {n_hire, n_cut, n_flat, net, top_hire_name, top_hire_delta,
+    top_cut_name, top_cut_delta, asof}. Hire = delta>0, cut = delta<0.
+    """
+    if df.empty:
+        return {}
+    d = df.dropna(subset=["delta"]).copy()
+    d["delta"] = pd.to_numeric(d["delta"], errors="coerce")
+    d = d.dropna(subset=["delta"])
+    n_hire = int((d["delta"] > 0).sum())
+    n_cut = int((d["delta"] < 0).sum())
+    n_flat = int((d["delta"] == 0).sum())
+    top_h = d.loc[d["delta"].idxmax()]
+    top_c = d.loc[d["delta"].idxmin()]
+    return {
+        "n_hire": n_hire, "n_cut": n_cut, "n_flat": n_flat,
+        "net": int(d["delta"].sum()),
+        "top_hire_name_cn": str(top_h["name_cn"]), "top_hire_name_en": str(top_h["name_en"]),
+        "top_hire_delta": int(top_h["delta"]),
+        "top_cut_name_cn": str(top_c["name_cn"]), "top_cut_name_en": str(top_c["name_en"]),
+        "top_cut_delta": int(top_c["delta"]),
+        "asof": str(d["asof"].iloc[0]) if "asof" in d.columns and len(d) else "",
+    }
 
 
 def _parse_aum(s) -> float | None:

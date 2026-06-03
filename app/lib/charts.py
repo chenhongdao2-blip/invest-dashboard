@@ -739,6 +739,51 @@ def positioning_diverging_bar(
     return fig
 
 
+def headcount_diverging_bar(
+    labels: list,
+    deltas: list,               # signed integer: +1843 hire / −2944 cut (people)
+    *,
+    title: str = "",
+    xlabel: str = "Headcount change (FY2024 → FY2025)",
+    height: int | None = None,
+) -> go.Figure:
+    """Diverging horizontal bars — net headcount change per company (扩招 vs 收缩).
+
+    x = signed COUNT of people (FY2025 − FY2024). Color follows the LOCKED project
+    convention: net hire (>0) → teal (theme.UP), net cut (<0) → red (theme.DOWN).
+    NOTE this is an operating-posture signal, not a price return — the page caption
+    must spell out "teal = 扩招 / red = 收缩" so the A-share red-is-up reflex doesn't
+    misread it. Sorted biggest hirer at top; a vertical zero line marks no change.
+    """
+    fig = go.Figure()
+    if not labels:
+        return theme.style_plotly(fig)
+    order = sorted(range(len(labels)),
+                   key=lambda k: (deltas[k] if deltas[k] is not None else 0))
+    labs = [labels[k] for k in order]
+    vals = [int(deltas[k] or 0) for k in order]
+    colors = [theme.UP if v >= 0 else theme.DOWN for v in vals]
+    texts = [(f"+{v:,}" if v > 0 else f"{v:,}") for v in vals]
+    fig.add_trace(go.Bar(
+        x=vals, y=labs, orientation="h",
+        marker_color=colors, marker_line_width=0,
+        text=texts, textposition="outside",
+        textfont=dict(size=11, color=theme.INK_2),
+        hovertemplate="%{y}<br>%{x:+,} 人<extra></extra>",
+    ))
+    h = height or max(240, 30 * len(labs) + 90)
+    fig.update_layout(title=_clean_title(title), height=h, showlegend=False)
+    fig = theme.style_plotly(fig)
+    fig.add_vline(x=0, line=dict(width=1.2, color=theme.INK_2), opacity=0.7)
+    fig.update_layout(
+        xaxis=dict(title=dict(text=xlabel, font=dict(size=12, color=theme.INK_2)),
+                   tickformat=",.0f", tickfont=dict(size=11, color=theme.INK_2), zeroline=False),
+        yaxis=dict(tickfont=dict(size=12, color=theme.INK), showgrid=False, automargin=True),
+        margin=dict(l=8, r=64, t=64, b=44),
+    )
+    return fig
+
+
 def funding_yoy_bar(
     rows: list[dict],
     *,

@@ -19,7 +19,7 @@ STRINGS = {
     "rot.note.hk": "港股拥挤度 = 板块换手率 z-score（iFind 周线）。板块 = 11 个恒生综合行业指数 vs 恒生指数。",
     "rot.empty.hk": "无港股板块数据——请跑 jobs/load_sw_industry.py。",
     "rot.tab.us": "美股 · GICS",
-    "rot.note.a": "A股拥挤度 = 板块换手率 z-score（iFind 周线）。当前为初始板块集（中证/中信混合）；标准申万一级31映射为 v2 项。",
+    "rot.note.a": "A股拥挤度 = 板块换手率 z-score（iFind 周线）。板块 = 标准申万一级 31 行业 vs 沪深300。",
     "rot.note.us": "美股拥挤度 = 价格拉伸 z（收盘 vs 200日均线）——超买代理，非真换手/breadth（v2）。板块 = 11 个 GICS SPDR ETF vs 标普500。",
     "rot.empty.a": "无 A 股板块数据——请跑 jobs/load_sw_industry.py。",
     "rot.empty.us": "无美股基准数据——请跑 jobs/fetch_eod.py。",

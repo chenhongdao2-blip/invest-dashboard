@@ -19,7 +19,7 @@ STRINGS = {
     "rot.note.hk": "HK crowding = sector turnover-rate z-score (iFind weekly). Sectors = 11 Hang Seng Composite Industry indices vs HSI.",
     "rot.empty.hk": "No HK sector data — run jobs/load_sw_industry.py.",
     "rot.tab.us": "US · GICS",
-    "rot.note.a": "A-share crowding = sector turnover-rate z-score (iFind weekly). Initial sector set (CSI/CITIC mix); standard SW-31 mapping is a v2 item.",
+    "rot.note.a": "A-share crowding = sector turnover-rate z-score (iFind weekly). Sectors = standard Shenwan Level-1 31 industries vs CSI 300.",
     "rot.note.us": "US crowding = price-extension z (close vs 200-DMA) — an overbought proxy, not true turnover/breadth (v2). Sectors = 11 GICS SPDR ETFs vs S&P 500.",
     "rot.empty.a": "No A-share sector data — run jobs/load_sw_industry.py.",
     "rot.empty.us": "No US benchmark data — run jobs/fetch_eod.py.",

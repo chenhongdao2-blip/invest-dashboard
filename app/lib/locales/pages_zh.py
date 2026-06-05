@@ -6,6 +6,34 @@ onboarding 正文多数沿用源页既有中文（精修），EN 侧为其翻译
 """
 
 STRINGS = {
+    # ── 板块轮动 (RRG) ──
+    "rot.title": "板块轮动 · 相对轮动图 RRG",
+    "rot.caption": "相对轮动地图——各板块相对市场基准的「相对强弱×动量」投影。是市场内部的注意力地图，不是择时信号。",
+    "rot.ctrl.header": "RRG 参数",
+    "rot.ctrl.tail": "尾巴长度（周）",
+    "rot.ctrl.tail_help": "每个板块点后画几周的轨迹尾巴。",
+    "rot.ctrl.thr": "过热阈值（z）",
+    "rot.ctrl.thr_help": "Leading 板块的拥挤度 z-score 超过此值时标记 [过热]。",
+    "rot.tab.a": "A股 · 申万/中证",
+    "rot.tab.hk": "港股 · 恒生行业",
+    "rot.note.hk": "港股拥挤度 = 板块换手率 z-score（iFind 周线）。板块 = 11 个恒生综合行业指数 vs 恒生指数。",
+    "rot.empty.hk": "无港股板块数据——请跑 jobs/load_sw_industry.py。",
+    "rot.tab.us": "美股 · GICS",
+    "rot.note.a": "A股拥挤度 = 板块换手率 z-score（iFind 周线）。当前为初始板块集（中证/中信混合）；标准申万一级31映射为 v2 项。",
+    "rot.note.us": "美股拥挤度 = 价格拉伸 z（收盘 vs 200日均线）——超买代理，非真换手/breadth（v2）。板块 = 11 个 GICS SPDR ETF vs 标普500。",
+    "rot.empty.a": "无 A 股板块数据——请跑 jobs/load_sw_industry.py。",
+    "rot.empty.us": "无美股基准数据——请跑 jobs/fetch_eod.py。",
+    "rot.onboard.title": "RRG 怎么读",
+    "rot.onboard.body": (
+        "**四象限顺时针演进：**改善（弱但反弹）→ 领先（强且改善）→ 转弱（强但动量衰减）→ 滞后（弱且转弱）。\n\n"
+        "- **横轴 = RS-Ratio**（相对基准的强弱）；**纵轴 = RS-Momentum**（其变化率）。原点 = 100/100。\n"
+        "- **点** = 板块当前位置；**尾巴** = 近期周度轨迹。\n"
+        "- **红圈 [过热]** = Leading **且**拥挤——护栏②标出 RRG 自己看不到的危险区（筹码结构）。\n"
+        "- **级别水印** = 护栏①——根据周期母框架判定战术 vs 战略资格。\n\n"
+        "**第一性原则：**RRG 描述的是*已经发生*的相对状态（高置信事实），不预测方向（无预测力）。"
+        "它回答\"走到哪一步了\"，不回答\"下一步涨不涨\"。"
+    ),
+
     # ── 共享：侧边栏搜索 ──
     "sidebar.find_ticker": "🔍 查找标的",
     "sidebar.jump_label": "跳转到个股详情",

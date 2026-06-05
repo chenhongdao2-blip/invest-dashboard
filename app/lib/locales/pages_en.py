@@ -6,6 +6,35 @@ Onboarding bodies are translations of the (originally Chinese) in-page help text
 """
 
 STRINGS = {
+    # ── Sector Rotation (RRG) ──
+    "rot.title": "Sector Rotation · RRG",
+    "rot.caption": "Relative-rotation map — each sector's relative strength × momentum vs its market benchmark. An internal attention map, not a timing signal.",
+    "rot.ctrl.header": "RRG controls",
+    "rot.ctrl.tail": "Tail length (weeks)",
+    "rot.ctrl.tail_help": "Weeks of trajectory drawn behind each sector dot.",
+    "rot.ctrl.thr": "Overheat threshold (z)",
+    "rot.ctrl.thr_help": "A Leading sector is flagged [HOT] when its crowding z-score exceeds this.",
+    "rot.tab.a": "A-share · SW/CSI",
+    "rot.tab.hk": "HK · HSCI",
+    "rot.note.hk": "HK crowding = sector turnover-rate z-score (iFind weekly). Sectors = 11 Hang Seng Composite Industry indices vs HSI.",
+    "rot.empty.hk": "No HK sector data — run jobs/load_sw_industry.py.",
+    "rot.tab.us": "US · GICS",
+    "rot.note.a": "A-share crowding = sector turnover-rate z-score (iFind weekly). Initial sector set (CSI/CITIC mix); standard SW-31 mapping is a v2 item.",
+    "rot.note.us": "US crowding = price-extension z (close vs 200-DMA) — an overbought proxy, not true turnover/breadth (v2). Sectors = 11 GICS SPDR ETFs vs S&P 500.",
+    "rot.empty.a": "No A-share sector data — run jobs/load_sw_industry.py.",
+    "rot.empty.us": "No US benchmark data — run jobs/fetch_eod.py.",
+    "rot.onboard.title": "How to read the RRG",
+    "rot.onboard.body": (
+        "**Four quadrants, clockwise:** Improving (weak but recovering) → Leading (strong & improving) "
+        "→ Weakening (strong but fading) → Lagging (weak & deteriorating).\n\n"
+        "- **X = RS-Ratio** (relative strength vs benchmark); **Y = RS-Momentum** (its rate of change). Origin = 100/100.\n"
+        "- **Dot** = sector now; **tail** = recent weekly trajectory.\n"
+        "- **Red ring [HOT]** = Leading **and** crowded — guardrail ② flags the danger zone RRG itself can't see (positioning).\n"
+        "- **Regime banner** = guardrail ① — tactical vs strategic qualification from the cycle backdrop.\n\n"
+        "**First principle:** RRG describes the relative state that has *already happened* (high-confidence fact), "
+        "not future direction (no predictive power). It answers \"how far along,\" not \"up next?\""
+    ),
+
     # ── shared: sidebar search (lib.ui.sidebar_search) ──
     "sidebar.find_ticker": "🔍 Find ticker",
     "sidebar.jump_label": "Jump to ticker drill",

@@ -140,7 +140,7 @@ def _us_drill_sectors() -> pd.DataFrame:
 
 @st.cache_data(ttl=1800)
 def _us_drill_frames(domain: str, sector: str) -> dict:
-    """{closes(wide,close), adv(20d 成交额)} — 某美股子板块成分股。"""
+    """{closes, adv, names_cn/en} — 某美股子板块成分股 (含名称供交互卡片)。"""
     members = db.sector_tickers(domain, sector)
     members = members[members["region"] == "US"]
     tks = tuple(members["ticker"])
@@ -158,7 +158,12 @@ def _us_drill_frames(domain: str, sector: str) -> dict:
         f") WHERE rn <= 20 GROUP BY ticker",
         tks,
     )
-    return {"closes": closes, "adv": dict(zip(adv["ticker"], adv["adv"]))}
+    return {
+        "closes": closes,
+        "adv": dict(zip(adv["ticker"], adv["adv"])),
+        "names_cn": dict(zip(members["ticker"], members["name_cn"])),
+        "names_en": dict(zip(members["ticker"], members["name_en"])),
+    }
 
 
 def _render_drill(prefer_cn: bool) -> None:
@@ -225,8 +230,33 @@ def _render_drill(prefer_cn: bool) -> None:
     reg = regime.regime_banner("us_drill", composite, prefer_cn=prefer_cn)   # 合成指数 auto 兜底
     as_of = composite.dropna().index.max()
     as_of = as_of.date().isoformat() if as_of is not None else None
+
+    # 交互卡片附加: 个股 1日/5日/1月/YTD 涨幅 + 名称·板块 + 一句业务简介 (George 选: 行情塞卡片)
+    from html import escape as _esc
+    rets = db.compute_returns(closes_q)
+    names = (fr.get("names_cn") if prefer_cn else fr.get("names_en")) or {}
+
+    def _retspan(v) -> str:
+        if v is None or v != v:
+            return f"<span style='color:{theme.INK_4}'>—</span>"
+        col = theme.UP if v >= 0 else theme.DOWN
+        return f"<span style='color:{col};font-weight:800'>{v:+.1f}%</span>"
+
+    extra: dict[str, str] = {}
+    for tk in shown:
+        nm = names.get(tk) or tk
+        head = f"<div class='nm'>{_esc(str(nm))} · {_esc(sec_name)}</div>"
+        line = ""
+        if tk in rets.index:
+            r = rets.loc[tk]
+            L = ("1日", "5日", "1月") if prefer_cn else ("1d", "5d", "1m")
+            line = (f"<div class='rr'>{L[0]} {_retspan(r['1d_%'])} · {L[1]} {_retspan(r['5d_%'])}"
+                    f" · {L[2]} {_retspan(r['1m_%'])} · YTD {_retspan(r['ytd_%'])}</div>")
+        extra[tk] = head + line
+
     doc, h = rrg.render_rrg_html(points, meta, prefer_cn=prefer_cn,
-                                 market_label=mkt_label, regime=reg, as_of=as_of, tail=tail)
+                                 market_label=mkt_label, regime=reg, as_of=as_of, tail=tail,
+                                 extra=extra)
     st.iframe(doc, height=h)
     notes = []
     if len(shown) < len(qualified):

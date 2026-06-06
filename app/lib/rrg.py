@@ -257,6 +257,7 @@ def render_rrg_html(
     tail: int = TAIL_DEFAULT,
     point_colors: dict[str, str] | None = None,
     group_legend: list[tuple[str, str]] | None = None,
+    extra: dict[str, str] | None = None,
 ) -> tuple[str, int]:
     """四象限 RRG 自包含 HTML doc + iframe 高度。
 
@@ -265,6 +266,8 @@ def render_rrg_html(
     regime : lib.regime.regime_banner 输出 (护栏①水印)，None 则不显示
     point_colors : {label: hex}  按点显式着色 (跨市场=按市场)，缺省回落 RS 强弱 diverging
     group_legend : [(name, hex)]  色块图例 (如 A股/港股/美股)，None 不显示
+    extra : {label: html}  注入交互卡片底部的附加 HTML (如个股下沉的行情/简介)；
+            调用方负责 _esc 动态文本，render 原样注入。None 则卡片只显示象限+动量。
     """
     from html import escape as _esc
 
@@ -412,11 +415,13 @@ def render_rrg_html(
         desc = _QUAD_DESC_CN[p.quadrant] if prefer_cn else _QUAD_DESC_EN[p.quadrant]
         read = _QUAD_READ_CN[p.quadrant] if prefer_cn else _QUAD_READ_EN[p.quadrant]
         acc_txt = f"{acc_g} {acc_cn if prefer_cn else acc_en}"
+        ex = (extra or {}).get(p.label, "")
         card = (
             f"<div class='th'>{_esc(p.label)}{hot_chip}</div>"
             f"<div class='tq'>{_esc(qline)}{brL}{_esc(desc)}{brR}</div>"
             f"<div class='tr'>{_esc(read)}</div>"
             f"<div class='tm'>{mom_lbl}{_esc(acc_txt)}</div>"
+            + (f"<div class='tx'>{ex}</div>" if ex else "")
         )
         sec_data.append({"html": card})
 
@@ -474,7 +479,7 @@ def render_rrg_html(
     .disc{{margin-top:10px;border-top:1px solid {t.PAPER_RULE};padding-top:9px;font-size:10.5px;color:{t.INK_3};line-height:1.55}}
     .disc b{{color:{t.INK_2}}}
     g.sec{{transition:opacity .12s ease}}
-    #rtip{{position:fixed;display:none;z-index:60;pointer-events:none;max-width:236px;
+    #rtip{{position:fixed;display:none;z-index:60;pointer-events:none;max-width:252px;
       background:#fff;border:1px solid {t.PAPER_RULE};border-left:3px solid {t.CMSI_RED};
       box-shadow:0 4px 16px rgba(0,0,0,.14);border-radius:3px;padding:8px 11px;
       font-size:11px;line-height:1.5;color:{t.INK}}}
@@ -483,6 +488,9 @@ def render_rrg_html(
     #rtip .tq{{font-weight:600;color:{t.INK_2}}}
     #rtip .tr{{color:{t.INK_3};font-size:10.5px;margin:2px 0 0}}
     #rtip .tm{{color:{t.INK_2};margin-top:3px}}
+    #rtip .tx{{margin-top:5px;padding-top:5px;border-top:1px solid {t.PAPER_RULE};font-size:10.5px;color:{t.INK_2}}}
+    #rtip .tx .nm{{font-weight:600;color:{t.INK}}}
+    #rtip .tx .rr{{margin:3px 0 0;font-family:{t.FONT_MONO};font-size:11.5px;color:{t.INK_3}}}
     """
     # ── 交互层 (内联 vanilla JS, 零 CDN/自包含 → 国内安全; 与数据表的 click-sort 同机制) ──
     # hover: 高亮该板块整组(其余淡化) + 弹样式化卡片; click: 钉住; 点别处取消。

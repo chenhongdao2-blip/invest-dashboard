@@ -46,14 +46,10 @@ home = st.Page(
 )
 ticker_drill = st.Page(
     "pages/6_Ticker_Drill.py",
-    title="Ticker Drill 个股详情",
-    url_path="Ticker_Drill",
+    title="Market & Stocks 行情 / 个股",   # 合并: 列表(全市场行情表)+详情(个股下钻) 同页
+    url_path="Ticker_Drill",               # url 不变 → ?ticker= 深链照常进详情模式
 )
-market_data = st.Page(
-    "pages/7_Market_Data.py",
-    title="Market Data 行情总表",
-    url_path="Market_Data",
-)
+# (Market Data 已并入 Ticker Drill 的列表模式; 表逻辑搬到 lib/quote_table.py)
 model_drill = st.Page(
     "pages/model_drill.py",
     title="Model Drill 分析师模型",
@@ -133,7 +129,7 @@ pg = st.navigation(
     {
         # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
         "⭐ 核心策略": [strategy_picks],
-        "Global 全局": [home, ticker_drill, model_drill, market_data, sector_rotation],
+        "Global 全局": [home, ticker_drill, model_drill, sector_rotation],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,

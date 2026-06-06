@@ -87,6 +87,20 @@ CREATE TABLE IF NOT EXISTS benchmarks_daily (
 );
 CREATE INDEX IF NOT EXISTS idx_bench_date ON benchmarks_daily(date);
 
+-- 申万行业指数周线 (RRG 板块轮动用)。iFind-only (MCP 在本地父会话，cron 抓不到)，
+-- 故走 committed seed CSV → jobs/load_sw_industry.py 入库，与 HSHCI 同模式。
+-- 频率=周 (W-FRI)；close=指数点位 native CNY；turnover_rate=周换手率% (拥挤度 Tier A)。
+CREATE TABLE IF NOT EXISTS sw_industry_daily (
+    ticker        TEXT NOT NULL,
+    name_cn       TEXT,
+    market        TEXT,            -- a_share | hk (美股走 benchmarks_daily)
+    date          TEXT NOT NULL,
+    close         REAL,
+    turnover_rate REAL,
+    PRIMARY KEY (ticker, date)
+);
+CREATE INDEX IF NOT EXISTS idx_sw_industry_date ON sw_industry_daily(date);
+
 -- Company profile from yfinance.info (cron-fetched; Ticker Drill extended
 -- fundamentals reads this, NOT live .info — Yahoo blocks live .info from cloud IPs).
 -- Columns mirror yfinance.info field names so the page can use info.get('ebitda') etc.
@@ -247,6 +261,7 @@ def main() -> None:
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN target_price_mean REAL")
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN recommendation_mean REAL")
         _safe_alter(conn, "ALTER TABLE multiples_daily ADD COLUMN n_analysts INTEGER")
+        _safe_alter(conn, "ALTER TABLE sw_industry_daily ADD COLUMN market TEXT")
         n_kpi = seed_kpi_map(conn)
         conn.commit()
         print(f"[init_db] seeded sec_kpi_map: {n_kpi} rows")

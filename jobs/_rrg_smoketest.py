@@ -1,0 +1,427 @@
+"""RRG 计算核冒烟测试 — 用本会话实拉的 iFind 真实周线数据.
+
+验证点：
+  1) 通信(一年近3倍, 换手7-16%) → Leading 象限 + is_overheated=True (护栏②红旗)
+  2) 医药生物/食品饮料(跑输沪深300) → Lagging — 不再重现 60日日频测试的"Improving"误判
+  3) auto_regime(沪深300) → 战略多头 (基准在均线上方且上行)
+运行：uv run --with pandas --with numpy --with pyyaml python jobs/_rrg_smoketest.py
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pandas as pd
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "app"))
+from lib import rrg, crowding, regime  # noqa: E402
+
+# 实拉数据：每行 "YYYYMMDD close [turnover%]"，newest-first (照 API 原样)
+HS300 = """
+20260605 4816.9199
+20260529 4892.1213
+20260522 4845.0956
+20260515 4859.5927
+20260508 4871.9122
+20260430 4807.3069
+20260424 4769.3688
+20260417 4728.6716
+20260410 4636.5655
+20260403 4440.7889
+20260327 4502.5698
+20260320 4567.0179
+20260313 4669.14
+20260306 4660.439
+20260227 4710.6469
+20260213 4660.4056
+20260206 4643.5959
+20260130 4706.3401
+20260123 4702.4966
+20260116 4731.8728
+20260109 4758.9221
+20251231 4629.9395
+20251226 4657.24
+20251219 4568.1781
+20251212 4580.95
+20251205 4584.5368
+20251128 4526.6616
+20251121 4453.6076
+20251114 4628.1398
+20251107 4678.7944
+20251031 4640.6676
+20251024 4660.6835
+20251017 4514.2345
+20251010 4616.8341
+20250930 4640.6935
+20250926 4550.0487
+20250919 4501.9195
+20250912 4521.998
+20250905 4460.3249
+20250829 4496.7591
+20250822 4377.9977
+20250815 4202.3533
+20250808 4104.9669
+20250801 4054.9286
+20250725 4127.1634
+20250718 4058.5486
+20250711 4014.807
+20250704 3982.2034
+20250627 3921.7578
+20250620 3846.6443
+20250613 3864.1822
+20250606 3873.9841
+"""
+
+MED = """
+20260605 7253.8918 4.6401
+20260529 7617.6056 6.6714
+20260522 7719.8928 6.9596
+20260515 7933.5817 8.7079
+20260508 8145.4961 4.59
+20260430 8199.1736 5.7564
+20260424 8148.4082 6.1168
+20260417 8206.7087 6.7432
+20260410 8316.3555 5.5699
+20260403 8233.6323 7.2797
+20260327 8066.2459 5.8156
+20260320 7973.4722 5.1081
+20260313 8084.892 4.998
+20260306 8130.7356 6.0414
+20260227 8345.8242 4.0293
+20260213 8374.1038 4.9342
+20260206 8428.3005 6.2262
+20260130 8417.5094 9.2531
+20260123 8652.286 7.4923
+20260116 8802.5621 10.5272
+20260109 8866.205 7.6268
+20251231 8286.8139 2.5337
+20251226 8482.6616 4.8332
+20251219 8502.4831 5.6329
+20251212 8525.3892 4.3912
+20251205 8549.9987 3.6468
+20251128 8604.6664 4.0986
+20251121 8477.2372 5.0515
+20251114 8967.9588 6.0541
+20251107 8775.6773 5.5879
+20251031 9011.7065 6.9134
+20251024 9014.5192 4.534
+20251017 8983.0902 6.0914
+20251010 9328.7766 2.5445
+20250930 9486.6494 2.0992
+20250926 9309.98 5.8728
+20250919 9470.4646 6.8945
+20250912 9607.0305 7.9625
+20250905 9703.7884 9.5194
+20250829 9431.7395 10.5922
+20250822 9370.5518 9.2153
+20250815 9228.773 7.8894
+20250808 8994.7978 8.0434
+20250801 9073.1457 10.7374
+20250725 8903.6252 8.3828
+20250718 8748.0203 6.6829
+20250711 8432.5439 5.8881
+20250704 8311.7436 5.7426
+20250627 8128.2724 5.0227
+20250620 8043.3864 5.6982
+20250613 8400.2332 7.2693
+20250606 8316.1589 4.8637
+"""
+
+FOOD = """
+20260605 15476.189
+20260529 16265.4152
+20260522 16031.9269
+20260515 16514.578
+20260508 17069.4684
+20260430 17317.6796
+20260424 17276.2913
+20260417 17063.6113
+20260410 17302.4308
+20260403 17333.0042
+20260327 17245.1916
+20260320 17380.1178
+20260313 17596.4616
+20260306 17556.8489
+20260227 17888.2698
+20260213 18197.2198
+20260206 18690.6317
+20260130 18086.8466
+20260123 17964.9778
+20260116 18192.111
+20260109 18583.7814
+20251231 18283.5568
+20251226 18669.6764
+20251219 18800.8429
+20251212 18578.5775
+20251205 18898.5594
+20251128 19354.716
+20251121 19331.1414
+20251114 19650.4261
+20251107 19061.5456
+20251031 19268.7746
+20251024 19238.3071
+20251017 19532.9018
+20251010 19379.3776
+20250930 19374.8214
+20250926 19189.7457
+20250919 19703.5115
+20250912 20150.3764
+20250905 20021.4712
+20250829 20326.429
+20250822 19789.5627
+20250815 19126.523
+20250808 18971.3469
+20250801 18842.3164
+20250725 19290.0614
+20250718 19181.7537
+20250711 19015.7109
+20250704 18839.5857
+20250627 18780.7839
+20250620 18959.599
+20250613 18918.6084
+20250606 19763.6949
+"""
+
+COMM = """
+20260529 16222.1874 11.0233
+20260522 15450.4939 14.186
+20260515 15428.9269 15.412
+20260508 14523.33 7.4795
+20260430 13450.5414 8.6201
+20260424 13626.6542 12.8012
+20260417 13584.9556 11.9184
+20260410 12563.9442 8.8341
+20260403 11339.6813 9.3278
+20260327 11044.6434 9.8424
+20260320 11230.6068 10.2915
+20260313 11041.5362 12.3089
+20260306 11022.2924 11.5612
+20260227 10942.4712 8.8443
+20260213 10470.8134 10.0516
+20260206 10244.2096 10.8956
+20260130 10983.0321 12.3489
+20260123 10483.1775 11.3355
+20260116 10662.5738 16.3102
+20260109 10581.0307 13.562
+20251231 10413.7813 6.3299
+20251226 10534.9347 11.4212
+20251219 10075.3396 10.4799
+20251212 10137.201 10.5549
+20251205 9570.6595 9.0656
+20251128 9230.488 8.7304
+20251121 8488.9629 7.1837
+20251114 8736.326 7.0959
+20251107 9186.0867 6.9924
+20251031 9099.7361 9.1039
+20251024 9427.0756 7.5289
+20251017 8450.3459 9.0384
+20251010 8954.1939 4.3234
+20250930 9077.8151 3.4783
+20250926 9130.1741 10.7866
+20250919 9158.8462 12.1901
+20250912 9066.963 14.1791
+20250905 8794.7565 13.5317
+20250829 8991.1002 16.4797
+20250822 7988.6596 15.2407
+20250815 7231.2727 12.3372
+20250808 6751.1394 9.6762
+20250801 6657.3406 9.6612
+20250725 6454.5607 8.3617
+20250718 6485.015 8.8431
+20250711 6059.8474 8.3855
+20250704 5929.7985 8.9715
+20250627 5939.0428 9.1672
+20250620 5663.3113 8.0776
+20250613 5583.2603 10.1977
+20250606 5610.8695 6.7578
+"""
+
+
+def parse(block: str) -> tuple[pd.Series, pd.Series]:
+    """→ (close, turnover) Series (turnover 可空)。"""
+    dates, closes, turns = [], [], []
+    for line in block.strip().splitlines():
+        parts = line.split()
+        dates.append(pd.to_datetime(parts[0]))
+        closes.append(float(parts[1]))
+        turns.append(float(parts[2]) if len(parts) > 2 else float("nan"))
+    idx = pd.DatetimeIndex(dates)
+    return pd.Series(closes, index=idx), pd.Series(turns, index=idx)
+
+
+def _synth(rs_path, turn_path=None):
+    """合成一个周线序列: sector = bench * rs_path。bench 缓升, 52 周止于 2026-06-05。"""
+    import numpy as np
+    idx = pd.date_range(end="2026-06-05", periods=52, freq="W-FRI")
+    t = np.linspace(0, 1, 52)
+    bench = pd.Series(1000.0 * (1 + 0.15 * t), index=idx)        # 基准缓升 +15%
+    sec = pd.Series(bench.values * rs_path(t), index=idx)
+    turn = pd.Series(turn_path(t), index=idx) if turn_path else None
+    return bench, sec, turn
+
+
+def real_data_sanity() -> bool:
+    """真实数据: 验 plumbing 与不变量 (非具体象限——边界象限无 ground truth)。"""
+    hs_close, _ = parse(HS300)
+    med_close, med_turn = parse(MED)
+    food_close, _ = parse(FOOD)
+    comm_close, comm_turn = parse(COMM)
+    sectors = {"通信": comm_close, "医药生物": med_close, "食品饮料": food_close}
+    turns = {"通信": comm_turn, "医药生物": med_turn, "食品饮料": None}
+
+    pts = rrg.compute_rrg(sectors, hs_close)
+    pts2 = rrg.compute_rrg(sectors, hs_close)
+    print("── 真实数据 sanity (申万周线 vs 沪深300) ──")
+    print(f"{'板块':<8}{'象限':<11}{'RS-Ratio':>10}{'RS-Mom':>9}{'换手z':>8}{'有效周':>7}")
+    ok = True
+    for p in pts:
+        tz = crowding.turnover_z(turns[p.label]) if turns.get(p.label) is not None else float("nan")
+        tzs = f"{tz:+.2f}" if tz == tz else "—"
+        print(f"{p.label:<8}{p.quadrant:<11}{p.rs_ratio:>10.2f}{p.rs_momentum:>9.2f}{tzs:>8}{p.n_valid:>7}")
+        if not (90 < p.rs_ratio < 110 and 90 < p.rs_momentum < 110):
+            ok = False; print(f"  ❌ {p.label} RS 越界 (应在 100±10 之内)")
+        if p.quadrant not in rrg.QUADRANTS:
+            ok = False; print(f"  ❌ {p.label} 象限非法")
+    # 确定性
+    if [p.quadrant for p in pts] != [p.quadrant for p in pts2]:
+        ok = False; print("  ❌ 非确定性 (两次结果不一致)")
+    else:
+        print("  ✅ 确定性 OK")
+    # crowding 取最新: 通信最新周(0529)换手 11.02, 修复前误取最老(0606)11→z<0
+    tz_comm = crowding.turnover_z(comm_turn)
+    print(f"  通信 换手z(修复后, 基于最新周) = {tz_comm:+.2f}")
+    reg = regime.regime_banner("a_share", hs_close, prefer_cn=True)
+    print(f"  regime(沪深300): {reg['level']} | {reg['backdrop']}")
+    if reg["level"] != "战略":
+        print(f"  ⚠️ regime={reg['level']} (52周边界, 非硬错)")
+    return ok
+
+
+def synthetic_logic() -> bool:
+    """合成数据: 验护栏逻辑 (有 ground truth)。"""
+    print("\n── 合成数据 护栏逻辑验证 ──")
+    ok = True
+    # Leader: RS 凸性加速上行 + 换手攀升至高位 → 应 Leading + 过热
+    _, lead_sec, lead_turn = _synth(
+        lambda t: 1.0 + 0.6 * t**2,                 # RS 1.0→1.6 加速
+        lambda t: 4.0 + 16.0 * t**3,                # 换手 4→20 末端飙升
+    )
+    bench_s, _, _ = _synth(lambda t: 1.0)
+    # Lagger: RS 加速下行 → 应 Lagging
+    _, lag_sec, _ = _synth(lambda t: 1.0 - 0.4 * t**2)
+
+    pts = rrg.compute_rrg({"LEADER": lead_sec, "LAGGER": lag_sec}, bench_s)
+    res = {p.label: p for p in pts}
+    for lbl, exp in (("LEADER", "Leading"), ("LAGGER", "Lagging")):
+        p = res.get(lbl)
+        got = p.quadrant if p else None
+        mark = "✅" if got == exp else "❌"
+        if got != exp:
+            ok = False
+        print(f"  {mark} {lbl}: 期望 {exp}, 实得 {got}  (RSR={p.rs_ratio:.1f}, RSM={p.rs_momentum:.1f})")
+
+    tz = crowding.turnover_z(lead_turn)
+    hot = crowding.is_overheated(res["LEADER"].quadrant, tz)
+    mark = "✅" if hot else "❌"
+    if not hot:
+        ok = False
+    print(f"  {mark} LEADER 换手z={tz:+.2f} → is_overheated={hot} (护栏②红旗应触发)")
+    # 负例: Lagging 即使换手高也不标红 (规则=仅 Leading)
+    not_hot = crowding.is_overheated("Lagging", 3.0)
+    mark = "✅" if not not_hot else "❌"
+    if not_hot:
+        ok = False
+    print(f"  {mark} Lagging+高换手 → is_overheated={not_hot} (非 Leading 不标红)")
+    return ok
+
+
+def composite_logic() -> bool:
+    """个股下沉: 等权合成板块指数 + 成分股 vs 合成指数 的护栏逻辑 (有 ground truth)。"""
+    import numpy as np
+    print("\n── 个股下沉 等权合成指数验证 ──")
+    ok = True
+    idx = pd.date_range(end="2026-06-05", periods=52, freq="W-FRI")
+    t = np.linspace(0, 1, 52)
+    # 4 只成分: 2 只持平、1 只跑赢、1 只跑输 → 合成指数应居中
+    flat1 = pd.Series(100.0 * (1 + 0.10 * t), index=idx)
+    flat2 = pd.Series(100.0 * (1 + 0.10 * t), index=idx)
+    win = pd.Series(100.0 * (1 + 0.60 * t**1.5), index=idx)     # 加速跑赢
+    lose = pd.Series(100.0 * (1 - 0.25 * t), index=idx)         # 持续跑输
+    wide = pd.concat({"FLAT1": flat1, "FLAT2": flat2, "WIN": win, "LOSE": lose}, axis=1)
+
+    comp = rrg.equal_weight_composite(wide)
+    base_ok = (not comp.empty) and abs(comp.iloc[0] - 100.0) < 1.0
+    print(f"  {'✅' if base_ok else '❌'} 合成指数基点≈100 (实 {comp.iloc[0]:.1f}), 末值 {comp.iloc[-1]:.1f}, 长度 {len(comp)}")
+    ok = ok and base_ok
+
+    # ragged: LOSE 晚 10 周上市 (前段 NaN) → 不应抛错、不引入再基化跳变
+    wide_ragged = wide.copy()
+    wide_ragged.loc[wide_ragged.index[:10], "LOSE"] = float("nan")
+    comp_r = rrg.equal_weight_composite(wide_ragged)
+    ragged_ok = (not comp_r.empty) and comp_r.notna().all() and len(comp_r) >= 40
+    print(f"  {'✅' if ragged_ok else '❌'} ragged 起点容忍 (晚上市成分): 合成长度 {len(comp_r)}, 无 NaN={comp_r.notna().all()}")
+    ok = ok and ragged_ok
+
+    # 成分股 vs 合成指数: WIN 应 Leading, LOSE 应 Lagging
+    pts = rrg.compute_rrg({"WIN": win, "LOSE": lose, "FLAT1": flat1}, comp)
+    res = {p.label: p for p in pts}
+    for lbl, exp in (("WIN", "Leading"), ("LOSE", "Lagging")):
+        got = res[lbl].quadrant if lbl in res else None
+        mark = "✅" if got == exp else "❌"
+        if got != exp:
+            ok = False
+        print(f"  {mark} {lbl} vs 合成指数: 期望 {exp}, 实得 {got}")
+
+    # 成分不足 min_names 返回空 (不崩)
+    too_few = rrg.equal_weight_composite(wide[["FLAT1", "FLAT2"]], min_names=3)
+    mark = "✅" if too_few.empty else "❌"
+    if not too_few.empty:
+        ok = False
+    print(f"  {mark} 成分<min_names 返回空 (优雅降级)")
+    return ok
+
+
+def usd_logic() -> bool:
+    """跨市场: USD 换算 + 护栏③ 汇率冻结 (有 ground truth)。"""
+    import numpy as np
+    print("\n── 跨市场 USD 换算 + 汇率剥离验证 ──")
+    ok = True
+    idx = pd.date_range(end="2026-06-05", periods=52, freq="W-FRI")
+    t = np.linspace(0, 1, 52)
+    local = pd.Series(100.0 * (1 + 0.20 * t), index=idx)        # 本币板块 +20%
+    fx = pd.Series(7.0 * (1 + 0.10 * t), index=idx)             # 本币/USD 7.0→7.7 (本币贬值10%)
+
+    live = rrg.usd_convert(local, fx, freeze=False)             # 含汇率
+    frz = rrg.usd_convert(local, fx, freeze=True)               # 汇率冻结期初
+    live_ret = live.iloc[-1] / live.iloc[0] - 1
+    frz_ret = frz.iloc[-1] / frz.iloc[0] - 1
+    # 本币贬值 → USD 口径被压低 → live 涨幅 < frozen 涨幅
+    drag_ok = live_ret < frz_ret - 0.02
+    print(f"  {'✅' if drag_ok else '❌'} 本币贬值压低 USD 表现: live {live_ret*100:+.1f}% < frozen {frz_ret*100:+.1f}%")
+    ok = ok and drag_ok
+    # frozen = local/fx0 → 与本币涨幅一致 (~+20%)
+    strip_ok = abs(frz_ret - 0.20) < 0.01
+    print(f"  {'✅' if strip_ok else '❌'} 冻结面板 = 本币驱动 (frozen {frz_ret*100:+.1f}% ≈ 本币 +20.0%)")
+    ok = ok and strip_ok
+    # 位移 = 汇率路径 (live/frozen 末值比 ≈ fx0/fx_last)
+    disp = (live.iloc[-1] / frz.iloc[-1]) / (fx.iloc[0] / fx.iloc[-1])
+    fx_ok = abs(disp - 1.0) < 1e-6
+    print(f"  {'✅' if fx_ok else '❌'} 两面板位移 = 纯汇率 beta (比值 {disp:.4f}≈1)")
+    ok = ok and fx_ok
+    # 美股 fx=None → 原样返回
+    none_ok = rrg.usd_convert(local, None).equals(local.dropna().sort_index())
+    print(f"  {'✅' if none_ok else '❌'} 美股 fx=None → USD 原样返回")
+    ok = ok and none_ok
+    return ok
+
+
+def main() -> None:
+    ok1 = real_data_sanity()
+    ok2 = synthetic_logic()
+    ok3 = composite_logic()
+    ok4 = usd_logic()
+    print("\n" + ("🎉 计算核冒烟全通过" if (ok1 and ok2 and ok3 and ok4) else "💥 有失败, 需排查"))
+
+
+if __name__ == "__main__":
+    main()

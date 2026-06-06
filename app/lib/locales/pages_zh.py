@@ -6,6 +6,51 @@ onboarding 正文多数沿用源页既有中文（精修），EN 侧为其翻译
 """
 
 STRINGS = {
+    # ── 板块轮动 (RRG) ──
+    "rot.title": "板块轮动 · 相对轮动图 RRG",
+    "rot.caption": "相对轮动地图——各板块相对市场基准的「相对强弱×动量」投影。是市场内部的注意力地图，不是择时信号。",
+    "rot.ctrl.header": "RRG 参数",
+    "rot.ctrl.tail": "尾巴长度（周）",
+    "rot.ctrl.tail_help": "每个板块点后画几周的轨迹尾巴。",
+    "rot.ctrl.thr": "过热阈值（z）",
+    "rot.ctrl.thr_help": "Leading 板块的拥挤度 z-score 超过此值时标记 [过热]。",
+    "rot.tab.a": "A股 · 申万/中证",
+    "rot.tab.hk": "港股 · 恒生行业",
+    "rot.note.hk": "港股拥挤度 = 板块换手率 z-score（iFind 周线）。板块 = 11 个恒生综合行业指数 vs 恒生指数。",
+    "rot.empty.hk": "无港股板块数据——请跑 jobs/load_sw_industry.py。",
+    "rot.tab.us": "美股 · GICS",
+    "rot.note.a": "A股拥挤度 = 板块换手率 z-score（iFind 周线）。板块 = 标准申万一级 31 行业 vs 沪深300。",
+    "rot.note.us": "美股拥挤度 = 价格拉伸 z（收盘 vs 200日均线）——超买代理，非真换手/breadth（v2）。板块 = 11 个 GICS SPDR ETF vs 标普500。",
+    "rot.empty.a": "无 A 股板块数据——请跑 jobs/load_sw_industry.py。",
+    "rot.empty.us": "无美股基准数据——请跑 jobs/fetch_eod.py。",
+    "rot.tab.drill": "美股 · 个股下沉",
+    "rot.drill.domain": "领域",
+    "rot.drill.sector": "板块",
+    "rot.drill.topn": "显示数量",
+    "rot.drill.topn_help": "按 20 日成交额（流动性）取前 N 只成分股绘制；合成板块指数仍用全部成分股。",
+    "rot.drill.empty": "该板块无足够成分股价格数据可下沉。",
+    "rot.drill.trunc": "已按流动性显示前 {shown}/{total} 只成分（合成指数用全部 {total} 只）。",
+    "rot.drill.short": "另有 {n} 只成分因价格历史不足（< 约 22 周）暂不参与，数据补全后自动纳入。",
+    "rot.note.drill": "个股下沉：成分股 vs **等权合成板块指数**（不是市场基准），回答「谁在板块内部领跑/掉队」。拥挤度 = 个股价格拉伸 z（收盘 vs 50 日均线，短窗超买代理）。⚠️ 个股价格仅约 9 个月历史（prices_daily），有效 RRG 周数偏短，仅作板块内部结构参考。",
+    "rot.tab.xmkt": "跨市场 · USD 同框",
+    "rot.xmkt.markets": "纳入市场",
+    "rot.xmkt.pern": "每市场板块数",
+    "rot.xmkt.pern_help": "每个市场按偏离度（离原点远近）取前 N 个板块绘制，避免 53 个板块挤爆画布。",
+    "rot.xmkt.pick": "请至少选择一个市场。",
+    "rot.xmkt.empty": "缺跨市场数据——请跑 jobs/fetch_fx_world.py（URTH/FX）与 jobs/load_sw_industry.py（申万/恒生）。",
+    "rot.xmkt.panel_frozen": "↑ 含汇率（USD 同框）　／　↓ 汇率剥离（板块本币驱动，汇率冻结期初）——同一板块两图间的位移 = 该板块的汇率 beta（护栏③）。",
+    "rot.note.xmkt": "跨市场：A/港/美板块统一换算 USD vs MSCI World（URTH，发达市场）。颜色 = 市场，仅以 URTH 作全球相对强弱标尺。⚠️ A/港板块为申万/恒生周线 seed（~52 周），美股为 GICS ETF 日线，口径略有差异；拥挤度（护栏②）见各单市场 tab。",
+    "rot.onboard.title": "RRG 怎么读",
+    "rot.onboard.body": (
+        "**四象限顺时针演进：**改善（弱但反弹）→ 领先（强且改善）→ 转弱（强但动量衰减）→ 滞后（弱且转弱）。\n\n"
+        "- **横轴 = RS-Ratio**（相对基准的强弱）；**纵轴 = RS-Momentum**（其变化率）。原点 = 100/100。\n"
+        "- **点** = 板块当前位置；**尾巴** = 近期周度轨迹。\n"
+        "- **红圈 [过热]** = Leading **且**拥挤——护栏②标出 RRG 自己看不到的危险区（筹码结构）。\n"
+        "- **级别水印** = 护栏①——根据周期母框架判定战术 vs 战略资格。\n\n"
+        "**第一性原则：**RRG 描述的是*已经发生*的相对状态（高置信事实），不预测方向（无预测力）。"
+        "它回答\"走到哪一步了\"，不回答\"下一步涨不涨\"。"
+    ),
+
     # ── 共享：侧边栏搜索 ──
     "sidebar.find_ticker": "🔍 查找标的",
     "sidebar.jump_label": "跳转到个股详情",

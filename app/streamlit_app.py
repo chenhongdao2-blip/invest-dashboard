@@ -59,6 +59,11 @@ model_drill = st.Page(
     title="Model Drill 分析师模型",
     url_path="Model_Drill",
 )
+sector_rotation = st.Page(
+    "pages/3b_Sector_Rotation.py",
+    title="Sector Rotation 板块轮动",
+    url_path="Sector_Rotation_RRG",
+)
 
 # --- Healthcare children ---
 cmsi_coverage = st.Page(
@@ -126,7 +131,7 @@ ai_sec = st.Page(
 
 pg = st.navigation(
     {
-        "Global 全局": [home, ticker_drill, model_drill, market_data, strategy_picks],
+        "Global 全局": [home, ticker_drill, model_drill, market_data, strategy_picks, sector_rotation],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,

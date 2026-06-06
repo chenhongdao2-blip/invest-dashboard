@@ -131,7 +131,9 @@ ai_sec = st.Page(
 
 pg = st.navigation(
     {
-        "Global 全局": [home, ticker_drill, model_drill, market_data, strategy_picks, sector_rotation],
+        # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
+        "⭐ 核心策略": [strategy_picks],
+        "Global 全局": [home, ticker_drill, model_drill, market_data, sector_rotation],
         "Healthcare 医疗健康": [
             cmsi_coverage,
             healthcare_overview,

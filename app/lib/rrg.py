@@ -31,6 +31,7 @@ RS-Ratio / RS-Momentum 框架 (Julius de Kempenaer)；本模块是其可复现�
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
 
@@ -49,6 +50,23 @@ _QUAD_CN = {
 _QUAD_DESC_CN = {
     "Leading": "强且改善", "Weakening": "强但转弱",
     "Lagging": "弱且转弱", "Improving": "弱但反弹",
+}
+_QUAD_DESC_EN = {
+    "Leading": "strong & improving", "Weakening": "strong but fading",
+    "Lagging": "weak & deteriorating", "Improving": "weak but recovering",
+}
+# 交互 tooltip 用的一句话「读法」(轮动到哪一步)
+_QUAD_READ_CN = {
+    "Leading": "顺时针强势段 — 留意是否过热见顶",
+    "Weakening": "强势后段 — 仍强但动量在泄",
+    "Lagging": "顺时针弱势段 — 又弱又在走弱",
+    "Improving": "轮动早段 — 弱但在反弹，可能转强",
+}
+_QUAD_READ_EN = {
+    "Leading": "clockwise strong leg — watch for overheating",
+    "Weakening": "late-strong — still strong but fading",
+    "Lagging": "clockwise weak leg — weak & deteriorating",
+    "Improving": "early leg — weak but recovering",
 }
 
 
@@ -344,52 +362,63 @@ def render_rrg_html(
             ly += 12
         _boxes.append((hx, ly)); label_y[i] = ly
 
-    # 每个板块: 尾巴 + 头点(含悬停tooltip) + 加速度字形 + 防重叠标签
+    # 每个板块整组包进 <g class='sec' data-i>，供内联 JS 做 hover 高亮/弹框/点击钉住
+    sec_data: list[dict] = []
     for i, p in enumerate(points):
         info = meta.get(p.label, {})
         hot = bool(info.get("overheated"))
         cz = info.get("cz")
         hue = (point_colors or {}).get(p.label) or _diverging_color(p.rs_ratio - 100, cap=4.0)
         pts_xy = heads[i]
+        cell: list[str] = []
         if len(pts_xy) >= 2:
             poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts_xy)
-            svg.append(f"<polyline points='{poly}' fill='none' stroke='{hue}' stroke-width='1.6' opacity='.4'/>")
+            cell.append(f"<polyline points='{poly}' fill='none' stroke='{hue}' stroke-width='1.6' opacity='.4'/>")
         n = len(pts_xy)
         for j, (x, y) in enumerate(pts_xy[:-1]):
             op = 0.16 + 0.5 * (j / max(1, n - 1)); rr = 1.7 + 1.5 * (j / max(1, n - 1))
-            svg.append(f"<circle cx='{x:.1f}' cy='{y:.1f}' r='{rr:.1f}' fill='{hue}' opacity='{op:.2f}'/>")
+            cell.append(f"<circle cx='{x:.1f}' cy='{y:.1f}' r='{rr:.1f}' fill='{hue}' opacity='{op:.2f}'/>")
         hx, hy = pts_xy[-1]
         ring = f"stroke='{t.DOWN}' stroke-width='2.6'" if hot else f"stroke='#fff' stroke-width='1.3'"
-        # 原生 SVG <title> 悬停 tooltip (零 JS，国内安全)
-        acc_cn = "加速" if p.accel > 0.04 else ("减速" if p.accel < -0.04 else "平")
-        acc_en = "accel" if p.accel > 0.04 else ("decel" if p.accel < -0.04 else "flat")
-        czt = f"{cz:+.2f}" if isinstance(cz, (int, float)) and cz == cz else "—"
-        tip = (f"{p.label} · {quadrant_label(p.quadrant, prefer_cn=prefer_cn)}\n"
-               f"RS-Ratio {p.rs_ratio:.1f} · RS-Mom {p.rs_momentum:.1f}\n"
-               f"{'动量' if prefer_cn else 'momentum'} {acc_cn if prefer_cn else acc_en} · "
-               f"{'拥挤z' if prefer_cn else 'crowd z'} {czt}")
-        svg.append(f"<circle cx='{hx:.1f}' cy='{hy:.1f}' r='6.5' fill='{hue}' {ring}>"
-                   f"<title>{_esc(tip)}</title></circle>")
+        cell.append(f"<circle cx='{hx:.1f}' cy='{hy:.1f}' r='6.5' fill='{hue}' {ring}/>")
         # 防重叠标签 + 引导线
         ly = label_y[i]
         if abs(ly - (hy + 4)) > 6:
-            svg.append(f"<line x1='{hx+6:.1f}' y1='{hy:.1f}' x2='{hx+9:.1f}' y2='{ly-3:.1f}' "
-                       f"stroke='{t.INK_4}' stroke-width='.7'/>")
+            cell.append(f"<line x1='{hx+6:.1f}' y1='{hy:.1f}' x2='{hx+9:.1f}' y2='{ly-3:.1f}' "
+                        f"stroke='{t.INK_4}' stroke-width='.7'/>")
         # 加速度字形 (▲加速/▼减速/·平) — 中信前瞻信号显式化
         if p.accel > 0.04:
-            gly = f"<tspan fill='{t.UP_DEEP}' font-weight='700'>▲</tspan> "
+            gly = f"<tspan fill='{t.UP_DEEP}' font-weight='700'>▲</tspan> "; acc_g, acc_cn, acc_en = "▲", "加速", "accel"
         elif p.accel < -0.04:
-            gly = f"<tspan fill='{t.DOWN}' font-weight='700'>▼</tspan> "
+            gly = f"<tspan fill='{t.DOWN}' font-weight='700'>▼</tspan> "; acc_g, acc_cn, acc_en = "▼", "减速", "decel"
         else:
-            gly = f"<tspan fill='{t.INK_4}'>·</tspan> "
+            gly = f"<tspan fill='{t.INK_4}'>·</tspan> "; acc_g, acc_cn, acc_en = "·", "平", "flat"
         tag = (f" <tspan fill='{t.DOWN}' font-weight='700'>[{'过热' if prefer_cn else 'HOT'}]</tspan>"
                if hot else "")
         czs = f" z{cz:+.1f}" if isinstance(cz, (int, float)) and cz == cz else ""
         noise = "" if p.n_valid >= tail else (" ⚠短史" if prefer_cn else " ⚠short")
-        svg.append(
+        cell.append(
             f"<text x='{hx+11:.1f}' y='{ly:.1f}' font-size='11.5' font-weight='600' fill='{t.INK}'>"
             f"{gly}{_esc(p.label)}<tspan font-size='9' fill='{t.INK_3}' font-weight='500'>{_esc(czs)}{_esc(noise)}</tspan>{tag}</text>"
         )
+        svg.append(f"<g class='sec' data-i='{i}'>{''.join(cell)}</g>")
+        # 交互弹框卡片 (Python 端拼好 i18n+转义; JS 只 set innerHTML)。内容按 George 选定:
+        # 板块名 + 象限&读法 + 动量加速/减速 (不放 RS 数值/拥挤z, 保持干净)
+        hot_chip = ((" <span class='hot'>[过热]</span>" if prefer_cn else " <span class='hot'>[HOT]</span>")
+                    if hot else "")
+        brL, brR = ("（", "）") if prefer_cn else (" (", ")")
+        mom_lbl = "动量：" if prefer_cn else "Momentum: "
+        qline = f"{_QUAD_CN[p.quadrant]} {p.quadrant}" if prefer_cn else p.quadrant
+        desc = _QUAD_DESC_CN[p.quadrant] if prefer_cn else _QUAD_DESC_EN[p.quadrant]
+        read = _QUAD_READ_CN[p.quadrant] if prefer_cn else _QUAD_READ_EN[p.quadrant]
+        acc_txt = f"{acc_g} {acc_cn if prefer_cn else acc_en}"
+        card = (
+            f"<div class='th'>{_esc(p.label)}{hot_chip}</div>"
+            f"<div class='tq'>{_esc(qline)}{brL}{_esc(desc)}{brR}</div>"
+            f"<div class='tr'>{_esc(read)}</div>"
+            f"<div class='tm'>{mom_lbl}{_esc(acc_txt)}</div>"
+        )
+        sec_data.append({"html": card})
 
     svg.append("</svg>")
 
@@ -408,6 +437,7 @@ def render_rrg_html(
         f"<b>{'读法' if prefer_cn else 'How to read'}:</b> "
         f"{'顺时针演进 改善→领先→转弱→滞后 · 点=板块当前位置 · 尾巴=近' if prefer_cn else 'Clockwise: Improving→Leading→Weakening→Lagging · dot=now · tail=last '}{tail}{'周轨迹' if prefer_cn else 'w'} · "
         f"<span style='color:{t.DOWN};font-weight:700'>{'红圈[过热]=Leading且拥挤(护栏②)' if prefer_cn else 'red ring [HOT]=Leading & crowded'}</span>"
+        f" · <span style='color:{t.INK_3}'>👆 {'悬停高亮 · 点击钉住' if prefer_cn else 'hover to highlight · click to pin'}</span>"
         "</div>"
     )
     group_html = ""
@@ -443,17 +473,53 @@ def render_rrg_html(
     .grp .chip i{{width:11px;height:11px;border-radius:50%;display:inline-block}}
     .disc{{margin-top:10px;border-top:1px solid {t.PAPER_RULE};padding-top:9px;font-size:10.5px;color:{t.INK_3};line-height:1.55}}
     .disc b{{color:{t.INK_2}}}
+    g.sec{{transition:opacity .12s ease}}
+    #rtip{{position:fixed;display:none;z-index:60;pointer-events:none;max-width:236px;
+      background:#fff;border:1px solid {t.PAPER_RULE};border-left:3px solid {t.CMSI_RED};
+      box-shadow:0 4px 16px rgba(0,0,0,.14);border-radius:3px;padding:8px 11px;
+      font-size:11px;line-height:1.5;color:{t.INK}}}
+    #rtip .th{{font-weight:700;font-size:12.5px;margin-bottom:2px}}
+    #rtip .th .hot{{color:{t.DOWN};font-weight:700;font-size:10px}}
+    #rtip .tq{{font-weight:600;color:{t.INK_2}}}
+    #rtip .tr{{color:{t.INK_3};font-size:10.5px;margin:2px 0 0}}
+    #rtip .tm{{color:{t.INK_2};margin-top:3px}}
     """
+    # ── 交互层 (内联 vanilla JS, 零 CDN/自包含 → 国内安全; 与数据表的 click-sort 同机制) ──
+    # hover: 高亮该板块整组(其余淡化) + 弹样式化卡片; click: 钉住; 点别处取消。
+    sec_js = json.dumps(sec_data, ensure_ascii=False)
+    tip_div = "<div id='rtip'></div>"
+    script = (
+        "<script>(function(){"
+        f"var S={sec_js};"
+        "var tip=document.getElementById('rtip');"
+        "var gs=document.querySelectorAll('g.sec');var pin=null;"
+        "function pos(x,y){var w=tip.offsetWidth,h=tip.offsetHeight;var nx=x+14,ny=y+14;"
+        "if(nx+w>window.innerWidth-6)nx=x-w-14;if(nx<4)nx=4;"
+        "if(ny+h>window.innerHeight-6)ny=y-h-14;if(ny<4)ny=4;"
+        "tip.style.left=nx+'px';tip.style.top=ny+'px';}"
+        "function show(i,x,y){tip.innerHTML=S[i].html;tip.style.display='block';pos(x,y);}"
+        "function hi(i){for(var k=0;k<gs.length;k++){gs[k].style.opacity=(gs[k].getAttribute('data-i')===i)?'1':'0.1';}}"
+        "function clr(){for(var k=0;k<gs.length;k++){gs[k].style.opacity='1';}tip.style.display='none';}"
+        "for(var k=0;k<gs.length;k++){(function(g){var i=g.getAttribute('data-i');g.style.cursor='pointer';"
+        "g.addEventListener('mouseenter',function(e){if(pin===null){hi(i);show(i,e.clientX,e.clientY);}});"
+        "g.addEventListener('mousemove',function(e){if(pin===null)pos(e.clientX,e.clientY);});"
+        "g.addEventListener('mouseleave',function(){if(pin===null)clr();});"
+        "g.addEventListener('click',function(e){e.stopPropagation();"
+        "if(pin===i){pin=null;clr();}else{pin=i;hi(i);show(i,e.clientX,e.clientY);}});"
+        "})(gs[k]);}"
+        "document.addEventListener('click',function(){if(pin!==null){pin=null;clr();}});"
+        "})();</script>"
+    )
     body = (
         f"<header class='mh'><h1>{title}</h1>"
         f"<span class='mkt'>{_esc(market_label)}</span>"
         f"<span class='as'>{('截至 ' if prefer_cn else 'as of ') + _esc(as_of) if as_of else ''}</span></header>"
-        f"{reg_html}{legend}{group_html}{''.join(svg)}{disclaimer}"
+        f"{reg_html}{legend}{group_html}{''.join(svg)}{disclaimer}{tip_div}"
     )
     doc = (
         "<!doctype html><html><head><meta charset='utf-8'>"
         "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-        f"<style>{css}</style></head><body>{body}</body></html>"
+        f"<style>{css}</style></head><body>{body}{script}</body></html>"
     )
     height = OY + PH + 34 + 150          # svg viewBox + header/regime/legend/disclaimer
     if group_legend:

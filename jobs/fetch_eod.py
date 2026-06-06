@@ -47,7 +47,13 @@ BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
                      "XLK", "XLF", "XLE", "XLB", "XLI", "XLY", "XLP", "XLC", "XLU", "XLRE",
                      # AI / semiconductor supply-chain benchmarks (cross-market; LLM Wiki)
                      "^SOX", "SMH", "AIQ", "2644.T", "091160.KS", "442580.KS",
-                     "512480.SS", "515880.SS", "159819.SZ", "588200.SS", "3191.HK"]
+                     "512480.SS", "515880.SS", "159819.SZ", "588200.SS", "3191.HK",
+                     # 跨市场 USD 同框 RRG (板块轮动 tab5) 用：全球基准 + FX 时间序列。
+                     # URTH = iShares MSCI World (USD)；CNY=X/HKD=X = USDCNY/USDHKD 汇率
+                     # (本币/USD)，存入 benchmarks_daily 供 _xmkt_raw 把 A/港板块换 USD。
+                     # NB: FX_PAIRS 也抓 USDCNY=X/USDHKD=X，但只落 meta(close_usd 快照)；
+                     # 这里用别名 CNY=X/HKD=X(同一标的)落 benchmarks_daily 留完整序列。
+                     "URTH", "CNY=X", "HKD=X"]
 # NB: 恒生医疗保健 (HSHCI.HK) is NOT here — yfinance has no pure HK healthcare index.
 # It is iFind-seeded via jobs/fetch_cn_benchmarks.py (cron can't reach iFind).
 

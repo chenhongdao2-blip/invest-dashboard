@@ -246,6 +246,33 @@ def _fmt_date(ts) -> str:
         return str(ts)
 
 
+def _smooth_path(pts: list[tuple[float, float]]) -> str:
+    """穿过所有点的平滑曲线 SVG path d (Catmull-Rom → 三次贝塞尔)。
+
+    比直连折线顺滑 (段间圆滑过渡)，但仍**穿过每个点** → 尾巴点/头点不偏移、
+    位置语义不变，只是连线不再有锐角拐弯。≤2 点退化为直线 (M/L)。
+    """
+    n = len(pts)
+    if n == 0:
+        return ""
+    if n <= 2:
+        d = f"M{pts[0][0]:.1f},{pts[0][1]:.1f}"
+        if n == 2:
+            d += f" L{pts[1][0]:.1f},{pts[1][1]:.1f}"
+        return d
+    d = [f"M{pts[0][0]:.1f},{pts[0][1]:.1f}"]
+    for i in range(n - 1):
+        p0 = pts[i - 1] if i > 0 else pts[0]
+        p1, p2 = pts[i], pts[i + 1]
+        p3 = pts[i + 2] if i + 2 < n else pts[n - 1]
+        c1x = p1[0] + (p2[0] - p0[0]) / 6.0
+        c1y = p1[1] + (p2[1] - p0[1]) / 6.0
+        c2x = p2[0] - (p3[0] - p1[0]) / 6.0
+        c2y = p2[1] - (p3[1] - p1[1]) / 6.0
+        d.append(f"C{c1x:.1f},{c1y:.1f} {c2x:.1f},{c2y:.1f} {p2[0]:.1f},{p2[1]:.1f}")
+    return " ".join(d)
+
+
 def render_rrg_html(
     points: list["RRGPoint"],
     meta: dict[str, dict],
@@ -375,8 +402,8 @@ def render_rrg_html(
         pts_xy = heads[i]
         cell: list[str] = []
         if len(pts_xy) >= 2:
-            poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts_xy)
-            cell.append(f"<polyline points='{poly}' fill='none' stroke='{hue}' stroke-width='1.6' opacity='.4'/>")
+            cell.append(f"<path d='{_smooth_path(pts_xy)}' fill='none' stroke='{hue}' "
+                        f"stroke-width='1.6' opacity='.4' stroke-linecap='round' stroke-linejoin='round'/>")
         n = len(pts_xy)
         for j, (x, y) in enumerate(pts_xy[:-1]):
             op = 0.16 + 0.5 * (j / max(1, n - 1)); rr = 1.7 + 1.5 * (j / max(1, n - 1))

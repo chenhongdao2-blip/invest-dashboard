@@ -335,10 +335,92 @@ def synthetic_logic() -> bool:
     return ok
 
 
+def composite_logic() -> bool:
+    """个股下沉: 等权合成板块指数 + 成分股 vs 合成指数 的护栏逻辑 (有 ground truth)。"""
+    import numpy as np
+    print("\n── 个股下沉 等权合成指数验证 ──")
+    ok = True
+    idx = pd.date_range(end="2026-06-05", periods=52, freq="W-FRI")
+    t = np.linspace(0, 1, 52)
+    # 4 只成分: 2 只持平、1 只跑赢、1 只跑输 → 合成指数应居中
+    flat1 = pd.Series(100.0 * (1 + 0.10 * t), index=idx)
+    flat2 = pd.Series(100.0 * (1 + 0.10 * t), index=idx)
+    win = pd.Series(100.0 * (1 + 0.60 * t**1.5), index=idx)     # 加速跑赢
+    lose = pd.Series(100.0 * (1 - 0.25 * t), index=idx)         # 持续跑输
+    wide = pd.concat({"FLAT1": flat1, "FLAT2": flat2, "WIN": win, "LOSE": lose}, axis=1)
+
+    comp = rrg.equal_weight_composite(wide)
+    base_ok = (not comp.empty) and abs(comp.iloc[0] - 100.0) < 1.0
+    print(f"  {'✅' if base_ok else '❌'} 合成指数基点≈100 (实 {comp.iloc[0]:.1f}), 末值 {comp.iloc[-1]:.1f}, 长度 {len(comp)}")
+    ok = ok and base_ok
+
+    # ragged: LOSE 晚 10 周上市 (前段 NaN) → 不应抛错、不引入再基化跳变
+    wide_ragged = wide.copy()
+    wide_ragged.loc[wide_ragged.index[:10], "LOSE"] = float("nan")
+    comp_r = rrg.equal_weight_composite(wide_ragged)
+    ragged_ok = (not comp_r.empty) and comp_r.notna().all() and len(comp_r) >= 40
+    print(f"  {'✅' if ragged_ok else '❌'} ragged 起点容忍 (晚上市成分): 合成长度 {len(comp_r)}, 无 NaN={comp_r.notna().all()}")
+    ok = ok and ragged_ok
+
+    # 成分股 vs 合成指数: WIN 应 Leading, LOSE 应 Lagging
+    pts = rrg.compute_rrg({"WIN": win, "LOSE": lose, "FLAT1": flat1}, comp)
+    res = {p.label: p for p in pts}
+    for lbl, exp in (("WIN", "Leading"), ("LOSE", "Lagging")):
+        got = res[lbl].quadrant if lbl in res else None
+        mark = "✅" if got == exp else "❌"
+        if got != exp:
+            ok = False
+        print(f"  {mark} {lbl} vs 合成指数: 期望 {exp}, 实得 {got}")
+
+    # 成分不足 min_names 返回空 (不崩)
+    too_few = rrg.equal_weight_composite(wide[["FLAT1", "FLAT2"]], min_names=3)
+    mark = "✅" if too_few.empty else "❌"
+    if not too_few.empty:
+        ok = False
+    print(f"  {mark} 成分<min_names 返回空 (优雅降级)")
+    return ok
+
+
+def usd_logic() -> bool:
+    """跨市场: USD 换算 + 护栏③ 汇率冻结 (有 ground truth)。"""
+    import numpy as np
+    print("\n── 跨市场 USD 换算 + 汇率剥离验证 ──")
+    ok = True
+    idx = pd.date_range(end="2026-06-05", periods=52, freq="W-FRI")
+    t = np.linspace(0, 1, 52)
+    local = pd.Series(100.0 * (1 + 0.20 * t), index=idx)        # 本币板块 +20%
+    fx = pd.Series(7.0 * (1 + 0.10 * t), index=idx)             # 本币/USD 7.0→7.7 (本币贬值10%)
+
+    live = rrg.usd_convert(local, fx, freeze=False)             # 含汇率
+    frz = rrg.usd_convert(local, fx, freeze=True)               # 汇率冻结期初
+    live_ret = live.iloc[-1] / live.iloc[0] - 1
+    frz_ret = frz.iloc[-1] / frz.iloc[0] - 1
+    # 本币贬值 → USD 口径被压低 → live 涨幅 < frozen 涨幅
+    drag_ok = live_ret < frz_ret - 0.02
+    print(f"  {'✅' if drag_ok else '❌'} 本币贬值压低 USD 表现: live {live_ret*100:+.1f}% < frozen {frz_ret*100:+.1f}%")
+    ok = ok and drag_ok
+    # frozen = local/fx0 → 与本币涨幅一致 (~+20%)
+    strip_ok = abs(frz_ret - 0.20) < 0.01
+    print(f"  {'✅' if strip_ok else '❌'} 冻结面板 = 本币驱动 (frozen {frz_ret*100:+.1f}% ≈ 本币 +20.0%)")
+    ok = ok and strip_ok
+    # 位移 = 汇率路径 (live/frozen 末值比 ≈ fx0/fx_last)
+    disp = (live.iloc[-1] / frz.iloc[-1]) / (fx.iloc[0] / fx.iloc[-1])
+    fx_ok = abs(disp - 1.0) < 1e-6
+    print(f"  {'✅' if fx_ok else '❌'} 两面板位移 = 纯汇率 beta (比值 {disp:.4f}≈1)")
+    ok = ok and fx_ok
+    # 美股 fx=None → 原样返回
+    none_ok = rrg.usd_convert(local, None).equals(local.dropna().sort_index())
+    print(f"  {'✅' if none_ok else '❌'} 美股 fx=None → USD 原样返回")
+    ok = ok and none_ok
+    return ok
+
+
 def main() -> None:
     ok1 = real_data_sanity()
     ok2 = synthetic_logic()
-    print("\n" + ("🎉 计算核冒烟全通过" if (ok1 and ok2) else "💥 有失败, 需排查"))
+    ok3 = composite_logic()
+    ok4 = usd_logic()
+    print("\n" + ("🎉 计算核冒烟全通过" if (ok1 and ok2 and ok3 and ok4) else "💥 有失败, 需排查"))
 
 
 if __name__ == "__main__":

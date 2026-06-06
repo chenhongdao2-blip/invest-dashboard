@@ -96,6 +96,52 @@ def quadrant_label(q: str, *, prefer_cn: bool) -> str:
     return f"{_QUAD_CN[q]}({_QUAD_DESC_CN[q]})" if prefer_cn else q
 
 
+def equal_weight_composite(closes: pd.DataFrame, *, min_names: int = 3) -> pd.Series:
+    """一篮成分股收盘 → 等权合成「板块指数」(个股下沉 RRG 的内生基准)。
+
+    WHY 不是简单 rebase 取均值：成分股起止 ragged (晚上市的股若按自身首值再基化到
+    100 会在中途插入一个跳变点，污染横截面均值)。改用**横截面平均日收益链式**——每个
+    交易日 = 当日有数成分股的等权平均收益，再 cumprod 到 100 基点。新名只在它有连续两点
+    后才贡献收益，天然容忍 ragged、无再基化跳变。
+
+    closes  : wide df, index=date, columns=ticker (日频或周频均可，compute_rrg 内部会
+              统一 resample 到 W-FRI)。
+    返回单一 close 序列，可直接当 compute_rrg 的 benchmark；成分不足 min_names 返回空。
+    """
+    if closes is None or closes.empty or closes.shape[1] < min_names:
+        return pd.Series(dtype=float)
+    cl = closes.sort_index()
+    avg_ret = cl.pct_change().mean(axis=1, skipna=True).dropna()
+    if avg_ret.empty:
+        return pd.Series(dtype=float)
+    return 100.0 * (1.0 + avg_ret).cumprod()
+
+
+def usd_convert(local: pd.Series, fx: pd.Series | None, *, freeze: bool = False) -> pd.Series:
+    """本币板块指数 → USD 计价 (跨市场同框 / 护栏③ 用)。
+
+    fx = 本币/USD 汇率 (yfinance CNY=X / HKD=X，即 1 USD 兑多少本币) → USD 值 = 本币 / fx。
+    freeze=True → 汇率冻结在公共起点 fx₀，**剥离汇率变动**，只保留板块本币驱动的路径
+    (护栏③：USD 面板含汇率 beta，冻结面板剥离之，二者位移 = 该板块的汇率 beta 贡献)。
+    fx=None (美股，本就 USD) → 原样返回。
+
+    FX 为日频、板块多为周频：把 fx 前向填充对齐到板块日期 (汇率连续，ffill 一两天无碍)，
+    避免周五逢假日时 inner-join 丢整周。
+    """
+    s = local.dropna().sort_index()
+    if fx is None:
+        return s
+    f = fx.dropna().sort_index()
+    if s.empty or f.empty:
+        return pd.Series(dtype=float)
+    f_on_s = f.reindex(s.index.union(f.index)).ffill().reindex(s.index)
+    df = pd.concat({"s": s, "f": f_on_s}, axis=1).dropna()
+    if df.empty:
+        return pd.Series(dtype=float)
+    denom = float(df["f"].iloc[0]) if freeze else df["f"]
+    return (df["s"] / denom).rename(None)
+
+
 # ── 计算核 (纯 pandas/numpy — 无 streamlit / 无 db，可独立单测) ───────────────
 
 def compute_rrg(
@@ -191,12 +237,16 @@ def render_rrg_html(
     regime: dict | None = None,
     as_of: str | None = None,
     tail: int = TAIL_DEFAULT,
+    point_colors: dict[str, str] | None = None,
+    group_legend: list[tuple[str, str]] | None = None,
 ) -> tuple[str, int]:
     """四象限 RRG 自包含 HTML doc + iframe 高度。
 
     points : compute_rrg 输出
     meta   : {point.label: {"overheated": bool, "cz": float}}  护栏②叠加信息
     regime : lib.regime.regime_banner 输出 (护栏①水印)，None 则不显示
+    point_colors : {label: hex}  按点显式着色 (跨市场=按市场)，缺省回落 RS 强弱 diverging
+    group_legend : [(name, hex)]  色块图例 (如 A股/港股/美股)，None 不显示
     """
     from html import escape as _esc
 
@@ -299,7 +349,7 @@ def render_rrg_html(
         info = meta.get(p.label, {})
         hot = bool(info.get("overheated"))
         cz = info.get("cz")
-        hue = _diverging_color(p.rs_ratio - 100, cap=4.0)   # teal右/red左
+        hue = (point_colors or {}).get(p.label) or _diverging_color(p.rs_ratio - 100, cap=4.0)
         pts_xy = heads[i]
         if len(pts_xy) >= 2:
             poly = " ".join(f"{x:.1f},{y:.1f}" for x, y in pts_xy)
@@ -360,6 +410,13 @@ def render_rrg_html(
         f"<span style='color:{t.DOWN};font-weight:700'>{'红圈[过热]=Leading且拥挤(护栏②)' if prefer_cn else 'red ring [HOT]=Leading & crowded'}</span>"
         "</div>"
     )
+    group_html = ""
+    if group_legend:
+        chips = " ".join(
+            f"<span class='chip'><i style='background:{c}'></i>{_esc(name)}</span>"
+            for name, c in group_legend
+        )
+        group_html = f"<div class='grp'>{chips}</div>"
     disclaimer = (
         "<div class='disc'>⚠ "
         + ("<b>RRG 描述「已发生的相对状态」(高置信事实)，不预测「方向」(无预测力)。</b>"
@@ -381,6 +438,9 @@ def render_rrg_html(
     .wm.str{{background:{t.UP_TINT};border-left:3px solid {t.UP};color:{t.UP_DEEP};font-weight:600}}
     .wm .bk{{margin-left:auto;font-weight:500;color:{t.INK_3};font-size:10.5px}}
     .key{{font-size:10.5px;color:{t.INK_2};margin:8px 2px 2px;line-height:1.5}}
+    .grp{{display:flex;flex-wrap:wrap;gap:12px;margin:6px 2px 0;font-size:11px;color:{t.INK_2}}}
+    .grp .chip{{display:inline-flex;align-items:center;gap:5px;font-weight:600}}
+    .grp .chip i{{width:11px;height:11px;border-radius:50%;display:inline-block}}
     .disc{{margin-top:10px;border-top:1px solid {t.PAPER_RULE};padding-top:9px;font-size:10.5px;color:{t.INK_3};line-height:1.55}}
     .disc b{{color:{t.INK_2}}}
     """
@@ -388,7 +448,7 @@ def render_rrg_html(
         f"<header class='mh'><h1>{title}</h1>"
         f"<span class='mkt'>{_esc(market_label)}</span>"
         f"<span class='as'>{('截至 ' if prefer_cn else 'as of ') + _esc(as_of) if as_of else ''}</span></header>"
-        f"{reg_html}{legend}{''.join(svg)}{disclaimer}"
+        f"{reg_html}{legend}{group_html}{''.join(svg)}{disclaimer}"
     )
     doc = (
         "<!doctype html><html><head><meta charset='utf-8'>"
@@ -396,4 +456,6 @@ def render_rrg_html(
         f"<style>{css}</style></head><body>{body}</body></html>"
     )
     height = OY + PH + 34 + 150          # svg viewBox + header/regime/legend/disclaimer
+    if group_legend:
+        height += 26                     # market color legend row
     return doc, int(height)

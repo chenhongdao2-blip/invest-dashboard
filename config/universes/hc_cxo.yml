@@ -1,4 +1,4 @@
-# CXO & Life Sciences sector — 14 tickers
+# CXO & Life Sciences sector — 18 tickers
 sector_id: cxo
 domain: healthcare
 
@@ -54,3 +54,21 @@ tickers:
   - ticker: ICLR
     name_en: ICON plc
     region: US
+  # ── Japan Healthcare 专栏并入（2026-06-10）：检验服务仿 Labcorp 先例，
+  # 亚速旺(实验室器材流通)仿 Avantor 对标 ──
+  - ticker: 6951.T
+    name_cn: 日本电子
+    name_en: JEOL
+    region: JP
+  - ticker: 4544.T
+    name_cn: H.U.集团
+    name_en: H.U. Group Holdings
+    region: JP
+  - ticker: 4694.T
+    name_cn: BML
+    name_en: BML
+    region: JP
+  - ticker: 7476.T
+    name_cn: 亚速旺
+    name_en: As One
+    region: JP

@@ -1,4 +1,4 @@
-# Healthcare + AI sector — 13 tickers
+# Healthcare + AI sector — 14 tickers
 sector_id: hc_ai
 domain: healthcare
 
@@ -46,4 +46,9 @@ tickers:
     region: US
   - ticker: 2413.T
     name_en: M3 Inc.
+    region: JP
+  # ── Japan Healthcare 专栏并入（2026-06-10）──
+  - ticker: 4483.T
+    name_cn: JMDC
+    name_en: JMDC
     region: JP

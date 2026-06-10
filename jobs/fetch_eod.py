@@ -493,8 +493,10 @@ def main() -> None:
         )
 
     # 3b. Benchmark indices (cron-cached so home page never calls live yfinance).
-    #     Needs a longer window than prices for 1M/YTD returns.
-    bench_start = (today - timedelta(days=200)).isoformat()
+    #     Needs a longer window than prices for 1M/YTD returns. Respect a deeper
+    #     --backfill-days too（曾硬编码 200 天 → JP 面板基准比 40 支价格短 2 个月，
+    #     图表共同锚被钉在基准起点，市值加权 vs 等权的 9-11 月分歧全被锚掉）。
+    bench_start = (today - timedelta(days=max(200, args.backfill_days or 0))).isoformat()
     n_bench = fetch_benchmarks(conn, start=bench_start, end=end)
     print(f"[bench] total benchmark rows upserted: {n_bench}")
 

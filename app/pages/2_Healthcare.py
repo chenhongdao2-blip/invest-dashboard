@@ -272,7 +272,9 @@ else:
         )
 
     # ② composite vs TOPIX vs Nikkei — same FT framing as the rs panels above
-    _comp = hco.jp_composite(_jp_closes)
+    _comp = hco.jp_composite(
+        _jp_closes, weights=_jp.set_index("ticker")["mcap_bn_jpy"]
+        if "mcap_bn_jpy" in _jp.columns else None)
     _jpb = hco.jp_benchmarks_usd()
     if _comp is not None and _jpb:
         _peers = {i18n.t("hc.jp.bench.topix"): _jpb["1305.T"]} if "1305.T" in _jpb else {}

@@ -295,12 +295,15 @@ def jp_universe() -> pd.DataFrame:
     return _read_jp_universe(path_str, mtime)
 
 
-def jp_composite(closes: pd.DataFrame, min_coverage: float = 0.9) -> pd.Series | None:
-    """42 支等权「日本医药专栏指数」：USD close panel → 各自归一 100 → 等权平均。
+def jp_composite(closes: pd.DataFrame, weights: pd.Series | None = None,
+                 min_coverage: float = 0.9) -> pd.Series | None:
+    """市值加权「日本医药专栏指数」：USD close panel → 锚日归一 100 → 按权重平均。
 
+    `weights` = ticker-indexed 市值快照（hc_japan.yml `mcap_bn_jpy`，2026/05/26）。
+    股本不变时「锚日市值权重 × 归一价格」= 标准市值加权指数（George 2026-06-10
+    指定，替换最初的等权口径）。weights 缺失/全零时回退等权。
     锚 = 首个覆盖率 ≥ min_coverage 的交易日（per-ticker ffill 后）；锚日仍缺数的
-    ticker 整条剔除（记在 .attrs['dropped']，caption 可披露）。等权 = 简单平均，
-    刻意不按市值加权——专栏指数反映的是清单本身，不是大票 beta。
+    ticker 整条剔除（记在 .attrs['dropped']，caption 可披露）。
     """
     if closes is None or closes.empty:
         return None
@@ -313,7 +316,11 @@ def jp_composite(closes: pd.DataFrame, min_coverage: float = 0.9) -> pd.Series |
     base = panel.loc[anchor]
     keep = base.dropna().index
     normalized = panel.loc[anchor:, keep].div(base[keep]) * 100.0
-    comp = normalized.mean(axis=1)
+    w = weights.reindex(keep).fillna(0.0) if weights is not None else None
+    if w is not None and float(w.sum()) > 0:
+        comp = normalized.mul(w, axis=1).sum(axis=1) / float(w.sum())
+    else:
+        comp = normalized.mean(axis=1)
     comp.attrs["anchor"] = anchor
     comp.attrs["dropped"] = sorted(set(panel.columns) - set(keep))
     return comp

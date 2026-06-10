@@ -104,6 +104,10 @@ def main() -> None:
 
     # mcap order from the xlsx (its row order is already mcap-desc)
     mcap_rank = {str(c).strip(): i for i, c in enumerate(df["代码"])}
+    # 市值快照（JPY，2026/05/26）→ 专栏指数的市值加权权重。股本不变时
+    # 「锚日市值权重 × 归一价格」= 标准市值加权指数；快照漂移以重跑本脚本刷新。
+    mcap_bn = {str(c).strip(): round(float(v) / 1e9)
+               for c, v in zip(df["代码"], df["总市值"])}
 
     lines = [
         f"# Japan Healthcare 区域 universe — {len(CURATED)} tickers",
@@ -133,6 +137,7 @@ def main() -> None:
             lines.append(f'    name_en: "{name_en}"')
             lines.append("    region: JP")
             lines.append(f"    subsector: {sub}")
+            lines.append(f"    mcap_bn_jpy: {mcap_bn[code]}   # 市值快照 2026/05/26, 十亿日元")
             if len(v) > 3:
                 lines.append(f'    note: "{v[3]}"')
     YML_OUT.write_text("\n".join(lines) + "\n", encoding="utf-8")

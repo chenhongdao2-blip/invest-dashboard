@@ -196,11 +196,12 @@ STRINGS = {
     "hc.jp.sub.distribution": "Distribution & Services",
     "hc.jp.col.subsector": "Subsector",
     "hc.jp.chart.title": "Japan HC composite vs TOPIX vs Nikkei 225 (USD)",
-    "hc.jp.hero": "Japan HC composite (40 names, equal-weight)",
+    "hc.jp.hero": "Japan HC composite (40 names, cap-weighted)",
     "hc.jp.bench.topix": "TOPIX (1305.T ETF proxy)",
     "hc.jp.bench.n225": "Nikkei 225",
     "hc.jp.caption": (
-        "Anchored {anchor} · {detail}. Composite = simple equal-weight of 40 names; "
+        "Anchored {anchor} · {detail}. Composite = market-cap-weighted across 40 names "
+        "(weights = May-2026 mcap snapshot, rebased at the anchor); "
         "all three series in USD (FX included; FX largely cancels in the relative "
         "spread); TOPIX proxied by the 1305.T ETF. Source: yfinance EOD cron, "
         "as of {asof}."

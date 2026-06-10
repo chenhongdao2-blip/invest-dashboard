@@ -298,10 +298,12 @@ def _build_japan(wb) -> None:
     ws.freeze_panes = "A2"
 
     # --- composite vs TOPIX vs 日经 (all USD, rebased at common anchor) ---
-    comp = hco.jp_composite(closes)
+    comp = hco.jp_composite(
+        closes, weights=uni.set_index("ticker")["mcap_bn_jpy"]
+        if "mcap_bn_jpy" in uni.columns else None)
     bench = hco.jp_benchmarks_usd()
     if comp is not None and bench:
-        cols = {"日本医药专栏指数(40支等权)": comp}
+        cols = {"日本医药专栏指数(40支市值加权)": comp}
         if "1305.T" in bench:
             cols["TOPIX (1305.T ETF代理)"] = bench["1305.T"]
         if "^N225" in bench:
@@ -344,7 +346,8 @@ def _build_japan(wb) -> None:
 
     asof = closes.index.max().date().isoformat() if not closes.empty else "—"
     ws.cell(last + 2, 1,
-            f"口径: Last/收益均为 USD（JPY 经 USDJPY 换算, M1 口径）· 等权指数=40支简单平均 · "
+            f"口径: Last/收益均为 USD（JPY 经 USDJPY 换算, M1 口径）· 专栏指数=40支市值加权"
+            f"(权重=2026/05市值快照) · "
             f"TOPIX 用 1305.T ETF 代理 · 截至 {asof}。").font = Font(size=9, color=GREY)
     ws.cell(last + 3, 1,
             "Universe: iFind 自选清单 2026/05 (42支) 剔除已退市 HOGY MEDICAL(3593)/久光制药(4530)。"

@@ -191,11 +191,12 @@ STRINGS = {
     "hc.jp.sub.distribution": "流通·服务",
     "hc.jp.col.subsector": "子板块",
     "hc.jp.chart.title": "日本医药专栏指数 vs TOPIX vs 日经 225（USD）",
-    "hc.jp.hero": "日本医药专栏指数（40 支等权）",
+    "hc.jp.hero": "日本医药专栏指数（40 支市值加权）",
     "hc.jp.bench.topix": "TOPIX（1305.T ETF 代理）",
     "hc.jp.bench.n225": "日经 225",
     "hc.jp.caption": (
-        "锚定 {anchor} · {detail}。专栏指数＝40 支等权简单平均；三条序列均为 "
+        "锚定 {anchor} · {detail}。专栏指数＝40 支市值加权（权重＝2026/05 市值快照，"
+        "锚日归一）；三条序列均为 "
         "USD 口径（含汇率，相对差值已大致互抵汇率项）；TOPIX 用 1305.T ETF 代理。"
         "来源：yfinance EOD cron，截至 {asof}。"
     ),

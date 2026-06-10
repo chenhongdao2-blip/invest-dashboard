@@ -177,10 +177,37 @@ if url_ticker and url_ticker in all_tickers and st.session_state.global_ticker !
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("drill.title"))
-st.caption(i18n.t("drill.caption"))
+prefer_cn = i18n.get_lang() == "zh"
 
-# Local selectbox (fallback when sidebar empty).
+# ── 合并页：列表模式(没选股 = 全市场行情表) / 详情模式(选了股 = 个股下钻) ──
+# mode 由当前 global_ticker 决定 (下方选股框/返回键改它 → Streamlit rerun)。
+_in_detail = bool(
+    st.session_state.global_ticker and st.session_state.global_ticker in all_tickers
+)
+
+
+def _back_to_list() -> None:
+    """返回列表：清选中票 + 选股框 + ?ticker= 深链。on_click 回调早于 widget 实例化,
+    可安全改 drill_local_pick (脚本体里改已实例化 widget 的 key 会报错)。"""
+    st.session_state.global_ticker = ""
+    st.session_state.drill_local_pick = ""
+    st.query_params.clear()
+
+
+if _in_detail:
+    st.button("← 返回列表" if prefer_cn else "← Back to list",
+              on_click=_back_to_list, key="drill_back")
+    theme.page_header(i18n.t("drill.title"))
+    st.caption(i18n.t("drill.caption"))
+else:
+    theme.page_header("行情 / 个股" if prefer_cn else "Market & Stocks")
+    st.caption(
+        "用下方选股框选一只看完整详情，或浏览/筛选全市场行情表（按领域/地区/行业）。"
+        if prefer_cn else
+        "Pick a ticker below for its full drill-down, or browse/filter the full quote table."
+    )
+
+# Local selectbox = 选股框 (两模式都在；详情模式可借它快速换股)。
 default_idx = 0
 if st.session_state.global_ticker in all_tickers:
     default_idx = all_tickers.index(st.session_state.global_ticker) + 1
@@ -210,7 +237,9 @@ if pick:
 
 ticker = st.session_state.global_ticker
 if not ticker:
-    st.info(i18n.t("drill.pick_prompt"))
+    # 列表模式：全市场行情表(FT精排, 行内「详情↗」点击开新标签) + 筛选 + 下载 + 选股框(上方)。
+    from lib import quote_table
+    quote_table.render_quote_list(prefer_cn=prefer_cn, key_prefix="drill_list")
     st.stop()
 
 # ---------- Header card ----------

@@ -182,6 +182,37 @@ STRINGS = {
         "→ {now_d} {now_c:,.0f}（较峰 {now_peak:+.0%}；较起点仍 {now_start:+.0%}）。"
         "来源：iFind 指数月收盘，截至 {asof}。"
     ),
+    # ── 日本医药（区域 universe：hc_japan.yml，40 支）──
+    "hc.jp.section": "日本医药 · Japan Healthcare",
+    "hc.jp.section_meta": "40 支 · iFind 自选清单 (2026/05) · 收益 USD 口径",
+    "hc.jp.sub.pharma": "制药",
+    "hc.jp.sub.medtech": "医疗器械",
+    "hc.jp.sub.diagnostics": "诊断·检测",
+    "hc.jp.sub.distribution": "流通·服务",
+    "hc.jp.col.subsector": "子板块",
+    "hc.jp.chart.title": "日本医药专栏指数 vs TOPIX vs 日经 225（USD）",
+    "hc.jp.hero": "日本医药专栏指数（40 支等权）",
+    "hc.jp.bench.topix": "TOPIX（1305.T ETF 代理）",
+    "hc.jp.bench.n225": "日经 225",
+    "hc.jp.caption": (
+        "锚定 {anchor} · {detail}。专栏指数＝40 支等权简单平均；三条序列均为 "
+        "USD 口径（含汇率，相对差值已大致互抵汇率项）；TOPIX 用 1305.T ETF 代理。"
+        "来源：yfinance EOD cron，截至 {asof}。"
+    ),
+    "hc.jp.detail": "40 支明细（按子板块 · USD 口径）",
+    "hc.jp.read": (
+        "日本医药的正确读法是**按定价货币分层**，而非按涨跌排序：第一三共（ADC：Enhertu/"
+        "Datroway）、卫材（Leqembi）与器械三杰（泰尔茂/HOYA/奥林巴斯）是**全球定价资产**"
+        "——收入以美元/欧元为主，弱日元是顺风；流通四社（Medipal/阿弗瑞萨/铃谦/东邦）与"
+        "仿制药（泽井/东和）是**本土定价资产**——吃药价两年一调与医保收缩的逆风，弱日元"
+        "还抬高其进口成本。专栏指数 vs TOPIX 的差值剔除了大盘 beta（同为 USD 口径，汇率项"
+        "大致互抵），适合回答「日本医疗相对自身市场强弱」；判断个股请回到上表分层。"
+    ),
+    "hc.jp.note_delisted": (
+        "原 42 支清单中 2 支因私有化退市剔除：HOGY MEDICAL（3593，凯雷 TOB，2026-05 退市）、"
+        "久光制药（4530，MBO 非公开化）。"
+    ),
+    "hc.jp.empty": "暂无日本医药 universe——请运行 jobs/load_universe.py 回补。",
     # ── 机构持仓 · 离岸中国基金对 healthcare 超配/低配 ──
     "hc.pos.section": "机构持仓 · 离岸中国基金对医疗的超配/低配",
     "hc.pos.section_meta": "12 只离岸中国股票型基金 · vs 各自基准 · 截至 2026-03-31",

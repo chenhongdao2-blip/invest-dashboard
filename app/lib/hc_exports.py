@@ -256,6 +256,101 @@ def _build_headcount(wb) -> None:
     ws.cell(last + 2, 1, "口径: 集团合并在职员工总数(FY年末)。来源见每行「数据来源」列。青=扩招/红=收缩。").font = Font(size=9, color=GREY)
 
 
+# ----------------------------------------------------------------------------- #
+# 4) 日本医药 — 40 支明细 + 专栏指数 vs TOPIX/日经 (rebased) + native line chart
+# ----------------------------------------------------------------------------- #
+_JP_SUB_CN = {"pharma": "制药", "medtech": "医疗器械",
+              "diagnostics": "诊断·检测", "distribution": "流通·服务"}
+
+
+def _build_japan(wb) -> None:
+    from openpyxl.chart import LineChart, Reference
+    from openpyxl.drawing.line import LineProperties
+    from openpyxl.styles import Font
+    from openpyxl.utils import get_column_letter
+
+    from lib import db
+
+    uni = hco.jp_universe()
+    closes = db.get_close_series_usd(tuple(uni["ticker"]))
+    rets = db.compute_returns(closes)
+
+    # --- detail sheet: 40 names, USD 口径 ---
+    ws = wb.create_sheet("日本医药 明细")
+    head = ["代码", "名称", "Name", "子板块", "Last (USD)", "1日%", "5日%", "1月%", "年初至今%"]
+    ws.append(head)
+    _style_header(ws, len(head))
+    m = uni.merge(rets, left_on="ticker", right_index=True, how="left")
+    for _, r in m.iterrows():
+        ws.append([
+            r["ticker"], r["name_cn"], r["name_en"], _JP_SUB_CN.get(r["subsector"], r["subsector"]),
+            None if pd.isna(r.get("last")) else round(float(r["last"]), 2),
+            *[None if pd.isna(r.get(k)) else round(float(r[k]), 2)
+              for k in ("1d_%", "5d_%", "1m_%", "ytd_%")],
+        ])
+    last = ws.max_row
+    for rr in range(2, last + 1):
+        ws.cell(rr, 5).number_format = "#,##0.00"
+        for cc in range(6, 10):
+            ws.cell(rr, cc).number_format = '+0.00"%";-0.00"%"'
+    for i, w in enumerate([10, 16, 26, 12, 12, 9, 9, 9, 11], start=1):
+        ws.column_dimensions[chr(64 + i)].width = w
+    ws.freeze_panes = "A2"
+
+    # --- composite vs TOPIX vs 日经 (all USD, rebased at common anchor) ---
+    comp = hco.jp_composite(closes)
+    bench = hco.jp_benchmarks_usd()
+    if comp is not None and bench:
+        cols = {"日本医药专栏指数(40支等权)": comp}
+        if "1305.T" in bench:
+            cols["TOPIX (1305.T ETF代理)"] = bench["1305.T"]
+        if "^N225" in bench:
+            cols["日经225"] = bench["^N225"]
+        wide = pd.DataFrame(cols).dropna().sort_index()
+        if not wide.empty:
+            reb = wide.divide(wide.iloc[0]) * 100.0
+            ws2 = wb.create_sheet("专栏指数 vs TOPIX vs 日经")
+            ws2.append(["日期"] + [f"{c} (rebased)" for c in reb.columns])
+            _style_header(ws2, 1 + len(reb.columns))
+            for i, d in enumerate(reb.index):
+                ws2.append([d.date()] + [round(float(v), 2) for v in reb.iloc[i]])
+            last2 = ws2.max_row
+            for rr in range(2, last2 + 1):
+                ws2.cell(rr, 1).number_format = "yyyy-mm-dd"
+                for cc in range(2, 2 + len(reb.columns)):
+                    ws2.cell(rr, cc).number_format = "0.00"
+            ws2.column_dimensions["A"].width = 12
+            for cc in range(2, 2 + len(reb.columns)):
+                ws2.column_dimensions[get_column_letter(cc)].width = 26
+            ws2.freeze_panes = "B2"
+            chart = LineChart()
+            chart.title = "日本医药专栏指数 vs TOPIX vs 日经225 (USD, rebased)"
+            chart.height, chart.width = 9, 22
+            chart.y_axis.title = "rebased (起点=100)"
+            chart.x_axis.number_format = "yyyy-mm"
+            chart.x_axis.majorTimeUnit = "months"
+            chart.add_data(Reference(ws2, min_col=2, max_col=1 + len(reb.columns),
+                                     min_row=1, max_row=last2), titles_from_data=True)
+            chart.set_categories(Reference(ws2, min_col=1, min_row=2, max_row=last2))
+            for k, ser in enumerate(chart.series):
+                is_hero = k == 0
+                ser.graphicalProperties.line = LineProperties(
+                    solidFill=(CMSI_RED if is_hero else GREY), w=28000 if is_hero else 14000)
+                if not is_hero:
+                    ser.graphicalProperties.line.prstDash = "dash" if k == 1 else "sysDot"
+                ser.smooth = False
+            chart.x_axis.delete = chart.y_axis.delete = False
+            ws2.add_chart(chart, f"{get_column_letter(3 + len(reb.columns))}2")
+
+    asof = closes.index.max().date().isoformat() if not closes.empty else "—"
+    ws.cell(last + 2, 1,
+            f"口径: Last/收益均为 USD（JPY 经 USDJPY 换算, M1 口径）· 等权指数=40支简单平均 · "
+            f"TOPIX 用 1305.T ETF 代理 · 截至 {asof}。").font = Font(size=9, color=GREY)
+    ws.cell(last + 3, 1,
+            "Universe: iFind 自选清单 2026/05 (42支) 剔除已退市 HOGY MEDICAL(3593)/久光制药(4530)。"
+            ).font = Font(size=9, color=GREY)
+
+
 def _save(wb) -> bytes:
     buf = BytesIO()
     wb.save(buf)
@@ -287,6 +382,15 @@ def headcount_xlsx(mtime: float) -> bytes:
     return _save(wb)
 
 
+@st.cache_data(ttl=3600)
+def japan_xlsx(mtime: float) -> bytes:
+    from openpyxl import Workbook
+    wb = Workbook()
+    wb.remove(wb.active)
+    _build_japan(wb)
+    return _save(wb)
+
+
 def _mtime(*paths) -> float:
     """Max mtime across candidate paths (0.0 if none) — the cache key."""
     m = 0.0
@@ -308,3 +412,9 @@ def positioning_bytes() -> bytes:
 
 def headcount_bytes() -> bytes:
     return headcount_xlsx(_mtime(hco.HC_PATH))
+
+
+def japan_bytes() -> bytes:
+    # cache key = universe yml + snapshots.db mtime（EOD cron 日刷 → 次日自动失效）
+    return japan_xlsx(_mtime(hco.JP_UNIVERSE_PATH,
+                             hco.REPO_ROOT / "data" / "snapshots.db"))

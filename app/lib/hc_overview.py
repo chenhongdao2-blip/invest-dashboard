@@ -268,6 +268,86 @@ def headcount_verdict(df: pd.DataFrame) -> dict:
     }
 
 
+# --- Japan Healthcare 区域 universe（「日本医药」section） -----------------------
+# Universe = config/universes/hc_japan.yml（42 支，jobs/_gen_jp_seed.py 从 iFind 自选
+# 清单生成）。subsector 分组只活在 yml（不进 DB）——这里读 yml 是分组的单一数据源；
+# 价格走 prices_daily（EOD cron 日刷，JPY→USD 已转）。
+JP_UNIVERSE_PATH = REPO_ROOT / "config" / "universes" / "hc_japan.yml"
+JP_SUBSECTOR_ORDER = ["pharma", "medtech", "diagnostics", "distribution"]
+
+
+@st.cache_data(ttl=3600)
+def _read_jp_universe(path_str: str, mtime: float) -> pd.DataFrame:
+    if not path_str:
+        return pd.DataFrame()
+    import yaml
+    with open(path_str, encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+    df = pd.DataFrame(data.get("tickers") or [])
+    # keep yml order (mcap-desc within subsector) but expose a stable sort key
+    df["_sub_rank"] = df["subsector"].map({s: i for i, s in enumerate(JP_SUBSECTOR_ORDER)})
+    return df
+
+
+def jp_universe() -> pd.DataFrame:
+    """ticker / name_cn / name_en / subsector / note — path+mtime outside cache."""
+    path_str, mtime = _resolve(JP_UNIVERSE_PATH)
+    return _read_jp_universe(path_str, mtime)
+
+
+def jp_composite(closes: pd.DataFrame, min_coverage: float = 0.9) -> pd.Series | None:
+    """42 支等权「日本医药专栏指数」：USD close panel → 各自归一 100 → 等权平均。
+
+    锚 = 首个覆盖率 ≥ min_coverage 的交易日（per-ticker ffill 后）；锚日仍缺数的
+    ticker 整条剔除（记在 .attrs['dropped']，caption 可披露）。等权 = 简单平均，
+    刻意不按市值加权——专栏指数反映的是清单本身，不是大票 beta。
+    """
+    if closes is None or closes.empty:
+        return None
+    panel = closes.sort_index().ffill()
+    coverage = panel.notna().mean(axis=1)
+    ok = coverage[coverage >= min_coverage]
+    if ok.empty:
+        return None
+    anchor = ok.index[0]
+    base = panel.loc[anchor]
+    keep = base.dropna().index
+    normalized = panel.loc[anchor:, keep].div(base[keep]) * 100.0
+    comp = normalized.mean(axis=1)
+    comp.attrs["anchor"] = anchor
+    comp.attrs["dropped"] = sorted(set(panel.columns) - set(keep))
+    return comp
+
+
+@st.cache_data(ttl=300)
+def jp_benchmarks_usd() -> dict[str, pd.Series]:
+    """{'1305.T': TOPIX-ETF USD 序列, '^N225': 日经 USD 序列}。
+
+    benchmarks_daily 存 NATIVE 报价（两者 JPY）；÷ 同表的 JPY=X（USDJPY）序列换 USD，
+    与 prices_daily 的 close_usd 同口径。JPY=X 缺数日 ffill（汇率日频连续，假日沿用）。
+    TOPIX 代理 = 1305.T（大和）：1306.T 2026-03-30 10:1 拆股 Yahoo 未复权，序列废。
+    """
+    from lib import db
+    raw = db.query(
+        "SELECT ticker, date, close FROM benchmarks_daily "
+        "WHERE ticker IN ('1305.T', '^N225', 'JPY=X') ORDER BY date"
+    )
+    if raw.empty:
+        return {}
+    raw["date"] = pd.to_datetime(raw["date"])
+    panel = raw.pivot(index="date", columns="ticker", values="close").sort_index()
+    if "JPY=X" not in panel.columns:
+        return {}
+    jpy = panel["JPY=X"].ffill()
+    out: dict[str, pd.Series] = {}
+    for t in ("1305.T", "^N225"):
+        if t in panel.columns:
+            ser = (panel[t] / jpy).dropna()
+            if not ser.empty:
+                out[t] = ser
+    return out
+
+
 def _parse_aum(s) -> float | None:
     """'3.3bn' → 3300, '995mn' → 995, '2,609mn' → 2609 (USD mn). None if unparseable."""
     if s is None:

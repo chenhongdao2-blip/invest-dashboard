@@ -53,7 +53,13 @@ BENCHMARK_TICKERS = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI", "^HSI", "^GSPC",
                      # (本币/USD)，存入 benchmarks_daily 供 _xmkt_raw 把 A/港板块换 USD。
                      # NB: FX_PAIRS 也抓 USDCNY=X/USDHKD=X，但只落 meta(close_usd 快照)；
                      # 这里用别名 CNY=X/HKD=X(同一标的)落 benchmarks_daily 留完整序列。
-                     "URTH", "CNY=X", "HKD=X"]
+                     "URTH", "CNY=X", "HKD=X",
+                     # 日本医药 section (2_Healthcare) 用：TOPIX ETF 代理 + 日经 225 +
+                     # USDJPY 序列（仿 CNY=X/HKD=X 先例 — FX_PAIRS 只落快照，这里留完整
+                     # 序列供 1305.T/^N225 的 JPY→USD 换算）。
+                     # ⚠️ TOPIX 代理用 1305.T（大和）不是 1306.T（野村）：1306.T 2026-03-30
+                     # 10:1 拆股，Yahoo 缺 split factor → auto_adjust 修不掉 −90% 假断崖。
+                     "1305.T", "^N225", "JPY=X"]
 # NB: 恒生医疗保健 (HSHCI.HK) is NOT here — yfinance has no pure HK healthcare index.
 # It is iFind-seeded via jobs/fetch_cn_benchmarks.py (cron can't reach iFind).
 

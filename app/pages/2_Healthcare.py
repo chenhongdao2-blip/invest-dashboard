@@ -51,7 +51,7 @@ _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 # hand-curated annuals) can't auto-refresh on Cloud, so the badge guarantees stale data
 # never silently reads as live. See docs/healthcare-data-pipeline.md.
 from datetime import date as _date
-_STALE_DAYS = {"rs": 35, "hshci": 45, "pos": 135, "hc": 300}
+_STALE_DAYS = {"rs": 35, "hshci": 45, "pos": 135, "hc": 300, "jp": 7}
 
 
 def _stale_note(latest_iso, key: str) -> None:
@@ -224,6 +224,101 @@ else:
         mime=_XLSX_MIME, key="dl_hc_relative",
     )
     _stale_note(_asof, "rs")   # _asof = 相对表现指数序列最新日期
+
+st.divider()
+
+# --- Japan Healthcare: 区域 universe（hc_japan.yml, 40 支 iFind 自选清单）--------
+# regions key 不进 7-sector taxonomy；价格走 prices_daily EOD cron（JPY→USD 已转，
+# M1 口径）。专栏指数 = 40 支等权；TOPIX 用 1305.T ETF 代理（yfinance 无 ^TPX；
+# 1306.T 因 2026-03-30 拆股 Yahoo 未复权弃用）。
+theme.section_header(i18n.t("hc.jp.section"), meta=i18n.t("hc.jp.section_meta"))
+_jp = hco.jp_universe()
+_jp_closes = db.get_close_series_usd(tuple(_jp["ticker"])) if not _jp.empty else pd.DataFrame()
+if _jp.empty or _jp_closes.empty:
+    st.info(i18n.t("hc.jp.empty"))
+else:
+    _cn = i18n.get_lang() == "zh"
+    _jp_asof = _jp_closes.index.max().date().isoformat()
+    _jp_rets = db.compute_returns(_jp_closes)
+    # merge keeps the yml row order (subsector blocks, mcap-desc within block)
+    _jpm = _jp.merge(_jp_rets, left_on="ticker", right_index=True, how="inner")
+
+    # ① subsector summary (equal-weight averages, USD)
+    _sub_rows = []
+    for _s in hco.JP_SUBSECTOR_ORDER:
+        _grp = _jpm[_jpm["subsector"] == _s]
+        if _grp.empty:
+            continue
+        _sub_rows.append({
+            "Subsector": i18n.t(f"hc.jp.sub.{_s}"),
+            "Tickers": len(_grp),
+            "1D % avg": _grp["1d_%"].mean(),
+            "5D % avg": _grp["5d_%"].mean(),
+            "1M % avg": _grp["1m_%"].mean(),
+            "YTD % avg": _grp["ytd_%"].mean(),
+        })
+    if _sub_rows:
+        _render_pct_table(
+            pd.DataFrame(_sub_rows).set_index("Subsector"),
+            pct_cols=["1D % avg", "5D % avg", "1M % avg", "YTD % avg"],
+            column_labels={
+                "Subsector": i18n.t("hc.jp.col.subsector"),
+                "Tickers": i18n.t("hc.col.tickers"),
+                "1D % avg": i18n.t("hc.col.1d_avg"),
+                "5D % avg": i18n.t("hc.col.5d_avg"),
+                "1M % avg": i18n.t("hc.col.1m_avg"),
+                "YTD % avg": i18n.t("hc.col.ytd_avg"),
+            },
+        )
+
+    # ② composite vs TOPIX vs Nikkei — same FT framing as the rs panels above
+    _comp = hco.jp_composite(_jp_closes)
+    _jpb = hco.jp_benchmarks_usd()
+    if _comp is not None and _jpb:
+        _peers = {i18n.t("hc.jp.bench.topix"): _jpb["1305.T"]} if "1305.T" in _jpb else {}
+        if "^N225" in _jpb:
+            _peers[i18n.t("hc.jp.bench.n225")] = _jpb["^N225"]
+        _figjp, _metajp = charts.index_compare_chart(
+            _comp, _peers, hero_name=i18n.t("hc.jp.hero"),
+            title=i18n.t("hc.jp.chart.title"), ylabel=i18n.t("hc.rs.ylabel"),
+        )
+        if _figjp is not None:
+            st.plotly_chart(_figjp, width="stretch", theme=None, config={"displayModeBar": False})
+            _partsjp = [f"{pn} {(pp if abs(pp) >= 0.05 else 0.0):+.1f}pp"
+                        for pn, pp in _metajp["spreads"].items()]
+            st.caption(i18n.t("hc.jp.caption", anchor=_metajp["anchor"],
+                              detail=" / ".join(_partsjp), asof=_jp_asof))
+
+    # ③ full 40-name detail (expander keeps the section weight equal to its peers)
+    with st.expander(i18n.t("hc.jp.detail")):
+        _name_col = "name_cn" if _cn else "name_en"
+        _dispjp = pd.DataFrame({
+            "Name": _jpm[_name_col],
+            "Subsector": _jpm["subsector"].map(lambda s: i18n.t(f"hc.jp.sub.{s}")),
+            "Last": _jpm["last"],
+            "1D %": _jpm["1d_%"],
+            "5D %": _jpm["5d_%"],
+            "1M %": _jpm["1m_%"],
+            "YTD %": _jpm["ytd_%"],
+        })
+        _dispjp.index = [fmt.fmt_ticker_bbg(t) for t in _jpm["ticker"]]
+        _render_pct_table(
+            _dispjp,
+            pct_cols=["1D %", "5D %", "1M %", "YTD %"],
+            num_cols=["Last"],
+            column_labels={**i18n.common_cols(),
+                           "Subsector": i18n.t("hc.jp.col.subsector")},
+        )
+
+    theme.eyebrow(i18n.t("hc.read.eyebrow"))   # pricing-currency layering read
+    st.markdown(i18n.t("hc.jp.read"))
+    st.caption(i18n.t("hc.jp.note_delisted"))
+    st.download_button(
+        i18n.t("hc.dl.xlsx"), data=hcx.japan_bytes(),
+        file_name="HC_日本医药_japan_healthcare.xlsx",
+        mime=_XLSX_MIME, key="dl_hc_japan",
+    )
+    _stale_note(_jp_asof, "jp")
 
 st.divider()
 

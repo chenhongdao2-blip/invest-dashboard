@@ -187,6 +187,42 @@ STRINGS = {
         "→ {now_d} {now_c:,.0f} ({now_peak:+.0%} vs peak; {now_start:+.0%} vs start). "
         "Source: iFind monthly close, as of {asof}."
     ),
+    # ── Japan Healthcare (region universe: hc_japan.yml, 40 names) ──
+    "hc.jp.section": "Japan Healthcare",
+    "hc.jp.section_meta": "40 names · iFind watchlist (May 2026) · returns in USD",
+    "hc.jp.sub.pharma": "Pharma",
+    "hc.jp.sub.medtech": "Medtech",
+    "hc.jp.sub.diagnostics": "Diagnostics & Testing",
+    "hc.jp.sub.distribution": "Distribution & Services",
+    "hc.jp.col.subsector": "Subsector",
+    "hc.jp.chart.title": "Japan HC composite vs TOPIX vs Nikkei 225 (USD)",
+    "hc.jp.hero": "Japan HC composite (40 names, equal-weight)",
+    "hc.jp.bench.topix": "TOPIX (1305.T ETF proxy)",
+    "hc.jp.bench.n225": "Nikkei 225",
+    "hc.jp.caption": (
+        "Anchored {anchor} · {detail}. Composite = simple equal-weight of 40 names; "
+        "all three series in USD (FX included; FX largely cancels in the relative "
+        "spread); TOPIX proxied by the 1305.T ETF. Source: yfinance EOD cron, "
+        "as of {asof}."
+    ),
+    "hc.jp.detail": "All 40 names (by subsector · USD)",
+    "hc.jp.read": (
+        "Read Japan healthcare **by pricing currency**, not by the return column: "
+        "Daiichi Sankyo (ADC: Enhertu/Datroway), Eisai (Leqembi) and the medtech trio "
+        "(Terumo/HOYA/Olympus) are **globally-priced assets** — revenue mostly in "
+        "USD/EUR, so a weak yen is a tailwind. The distributors (Medipal/Alfresa/"
+        "Suzuken/Toho) and generics (Sawai/Towa) are **domestically-priced assets** — "
+        "squeezed by biennial drug-price revisions and payer tightening, with a weak "
+        "yen inflating their import costs. The composite-vs-TOPIX spread strips market "
+        "beta (both legs in USD, so FX largely cancels) and answers \"is Japan "
+        "healthcare beating its own market\"; for single names, go back to the "
+        "layering above."
+    ),
+    "hc.jp.note_delisted": (
+        "Two names from the original 42-name list removed on going-private delistings: "
+        "HOGY MEDICAL (3593, Carlyle TOB, delisted May 2026) and Hisamitsu (4530, MBO)."
+    ),
+    "hc.jp.empty": "No Japan universe on file — run jobs/load_universe.py to backfill.",
     # ── Institutional positioning · offshore China funds' OW/UW on healthcare ──
     "hc.pos.section": "Institutional Positioning · Offshore China Funds' OW/UW on Healthcare",
     "hc.pos.section_meta": "12 offshore China-equity funds · vs own benchmark · as of 31 Mar 2026",

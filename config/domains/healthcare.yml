@@ -38,6 +38,15 @@ sectors:
     universe_file: hc_hospital_care.yml
     benchmark: XLV            # Health Care Select Sector SPDR
 
+# 区域 universe（与 sectors 平级、不混 sector taxonomy）：
+# 不进 7-sector 汇总表 / 热力图 tab，只供 2_Healthcare 的「日本医药」section 等
+# 区域叙事用。load_universe.py 同样 ingest（DB sector_id = region id）。
+regions:
+  - id: japan
+    name: Japan Healthcare
+    universe_file: hc_japan.yml
+    benchmark: 1305.T           # TOPIX ETF 代理（yfinance 无 ^TPX；1306.T 拆股断崖弃用）
+
 # Domain-level benchmarks
 benchmarks:
   primary: XLV

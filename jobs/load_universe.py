@@ -75,7 +75,11 @@ def main() -> None:
         for domain in load_domains():
             domain_id = domain["_domain_id"]
             sectors = domain.get("sectors") or []
-            for sector in sectors:
+            # Regions (e.g. healthcare.regions → japan) ride the same ingest path:
+            # one universe_member row per ticker with sector_id = region id. They are
+            # NOT in cfg["sectors"], so sector summary / heatmap tabs stay sector-pure.
+            regions = domain.get("regions") or []
+            for sector in [*sectors, *regions]:
                 uni = load_universe_file(sector["universe_file"])
                 n = upsert_members(
                     conn,

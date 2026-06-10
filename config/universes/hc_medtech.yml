@@ -1,4 +1,4 @@
-# Medtech sector — 13 tickers
+# Medtech sector — 21 tickers
 sector_id: medtech
 domain: healthcare
 
@@ -50,4 +50,37 @@ tickers:
     region: JP
   - ticker: 6869.T
     name_en: Sysmex
+    region: JP
+  # ── Japan Healthcare 专栏并入（2026-06-10，源 hc_japan.yml jp medtech 分类）──
+  - ticker: 7741.T
+    name_cn: 豪雅
+    name_en: HOYA
+    region: JP
+  - ticker: 7733.T
+    name_cn: 奥林巴斯
+    name_en: Olympus
+    region: JP
+  - ticker: 4901.T
+    name_cn: 富士胶片控股
+    name_en: FUJIFILM Holdings
+    region: JP
+  - ticker: 8086.T
+    name_cn: 尼普洛
+    name_en: Nipro
+    region: JP
+  - ticker: 7716.T
+    name_cn: NAKANISHI
+    name_en: NAKANISHI
+    region: JP
+  - ticker: 6849.T
+    name_cn: 日本光电
+    name_en: Nihon Kohden
+    region: JP
+  - ticker: 6960.T
+    name_cn: 福田电子
+    name_en: Fukuda Denshi
+    region: JP
+  - ticker: 7730.T
+    name_cn: 马尼
+    name_en: MANI
     region: JP

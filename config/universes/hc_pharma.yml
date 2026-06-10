@@ -1,4 +1,4 @@
-# Pharma sector — 16 tickers
+# Pharma sector — 29 tickers
 sector_id: pharma
 domain: healthcare
 
@@ -60,4 +60,57 @@ tickers:
     region: JP
   - ticker: 4568.T
     name_en: Daiichi Sankyo 第一三共
+    region: JP
+  # ── Japan Healthcare 专栏并入（2026-06-10，源 hc_japan.yml jp pharma 分类）──
+  - ticker: 4578.T
+    name_cn: 大冢控股
+    name_en: Otsuka Holdings
+    region: JP
+  - ticker: 4503.T
+    name_cn: 安斯泰来
+    name_en: Astellas Pharma
+    region: JP
+  - ticker: 4507.T
+    name_cn: 盐野义制药
+    name_en: Shionogi
+    region: JP
+  - ticker: 4523.T
+    name_cn: 卫材
+    name_en: Eisai
+    region: JP
+  - ticker: 4528.T
+    name_cn: 小野药品
+    name_en: Ono Pharmaceutical
+    region: JP
+  - ticker: 4536.T
+    name_cn: 参天制药
+    name_en: Santen Pharmaceutical
+    region: JP
+  - ticker: 4967.T
+    name_cn: 小林制药
+    name_en: Kobayashi Pharmaceutical
+    region: JP
+  - ticker: 4540.T
+    name_cn: 津村
+    name_en: Tsumura
+    region: JP
+  - ticker: 4516.T
+    name_cn: 日本新药
+    name_en: Nippon Shinyaku
+    region: JP
+  - ticker: 4887.T
+    name_cn: 泽井集团
+    name_en: Sawai Group Holdings
+    region: JP
+  - ticker: 4553.T
+    name_cn: 东和药品
+    name_en: Towa Pharmaceutical
+    region: JP
+  - ticker: 4547.T
+    name_cn: 橘生药品
+    name_en: Kissei Pharmaceutical
+    region: JP
+  - ticker: 4521.T
+    name_cn: 科研制药
+    name_en: Kaken Pharmaceutical
     region: JP

@@ -1,4 +1,4 @@
-# Hospital Care sector — 10 tickers
+# Hospital Care sector — 15 tickers
 sector_id: hospital_care
 domain: healthcare
 
@@ -33,3 +33,25 @@ tickers:
   - ticker: ACHC
     name_en: Acadia Healthcare
     region: US
+  # ── Japan Healthcare 专栏并入（2026-06-10）：医药流通五社 — GICS Health Care
+  # Distributors 属 Providers & Services，XHS(本板块 RS 基准)同样含 MCK/COR/CAH ──
+  - ticker: 7459.T
+    name_cn: Medipal 控股
+    name_en: Medipal Holdings
+    region: JP
+  - ticker: 2784.T
+    name_cn: 阿弗瑞萨
+    name_en: Alfresa Holdings
+    region: JP
+  - ticker: 9987.T
+    name_cn: 铃谦
+    name_en: Suzuken
+    region: JP
+  - ticker: 8129.T
+    name_cn: 东邦控股
+    name_en: Toho Holdings
+    region: JP
+  - ticker: 3360.T
+    name_cn: SHIP HEALTHCARE
+    name_en: SHIP HEALTHCARE
+    region: JP

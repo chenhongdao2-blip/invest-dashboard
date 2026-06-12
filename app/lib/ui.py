@@ -144,7 +144,7 @@ def _cmsi_table_css() -> str:
     does NOT inherit the page theme — every token must be inlined here)."""
     t = theme
     return f"""
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+    {t.FONT_FACE_CSS}
     :root {{ color-scheme: light; }}
     * {{ box-sizing: border-box; }}
     html, body {{
@@ -242,6 +242,34 @@ def _na(v) -> bool:
     return v is None or (isinstance(v, float) and math.isnan(v)) or (isinstance(v, float) and pd.isna(v)) or v is pd.NA
 
 
+def _spark_svg(vals, up: str, down: str) -> tuple[str, float | str]:
+    """Inline-SVG sparkline for one cell — (svg_html, sort_value). `vals` is a
+    sequence of closes; stroke teal/red by window direction; sort value = window
+    % change so the column header sort works like the pct columns."""
+    vals = [float(v) for v in (vals or []) if not _na(v)]
+    if len(vals) < 2 or vals[0] == 0:
+        return '<span class="flat">—</span>', ""
+    w, h, p = 84, 22, 2
+    mn, mx = min(vals), max(vals)
+    rng = (mx - mn) or 1.0
+    step = (w - 2 * p) / (len(vals) - 1)
+    pts = " ".join(
+        f"{p + i * step:.1f},{h - p - (v - mn) / rng * (h - 2 * p):.1f}"
+        for i, v in enumerate(vals)
+    )
+    chg = (vals[-1] / vals[0] - 1) * 100
+    color = up if chg >= 0 else down
+    lx, ly = pts.rsplit(" ", 1)[-1].split(",")
+    svg = (
+        f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" '
+        f'style="vertical-align:middle;">'
+        f'<polyline points="{pts}" fill="none" stroke="{color}" '
+        f'stroke-width="1.5" stroke-linejoin="round"/>'
+        f'<circle cx="{lx}" cy="{ly}" r="2" fill="{color}"/></svg>'
+    )
+    return svg, float(chg)
+
+
 def render_html_table(
     df: pd.DataFrame,
     *,
@@ -256,6 +284,8 @@ def render_html_table(
     right_text_cols: list[str] | None = None,
     link_cols: list[str] | None = None,
     nav_cols: list[str] | None = None,
+    spark_cols: list[str] | None = None,
+    bar_cols: list[str] | None = None,
     nav_label: str = "↗",
     extra_formats: dict[str, str] | None = None,
     column_help: dict[str, str] | None = None,
@@ -285,6 +315,10 @@ def render_html_table(
       int_cols          integer "%d"
       price_cols        comma price "%,.2f"
       text_cols         left-aligned text (escaped)
+      spark_cols        value is a SEQUENCE of closes → inline-SVG sparkline,
+                        sorts by window % change
+      bar_cols          OVERLAY (composable with any kind above): in-cell
+                        Excel-style data bar scaled to column max |value|
     The DataFrame index becomes the sticky first column (mono). Pass hide_index=True
     to drop it. `column_help` → <th title="…"> tooltip (defaults to COLUMN_HELP).
     `column_labels` overrides a column's header text.
@@ -300,7 +334,14 @@ def render_html_table(
     right_text_cols = set(right_text_cols or [])
     link_cols = set(link_cols or [])
     nav_cols = set(nav_cols or [])
+    spark_cols = set(spark_cols or [])
+    bar_cols = set(bar_cols or [])
     extra_formats = extra_formats or {}
+    # In-cell data bars scale to the column's max |value| (Excel-style).
+    bar_max = {
+        c: float(pd.to_numeric(df[c], errors="coerce").abs().max() or 0)
+        for c in bar_cols if c in df.columns
+    }
     column_help = COLUMN_HELP if column_help is None else column_help
     column_labels = column_labels or {}
 
@@ -328,8 +369,26 @@ def render_html_table(
                  f'{sign}{v:.{decimals}f}%</span>')
         return inner, float(v), _heat(v)
 
+    def _bar_bg(col, v) -> str:
+        """Excel-style in-cell data bar: teal/red left-anchored gradient sized
+        to |v| / column max. Layered UNDER the text like the heatmap tint."""
+        m = bar_max.get(col, 0)
+        if _na(v) or not m:
+            return ""
+        try:
+            p = min(abs(float(v)) / m, 1.0) * 100
+        except (TypeError, ValueError):
+            return ""
+        rgb = "13,118,128" if float(v) >= 0 else "204,0,0"
+        return (f"background:linear-gradient(90deg,rgba({rgb},0.16) {p:.0f}%,"
+                f"rgba(0,0,0,0) {p:.0f}%);")
+
     def _cell(col, v):
         """Return (inner_html, sort_value, td_class, sortable_type, bg_style)."""
+        if col in spark_cols:
+            # value is a SEQUENCE of closes → inline-SVG sparkline
+            inner, sv = _spark_svg(v, theme.UP, theme.DOWN)
+            return inner, sv, "", "n", ""
         # extra_formats wins over kind lists — matches the old column_config
         # precedence (e.g. Valuation 'Sector P/E %ile' is in BOTH mult_cols and
         # extra_formats, and the printf format must win).
@@ -427,6 +486,8 @@ def render_html_table(
             tds.append(f'<td class="tk" data-v="{_html.escape(str(idx).lower())}">{idx_disp}</td>')
         for col in cols:
             inner, sv, td_cls, _, bg = _cell(col, row[col])
+            if col in bar_cols and not bg:
+                bg = _bar_bg(col, row[col])
             sv_attr = _html.escape(str(sv)) if sv != "" else ""
             cls_attr = f' class="{td_cls}"' if td_cls else ""
             style_attr = f' style="{bg}"' if bg else ""

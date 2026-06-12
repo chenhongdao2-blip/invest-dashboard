@@ -3,7 +3,11 @@
 Strategies tracked:
 - v4 biotech (2026-04-22, 27 picks, XBI benchmark) — CSV
 - v5 biotech (2026-05-15, 40 picks, XBI benchmark) — CSV (derived from picks.db)
-- HK 高股息 (2026-03-20, 34 picks, 3110.HK benchmark) — CSV
+- HK 高股息 v1 (2026-03-20, 34 picks equal-weight, 3466.HK benchmark) — CSV
+- HK 高股息 v2 (2026-06-11, 20 picks score-weighted + 12% cash, 3466.HK) — CSV
+  (standard build, George sign-off 2026-06-11; canonical source:
+  portfolio-engine/high_div_screen standard-build output. v1 history is frozen
+  and never edited — v2 is a NEW book starting 2026-06-11, not a restatement.)
 
 B1 audit fix: picks.db not committed (contains thesis/conviction IP).
 Sync via `scripts/sync_ledger.sh` to regenerate v5_picks.csv from local ic-foundry.
@@ -13,6 +17,7 @@ Prices fetched live via yfinance, cached 1 hour.
 
 from __future__ import annotations
 
+import time
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -28,6 +33,7 @@ DATA_EXT = REPO_ROOT / "data" / "external"
 V4_CSV = DATA_EXT / "v4_picks.csv"
 V5_CSV = DATA_EXT / "v5_picks.csv"
 HD_CSV = DATA_EXT / "hd_picks.csv"
+HD_V2_CSV = DATA_EXT / "hd_picks_v2.csv"
 IPO_CSV = DATA_EXT / "ipo_picks.csv"
 IPO_INTRADAY_CSV = DATA_EXT / "ipo_day1_intraday.csv"
 
@@ -52,6 +58,17 @@ def load_hd() -> pd.DataFrame:
     if not HD_CSV.exists():
         return pd.DataFrame()
     return pd.read_csv(HD_CSV)
+
+
+@st.cache_data(ttl=900)
+def load_hd_v2() -> pd.DataFrame:
+    """HD v2 standard build (2026-06-11). Public fields only (rank/score/weight/
+    bucket/runrate) — B1 audit convention, no thesis/conviction columns.
+    weight_pct = absolute book weight, Σ=88.01; the other ~12% is idle cash by
+    design (not an error). bucket: rate=利率溢价桶 / nonrate=非利率桶."""
+    if not HD_V2_CSV.exists():
+        return pd.DataFrame()
+    return pd.read_csv(HD_V2_CSV)
 
 
 @st.cache_data(ttl=900)
@@ -101,58 +118,109 @@ STRATEGIES = {
         "benchmark": "XBI",
         "benchmark_name": "SPDR S&P Biotech",
     },
+    # HD benchmarks (George 2026-06-12): primary 3466.HK Hang Seng High
+    # Dividend 30 ETF (was 3110.HK), plus ^HSI as a broad-market reference
+    # overlay — both versions, so the v1/v2 curves stay comparable.
     "hk_hd": {
-        "name": "💰 HK 高股息",
+        "name": "💰 HK 高股息 v1",
         "emoji": "💰",
         "loader": load_hd,
         "pick_date": "2026-03-20",
-        "benchmark": "3110.HK",
-        "benchmark_name": "Premia 沪深港高股息低波动",
+        "benchmark": "3466.HK",
+        "benchmark_name": "恒生高股息30",
+        "benchmark2": "^HSI",
+        "benchmark2_name": "恒生指数",
+    },
+    "hk_hd_v2": {
+        "name": "💰 HK 高股息 v2",
+        "emoji": "💰",
+        "loader": load_hd_v2,
+        "pick_date": "2026-06-11",
+        "benchmark": "3466.HK",
+        "benchmark_name": "恒生高股息30",
+        "benchmark2": "^HSI",
+        "benchmark2_name": "恒生指数",
+        # score-weighted book: weight_pct column = absolute %, plus idle cash.
+        "weight_col": "weight_pct",
+        "cash_pct": 12.0,
+        # page renders this INSIDE the hk_hd tab (version toggle), not as its
+        # own tab — see HD_VERSION_GROUP filter in 4_Strategy_Picks.py.
+        "version_of": "hk_hd",
     },
 }
 
 
 @st.cache_data(ttl=3600, show_spinner="Fetching picks prices…")
 def fetch_picks_closes(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
-    """Wide-format close DataFrame for picks. Live yfinance, cached 1h."""
+    """Wide-format close DataFrame for picks. Live yfinance, cached 1h.
+
+    yfinance occasionally fails a whole burst of symbols in one batch
+    ("possibly delisted" on clearly-listed names = rate-limit artifact, seen
+    2026-06-11 with 12/21 HK names incl. the benchmark). A partial frame
+    would be CACHED for 1h and silently shrink the book, so missing symbols
+    get one re-download after a short pause; if still missing, the page is
+    warned rather than left silently degraded.
+    """
     if not yf_syms:
         return pd.DataFrame()
     end = (date.today() + timedelta(days=1)).isoformat()
-    try:
-        d = yf.download(
-            list(yf_syms), start=start, end=end,
-            auto_adjust=True, progress=False, threads=True, group_by="ticker",
-        )
-    except Exception as e:
-        st.warning(f"Live fetch failed: {e}")
-        return pd.DataFrame()
-    if d.empty:
-        return pd.DataFrame()
 
-    if len(yf_syms) == 1:
-        sym = yf_syms[0]
-        if isinstance(d.columns, pd.MultiIndex):
-            d.columns = d.columns.droplevel(1)
-        if "Close" in d.columns:
-            return pd.DataFrame({sym: d["Close"]}).dropna(how="all")
-        return pd.DataFrame()
-
-    out = {}
-    for sym in yf_syms:
+    def _download(syms: tuple[str, ...]) -> dict[str, pd.Series]:
         try:
-            if sym in d.columns.get_level_values(0):
-                out[sym] = d[sym]["Close"].dropna()
-        except Exception:
-            pass
+            d = yf.download(
+                list(syms), start=start, end=end,
+                auto_adjust=True, progress=False, threads=True, group_by="ticker",
+            )
+        except Exception as e:
+            st.warning(f"Live fetch failed: {e}")
+            return {}
+        if d.empty:
+            return {}
+        if len(syms) == 1:
+            sym = syms[0]
+            if isinstance(d.columns, pd.MultiIndex):
+                d.columns = d.columns.droplevel(1)
+            if "Close" in d.columns:
+                ser = d["Close"].dropna()
+                if not ser.empty:
+                    return {sym: ser}
+            return {}
+        out: dict[str, pd.Series] = {}
+        for sym in syms:
+            try:
+                if sym in d.columns.get_level_values(0):
+                    ser = d[sym]["Close"].dropna()
+                    if not ser.empty:
+                        out[sym] = ser
+            except Exception:
+                pass
+        return out
+
+    out = _download(tuple(yf_syms))
+    missing = tuple(s for s in yf_syms if s not in out)
+    if missing:
+        time.sleep(2)  # rate-limit pause before the retry batch
+        out.update(_download(missing))
+        still = [s for s in yf_syms if s not in out]
+        if still:
+            st.warning(f"Price fetch incomplete after retry: {', '.join(still)}")
+    if not out:
+        return pd.DataFrame()
     return pd.DataFrame(out).sort_index()
 
 
 def compute_strategy_returns(
     closes: pd.DataFrame, pick_date: str, rebalance_freq: str = "M",
     portfolio_syms: list[str] | tuple[str, ...] | None = None,
+    weights: pd.Series | None = None, cash_pct: float = 0.0,
 ) -> tuple[pd.DataFrame, pd.Series, pd.Series, pd.Series]:
-    """Compute since-inception cumulative return (indexed=100) + TWO equal-weight
-    portfolio curves + per-window returns table.
+    """Compute since-inception cumulative return (indexed=100) + TWO portfolio
+    curves (equal-weight by default) + per-window returns table.
+
+    Weighted mode (HD v2): pass `weights` (pd.Series indexed by yf_sym, DECIMAL
+    fractions, e.g. 0.0641) + `cash_pct` (12.0 = 12% idle cash, 0 return).
+    Curves switch to pm.weighted_* (buy & hold drift + reset-to-target monthly);
+    `weights=None` keeps the original equal-weight path — v1/v4/v5 unchanged.
 
     The strategy is a SCORING model: rank by score, build the portfolio from the
     **Top 20** by rank (equal-weight headline; `portfolio_syms` = those 20 yf
@@ -186,8 +254,14 @@ def compute_strategy_returns(
         sub = sub_all
     # Single-source math (lib.portfolio_math — pure, unit-tested in tests/test_strategy.py)
     normed = pm.normalize(sub)
-    portfolio = pm.buy_hold_portfolio(normed)
-    portfolio_rebalanced = pm.rebalanced_portfolio(sub, freq=rebalance_freq)
+    if weights is not None:
+        cash_w = float(cash_pct) / 100.0
+        portfolio = pm.weighted_buy_hold_portfolio(normed, weights, cash_weight=cash_w)
+        portfolio_rebalanced = pm.weighted_rebalanced_portfolio(
+            sub, weights, cash_weight=cash_w, freq=rebalance_freq)
+    else:
+        portfolio = pm.buy_hold_portfolio(normed)
+        portfolio_rebalanced = pm.rebalanced_portfolio(sub, freq=rebalance_freq)
 
     # Per-window returns
     rows = []

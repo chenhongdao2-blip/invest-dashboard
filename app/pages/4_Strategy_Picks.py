@@ -66,6 +66,8 @@ def render_strategy(strat_id: str) -> None:
     pick_date = cfg["pick_date"]
     bench_sym = cfg["benchmark"]
     bench_name = cfg["benchmark_name"]
+    bench2_sym = cfg.get("benchmark2")
+    bench2_name = cfg.get("benchmark2_name", "")
     disp_name = i18n.t(f"strategy.name.{strat_id}")
 
     # --- Methodology (sourced; biotech vs high-dividend) ---
@@ -73,6 +75,7 @@ def render_strategy(strat_id: str) -> None:
         "v4_biotech": "strategy.v4.method",
         "v5_biotech": "strategy.v5.method",
         "hk_hd": "strategy.hd.method",
+        "hk_hd_v2": "strategy.hd.v2.method",
     }.get(strat_id, "strategy.hd.method")
     with st.expander(i18n.t("strategy.method_expander")):
         st.markdown(i18n.t(method_key))
@@ -83,80 +86,119 @@ def render_strategy(strat_id: str) -> None:
     picks_ranked = picks.sort_values("rank") if "rank" in picks.columns else picks
     top_syms = picks_ranked.head(top_n)["yf_sym"].dropna().tolist()
 
-    # --- Header metrics ---
+    # --- Weighted book (HD v2): published weights + idle-cash sleeve ---
+    weight_col = cfg.get("weight_col")
+    cash_pct = float(cfg.get("cash_pct", 0.0))
+    weights = None
+    if weight_col and weight_col in picks.columns:
+        weights = picks.set_index("yf_sym")[weight_col].astype(float) / 100.0
+
+    # --- Header metrics (KPI cards — house style, replaces st.metric) ---
     days_since = (pd.Timestamp.now().normalize() - pd.Timestamp(pick_date)).days
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric(i18n.t("strategy.metric.pick_date"), pick_date)
-    c2.metric(i18n.t("strategy.metric.n_picks"), top_n,
-              help=i18n.t("strategy.metric.holdings_help", n=n_total))
-    c3.metric(i18n.t("strategy.metric.days_since"), days_since)
-    c4.metric(i18n.t("strategy.metric.benchmark"), bench_sym)
+    holdings_foot = (
+        i18n.t("strategy.metric.holdings_foot_weighted", cash=cash_pct)
+        if weights is not None
+        else i18n.t("strategy.metric.holdings_foot", n=n_total)
+    )
+    theme.kpi_strip([
+        theme.kpi_metric(i18n.t("strategy.metric.pick_date"), str(pick_date)),
+        theme.kpi_metric(i18n.t("strategy.metric.n_picks"), str(top_n),
+                         foot=holdings_foot),
+        theme.kpi_metric(i18n.t("strategy.metric.days_since"), str(days_since)),
+        theme.kpi_metric(i18n.t("strategy.metric.benchmark"), bench_sym,
+                         foot=bench_name),
+    ])
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
-    earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=10)).date().isoformat()
-    closes = strat.fetch_picks_closes(yf_syms + (bench_sym,), start=earliest)
+    # 55 calendar days ≈ 30+ trading days of pre-inception history so the
+    # trailing 15D/30D columns have data even on a freshly built book (v2).
+    earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
+    bench_syms = tuple(s for s in (bench_sym, bench2_sym) if s)
+    closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest)
 
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
         return
 
     bench_close = closes[bench_sym] if bench_sym in closes.columns else pd.Series(dtype=float)
-    picks_closes = closes.drop(columns=[bench_sym], errors="ignore")
+    bench2_close = (closes[bench2_sym]
+                    if bench2_sym and bench2_sym in closes.columns
+                    else pd.Series(dtype=float))
+    picks_closes = closes.drop(columns=list(bench_syms), errors="ignore")
 
     # --- Compute returns (single source: buy&hold + monthly rebalance) ---
     normed, portfolio, portfolio_rebal, perf = strat.compute_strategy_returns(
-        picks_closes, pick_date, portfolio_syms=top_syms
+        picks_closes, pick_date, portfolio_syms=top_syms,
+        weights=weights, cash_pct=cash_pct,
     )
 
     # Benchmark norm to 100 at pick_date anchor
-    bench_norm = pd.Series(dtype=float)
-    if not bench_close.empty:
-        anchor_ts = pd.Timestamp(pick_date)
-        bench_sub = bench_close[bench_close.index >= anchor_ts].dropna()
-        if not bench_sub.empty:
-            bench_norm = (bench_sub / bench_sub.iloc[0]) * 100
+    def _bench_norm(close: pd.Series) -> pd.Series:
+        if close.empty:
+            return pd.Series(dtype=float)
+        sub = close[close.index >= pd.Timestamp(pick_date)].dropna()
+        return (sub / sub.iloc[0]) * 100 if not sub.empty else pd.Series(dtype=float)
 
-    # --- Summary metrics ---
+    bench_norm = _bench_norm(bench_close)
+    bench2_norm = _bench_norm(bench2_close)
+
+    # --- Summary metrics (KPI cards — house style, replaces st.metric) ---
+    asof = (picks_closes.index[-1].date().isoformat()
+            if not picks_closes.empty else "")
     if not portfolio.empty:
         port_last = portfolio.iloc[-1] - 100
         rebal_last = (portfolio_rebal.iloc[-1] - 100) if not portfolio_rebal.empty else None
         bench_last = (bench_norm.iloc[-1] - 100) if not bench_norm.empty else None
         alpha = (port_last - bench_last) if bench_last is not None else None
 
-        show_rebal_metric = show_rebal and rebal_last is not None
-        mcols = st.columns(4 if show_rebal_metric else 3)
-        i = 0
-        mcols[i].metric(i18n.t("strategy.metric.port_bh"), f"{port_last:+.2f}%")
-        i += 1
-        if show_rebal_metric:
+        def _dir(x) -> str:
+            return "up" if x is not None and x > 0 else (
+                "down" if x is not None and x < 0 else "flat")
+
+        def _gly(x) -> str:
+            return "▲" if x is not None and x > 0 else (
+                "▼" if x is not None and x < 0 else "·")
+
+        cards = [theme.kpi_metric(
+            i18n.t("strategy.metric.port_bh"), f"{port_last:+.2f}%",
+            delta_abs=_gly(port_last), direction=_dir(port_last),
+        )]
+        if show_rebal and rebal_last is not None:
             delta_bp = (rebal_last - port_last) * 100  # pp diff → basis points
-            mcols[i].metric(
+            cards.append(theme.kpi_metric(
                 i18n.t("strategy.metric.port_rebal"), f"{rebal_last:+.2f}%",
-                delta=i18n.t("strategy.metric.delta_vs_bh", bp=delta_bp),
-                delta_color="off",
-            )
-            i += 1
-        mcols[i].metric(
+                delta_pct=i18n.t("strategy.metric.delta_vs_bh", bp=delta_bp),
+                direction="flat",
+            ))
+        cards.append(theme.kpi_metric(
             i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
             f"{bench_last:+.2f}%" if bench_last is not None else "—",
+            delta_abs=_gly(bench_last), direction=_dir(bench_last),
+        ))
+        if not bench2_norm.empty:
+            b2_last = bench2_norm.iloc[-1] - 100
+            cards.append(theme.kpi_metric(
+                i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
+                f"{b2_last:+.2f}%",
+                delta_abs=_gly(b2_last), direction=_dir(b2_last),
+            ))
+        delta_word = (
+            i18n.t("strategy.delta.outperform") if alpha and alpha > 0
+            else i18n.t("strategy.delta.underperform") if alpha
+            else i18n.t("strategy.delta.tied")
         )
-        i += 1
-        if i < len(mcols):
-            delta_word = (
-                i18n.t("strategy.delta.outperform") if alpha and alpha > 0
-                else i18n.t("strategy.delta.underperform") if alpha
-                else i18n.t("strategy.delta.tied")
-            )
-            mcols[i].metric(
-                i18n.t("strategy.metric.alpha"),
-                f"{alpha:+.2f}pp" if alpha is not None else "—",
-                delta=delta_word,
-                delta_color="normal" if alpha and alpha > 0 else "inverse" if alpha else "off",
-            )
+        cards.append(theme.kpi_metric(
+            i18n.t("strategy.metric.alpha"),
+            f"{alpha:+.2f}pp" if alpha is not None else "—",
+            delta_abs=delta_word, direction=_dir(alpha),
+        ))
+        theme.kpi_strip(cards)
         # 口径声明: auto_adjust=True → "Close" 是复权总回报(含息); 组合与基准同口径
         # (lib/strategy.py fetch_picks_closes)。高息股除息日股价机械下跌已被复权抵消。
         st.caption(i18n.t("strategy.metric.totalreturn_note"))
+        if weights is not None:
+            st.caption(i18n.t("strategy.hd.v2.cash_note", cash=cash_pct))
 
     # --- Cumulative return chart (consumes precomputed series) ---
     if not portfolio.empty:
@@ -182,8 +224,17 @@ def render_strategy(strat_id: str) -> None:
                 name=i18n.t("strategy.chart.line.benchmark", sym=bench_sym, name=bench_name),
                 line=dict(width=1.5, color="#8a8580", dash="dash"),
             ))
+        if not bench2_norm.empty:
+            fig.add_trace(go.Scatter(
+                x=bench2_norm.index, y=bench2_norm.values,
+                mode="lines",
+                name=i18n.t("strategy.chart.line.benchmark", sym=bench2_sym, name=bench2_name),
+                line=dict(width=1.5, color="#4a6fa5", dash="dot"),
+            ))
         # theme=None: keep our PLOTLY_LAYOUT authoritative (cream bg + INK text).
         st.plotly_chart(fig, width="stretch", theme=None)
+        if asof:
+            theme.provenance(i18n.t("common.provenance", src="yfinance", asof=asof))
 
     # --- Top/Worst ranking tables ---
     if perf.empty:
@@ -191,29 +242,58 @@ def render_strategy(strat_id: str) -> None:
         return
 
     # --- Ranked holdings table (scoring model → sort by SCORE RANK, not return) ---
-    meta_cols = [c for c in ["rank", "name", "score"] if c in picks.columns]
+    # HD v2 extras (weight/bucket/runrate) join automatically when present.
+    meta_cols = [c for c in ["rank", "name", "score", "weight_pct", "bucket",
+                             "runrate_pct"] if c in picks.columns]
     meta = picks.set_index("yf_sym")[meta_cols]
     perf = perf.join(meta, how="left")
+    if "weight_pct" in perf.columns and "Since %" in perf.columns:
+        # Contribution to basket NAV since inception = build weight × since-entry
+        # return; cash buffer contributes 0 (conservative cash=0% convention), so
+        # the column sums to ≈ the buy & hold curve's since-inception return.
+        perf["contrib_pct"] = perf["weight_pct"] / 100.0 * perf["Since %"]
     if "rank" in perf.columns:
         perf = perf.sort_values("rank", na_position="last")
+    if "bucket" in perf.columns:
+        perf["bucket"] = perf["bucket"].map(
+            lambda b: i18n.t(f"strategy.hd.bucket.{b}") if isinstance(b, str) else b)
+    # 30-trading-day sparkline closes per ticker (fetch window is 55 calendar
+    # days, so even a fresh book has a full pre-inception window).
+    perf["spark"] = [
+        picks_closes[t].dropna().tail(30).tolist()
+        if t in picks_closes.columns else []
+        for t in perf.index
+    ]
     perf.index = [fmt.fmt_ticker_bbg(t) for t in perf.index]
 
-    disp = perf.rename(columns={"rank": "Rank", "name": "Name", "score": "Score"})
-    front_cols = ["Rank", "Name", "Score", "Last", "1D %", "5D %", "15D %", "30D %", "Since %"]
+    disp = perf.rename(columns={
+        "rank": "Rank", "name": "Name", "score": "Score",
+        "weight_pct": "Weight", "bucket": "Bucket", "runrate_pct": "Yield",
+        "contrib_pct": "Contrib", "spark": "Spark",
+    })
+    front_cols = ["Rank", "Name", "Score", "Weight", "Bucket", "Yield",
+                  "Last", "Spark", "1D %", "5D %", "15D %", "30D %",
+                  "Since %", "Contrib"]
     disp = disp[[c for c in front_cols if c in disp.columns]]
 
-    pct_cols_avail = [c for c in ["1D %", "5D %", "15D %", "30D %", "Since %"] if c in disp.columns]
+    pct_cols_avail = [c for c in ["1D %", "5D %", "15D %", "30D %", "Since %", "Contrib"]
+                      if c in disp.columns]
     extra_fmt = {}
-    if "Last" in disp.columns:
-        extra_fmt["Last"] = "%.2f"
-    if "Score" in disp.columns:
-        extra_fmt["Score"] = "%.2f"
+    for c, f in (("Last", "%.2f"), ("Score", "%.2f"),
+                 ("Weight", "%.2f"), ("Yield", "%.2f")):
+        if c in disp.columns:
+            extra_fmt[c] = f
     col_labels = {
         "Rank": i18n.t("strategy.col.rank"),
         "Name": i18n.t("strategy.col.name"),
         "Score": i18n.t("strategy.col.score"),
+        "Weight": i18n.t("strategy.col.weight"),
+        "Bucket": i18n.t("strategy.col.bucket"),
+        "Yield": i18n.t("strategy.col.runrate"),
         "Last": i18n.t("strategy.col.last"),
+        "Spark": i18n.t("strategy.col.spark"),
         "Since %": i18n.t("strategy.col.since"),
+        "Contrib": i18n.t("strategy.col.contrib"),
     }
 
     def _render_perf(slice_df: pd.DataFrame, height: int = 560) -> None:
@@ -221,7 +301,9 @@ def render_strategy(strat_id: str) -> None:
             slice_df,
             int_cols=[c for c in ["Rank"] if c in slice_df.columns],
             pct_cols=[c for c in pct_cols_avail if c in slice_df.columns],
-            text_cols=[c for c in ["Name"] if c in slice_df.columns],
+            text_cols=[c for c in ["Name", "Bucket"] if c in slice_df.columns],
+            spark_cols=[c for c in ["Spark"] if c in slice_df.columns],
+            bar_cols=[c for c in ["Weight", "Contrib"] if c in slice_df.columns],
             extra_formats=extra_fmt,
             column_labels=col_labels,
             index_label=i18n.t("strategy.col.ticker"),
@@ -229,11 +311,208 @@ def render_strategy(strat_id: str) -> None:
         )
 
     # Top-N holdings (the actual portfolio) shown by default; full ranked universe in expander.
-    st.markdown(f"##### {i18n.t('strategy.holdings.title')}")
+    holdings_title_key = ("strategy.holdings.title_weighted" if weights is not None
+                          else "strategy.holdings.title")
+    st.markdown(f"##### {i18n.t(holdings_title_key)}")
     _render_perf(disp.head(top_n), height=560)
+    if asof:
+        theme.provenance(i18n.t("common.provenance", src="yfinance", asof=asof))
     if len(disp) > top_n:
         with st.expander(i18n.t("strategy.holdings.all", n=len(disp))):
             _render_perf(disp, height=620)
+
+
+def render_hd_versions() -> None:
+    """HK 高股息 tab = version group: v2 (current, default) / v1 (history,
+    frozen curve keeps running) / v1-vs-v2 compare. One tab, three views —
+    v1 history is never truncated; v2 is a NEW book from 2026-06-11."""
+    opts = [
+        i18n.t("strategy.hd.version.v2"),
+        i18n.t("strategy.hd.version.v1"),
+        i18n.t("strategy.hd.version.compare"),
+    ]
+    choice = st.segmented_control(
+        i18n.t("strategy.hd.version.toggle"), opts, default=opts[0],
+        key="hd_version",
+    ) or opts[0]
+    if choice == opts[1]:
+        st.caption(i18n.t("strategy.hd.version.v1_note"))
+        render_strategy("hk_hd")
+    elif choice == opts[2]:
+        render_hd_compare()
+    else:
+        render_strategy("hk_hd_v2")
+
+
+def render_hd_compare() -> None:
+    """v1 vs v2 overlay + rebalance diff.
+
+    Overlay: each curve indexed to 100 at its OWN inception (independent books,
+    NOT a chained NAV); benchmark anchored at v1 inception. Diff is computed
+    from the two CSVs (never hand-filled), against the v1 TOP-20 NAV book —
+    the equal-weight portfolio the page has been tracking — not the 34-name
+    scored universe.
+    """
+    v1 = strat.load_hd()
+    v2 = strat.load_hd_v2()
+    if v1.empty or v2.empty:
+        st.warning("Need both hd_picks.csv and hd_picks_v2.csv — check data/external/")
+        return
+    cfg1 = strat.STRATEGIES["hk_hd"]
+    cfg2 = strat.STRATEGIES["hk_hd_v2"]
+    bench_sym = cfg1["benchmark"]
+    bench2_sym = cfg1.get("benchmark2")
+
+    v1_book = v1.sort_values("rank").head(20)
+    v2_book = v2.sort_values("rank")
+    v1_syms = v1_book["yf_sym"].dropna().tolist()
+    v2_syms = v2_book["yf_sym"].dropna().tolist()
+
+    # --- Prices: one fetch covering both books + benchmarks, from v1 inception ---
+    all_syms = tuple(dict.fromkeys(
+        v1_syms + v2_syms + [s for s in (bench_sym, bench2_sym) if s]))
+    earliest = (pd.Timestamp(cfg1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
+    closes = strat.fetch_picks_closes(all_syms, start=earliest)
+    if closes.empty:
+        st.error("Live price fetch failed. Check network/yfinance.")
+        return
+
+    # v1 curve: equal-weight top-20 from 2026-03-20 (existing semantics, untouched)
+    _, port_v1, _, _ = strat.compute_strategy_returns(
+        closes[[c for c in v1_syms if c in closes.columns]],
+        cfg1["pick_date"], portfolio_syms=v1_syms,
+    )
+    # v2 curve: published weights + 12% cash from 2026-06-11
+    w2 = v2_book.set_index("yf_sym")[cfg2["weight_col"]].astype(float) / 100.0
+    _, port_v2, _, _ = strat.compute_strategy_returns(
+        closes[[c for c in v2_syms if c in closes.columns]],
+        cfg2["pick_date"], portfolio_syms=v2_syms,
+        weights=w2, cash_pct=cfg2["cash_pct"],
+    )
+    def _cmp_norm(sym: str | None) -> pd.Series:
+        if not sym or sym not in closes.columns:
+            return pd.Series(dtype=float)
+        b = closes[sym].dropna()
+        b = b[b.index >= pd.Timestamp(cfg1["pick_date"])]
+        return (b / b.iloc[0]) * 100 if not b.empty else pd.Series(dtype=float)
+
+    bench_norm = _cmp_norm(bench_sym)
+    bench2_norm = _cmp_norm(bench2_sym)
+
+    # --- Summary metrics (as-of latest close) ---
+    mc = st.columns(4 if not bench2_norm.empty else 3)
+    if not port_v1.empty:
+        mc[0].metric(i18n.t("strategy.hd.compare.metric.v1"),
+                     f"{port_v1.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg1['pick_date']}")
+    if not port_v2.empty:
+        mc[1].metric(i18n.t("strategy.hd.compare.metric.v2"),
+                     f"{port_v2.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg2['pick_date']}")
+    if not bench_norm.empty:
+        mc[2].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
+                     f"{bench_norm.iloc[-1] - 100:+.2f}%",
+                     help=f"anchor {cfg1['pick_date']}")
+    if not bench2_norm.empty:
+        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
+                     f"{bench2_norm.iloc[-1] - 100:+.2f}%",
+                     help=f"anchor {cfg1['pick_date']}")
+
+    # --- Overlay chart: v1 + v2 + benchmark, v2 inception marked ---
+    fig = go.Figure()
+    if not bench_norm.empty:
+        fig.add_trace(go.Scatter(
+            x=bench_norm.index, y=bench_norm.values, mode="lines",
+            name=i18n.t("strategy.chart.line.benchmark",
+                        sym=bench_sym, name=cfg1["benchmark_name"]),
+            line=dict(width=1.5, color="#8a8580", dash="dash"),
+        ))
+    if not bench2_norm.empty:
+        fig.add_trace(go.Scatter(
+            x=bench2_norm.index, y=bench2_norm.values, mode="lines",
+            name=i18n.t("strategy.chart.line.benchmark",
+                        sym=bench2_sym, name=cfg1.get("benchmark2_name", "")),
+            line=dict(width=1.5, color="#4a6fa5", dash="dot"),
+        ))
+    if not port_v1.empty:
+        fig.add_trace(go.Scatter(
+            x=port_v1.index, y=port_v1.values, mode="lines",
+            name=i18n.t("strategy.hd.compare.v1_line"),
+            line=dict(width=1.5, color=charts.SECONDARY),
+        ))
+    if not port_v2.empty:
+        fig.add_trace(go.Scatter(
+            x=port_v2.index, y=port_v2.values, mode="lines",
+            name=i18n.t("strategy.hd.compare.v2_line"),
+            line=dict(width=2.0, color=charts.PRIMARY),
+        ))
+    fig.add_vline(x=pd.Timestamp(cfg2["pick_date"]), line_width=1,
+                  line_dash="dot", line_color="#8a8580")
+    fig.add_annotation(x=pd.Timestamp(cfg2["pick_date"]), y=1.02, yref="paper",
+                       text=i18n.t("strategy.hd.compare.rebal_label"),
+                       showarrow=False, font=dict(size=11, color="#4a4a4a"))
+    fig.update_layout(
+        title=i18n.t("strategy.hd.compare.title"),
+        yaxis_title=i18n.t("strategy.chart.y"),
+        height=450,
+    )
+    st.plotly_chart(theme.style_plotly(fig), width="stretch", theme=None)
+    st.caption(i18n.t("strategy.hd.compare.note"))
+
+    # --- Rebalance diff: kept / added / removed, computed from the two CSVs ---
+    theme.section_header(i18n.t("strategy.hd.diff.title"))
+    v1_set = set(v1_book["ticker"])
+    v2_set = set(v2_book["ticker"])
+    v1_names = v1_book.set_index("ticker")
+    v2_names = v2_book.set_index("ticker")
+    EQ_W = 100.0 / len(v1_book)  # v1 equal weight per name (top-20 book → 5%)
+
+    kept_tk = [t for t in v2_book["ticker"] if t in v1_set]      # v2 rank order
+    added_tk = [t for t in v2_book["ticker"] if t not in v1_set]  # v2 rank order
+    removed_tk = [t for t in v1_book["ticker"] if t not in v2_set]  # v1 rank order
+
+    col_name = i18n.t("strategy.col.name")
+    col_v1w = i18n.t("strategy.hd.diff.col.v1w")
+    col_v2w = i18n.t("strategy.hd.diff.col.v2w")
+    col_bucket = i18n.t("strategy.col.bucket")
+    col_sector = i18n.t("strategy.hd.diff.col.sector")
+
+    def _bucket_lab(t: str) -> str:
+        b = v2_names.loc[t, "bucket"]
+        return i18n.t(f"strategy.hd.bucket.{b}") if isinstance(b, str) else "—"
+
+    kept_df = pd.DataFrame({
+        col_name: [v2_names.loc[t, "name"] for t in kept_tk],
+        col_v1w: [f"{EQ_W:.1f}" for _ in kept_tk],
+        col_v2w: [f"{v2_names.loc[t, 'weight_pct']:.2f}" for t in kept_tk],
+        col_bucket: [_bucket_lab(t) for t in kept_tk],
+    }, index=kept_tk)
+    added_df = pd.DataFrame({
+        col_name: [v2_names.loc[t, "name"] for t in added_tk],
+        col_v2w: [f"{v2_names.loc[t, 'weight_pct']:.2f}" for t in added_tk],
+        col_bucket: [_bucket_lab(t) for t in added_tk],
+    }, index=added_tk)
+    removed_df = pd.DataFrame({
+        col_name: [v1_names.loc[t, "name"] for t in removed_tk],
+        col_v1w: [f"{EQ_W:.1f}" for _ in removed_tk],
+        col_sector: [v1_names.loc[t, "sector"] for t in removed_tk],
+    }, index=removed_tk)
+
+    d1, d2, d3 = st.columns(3)
+    _tk_lbl = i18n.t("strategy.col.ticker")
+    with d1:
+        st.markdown(f"##### {i18n.t('strategy.hd.diff.kept', n=len(kept_tk))}")
+        ui.render_html_table(kept_df, text_cols=list(kept_df.columns),
+                             index_label=_tk_lbl, height=520)
+    with d2:
+        st.markdown(f"##### {i18n.t('strategy.hd.diff.added', n=len(added_tk))}")
+        ui.render_html_table(added_df, text_cols=list(added_df.columns),
+                             index_label=_tk_lbl, height=520)
+    with d3:
+        st.markdown(f"##### {i18n.t('strategy.hd.diff.removed', n=len(removed_tk))}")
+        ui.render_html_table(removed_df, text_cols=list(removed_df.columns),
+                             index_label=_tk_lbl, height=520)
+    st.caption(i18n.t("strategy.hd.diff.note"))
 
 
 def _spearman_rho(x: pd.Series, y: pd.Series) -> float:
@@ -481,13 +760,18 @@ with st.expander(i18n.t("strategy.onboarding.title")):
     st.markdown(i18n.t("strategy.onboarding.body"))
 
 # --- Tabs: 3 time-series strategies + 1 independent static IPO backtest ---
-_ts_ids = list(strat.STRATEGIES.keys())
+# Strategies with "version_of" render INSIDE their group's tab (version toggle),
+# not as their own tab — hk_hd_v2 lives in the hk_hd tab.
+_ts_ids = [k for k, c in strat.STRATEGIES.items() if not c.get("version_of")]
 _tab_labels = [i18n.t(f"strategy.name.{sid}") for sid in _ts_ids]
 _tab_labels.append(i18n.t("strategy.name.ipo"))
 strategy_tabs = st.tabs(_tab_labels)
 for tab, sid in zip(strategy_tabs[:-1], _ts_ids):
     with tab:
-        render_strategy(sid)
+        if sid == "hk_hd":
+            render_hd_versions()
+        else:
+            render_strategy(sid)
 with strategy_tabs[-1]:
     render_ipo_strategy()
 

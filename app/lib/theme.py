@@ -141,9 +141,31 @@ def style_plotly(fig):
     return fig
 
 
+# ── Self-hosted fonts ────────────────────────────────────────────────────
+# Variable woff2 served from app/static/ (enableStaticServing) instead of the
+# Google Fonts CDN, which is blocked for mainland-China viewers. The /app/static
+# path also resolves inside components.html srcdoc iframes (they inherit the
+# parent base URL), so the same block works for ui.render_html_table.
+FONT_FACE_CSS = """
+@font-face {
+  font-family: 'Inter';
+  src: url('/app/static/fonts/inter-var.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/app/static/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+"""
+
 # ── CSS ──────────────────────────────────────────────────────────────────
 _CSS = f"""
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+{FONT_FACE_CSS}
 
 /* force light color-scheme — dodge OS dark-mode for canvas widgets */
 :root, html, body {{ color-scheme: light !important; }}
@@ -866,6 +888,18 @@ def section_header(title: str, meta: str | None = None) -> None:
         f'<span class="ttl">{title}</span>'
         f'{meta_html}'
         f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def provenance(text: str) -> None:
+    """Standardized data-provenance line under a chart/table — sell-side style
+    'Source: X · as of YYYY-MM-DD'. Build the text with i18n at the call site
+    (key: common.provenance) so theme stays i18n-free."""
+    st.markdown(
+        f'<div style="font-size:11px;color:{INK_3};letter-spacing:.02em;'
+        f'margin:2px 0 14px;font-variant-numeric:tabular-nums;">'
+        f'{_esc(str(text))}</div>',
         unsafe_allow_html=True,
     )
 

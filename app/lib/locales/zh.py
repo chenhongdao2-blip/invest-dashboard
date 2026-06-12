@@ -64,21 +64,74 @@ STRINGS = {
     "strategy.col.name": "名称",
     "strategy.col.score": "评分",
     "strategy.col.last": "最新价",
+    "common.provenance": "来源: {src} · 截至 {asof}",
+    "strategy.metric.holdings_foot": "等权 · 评分池 {n} 只",
+    "strategy.metric.holdings_foot_weighted": "评分定权 · 约 {cash:.0f}% 现金缓冲",
     "strategy.col.since": "建仓至今 %",
+    "strategy.col.contrib": "收益贡献 %",
+    "strategy.col.spark": "30日走势",
     "strategy.col.rank": "排名",
     "strategy.holdings.title": "Top 20 持仓（按评分排名 · 等权）",
     "strategy.holdings.all": "全部 {n} 只评分股票池（按评分排名；前 20 为组合持仓）",
     "strategy.metric.holdings_help": "本组合由评分前 20 名等权建仓；当期评分股票池共 {n} 只。",
+    "strategy.metric.holdings_help_weighted": (
+        "本组合 = 20 只按质量评分定权建仓 + 约 {cash:.0f}% 现金缓冲；"
+        "表中权重为建仓权重，买入持有曲线随价格自然漂移。"
+    ),
+    "strategy.holdings.title_weighted": "Top 20 持仓（按评分排名 · 评分定权 + 现金缓冲）",
+    "strategy.col.weight": "权重 %",
+    "strategy.col.bucket": "收益来源",
+    "strategy.col.runrate": "股息率 %",
+    "strategy.hd.bucket.rate": "利率溢价",
+    "strategy.hd.bucket.nonrate": "非利率",
+
+    # ── HD version group (v1 frozen history / v2 current / compare) ──
+    "strategy.hd.version.toggle": "组合版本",
+    "strategy.hd.version.v2": "v2 · 2026-06-11（当前）",
+    "strategy.hd.version.v1": "v1 · 2026-03-20（历史）",
+    "strategy.hd.version.compare": "v1 vs v2 对比",
+    "strategy.hd.version.v1_note": (
+        "历史版本：v1 为 2026-03-20 发布的正式组合（34 只评分池 · Top 20 等权），"
+        "曲线持续跟踪、成分不再调整；2026-06-11 起的新建仓见 v2。"
+    ),
+    "strategy.hd.compare.title": "高股息 v1 vs v2 · 净值对比（各自建仓日 = 100）",
+    "strategy.hd.compare.v1_line": "v1 组合（等权，2026-03-20 起）",
+    "strategy.hd.compare.v2_line": "v2 组合（评分定权 + 现金缓冲，2026-06-11 起）",
+    "strategy.hd.compare.rebal_label": "v2 建仓 2026-06-11",
+    "strategy.hd.compare.note": (
+        "口径：两条曲线各自以建仓日收盘 = 100 独立计算（两个独立组合，"
+        "非同一净值的接续）；基准锚定 v1 建仓日。v1 历史完整保留，"
+        "不因 v2 上线而截断或重述。"
+    ),
+    "strategy.hd.compare.metric.v1": "v1 建仓至今",
+    "strategy.hd.compare.metric.v2": "v2 建仓至今",
+    "strategy.hd.diff.title": "换仓明细（v1 Top-20 组合 → v2）",
+    "strategy.hd.diff.kept": "留任 {n} 只",
+    "strategy.hd.diff.added": "新进 {n} 只",
+    "strategy.hd.diff.removed": "剔除 {n} 只",
+    "strategy.hd.diff.col.v1w": "v1 权重 %",
+    "strategy.hd.diff.col.v2w": "v2 权重 %",
+    "strategy.hd.diff.col.sector": "行业",
+    "strategy.hd.diff.note": (
+        "换仓明细由两版持仓 CSV 自动计算（不手工填写）。对比基准为 v1 的 "
+        "Top-20 净值组合（等权、每只 5.0%），34 只评分池中排名 20 以后者"
+        "不在 v1 组合内；v2 权重为 2026-06-11 建仓权重。"
+    ),
+    "strategy.hd.v2.cash_note": (
+        "组合含约 {cash:.0f}% 现金缓冲（策略设计，非误差）；净值按现金 0 收益的"
+        "保守口径计算，不计利息收入。"
+    ),
     "strategy.col.ticker": "代码",
     "strategy.metric.delta_vs_bh": "{bp:+.0f} bp vs 买入持有",
     "strategy.onboarding.title": "如何阅读本页",
 
     # ── methodology footnotes ──
     "strategy.method.equal_weight": (
-        "**方法论** — 组合 = 按评分排名取 **Top 20 等权**建仓，自选股日起的两条曲线："
-        "**买入持有**：成立时等权建仓后持有（权重随价格漂移）。"
-        "**月度再平衡**：每月初将权重重置为等权。"
-        "基准：生物科技用 XBI，港股高股息用 3110.HK。"
+        "**方法论** — 生物科技与高股息 v1：按评分排名取 **Top 20 等权**建仓；"
+        "高股息 v2：**质量评分定权 + 约 12% 现金缓冲**（现金按 0 收益保守计）。"
+        "自建仓日起的两条曲线：**买入持有**：成立时按建仓权重买入后持有（权重随价格漂移）。"
+        "**月度再平衡**：每月初将权重重置回建仓权重（等权组合即重置等权）。"
+        "基准：生物科技用 XBI；港股高股息用 3466.HK（恒生高股息30），另列恒生指数作大盘参照。"
     ),
     "strategy.method.total_return": (
         "组合与基准均采用 yfinance 复权收盘价（已回补拆股**与**分红，即总收益口径），"
@@ -261,6 +314,7 @@ STRINGS = {
     "strategy.name.v4_biotech": "美国生物科技选股 4.0",
     "strategy.name.v5_biotech": "美国生物科技选股 5.0",
     "strategy.name.hk_hd": "港股高股息选股",
+    "strategy.name.hk_hd_v2": "港股高股息 v2 · 标准建仓",
     "strategy.v4.tag": "回看版",
     "strategy.v5.tag": "catalyst-monitor",
     "strategy.v4.method": (
@@ -306,8 +360,27 @@ STRINGS = {
         "**评级** — ≥80 优秀（核心配置）· 60–79 良好 · 40–59 一般 · <40 剔除。"
         "（如招商银行 = 87，优秀级。）\n\n"
         "**底线** — 当前静态股息率**不作**评分依据（防周期高点的伪高息）。\n\n"
-        "**基准** — 3110.HK（Premia 沪深港高股息低波动）。\n\n"
+        "**基准** — 3466.HK（恒生高股息30 ETF），另列恒生指数作大盘参照。\n\n"
         "**投资哲学** — 巴菲特（股东导向 / 护城河）、芒格（高 ROE）、"
         "马克斯（第二层思考 / 风险控制）、格雷厄姆（安全边际）。"
+    ),
+    "strategy.hd.v2.method": (
+        "**版本定位** — v2 为 2026-06-11 标准建仓的正式组合（20 只，非等权），"
+        "与 v1（2026-03-20，34 只评分池 · Top 20 等权）独立核算；v1 历史曲线完整保留。\n\n"
+        "**构建方式** — 本组合由 AI 原生端到端投研引擎产出：定量筛选、定性评分、"
+        "组合构建全流程由 Agent 执行，机器校验、独立审核、全程留痕，"
+        "实现从选股到建仓的全自动化（详见 2026-06-10 报告"
+        "《从 Vibe Coding 到 Agentic Engineering》）。\n\n"
+        "**四条组合规则** —\n"
+        "1. **高仓位收息**：约 88% 建仓 + 约 12% 现金缓冲，现金用于应对调仓与极端波动"
+        "（净值按现金 0 收益的保守口径计算）。\n"
+        "2. **质量评分定权重**：沿用「愿意分 / 分得出 / 分得久」质量评分框架，评分越高权重越高。\n"
+        "3. **收益来源结构锚定**：利率溢价桶约 55% : 非利率桶约 45%。第一性原理——高股息"
+        "收益的本质是**利率风险溢价**：银行吃信用利差、公用事业（燃气 / 电力）吃久期折现；"
+        "非利率桶（消费 / 能源 / 交通 / 博彩 / 医药）的分红由自身现金流驱动，"
+        "对冲组合的利率敏感度。\n"
+        "4. **集中度约束**：单一标的权重 ≤10%，行业适度分散。\n\n"
+        "**股息率口径** — 表中股息率为建仓时点的年化 run-rate（截至 2026-06-11）。\n\n"
+        "**基准** — 3466.HK（恒生高股息30 ETF），另列恒生指数作大盘参照；与 v1 一致。"
     ),
 }

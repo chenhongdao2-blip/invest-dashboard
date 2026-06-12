@@ -14,6 +14,9 @@ dataframeBorderColor = "#d9c7b6"
 [server]
 headless = true
 enableXsrfProtection = true
+# Serve app/static/ at /app/static/* — self-hosted Inter/JetBrains Mono woff2
+# (Google Fonts CDN is blocked for mainland-China viewers).
+enableStaticServing = true
 
 [client]
 # Do NOT leak source code / tracebacks to app viewers. On error show a generic

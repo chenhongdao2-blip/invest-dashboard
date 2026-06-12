@@ -64,21 +64,79 @@ STRINGS = {
     "strategy.col.name": "Name",
     "strategy.col.score": "Pick score",
     "strategy.col.last": "Last",
+    "common.provenance": "Source: {src} · as of {asof}",
+    "strategy.metric.holdings_foot": "equal-weight · {n} scored",
+    "strategy.metric.holdings_foot_weighted": "score-weighted · ~{cash:.0f}% cash buffer",
     "strategy.col.since": "Since entry %",
+    "strategy.col.contrib": "Contrib %",
+    "strategy.col.spark": "30D trend",
     "strategy.col.rank": "Rank",
     "strategy.holdings.title": "Top 20 holdings (by score rank · equal-weight)",
     "strategy.holdings.all": "All {n} scored (by score rank; top 20 = portfolio)",
     "strategy.metric.holdings_help": "Portfolio = top 20 by score, equal-weight; scored universe = {n}.",
+    "strategy.metric.holdings_help_weighted": (
+        "Portfolio = 20 names, quality-score-set weights, plus ~{cash:.0f}% cash buffer; "
+        "weights shown are at-build and drift with price on the buy & hold curve."
+    ),
+    "strategy.holdings.title_weighted": "Top 20 holdings (by score rank · score-weighted + cash buffer)",
+    "strategy.col.weight": "Weight %",
+    "strategy.col.bucket": "Return source",
+    "strategy.col.runrate": "Div yield %",
+    "strategy.hd.bucket.rate": "Rate premium",
+    "strategy.hd.bucket.nonrate": "Non-rate",
+
+    # ── HD version group (v1 frozen history / v2 current / compare) ──
+    "strategy.hd.version.toggle": "Portfolio version",
+    "strategy.hd.version.v2": "v2 · 2026-06-11 (current)",
+    "strategy.hd.version.v1": "v1 · 2026-03-20 (history)",
+    "strategy.hd.version.compare": "v1 vs v2 compare",
+    "strategy.hd.version.v1_note": (
+        "Historical version: v1 is the official portfolio published 2026-03-20 "
+        "(34-name scored universe · top 20 equal-weight). Its curve keeps running "
+        "and constituents are frozen; the new book from 2026-06-11 is v2."
+    ),
+    "strategy.hd.compare.title": "High-dividend v1 vs v2 · NAV compare (each inception = 100)",
+    "strategy.hd.compare.v1_line": "v1 (equal-weight, from 2026-03-20)",
+    "strategy.hd.compare.v2_line": "v2 (score-weighted + cash buffer, from 2026-06-11)",
+    "strategy.hd.compare.rebal_label": "v2 build 2026-06-11",
+    "strategy.hd.compare.note": (
+        "Basis: each curve is indexed to 100 at its own inception close — two "
+        "independent books, not one chained NAV. Benchmark anchored at the v1 "
+        "inception. v1 history is fully preserved, never truncated or restated."
+    ),
+    "strategy.hd.compare.metric.v1": "v1 since inception",
+    "strategy.hd.compare.metric.v2": "v2 since inception",
+    "strategy.hd.diff.title": "Rebalance detail (v1 top-20 book → v2)",
+    "strategy.hd.diff.kept": "Kept ({n})",
+    "strategy.hd.diff.added": "Added ({n})",
+    "strategy.hd.diff.removed": "Removed ({n})",
+    "strategy.hd.diff.col.v1w": "v1 weight %",
+    "strategy.hd.diff.col.v2w": "v2 weight %",
+    "strategy.hd.diff.col.sector": "Sector",
+    "strategy.hd.diff.note": (
+        "Computed automatically from the two holdings CSVs (never hand-filled). "
+        "Comparison base is the v1 top-20 NAV book (equal-weight, 5.0% each); names "
+        "ranked below 20 in the 34-name scored universe were not in the v1 book. "
+        "v2 weights are at-build, 2026-06-11."
+    ),
+    "strategy.hd.v2.cash_note": (
+        "The book carries a ~{cash:.0f}% cash buffer by design (not an error); the "
+        "NAV treats cash at zero return — a conservative basis with no interest "
+        "income credited."
+    ),
     "strategy.col.ticker": "Ticker",
     "strategy.metric.delta_vs_bh": "{bp:+.0f} bp vs buy & hold",
     "strategy.onboarding.title": "How to read this page",
 
     # ── methodology footnotes ──
     "strategy.method.equal_weight": (
-        "**Methodology** — Portfolio = **top 20 by score, equal-weight**, from the pick date. Two curves: "
-        "**Buy & hold**: equal weight at inception, then held (weights drift with price). "
-        "**Monthly rebalance**: weights reset to equal at each month start. "
-        "Benchmark: XBI for biotech, 3110.HK for HK high-dividend."
+        "**Methodology** — Biotech & high-dividend v1: **top 20 by score, equal-weight**. "
+        "High-dividend v2: **quality-score-set weights + ~12% cash buffer** (cash at zero "
+        "return, conservative). Two curves from the pick date: "
+        "**Buy & hold**: at-build weights at inception, then held (weights drift with price). "
+        "**Monthly rebalance**: weights reset to the at-build book at each month start. "
+        "Benchmark: XBI for biotech; HK high-dividend uses 3466.HK (Hang Seng High "
+        "Dividend 30), with the Hang Seng Index as a broad-market reference."
     ),
     "strategy.method.total_return": (
         "Portfolio and benchmark both use yfinance auto-adjusted closes "
@@ -289,6 +347,7 @@ STRINGS = {
     "strategy.name.v4_biotech": "US Biotech AI Picks 4.0",
     "strategy.name.v5_biotech": "US Biotech AI Picks 5.0",
     "strategy.name.hk_hd": "HK High-Dividend Picks",
+    "strategy.name.hk_hd_v2": "HK High-Dividend v2 · Standard Build",
     "strategy.v4.tag": "Lookback build",
     "strategy.v5.tag": "catalyst-monitor",
     "strategy.v4.method": (
@@ -347,9 +406,35 @@ STRINGS = {
         "(e.g. China Merchants Bank = 87, excellent.)\n\n"
         "**Bottom line** — current static dividend yield is **not** a scoring input "
         "(guards against cyclical-peak fake-high-yield).\n\n"
-        "**Benchmark** — 3110.HK (Premia CSI Caixin China Bedrock Economy / HK high-"
-        "dividend low-volatility).\n\n"
+        "**Benchmark** — 3466.HK (Hang Seng High Dividend 30 ETF), with the Hang Seng "
+        "Index shown as a broad-market reference.\n\n"
         "**Philosophy** — Buffett (shareholder-oriented mgmt / moat) · Munger (high ROE) · "
         "Marks (second-level thinking / risk control) · Graham (margin of safety)."
+    ),
+    "strategy.hd.v2.method": (
+        "**This build** — v2 is the official standard build of 2026-06-11 (20 names, "
+        "non-equal weights), run as a separate book from v1 (2026-03-20, 34-name "
+        "scored universe · top 20 equal-weight); the v1 curve is fully preserved.\n\n"
+        "**How it is built** — the portfolio is produced by an AI-native end-to-end "
+        "research engine: quantitative screening, qualitative scoring and portfolio "
+        "construction are all executed by Agents, with machine validation, independent "
+        "review and full audit trails — fully automated from stock selection to "
+        "portfolio build (see our 2026-06-10 report *From Vibe Coding to Agentic "
+        "Engineering*).\n\n"
+        "**Four portfolio rules** —\n"
+        "1. **High deployment for income**: ~88% invested + ~12% cash buffer for "
+        "rebalancing and tail volatility (NAV treats cash at zero return, conservative).\n"
+        "2. **Quality score sets weights**: the *willing / able / durable to pay* quality "
+        "framework carries over; higher score → higher weight.\n"
+        "3. **Return-source structure anchored**: rate-premium bucket ~55% : non-rate "
+        "~45%. First principles — high-dividend return is fundamentally a **rate risk "
+        "premium**: banks earn the credit spread, utilities (gas / power) earn duration "
+        "discounting; the non-rate bucket (consumer / energy / transport / gaming / "
+        "healthcare) pays out of its own cash flow, hedging the book's rate sensitivity.\n"
+        "4. **Concentration limit**: single name ≤10%, sectors reasonably diversified.\n\n"
+        "**Yield basis** — yields shown are the annualized run-rate at build (as of "
+        "2026-06-11).\n\n"
+        "**Benchmark** — 3466.HK (Hang Seng High Dividend 30 ETF), with the Hang Seng "
+        "Index shown as a broad-market reference; same as v1."
     ),
 }

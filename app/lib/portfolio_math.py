@@ -19,6 +19,11 @@ Two equal-weight conventions, both indexed to 100 at inception:
 The two differ whenever constituents diverge within a period: buy & hold lets
 winners compound their weight; periodic rebalancing trims winners back to equal
 at each reset. See test_strategy.py for the hand-verified divergence case.
+
+Weighted variants (HD v2 standard build, 2026-06-11): weighted_buy_hold_portfolio
+/ weighted_rebalanced_portfolio take published target weights + an idle-cash
+sleeve (cash return = 0, conservative). Same dual-track semantics; the reset
+book is the published weights instead of equal weight.
 """
 
 from __future__ import annotations
@@ -48,6 +53,106 @@ def buy_hold_portfolio(normed: pd.DataFrame) -> pd.Series:
     if normed.empty:
         return pd.Series(dtype=float)
     return normed.mean(axis=1, skipna=True)
+
+
+def _align_weights(
+    cols: pd.Index, weights: pd.Series, cash_weight: float
+) -> tuple[pd.Series, float]:
+    """Align target weights to `cols` and normalize (Σstock + cash = 1).
+
+    Tickers in `weights` ABSENT from `cols` (price fetch failed entirely)
+    fold their weight into the cash sleeve — same conservative convention as
+    NaN-at-inception — instead of being renormalized away (which would
+    silently upweight the surviving names). Tickers in `cols` without a
+    weight get 0. Normalizing by the grand total absorbs publication
+    rounding (e.g. the HD v2 book publishes 88.01 + 12 cash) so the curve
+    starts at exactly 100 without touching relative weights.
+    """
+    w_all = weights.astype(float)
+    w = w_all.reindex(cols).fillna(0.0)
+    absent_mass = float(w_all.sum()) - float(w.sum())
+    total = float(w_all.sum()) + float(cash_weight)
+    if total <= 0:
+        return w * 0.0, 0.0
+    return w / total, (float(cash_weight) + absent_mass) / total
+
+
+def weighted_buy_hold_portfolio(
+    normed: pd.DataFrame, weights: pd.Series, cash_weight: float = 0.0
+) -> pd.Series:
+    """Custom-weight-at-inception, buy & hold, with an idle-cash sleeve.
+
+    value_t = Σ wᵢ · normedᵢ(t) + w_cash · 100 — initial weights set the $
+    allocation at inception and then DRIFT with price (the Σw·normed form is
+    the drift; no resets). Cash earns 0 (conservative book convention), i.e.
+    its indexed sleeve is pinned at 100.
+
+    `weights` are decimal fractions per ticker (0.0641 = 6.41%); together with
+    `cash_weight` they are re-normalized to sum to 1 (rounding absorption).
+    A ticker that is NaN at inception (all-NaN normed column, see normalize())
+    was never bought — its weight FOLDS INTO CASH (flat), mirroring the
+    cash-earns-0 conservatism rather than silently upweighting survivors.
+    """
+    if normed.empty:
+        return pd.Series(dtype=float)
+    w, cash = _align_weights(normed.columns, weights, cash_weight)
+    dead = normed.iloc[0].isna()
+    cash += float(w[dead].sum())
+    w = w.where(~dead, 0.0)
+    live = normed.ffill()  # defensive: post-inception gaps carry last value
+    return live.mul(w, axis=1).sum(axis=1, skipna=True) + cash * 100.0
+
+
+def weighted_rebalanced_portfolio(
+    sub: pd.DataFrame, weights: pd.Series, cash_weight: float = 0.0,
+    freq: str = "M",
+) -> pd.Series:
+    """Reset to TARGET weights every `freq` period; cash sleeve flat (×1 daily).
+
+    Same chain-linked-daily-returns algorithm as rebalanced_portfolio (period
+    boundary reset effective next trading day, intra-period drift, gap return
+    preserved) — only the reset book differs: equal weight → published target
+    weights + cash. At each reset, tickers not priced at the prior close fold
+    their target weight into cash, consistent with the buy & hold convention.
+
+    The cash sleeve participates in drift: contrib_cash = w_cash × 1.0 each
+    day, so cash weight shrinks when stocks rally and cushions drawdowns —
+    exactly the published 88/12 book semantics.
+    """
+    if sub.empty:
+        return pd.Series(dtype=float)
+    sub = sub.sort_index()
+    cols = sub.columns
+    periods = sub.index.to_period(freq)
+    rets = sub.pct_change()  # row 0 is NaN
+    w_target, cash_target = _align_weights(cols, weights, cash_weight)
+
+    def _book(price_row: pd.Series) -> tuple[pd.Series, float]:
+        dead = ~(price_row.notna() & (price_row != 0))
+        w = w_target.where(~dead, 0.0)
+        return w, cash_target + float(w_target[dead].sum())
+
+    value = 100.0
+    w, w_cash = _book(sub.iloc[0])  # inception book
+    values = [value]
+
+    for i in range(1, len(sub)):
+        if periods[i] != periods[i - 1]:
+            # new period → rebalance to target over the prior close's book
+            w, w_cash = _book(sub.iloc[i - 1])
+        r = rets.iloc[i]
+        # missing return (halt) → that sleeve is flat (×1); cash always ×1
+        contrib = w * (1 + r).where(r.notna(), 1.0)
+        total = contrib.sum() + w_cash
+        if total <= 0 or pd.isna(total):
+            values.append(value)  # degenerate day → carry flat
+            continue
+        value = value * float(total)
+        w = contrib / total  # drift
+        w_cash = w_cash / total
+        values.append(value)
+
+    return pd.Series(values, index=sub.index)
 
 
 def rebalanced_portfolio(sub: pd.DataFrame, freq: str = "M") -> pd.Series:

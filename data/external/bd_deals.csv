@@ -1,100 +1,114 @@
-licensor,licensee,asset,moa,ta,phase,region,upfront_musd,milestone_musd,total_musd,date,year,source_url,subtype
-石药集团,阿斯利康,Metabolic / obesity & T2,—,Cardiovascular/Metabolic,—,—,1200.0,17300.0,18500.0,2026-01,2026,https://www.biopharmadive.com/news/astrazeneca-obesity-deal-china-cspc-ai/810942/,BD-collaboration
-恒瑞医药,GSK,HRS-9821,PDE3/4抑制剂,慢阻塞肺病/肿瘤,Ⅰ期,全球,500.0,12000.0,12500.0,2025-07,2025,,BD
-信达生物,武田制药,IBI363/343/301,PD-1 x IL-2α-bias/ CLDN18.2 双抗等,肿瘤,Ⅱ/Ⅲ期,全球（除中国）,1200.0,10200.0,11400.0,2025-10,2025,,BD
-BioNTech,百时美施贵宝,BNT327,PD-L1 × VEGF-A 双抗,肿瘤,Ⅲ期,全球,1500.0,9600.0,11100.0,2025-06,2025,,BD
-信达生物,辉瑞,Oncology (12 early-stage,—,Oncology,—,—,650.0,9850.0,10500.0,2026-05,2026,https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-innovent-biologics-enter-global-strategic,BD-collaboration
-信达生物,礼来,Oncology + immunology (j,—,Oncology,—,—,350.0,8500.0,8850.0,2026-02,2026,https://www.prnewswire.com/news-releases/innovent-announces-strategic-collaboration-with-lilly-to-develop-new-medicines-globally-in-oncology-and-immunology-302682009.html,BD-collaboration
-三生制药,辉瑞,SSGJ-707,PD-1 × VEGF 双抗,肿瘤,Ⅰ/Ⅱ期,全球（除中国，含中国期权）,1250.0,4800.0,6050.0,2025-05,2025,,BD
-晶泰科技,DoveTree,AI药物发现平台,AI制药,IO/CNS,临床前,全球,51.0,5939.0,5990.0,2025-06,2025,,BD
-Monte Rosa Therapeutics,Novartis,分子胶降解剂药物,未公开,免疫介导疾病,临床前,全球,120.0,5580.0,5700.0,2025-09,2025,,BD
-荣昌生物,艾伯维,Oncology (advanced solid,—,Oncology,—,—,650.0,4950.0,5600.0,2026-01,2026,https://news.abbvie.com/2026-01-12-AbbVie-and-RemeGen-Announce-Exclusive-Licensing-Agreement-to-Develop-A-Novel-Bispecific-Antibody-for-Advanced-Solid-Tumors,BD-license
-舶望制药,Novartis,ANGPTL3,RNA疗法,代谢/CVD,Ⅱ期,全球（除中国）,160.0,5200.0,5360.0,2025-09,2025,,BD
-石药集团,AstraZeneca,AI药物发现平台,AI制药,自免疾病,临床前,全球,110.0,5220.0,5330.0,2025-06,2025,,BD
-Zealand,罗氏,Petrelintide,胰淀素类似物,代谢,Ⅱb期,全球,1650.0,3600.0,5300.0,2025-03,2025,,BD
-和铂医药,阿斯利康,未披露（战略合作）,未披露,肿瘤 / 自免,未披露,全球（除大中华区）,,4400.0,4680.0,2025-03,2025,,BD
-荣昌生物,Vor BioPharma,泰它西普,Taci-Fc融合蛋白,自免疾病,批准上市,全球（除大中华区）,45.0,4105.0,4230.0,2025-06,2025,,BD
-Syneron,阿斯利康,未披露 + Synova 技术平台,口服大环肽,自免,未披露,全球,75.0,3400.0,3475.0,2025-03,2025,,BD
-英矽智能 Insilico Medicine,礼来,AI drug discovery (oral ,—,Other,—,—,115.0,2635.0,2750.0,2026-03,2026,https://www.biopharmadive.com/news/eli-lilly-insilico-ai-medicine-drug-discovery/816088/,BD-license
-ABL Bio,GSK,Grabody-B 技术平台,IGF1R 靶向血脑屏障穿透,中枢神经,临床前,全球,49.0,2652.0,2701.0,2025-04,2025,,BD
-Earendil Labs,赛诺菲,HXN-1003,—,Immunology,—,—,160.0,2400.0,2560.0,2026-01,2026,https://www.prnewswire.com/news-releases/earendil-labs-announces-strategic-collaboration-with-sanofi-to-discover-bispecific-antibodies-for-autoimmune-diseases-302652305.html,BD-collaboration
-先为达生物,Verdiva Bio,Ecnoglutide Oral,Amylin类似物/GLP-1,肥胖/2型糖尿病,Ⅰ期,全球（除大中华区，韩国）,70.0,2400.0,2470.0,2025-01,2025,,BD
-Gubra,艾伯维,GUB014295,Amylin类似物,肥胖/2型糖尿病,Ⅰ期,全球,350.0,1875.0,2225.0,2025-03,2025,,BD
-Arrowhead Pharmaceuticals,诺华,ARO-SNCA,RNA疗法,神经退行性疾病,临床前,全球,200.0,2000.0,2200.0,2025-09,2025,,BD
-Septerna,诺和诺德,多款口服小分子,GPCR 发现平台,代谢,先导筛选,全球,200.0,2000.0,2200.0,2025-05,2025,,BD
-Quotient Therapeutics,默克,Immunology / inflammator,—,Immunology,—,—,20.0,2180.0,2200.0,2026-03,2026,https://quotient-tx.com/news/quotient-therapeutics-announces-collaboration-with-merck-to-discover-novel-drug-targets-in-inflammatory-bowel-disease-using-somatic-genomics-platform-technology,BD-collaboration
-Xilio,艾伯维,未披露 + 技术平台,T 细胞接合剂 (TCEs),肿瘤,临床前,全球,52.0,2100.0,2142.0,2025-02,2025,,BD
-Arbor Biotechnology,Chiesi,ABO-101,NAGLU基因疗法,罕见病,I/II期临床,全球,115.0,2000.0,2115.0,2025-10,2025,,BD
-Vivtex Corporation,诺和诺德,Oral biologics for obesi,—,Cardiovascular/Metabolic,—,—,,,2100.0,2026-02,2026,https://www.novonordisk.com/content/nncorp/global/en/news-and-media/news-and-ir-materials/news-details.html?id=916506,BD-license
-Omeros,诺和诺德,zaltenibart,MASP-3 inhibitor,罕见血液/肾脏疾病,III期临床,全球,340.0,,2100.0,2025-10,2025,,BD
-诺诚健华,Zenas BioPharma,Orelabrutinib,BTK inhibitor,多发性硬化症,Phase 3,全球（大中华区和东南亚以外）,35.0,,2095.0,2025-10,2025,,BD
-石药集团,Madrigal Pharmaceutical,SYH2086,GLP-1R激动剂,肥胖,临床前,全球（除中国）,120.0,1955.0,2075.0,2025-07,2025,,BD
-Enlaza Therapeutics,Vertex Pharmaceutical,War-Lock 技术平台,抗体,自免疾病,临床前,全球,45.0,2000.0,2045.0,2025-09,2025,,BD
-Insitro,Bristol-Myers Squibb,ChemML™平台,AI制药,肌萎缩侧索硬化症,临床前,全球,20.0,2000.0,2020.0,2025-10,2025,,BD
-翰森制药,再生元,HS-20094,GLP-1 / GIP 双激动剂,代谢 / 肥胖,Ⅲ期,全球（除中国）,80.0,1930.0,2010.0,2025-06,2025,,BD
-Skyhawk Therapeutics,默克KGaA Merck KGaA,SkySTAR 平台,RNA靶点小分子药物,神经系统疾病,临床前,全球,,,2000.0,2025-08,2025,,BD
-Orionis Bio,基因泰克 / 罗氏,小分子“胶合剂”,Allo-Glue™,肿瘤,临床前,全球,105.0,,2000.0,2025-05,2025,,BD
-联邦制药,诺和诺德,UBT251,合成肽 (GLP-1/GIP/胰高血糖素),代谢,Ⅰ期,全球（除大中华区）,200.0,1800.0,2000.0,2025-03,2025,,BD
-恒瑞医药,默沙东,HRS-5346,Lp(a) 抑制剂,代谢,Ⅱ期,全球（除大中华区）,200.0,1770.0,1970.0,2025-03,2025,,BD
-Repertoire Immune Medicines,礼来,Immunology (T-cell toler,—,Immunology,—,—,85.0,1840.0,1925.0,2026-01,2026,https://www.prnewswire.com/news-releases/repertoire-immune-medicines-announces-strategic-collaboration-with-lilly-to-develop-tolerizing-therapies-for-autoimmune-diseases-302673203.html,BD-collaboration
-Ichnos Glenmark Innovation,艾伯维,ISB 2001,anti-BCMA/CD38/CD3三特异性抗体,多发性骨髓瘤,Ⅰ期,北美，欧洲，日本，大中华区,700.0,1225.0,1925.0,2025-07,2025,,BD
-Earendil,赛诺菲,HXN-1002 & HXN-100,TL1A×α4β7 & TL1A×IL-23 双抗,自免,临床前,全球,125.0,1720.0,1845.0,2025-04,2025,,BD
-Unnatural Products,诺华,Cardiovascular (AI-guide,—,Cardiovascular/Metabolic,—,—,100.0,1700.0,1800.0,2026-02,2026,https://www.globenewswire.com/news-release/2026/02/18/3240126/0/en/Unnatural-Products-Announces-Licensing-Agreement-with-Novartis-to-Develop-Macrocyclic-Peptide-Therapeutics.html,BD-collaboration
-Leo Pharma,吉利德,STAT6 组合,STAT6 蛋白降解剂,自免,临床前,全球,250.0,1450.0,1700.0,2025-01,2025,,BD
-SciNeuro Pharmaceuticals,诺华,Neuroscience (Alzheimer',—,CNS/Neurology,—,—,165.0,1500.0,1665.0,2026-01,2026,https://www.prnewswire.com/news-releases/scineuro-and-novartis-enter-into-a-licensing-and-collaboration-agreement-for-next-generation-therapeutics-to-treat-alzheimers-disease-302658400.html,BD-license
-普瑞金,Kite Pharma,Car-T,体内原位编辑疗法,肿瘤/自免,临床前,全球,120.0,1520.0,1640.0,2025-10,2025,,BD
-信诺维,Astellas Pharma,XNW27011,anti-CLDN18.2抗体偶联药物,实体瘤,Ⅰ/Ⅱ期,全球（除大中华区）,130.0,1340.0,1540.0,2025-05,2025,,BD
-瀚森制药,罗氏,CDH17,anti-CDH17抗体偶联药物,实体瘤,Ⅰ期,全球（除大中华区）,80.0,1450.0,1530.0,2025-10,2025,,BD
-SanegeneBio,罗氏,RNAi / siRNA platform (u,—,Gene/Cell Therapy,—,—,200.0,1300.0,1500.0,2026-02,2026,https://www.prnewswire.com/news-releases/sanegenebio-announces-rnai-global-licensing-collaboration-with-genentech-302676224.html,BD-license
-Kestrel Therapeutics,艾伯维,Oncology (KRAS-mutant so,—,Oncology,—,—,,,1450.0,2026-04,2026,https://www.biospace.com/business/abbvie-sinks-talons-into-kras-with-right-to-buy-kestrel-for-up-to-1-45b,BD-option
-Sangamo,礼来,STAC-BBB 技术,专有 AAV 血脑屏障载体,中枢神经,临床前,全球,18.0,1400.0,1418.0,2025-04,2025,,BD
-Philochem AG,RayzeBio,OncoACP3,ACP3 靶向放射配体,前列腺癌,IND 递交,全球,350.0,1000.0,1350.0,2025-06,2025,,BD
-Evopoint Bio,阿斯泰拉斯,XNW27011,CLDN18.2 ADC,肿瘤,Ⅰ/Ⅱ期,全球,130.0,1210.0,1340.0,2025-05,2025,,BD
-Nimbus Therapeutics,礼来,Metabolic/obesity (oral ,—,Cardiovascular/Metabolic,—,—,55.0,1245.0,1300.0,2026-01,2026,https://www.businesswire.com/news/home/20260106883316/en/Nimbus-Therapeutics-Announces-Research-Collaboration-and-License-Agreement-with-Lilly-for-Novel-Oral-Obesity-Treatment,BD-license
-Rznomics,礼来,未披露（听力损失靶点）,转剪接核酶 RNA 编辑平台,遗传病,临床前,全球,,1300.0,1300.0,2025-05,2025,,BD
-Superluminal Medicines,礼来,GPCR靶点小分子疗法,未披露,代谢，肥胖,临床前,全球,,,1300.0,2025-08,2025,,BD
-Kumquat Biosciences,拜耳,KRAS G12D,KRAS G12D抑制剂,癌症,申报临床,全球,,,1300.0,2025-08,2025,,BD
-Magnet Bio,礼来,未披露 + 技术平台,分子胶,肿瘤,临床前,全球,40.0,1250.0,1290.0,2025-02,2025,,BD
-石药集团,Radiance Bio,SYS6005,ROR1 ADC,肿瘤,临床前,美/加/澳/部分欧盟,15.0,1225.0,1240.0,2025-02,2025,,BD
-乐普生物,ArriVent,MRG007,未披露 ADC,肿瘤,临床前,全球（除大中华区）,47.0,1160.0,1207.0,2025-01,2025,,BD
-Duality,Avenzo,AVZO-1418/DB-1418,EGFR×HER3 ADC,肿瘤,临床前,全球（除大中华区）,50.0,1150.0,1200.0,2025-01,2025,,BD
-科弈药业,Radiance,KY-0301,纳米双抗ADC,肿瘤,Ⅰ/Ⅱ期,全球,15.0,1150.0,1165.0,2025-08,2025,,BD
-Seamless Therapeutics,礼来,Genetic medicine (progra,—,Gene/Cell Therapy,—,—,,,1120.0,2026-01,2026,https://www.globenewswire.com/news-release/2026/01/28/3227440/0/en/Seamless-Therapeutics-Announces-Global-Research-Collaboration-with-Lilly-to-Develop-Programmable-Recombinase-based-Therapeutics-for-Hearing-Loss.html,BD-collaboration
-恒瑞医药,Glenmark Specialty,瑞康曲妥珠单抗,anti-HER2抗体偶联药物,肿瘤,批准上市,全球（除大中华/美国/加拿大/欧洲等地区）,18.0,1093.0,1111.0,2025-09,2025,,BD
-恒瑞医药,Braveheart,HRS-1893,myosin抑制剂,肥厚型心肌病 HCM,III期临床,全球（除大中华区）,65.0,1023.0,1088.0,2025-09,2025,,BD
-Rani Therapeutics,中外制药,RaniPill®技术平台,罕见病抗体,罕见病,未披露,全球,10.0,1075.0,1085.0,2025-10,2025,,BD
-信达生物,罗氏,IBI3009,DLL3 ADC,肿瘤,IND/Ⅰ期,全球,80.0,1000.0,1080.0,2025-01,2025,,BD
-荃信生物,Roche,"IL-33, TSLP",anti-IL-33/TSLP双特异性抗体,呼吸系统疾病,临床前,全球,75.0,995.0,1070.0,2025-10,2025,,BD
-石药集团,Cipla,伊立替康,喜树碱;Top I抑制剂,肿瘤,批准上市,美国,15.0,1050.0,1065.0,2025-05,2025,,BD
-Vanqua Bio,Biogen,C5aR1,C5aR1拮抗剂,炎症,临床前,全球,70.0,990.0,1060.0,2025-10,2025,,BD
-City Therapeutics,渤健,未披露（单一 CNS 靶点）,CityRNA™ 新一代 RNAi,神经科,发现阶段,全球,46.0,1000.0,1046.0,2025-05,2025,,BD
-民为生物,Sidera Bio,FGF21; GLP-1,FGF21/GLP-1/GIP- Fc融合蛋白,代谢/肥胖,Ⅱ期临床,全球（除大中华区）,35.0,1010.0,1045.0,2025-10,2025,,BD
-Oxford Bio,罗氏,未披露 + OGAP-Verify 发现平台,未披露（免疫肿瘤 & ADC）,肿瘤,IND,全球,36.0,1000.0,1036.0,2025-03,2025,,BD
-Saniona,Jazz Pharmaceutical,SAN2355,Kv7.3激活剂;Kv7.2激活剂,癫痫 Epilepsy,临床前,全球,42.5,992.5,1035.0,2025-08,2025,,BD
-Light Horse,诺华,多个候选,未披露,肿瘤,临床前,全球,25.0,1000.0,1025.0,2025-01,2025,,BD
-C4 Therapeutics,罗氏,Oncology — degrader-anti,—,Oncology,—,—,20.0,1000.0,1020.0,2026-04,2026,https://www.sec.gov/Archives/edgar/data/1662579/000162828026024336/cccc-20260409xexx991.htm,BD-collaboration
-Creyon Bio,礼来,未披露,RNA-Oligo,罕见病,临床前,全球,13.0,1000.0,1013.0,2025-04,2025,,BD
-前沿生物,GSK,siRNA for inflammation-d,—,Immunology,—,—,40.0,963.0,1003.0,2026-02,2026,https://www.prnewswire.com/news-releases/frontier-biotech-and-gsk-enter-global-exclusive-licensing-agreement-for-small-interfering-rna-therapeutics-302695609.html,BD-license
-迈威生物,Kalexo Bio,2MW7141,siRNA疗法,血脂调控,临床前,全球,12.0,,1000.0,2025-09,2025,,BD
-Nabla Bio,Takeda Pharmaceutical,AI蛋白质疗法设计,抗体,未知,临床前,全球,,,1000.0,2025-10,2025,,BD
-Lexicon Pharmaceuticals,诺和诺德,LX9851,ACSL5抑制剂,肥胖,临床前,全球,75.0,925.0,1000.0,2025-03,2025,,BD
-Matchpoint Therapeutics,诺华,未披露,抑制剂,炎症(未指明),临床前,全球,60.0,940.0,1000.0,2025-07,2025,,BD
-Modex Therapeutics,Regeneron Pharmaceuticals,MSTAR平台,多特异性抗体,免疫/肿瘤/代谢,临床前,全球,7.0,,1000.0,2025-10,2025,,BD
-Infinimmune,默克,Immunology / autoimmune ,—,Immunology,—,—,,,838.0,2026-03,2026,https://www.businesswire.com/news/home/20260331613246/en/Infinimmune-Enters-Collaboration-with-Merck-to-Discover-Novel-Human-Antibody-Therapeutics,BD-collaboration
-海思科,艾伯维,Pain / non-opioid analge,—,CNS/Neurology,—,—,30.0,715.0,745.0,2026-04,2026,https://www.prnewswire.com/news-releases/haisco-enters-into-exclusive-license-agreement-with-abbvie-to-develop-novel-medicines-for-pain-302740226.html,BD-license
-Orna,Vertex,技术平台,LNP 递送,罕见病,临床前,全球,65.0,635.0,700.0,2025-01,2025,,BD
-GSK,Alfasigma,Rare liver disease — PBC,—,Rare Disease,—,—,300.0,390.0,690.0,2026-03,2026,https://www.gsk.com/en-gb/media/press-releases/gsk-and-alfasigma-announce-agreement/,BD-rights
-DISCO Pharmaceuticals,安进,Oncology (cancer surface,—,Oncology,—,—,,,618.0,2026-01,2026,https://www.globenewswire.com/news-release/2026/01/07/3214315/0/en/DISCO-Pharmaceuticals-Enters-License-Agreement-to-Advance-Novel-Cancer-Surfaceome-Targeted-Therapies.html,BD-license
-Halozyme Therapeutics,GSK,Oncology — subcutaneous ,—,Oncology,—,—,30.0,580.0,610.0,2026-05,2026,https://www.prnewswire.com/news-releases/halozyme-announces-global-collaboration-and-license-agreement-with-gsk-to-develop-subcutaneous-formulations-of-multiple-promising-oncology-targets-302765632.html,BD-license
-Evaxion Biotech,默克,EVX-B 2/3,疫苗,传染病/细菌感染,临床前,全球,7.5,1184.0,600.0,2025-09,2025,,BD
-MediLink Therapeutics,罗氏,Oncology — B7H3 ADC (sol,—,Oncology,—,—,570.0,,570.0,2026-01,2026,https://www.prnewswire.com/news-releases/medilink-has-signed-an-additional-exclusive-licensing-agreement-with-roche-302656495.html,BD-license
-Novavax,辉瑞,Vaccines / infectious di,—,Vaccines,—,—,30.0,500.0,530.0,2026-01,2026,https://ir.novavax.com/press-releases/2026-01-20-Novavax-Announces-Entering-into-a-License-Agreement-with-Pfizer,BD-license
-Pinetree Therapeutics,阿斯利康,Oncology (EGFR-driven tu,—,Oncology,—,—,25.0,475.0,500.0,2026-04,2026,https://www.prnewswire.com/news-releases/pinetree-therapeutics-announces-exercise-of-option-to-license-egfr-degrader-program-by-astrazeneca-302754627.html,BD-option
-Sciwind Biosciences,辉瑞,Metabolic / obesity & T2,—,Cardiovascular/Metabolic,—,—,,,495.0,2026-02,2026,https://www.prnewswire.com/news-releases/sciwind-biosciences-partners-with-pfizer-china-to-commercialize-its-biased-glp-1-in-china-302695339.html,BD-rights
-Structure Therapeutics,罗氏,Obesity / metabolic — GL,—,Cardiovascular/Metabolic,—,—,100.0,0.0,100.0,2026-01,2026,https://www.sec.gov/Archives/edgar/data/1888886/000110465926043425/tm2611763d1_ex99-1.htm,BD-license
-Zonsen PepLib Biotech,诺华,Oncology / radioligand t,—,Oncology,—,—,50.0,,50.0,2026-01,2026,https://www.businesswire.com/news/home/20260112577341/en/Zonsen-PepLib-Biotech-and-Novartis-Sign-Worldwide-License-Agreement-regarding-Radioligand-Therapy-Asset,BD-license
-Helix,GSK,Precision medicine / hum,—,Gene/Cell Therapy,—,—,,,0.0,2026-01,2026,https://www.prnewswire.com/news-releases/helix-announces-multi-year-strategic-collaboration-with-gsk-to-drive-precision-medicine-development-302654760.html,BD-collaboration
-Forge Genetics,艾伯维,Platform / gene editing ,—,Gene/Cell Therapy,—,—,,,0.0,2026-03,2026,https://www.thebusinessdesk.com/eastmidlands/news/2108205-nottingham-biotech-lands-licensing-deal-with-pharma-giant-abbvie,BD-license
-Nosis Bio,强生,Neurology (+ one undiscl,—,CNS/Neurology,—,—,,,0.0,2026-03,2026,https://www.nosisbio.com/news/nosis-bio-enters-into-strategic-collaboration-with-johnson-johnson,BD-collaboration
-Medicines Patent Pool,罗氏,Antiviral / influenza — ,—,Gene/Cell Therapy,—,—,,,0.0,2026-05,2026,https://medicinespatentpool.org/news-publications-post/mpp-and-roche-sign-licence-agreement-to-expand-access-to-influenza-treatment-in-low-and-middle-income-countries,BD-license
-OpenAI,诺和诺德,Enterprise AI / drug-dis,—,Other,—,—,,,0.0,2026-04,2026,https://www.biospace.com/press-releases/novo-nordisk-and-openai-partner-to-transform-how-medicines-are-discovered-and-delivered,other
+licensor,licensee,asset,moa,ta,phase,region,upfront_musd,milestone_musd,total_musd,date,year,source_url,subtype,structure
+石药集团,阿斯利康,Metabolic / obesity & T2,—,Cardiovascular/Metabolic,—,—,1200.0,17300.0,18500.0,2026-01,2026,https://www.biopharmadive.com/news/astrazeneca-obesity-deal-china-cspc-ai/810942/,BD-collaboration,License-out
+恒瑞医药,GSK,HRS-9821,PDE3/4抑制剂,慢阻塞肺病/肿瘤,Ⅰ期,全球,500.0,12000.0,12500.0,2025-07,2025,,BD,License-out
+信达生物,武田制药,IBI363/343/301,PD-1 x IL-2α-bias/ CLDN18.2 双抗等,肿瘤,Ⅱ/Ⅲ期,全球（除中国）,1200.0,10200.0,11400.0,2025-10,2025,,BD,Co-Co
+BioNTech,百时美施贵宝,BNT327,PD-L1 × VEGF-A 双抗,肿瘤,Ⅲ期,全球,1500.0,9600.0,11100.0,2025-06,2025,,BD,License-out
+信达生物,辉瑞,Oncology (12 early-stage,—,Oncology,—,—,650.0,9850.0,10500.0,2026-05,2026,https://www.pfizer.com/news/press-release/press-release-detail/pfizer-and-innovent-biologics-enter-global-strategic,BD-collaboration,Co-Co
+信达生物,礼来,Oncology + immunology (j,—,Oncology,—,—,350.0,8500.0,8850.0,2026-02,2026,https://www.prnewswire.com/news-releases/innovent-announces-strategic-collaboration-with-lilly-to-develop-new-medicines-globally-in-oncology-and-immunology-302682009.html,BD-collaboration,License-out
+三生制药,辉瑞,SSGJ-707,PD-1 × VEGF 双抗,肿瘤,Ⅰ/Ⅱ期,全球（除中国，含中国期权）,1250.0,4800.0,6050.0,2025-05,2025,,BD,License-out
+晶泰科技,DoveTree,AI药物发现平台,AI制药,IO/CNS,临床前,全球,51.0,5939.0,5990.0,2025-06,2025,,BD,License-out
+Monte Rosa Therapeutics,Novartis,分子胶降解剂药物,未公开,免疫介导疾病,临床前,全球,120.0,5580.0,5700.0,2025-09,2025,,BD,License-out
+荣昌生物,艾伯维,Oncology (advanced solid,—,Oncology,—,—,650.0,4950.0,5600.0,2026-01,2026,https://news.abbvie.com/2026-01-12-AbbVie-and-RemeGen-Announce-Exclusive-Licensing-Agreement-to-Develop-A-Novel-Bispecific-Antibody-for-Advanced-Solid-Tumors,BD-license,License-out
+舶望制药,Novartis,ANGPTL3,RNA疗法,代谢/CVD,Ⅱ期,全球（除中国）,160.0,5200.0,5360.0,2025-09,2025,,BD,License-out
+石药集团,AstraZeneca,AI药物发现平台,AI制药,自免疾病,临床前,全球,110.0,5220.0,5330.0,2025-06,2025,,BD,License-out
+Zealand,罗氏,Petrelintide,胰淀素类似物,代谢,Ⅱb期,全球,1650.0,3600.0,5300.0,2025-03,2025,,BD,License-out
+和铂医药,阿斯利康,未披露（战略合作）,未披露,肿瘤 / 自免,未披露,全球（除大中华区）,,4400.0,4680.0,2025-03,2025,,BD,License-out
+荣昌生物,Vor BioPharma,泰它西普,Taci-Fc融合蛋白,自免疾病,批准上市,全球（除大中华区）,45.0,4105.0,4230.0,2025-06,2025,,BD,NewCo
+Syneron,阿斯利康,未披露 + Synova 技术平台,口服大环肽,自免,未披露,全球,75.0,3400.0,3475.0,2025-03,2025,,BD,License-out
+英矽智能 Insilico Medicine,礼来,AI drug discovery (oral ,—,Other,—,—,115.0,2635.0,2750.0,2026-03,2026,https://www.biopharmadive.com/news/eli-lilly-insilico-ai-medicine-drug-discovery/816088/,BD-license,License-out
+ABL Bio,GSK,Grabody-B 技术平台,IGF1R 靶向血脑屏障穿透,中枢神经,临床前,全球,49.0,2652.0,2701.0,2025-04,2025,,BD,License-out
+Earendil Labs,赛诺菲,HXN-1003,—,Immunology,—,—,160.0,2400.0,2560.0,2026-01,2026,https://www.prnewswire.com/news-releases/earendil-labs-announces-strategic-collaboration-with-sanofi-to-discover-bispecific-antibodies-for-autoimmune-diseases-302652305.html,BD-collaboration,License-out
+先为达生物,Verdiva Bio,Ecnoglutide Oral,Amylin类似物/GLP-1,肥胖/2型糖尿病,Ⅰ期,全球（除大中华区，韩国）,70.0,2400.0,2470.0,2025-01,2025,,BD,NewCo
+Gubra,艾伯维,GUB014295,Amylin类似物,肥胖/2型糖尿病,Ⅰ期,全球,350.0,1875.0,2225.0,2025-03,2025,,BD,License-out
+Arrowhead Pharmaceuticals,诺华,ARO-SNCA,RNA疗法,神经退行性疾病,临床前,全球,200.0,2000.0,2200.0,2025-09,2025,,BD,License-out
+Septerna,诺和诺德,多款口服小分子,GPCR 发现平台,代谢,先导筛选,全球,200.0,2000.0,2200.0,2025-05,2025,,BD,License-out
+Quotient Therapeutics,默克,Immunology / inflammator,—,Immunology,—,—,20.0,2180.0,2200.0,2026-03,2026,https://quotient-tx.com/news/quotient-therapeutics-announces-collaboration-with-merck-to-discover-novel-drug-targets-in-inflammatory-bowel-disease-using-somatic-genomics-platform-technology,BD-collaboration,License-out
+Xilio,艾伯维,未披露 + 技术平台,T 细胞接合剂 (TCEs),肿瘤,临床前,全球,52.0,2100.0,2142.0,2025-02,2025,,BD,License-out
+Arbor Biotechnology,Chiesi,ABO-101,NAGLU基因疗法,罕见病,I/II期临床,全球,115.0,2000.0,2115.0,2025-10,2025,,BD,License-out
+Vivtex Corporation,诺和诺德,Oral biologics for obesi,—,Cardiovascular/Metabolic,—,—,,,2100.0,2026-02,2026,https://www.novonordisk.com/content/nncorp/global/en/news-and-media/news-and-ir-materials/news-details.html?id=916506,BD-license,License-out
+Omeros,诺和诺德,zaltenibart,MASP-3 inhibitor,罕见血液/肾脏疾病,III期临床,全球,340.0,,2100.0,2025-10,2025,,BD,License-out
+诺诚健华,Zenas BioPharma,Orelabrutinib,BTK inhibitor,多发性硬化症,Phase 3,全球（大中华区和东南亚以外）,35.0,,2095.0,2025-10,2025,,BD,NewCo
+石药集团,Madrigal Pharmaceutical,SYH2086,GLP-1R激动剂,肥胖,临床前,全球（除中国）,120.0,1955.0,2075.0,2025-07,2025,,BD,License-out
+Enlaza Therapeutics,Vertex Pharmaceutical,War-Lock 技术平台,抗体,自免疾病,临床前,全球,45.0,2000.0,2045.0,2025-09,2025,,BD,License-out
+Insitro,Bristol-Myers Squibb,ChemML™平台,AI制药,肌萎缩侧索硬化症,临床前,全球,20.0,2000.0,2020.0,2025-10,2025,,BD,License-out
+翰森制药,再生元,HS-20094,GLP-1 / GIP 双激动剂,代谢 / 肥胖,Ⅲ期,全球（除中国）,80.0,1930.0,2010.0,2025-06,2025,,BD,License-out
+Skyhawk Therapeutics,默克KGaA Merck KGaA,SkySTAR 平台,RNA靶点小分子药物,神经系统疾病,临床前,全球,,,2000.0,2025-08,2025,,BD,License-out
+Orionis Bio,基因泰克 / 罗氏,小分子“胶合剂”,Allo-Glue™,肿瘤,临床前,全球,105.0,,2000.0,2025-05,2025,,BD,License-out
+联邦制药,诺和诺德,UBT251,合成肽 (GLP-1/GIP/胰高血糖素),代谢,Ⅰ期,全球（除大中华区）,200.0,1800.0,2000.0,2025-03,2025,,BD,License-out
+恒瑞医药,默沙东,HRS-5346,Lp(a) 抑制剂,代谢,Ⅱ期,全球（除大中华区）,200.0,1770.0,1970.0,2025-03,2025,,BD,License-out
+Repertoire Immune Medicines,礼来,Immunology (T-cell toler,—,Immunology,—,—,85.0,1840.0,1925.0,2026-01,2026,https://www.prnewswire.com/news-releases/repertoire-immune-medicines-announces-strategic-collaboration-with-lilly-to-develop-tolerizing-therapies-for-autoimmune-diseases-302673203.html,BD-collaboration,License-out
+Ichnos Glenmark Innovation,艾伯维,ISB 2001,anti-BCMA/CD38/CD3三特异性抗体,多发性骨髓瘤,Ⅰ期,北美，欧洲，日本，大中华区,700.0,1225.0,1925.0,2025-07,2025,,BD,License-out
+Earendil,赛诺菲,HXN-1002 & HXN-100,TL1A×α4β7 & TL1A×IL-23 双抗,自免,临床前,全球,125.0,1720.0,1845.0,2025-04,2025,,BD,License-out
+Unnatural Products,诺华,Cardiovascular (AI-guide,—,Cardiovascular/Metabolic,—,—,100.0,1700.0,1800.0,2026-02,2026,https://www.globenewswire.com/news-release/2026/02/18/3240126/0/en/Unnatural-Products-Announces-Licensing-Agreement-with-Novartis-to-Develop-Macrocyclic-Peptide-Therapeutics.html,BD-collaboration,License-out
+Leo Pharma,吉利德,STAT6 组合,STAT6 蛋白降解剂,自免,临床前,全球,250.0,1450.0,1700.0,2025-01,2025,,BD,License-out
+SciNeuro Pharmaceuticals,诺华,Neuroscience (Alzheimer',—,CNS/Neurology,—,—,165.0,1500.0,1665.0,2026-01,2026,https://www.prnewswire.com/news-releases/scineuro-and-novartis-enter-into-a-licensing-and-collaboration-agreement-for-next-generation-therapeutics-to-treat-alzheimers-disease-302658400.html,BD-license,License-out
+普瑞金,Kite Pharma,Car-T,体内原位编辑疗法,肿瘤/自免,临床前,全球,120.0,1520.0,1640.0,2025-10,2025,,BD,License-out
+信诺维,Astellas Pharma,XNW27011,anti-CLDN18.2抗体偶联药物,实体瘤,Ⅰ/Ⅱ期,全球（除大中华区）,130.0,1340.0,1540.0,2025-05,2025,,BD,License-out
+瀚森制药,罗氏,CDH17,anti-CDH17抗体偶联药物,实体瘤,Ⅰ期,全球（除大中华区）,80.0,1450.0,1530.0,2025-10,2025,,BD,License-out
+SanegeneBio,罗氏,RNAi / siRNA platform (u,—,Gene/Cell Therapy,—,—,200.0,1300.0,1500.0,2026-02,2026,https://www.prnewswire.com/news-releases/sanegenebio-announces-rnai-global-licensing-collaboration-with-genentech-302676224.html,BD-license,License-out
+Kestrel Therapeutics,艾伯维,Oncology (KRAS-mutant so,—,Oncology,—,—,,,1450.0,2026-04,2026,https://www.biospace.com/business/abbvie-sinks-talons-into-kras-with-right-to-buy-kestrel-for-up-to-1-45b,BD-option,License-out
+Sangamo,礼来,STAC-BBB 技术,专有 AAV 血脑屏障载体,中枢神经,临床前,全球,18.0,1400.0,1418.0,2025-04,2025,,BD,License-out
+Philochem AG,RayzeBio,OncoACP3,ACP3 靶向放射配体,前列腺癌,IND 递交,全球,350.0,1000.0,1350.0,2025-06,2025,,BD,License-out
+Evopoint Bio,阿斯泰拉斯,XNW27011,CLDN18.2 ADC,肿瘤,Ⅰ/Ⅱ期,全球,130.0,1210.0,1340.0,2025-05,2025,,BD,License-out
+Nimbus Therapeutics,礼来,Metabolic/obesity (oral ,—,Cardiovascular/Metabolic,—,—,55.0,1245.0,1300.0,2026-01,2026,https://www.businesswire.com/news/home/20260106883316/en/Nimbus-Therapeutics-Announces-Research-Collaboration-and-License-Agreement-with-Lilly-for-Novel-Oral-Obesity-Treatment,BD-license,License-out
+Rznomics,礼来,未披露（听力损失靶点）,转剪接核酶 RNA 编辑平台,遗传病,临床前,全球,,1300.0,1300.0,2025-05,2025,,BD,License-out
+Superluminal Medicines,礼来,GPCR靶点小分子疗法,未披露,代谢，肥胖,临床前,全球,,,1300.0,2025-08,2025,,BD,License-out
+Kumquat Biosciences,拜耳,KRAS G12D,KRAS G12D抑制剂,癌症,申报临床,全球,,,1300.0,2025-08,2025,,BD,License-out
+Magnet Bio,礼来,未披露 + 技术平台,分子胶,肿瘤,临床前,全球,40.0,1250.0,1290.0,2025-02,2025,,BD,License-out
+石药集团,Radiance Bio,SYS6005,ROR1 ADC,肿瘤,临床前,美/加/澳/部分欧盟,15.0,1225.0,1240.0,2025-02,2025,,BD,NewCo
+乐普生物,ArriVent,MRG007,未披露 ADC,肿瘤,临床前,全球（除大中华区）,47.0,1160.0,1207.0,2025-01,2025,,BD,License-out
+Duality,Avenzo,AVZO-1418/DB-1418,EGFR×HER3 ADC,肿瘤,临床前,全球（除大中华区）,50.0,1150.0,1200.0,2025-01,2025,,BD,License-out
+科弈药业,Radiance,KY-0301,纳米双抗ADC,肿瘤,Ⅰ/Ⅱ期,全球,15.0,1150.0,1165.0,2025-08,2025,,BD,NewCo
+Seamless Therapeutics,礼来,Genetic medicine (progra,—,Gene/Cell Therapy,—,—,,,1120.0,2026-01,2026,https://www.globenewswire.com/news-release/2026/01/28/3227440/0/en/Seamless-Therapeutics-Announces-Global-Research-Collaboration-with-Lilly-to-Develop-Programmable-Recombinase-based-Therapeutics-for-Hearing-Loss.html,BD-collaboration,License-out
+恒瑞医药,Glenmark Specialty,瑞康曲妥珠单抗,anti-HER2抗体偶联药物,肿瘤,批准上市,全球（除大中华/美国/加拿大/欧洲等地区）,18.0,1093.0,1111.0,2025-09,2025,,BD,License-out
+恒瑞医药,Braveheart,HRS-1893,myosin抑制剂,肥厚型心肌病 HCM,III期临床,全球（除大中华区）,65.0,1023.0,1088.0,2025-09,2025,,BD,NewCo
+Rani Therapeutics,中外制药,RaniPill®技术平台,罕见病抗体,罕见病,未披露,全球,10.0,1075.0,1085.0,2025-10,2025,,BD,License-out
+信达生物,罗氏,IBI3009,DLL3 ADC,肿瘤,IND/Ⅰ期,全球,80.0,1000.0,1080.0,2025-01,2025,,BD,License-out
+荃信生物,Roche,"IL-33, TSLP",anti-IL-33/TSLP双特异性抗体,呼吸系统疾病,临床前,全球,75.0,995.0,1070.0,2025-10,2025,,BD,License-out
+石药集团,Cipla,伊立替康,喜树碱;Top I抑制剂,肿瘤,批准上市,美国,15.0,1050.0,1065.0,2025-05,2025,,BD,License-out
+Vanqua Bio,Biogen,C5aR1,C5aR1拮抗剂,炎症,临床前,全球,70.0,990.0,1060.0,2025-10,2025,,BD,License-out
+City Therapeutics,渤健,未披露（单一 CNS 靶点）,CityRNA™ 新一代 RNAi,神经科,发现阶段,全球,46.0,1000.0,1046.0,2025-05,2025,,BD,License-out
+民为生物,Sidera Bio,FGF21; GLP-1,FGF21/GLP-1/GIP- Fc融合蛋白,代谢/肥胖,Ⅱ期临床,全球（除大中华区）,35.0,1010.0,1045.0,2025-10,2025,,BD,NewCo
+Oxford Bio,罗氏,未披露 + OGAP-Verify 发现平台,未披露（免疫肿瘤 & ADC）,肿瘤,IND,全球,36.0,1000.0,1036.0,2025-03,2025,,BD,License-out
+Saniona,Jazz Pharmaceutical,SAN2355,Kv7.3激活剂;Kv7.2激活剂,癫痫 Epilepsy,临床前,全球,42.5,992.5,1035.0,2025-08,2025,,BD,License-out
+Light Horse,诺华,多个候选,未披露,肿瘤,临床前,全球,25.0,1000.0,1025.0,2025-01,2025,,BD,License-out
+C4 Therapeutics,罗氏,Oncology — degrader-anti,—,Oncology,—,—,20.0,1000.0,1020.0,2026-04,2026,https://www.sec.gov/Archives/edgar/data/1662579/000162828026024336/cccc-20260409xexx991.htm,BD-collaboration,License-out
+Creyon Bio,礼来,未披露,RNA-Oligo,罕见病,临床前,全球,13.0,1000.0,1013.0,2025-04,2025,,BD,License-out
+前沿生物,GSK,siRNA for inflammation-d,—,Immunology,—,—,40.0,963.0,1003.0,2026-02,2026,https://www.prnewswire.com/news-releases/frontier-biotech-and-gsk-enter-global-exclusive-licensing-agreement-for-small-interfering-rna-therapeutics-302695609.html,BD-license,License-out
+迈威生物,Kalexo Bio,2MW7141,siRNA疗法,血脂调控,临床前,全球,12.0,,1000.0,2025-09,2025,,BD,NewCo
+Nabla Bio,Takeda Pharmaceutical,AI蛋白质疗法设计,抗体,未知,临床前,全球,,,1000.0,2025-10,2025,,BD,License-out
+Lexicon Pharmaceuticals,诺和诺德,LX9851,ACSL5抑制剂,肥胖,临床前,全球,75.0,925.0,1000.0,2025-03,2025,,BD,License-out
+Matchpoint Therapeutics,诺华,未披露,抑制剂,炎症(未指明),临床前,全球,60.0,940.0,1000.0,2025-07,2025,,BD,License-out
+Modex Therapeutics,Regeneron Pharmaceuticals,MSTAR平台,多特异性抗体,免疫/肿瘤/代谢,临床前,全球,7.0,,1000.0,2025-10,2025,,BD,License-out
+Infinimmune,默克,Immunology / autoimmune ,—,Immunology,—,—,,,838.0,2026-03,2026,https://www.businesswire.com/news/home/20260331613246/en/Infinimmune-Enters-Collaboration-with-Merck-to-Discover-Novel-Human-Antibody-Therapeutics,BD-collaboration,License-out
+海思科,艾伯维,Pain / non-opioid analge,—,CNS/Neurology,—,—,30.0,715.0,745.0,2026-04,2026,https://www.prnewswire.com/news-releases/haisco-enters-into-exclusive-license-agreement-with-abbvie-to-develop-novel-medicines-for-pain-302740226.html,BD-license,License-out
+Orna,Vertex,技术平台,LNP 递送,罕见病,临床前,全球,65.0,635.0,700.0,2025-01,2025,,BD,License-out
+GSK,Alfasigma,Rare liver disease — PBC,—,Rare Disease,—,—,300.0,390.0,690.0,2026-03,2026,https://www.gsk.com/en-gb/media/press-releases/gsk-and-alfasigma-announce-agreement/,BD-rights,License-out
+DISCO Pharmaceuticals,安进,Oncology (cancer surface,—,Oncology,—,—,,,618.0,2026-01,2026,https://www.globenewswire.com/news-release/2026/01/07/3214315/0/en/DISCO-Pharmaceuticals-Enters-License-Agreement-to-Advance-Novel-Cancer-Surfaceome-Targeted-Therapies.html,BD-license,License-out
+Halozyme Therapeutics,GSK,Oncology — subcutaneous ,—,Oncology,—,—,30.0,580.0,610.0,2026-05,2026,https://www.prnewswire.com/news-releases/halozyme-announces-global-collaboration-and-license-agreement-with-gsk-to-develop-subcutaneous-formulations-of-multiple-promising-oncology-targets-302765632.html,BD-license,License-out
+Evaxion Biotech,默克,EVX-B 2/3,疫苗,传染病/细菌感染,临床前,全球,7.5,1184.0,600.0,2025-09,2025,,BD,License-out
+MediLink Therapeutics,罗氏,Oncology — B7H3 ADC (sol,—,Oncology,—,—,570.0,,570.0,2026-01,2026,https://www.prnewswire.com/news-releases/medilink-has-signed-an-additional-exclusive-licensing-agreement-with-roche-302656495.html,BD-license,License-out
+Novavax,辉瑞,Vaccines / infectious di,—,Vaccines,—,—,30.0,500.0,530.0,2026-01,2026,https://ir.novavax.com/press-releases/2026-01-20-Novavax-Announces-Entering-into-a-License-Agreement-with-Pfizer,BD-license,License-out
+Pinetree Therapeutics,阿斯利康,Oncology (EGFR-driven tu,—,Oncology,—,—,25.0,475.0,500.0,2026-04,2026,https://www.prnewswire.com/news-releases/pinetree-therapeutics-announces-exercise-of-option-to-license-egfr-degrader-program-by-astrazeneca-302754627.html,BD-option,License-out
+Sciwind Biosciences,辉瑞,Metabolic / obesity & T2,—,Cardiovascular/Metabolic,—,—,,,495.0,2026-02,2026,https://www.prnewswire.com/news-releases/sciwind-biosciences-partners-with-pfizer-china-to-commercialize-its-biased-glp-1-in-china-302695339.html,BD-rights,License-out
+Structure Therapeutics,罗氏,Obesity / metabolic — GL,—,Cardiovascular/Metabolic,—,—,100.0,0.0,100.0,2026-01,2026,https://www.sec.gov/Archives/edgar/data/1888886/000110465926043425/tm2611763d1_ex99-1.htm,BD-license,License-out
+Zonsen PepLib Biotech,诺华,Oncology / radioligand t,—,Oncology,—,—,50.0,,50.0,2026-01,2026,https://www.businesswire.com/news/home/20260112577341/en/Zonsen-PepLib-Biotech-and-Novartis-Sign-Worldwide-License-Agreement-regarding-Radioligand-Therapy-Asset,BD-license,License-out
+Helix,GSK,Precision medicine / hum,—,Gene/Cell Therapy,—,—,,,0.0,2026-01,2026,https://www.prnewswire.com/news-releases/helix-announces-multi-year-strategic-collaboration-with-gsk-to-drive-precision-medicine-development-302654760.html,BD-collaboration,License-out
+Forge Genetics,艾伯维,Platform / gene editing ,—,Gene/Cell Therapy,—,—,,,0.0,2026-03,2026,https://www.thebusinessdesk.com/eastmidlands/news/2108205-nottingham-biotech-lands-licensing-deal-with-pharma-giant-abbvie,BD-license,License-out
+Nosis Bio,强生,Neurology (+ one undiscl,—,CNS/Neurology,—,—,,,0.0,2026-03,2026,https://www.nosisbio.com/news/nosis-bio-enters-into-strategic-collaboration-with-johnson-johnson,BD-collaboration,License-out
+Medicines Patent Pool,罗氏,Antiviral / influenza — ,—,Gene/Cell Therapy,—,—,,,0.0,2026-05,2026,https://medicinespatentpool.org/news-publications-post/mpp-and-roche-sign-licence-agreement-to-expand-access-to-influenza-treatment-in-low-and-middle-income-countries,BD-license,License-out
+OpenAI,诺和诺德,Enterprise AI / drug-dis,—,Other,—,—,,,0.0,2026-04,2026,https://www.biospace.com/press-releases/novo-nordisk-and-openai-partner-to-transform-how-medicines-are-discovered-and-delivered,other,License-out
+圣因生物,罗氏,RNAi 平台药物,siRNA,Other,—,全球,200.0,1500.0,1700.0,2026-02,2026,https://www.prnewswire.com/news-releases/sanegenebio-announces-rnai-global-licensing-collaboration-with-genentech-302676224.html,BD-license,License-out
+复宏汉霖,卫材,汉斯状®（PD-1 单抗）,PD-1,Oncology,Approved/Filed,日本,75.0,315.0,390.0,2026-02,2026,https://www.eisai.com/news/2026/news202606.html,BD-license,License-out
+瑞博生物,Madrigal,MASH siRNA 疗法,siRNA,Cardiovascular/Metabolic,—,全球（除中国）,60.0,4340.0,4400.0,2026-02,2026,https://www.prnewswire.com/news-releases/ribo-and-ribocure-announce-exclusive-global-licensing-agreement-with-madrigal-for-novel-sirna-therapeutics-targeting-mash-302685018.html,BD-license,License-out
+先为达生物,辉瑞,偏向型 GLP-1（中国区权益）,GLP-1,Cardiovascular/Metabolic,—,中国,,,495.0,2026-02,2026,https://www.sec.gov/Archives/edgar/data/0000078003/000007800326000005/pfe-12312025xex99.htm,BD-license,License-out
+中国生物制药,赛诺菲,罗伐昔替尼（JAK/ROCK 抑制剂）,JAK/ROCK,Immunology,—,全球（除中国）,135.0,1395.0,1530.0,2026-03,2026,https://endpoints.news/sanofi-licenses-sino-biopharms-transplant-drug-for-135m-upfront/,BD-license,License-out
+德琪医药,优时比,ATG-201（CD19/CD3 双抗）,CD19xCD3 TCE,Immunology,—,全球（除大中华）,80.0,1100.0,1180.0,2026-03,2026,https://www.prnewswire.com/news-releases/antengene-and-ucb-enter-global-license-agreement-for-atg-201-a-cd19cd3-bispecific-t-cell-engager-for-autoimmune-diseases-302702638.html,BD-license,License-out
+华辉安健,百济神州,HH160（PD-1/CTLA-4/VEGF-A 三抗）,三特异抗体,Oncology,—,—,20.0,1980.0,2000.0,2026-04,2026,https://www.prnewswire.com/news-releases/huahui-health-and-beone-medicines-enter-into-a-global-exclusive-option-license-and-collaboration-agreement-for-innovative-oncology-drug-hh160-302758566.html,BD,License-out
+恒瑞医药,百时美施贵宝,13 个早期项目（肿瘤/血液/免疫）,platform,Oncology,临床前,全球（除大中华）,600.0,14600.0,15200.0,2026-05,2026,https://www.prnewswire.com/news-releases/hengrui-pharma-and-bristol-myers-squibb-announce-strategic-agreements-to-advance-innovative-medicines-across-oncology-hematology-and-immunology-302769021.html,BD-collaboration,License-out
+海思科,礼来,5 靶点小分子发现及早研,small molecule discovery,Other,发现阶段,全球,87.0,2967.0,3054.0,2026-06,2026,https://www.prnewswire.com/news-releases/haisco-announces-licensing-and-research-collaboration-agreement-with-lilly-to-develop-innovative-medicines-across-multiple-therapeutic-areas-302786957.html,BD-collaboration,License-out
+云顶新耀,Travere,EVER001 希布替尼（可逆 BTK）,covalent-reversible BTK,Rare Disease,—,全球,112.5,1030.0,1142.0,2026-06,2026,https://www.prnewswire.com/apac/news-releases/everest-medicines-enters-into-exclusive-licensing-agreement-with-travere-therapeutics-for-civorebrutinib-a-potential-best-in-class-btk-inhibitor-for-rare-kidney-diseases-302788528.html,BD-license,License-out
+和铂医药,Solstice Oncology,HBM4003（新一代 CTLA-4 抗体）,CTLA-4,Oncology,—,全球（除大中华）,100.0,1100.0,1200.0,2026-02,2026,https://www.harbourbiomed.com/news/257.html,NewCo,NewCo
+爱科瑞思,K2 Therapeutics,ACR246（全球首个临床期 anti-5T4 ADC）,5T4 ADC,Oncology,Ⅰ期,全球,,,730.0,2026-04,2026,https://www.vcbeathealth.com/article/30885,NewCo,NewCo
+海思科,AirNexis,Nav1.8 抑制剂（疼痛）,Nav1.8,CNS/Neurology,—,海外,108.0,955.0,1063.0,2026-01,2026,https://www.prnewswire.com/news-releases/haisco-grants-global-rights-of-innovative-drug-hsk39004-to-airnexis-in-deal-exceeding-usd-1-billion-302657951.html,NewCo,NewCo
+康诺亚,吉利德,自免/炎症 via NewCo Ouro Medicines(CM336/OM336 BCMA×CD3 TCE),—,Immunology,—,全球,250.0,70.0,320.0,2026-04,2026,https://www.vcbeathealth.com/article/2983,NewCo,"NewCo 股权回款(康诺亚持Ouro 15%);吉利德收购整个Ouro Medicines $2,175M属另一笔M&A(吉利德非13-MNC,不入M&A表)"

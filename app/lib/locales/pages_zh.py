@@ -156,8 +156,30 @@ STRINGS = {
     "hc.rs.section": "相对表现",
     "hc.rs.section_meta": "去年 8 月以来 · rebased=100",
     "hc.rs.hk.title": "恒生医疗保健 vs 恒生 vs 恒生科技",
-    "hc.rs.nbi.title": "纳斯达克生物科技 (NBI) vs 纳斯达克综合",
+    "hc.rs.msci.title": "MSCI 中国医疗保健 vs MSCI 中国（ETF 代理：KURE / MCHI）",
+    "hc.rs.msci.src": "yfinance · ETF 代理（含息·USD）",
+    "hc.rs.hc_indices_note": (
+        "**两个医疗指数怎么区分？**　"
+        "**① 恒生医疗保健（HSHCI）**——成分为**香港上市**医疗股（创新药 / Biotech / 器械 / 医疗服务），"
+        "Biotech 权重高、波动大；纯离岸、**不含 A 股**；港元价格指数（不含息）。代表**港股医疗 beta**。　"
+        "**② MSCI 中国医疗（KURE 跟踪 MSCI China All Shares Health Care）**——覆盖**全中国**医疗"
+        "（A 股 + H 股 + ADR，含恒瑞医药、迈瑞医疗等 A 股大票），口径更宽，A 股纳入摊薄了港股 Biotech 的极端波动；"
+        "为美元 ETF、含息。代表**全中国医疗 beta**。　"
+        "→ 二者会分叉：讲**港股医疗去仓位 / Biotech** 用 HSHCI，讲**全中国医疗 beta** 用 MSCI（KURE）。"
+    ),
+    "hc.rs.nbi.title": "纳指生科 NBI · 标普生科 XBI vs 纳斯达克综合",
     "hc.rs.sphc.title": "标普 500 医疗保健 vs 标普 500",
+    "hc.rs.aibio.title": "生物科技（NBI 大盘 · XBI 等权）vs AI 硬件（费城半导体 SOX）",
+    "hc.rs.aibio.note": (
+        "**怎么读这张图？**　把两大热门主题放在同一锚点（去年 8 月）同框：**红＝生物科技**"
+        "（实线 NBI 大盘·市值加权 / 红虚线 XBI 标普生科·等权，代表中小盘 breadth），"
+        "**青＝AI 硬件**（^SOX 费城半导体指数）。　"
+        "**① NBI 与 XBI 的缺口** ＝ 大盘 vs 中小盘生科的强弱：XBI 领先 ＝ 中小盘普涨、breadth 强"
+        "（并购 / 小票逼空驱动）；XBI 落后 ＝ 涨幅集中在大票、breadth 弱。　"
+        "**② 生科红线与 AI 青线的剪刀差** ＝ 资金在两大主题间的相对轮动——AI 硬件长期领跑时生科多被虹吸，"
+        "剪刀差收敛 / 反转常是风险偏好或利率预期切换的信号。　"
+        "三条线同口径 rebased，仅看 beta，不含个股 alpha。"
+    ),
     "hc.rs.ylabel": "rebased（起点 = 100）",
     "hc.rs.caption": "锚定 {anchor}（去年 8 月）· {detail}。来源：{src}，截至 {asof}。",
     "hc.rs.read": (
@@ -878,4 +900,18 @@ STRINGS = {
     "capital.bd.filter.licensee": "按被授权方（MNC）筛选",
     "capital.bd.filter.licensor": "按授权方筛选",
     "capital.bd.filter.all": "全部",
+    # 出海模式区分：传统授权 / Co-Co / NewCo
+    "capital.bd.col.structure": "结构",
+    "capital.bd.struct.licenseout": "传统授权",
+    "capital.bd.struct.coco": "Co-Co",
+    "capital.bd.struct.newco": "NewCo",
+    "capital.bd.section.bystructure": "按出海模式（授权 / Co-Co / NewCo）",
+    "capital.bd.section.bystructure_meta": "按交易笔数 · 传统授权 vs Co-Co（共研+共商业化）vs NewCo（资产装新公司+换股权）",
+    "capital.bd.chart.structure": "出海模式分布（按笔数）",
+    "capital.bd.note.structure": (
+        "传统授权 {lo} 笔 · Co-Co {coco} 笔 · NewCo {newco} 笔。"
+        "Co-Co＝共同开发 + 联合商业化、按比例分摊成本/分享利润（如信达×武田 IBI363）；"
+        "NewCo＝把资产装入新设公司、授权方换取股权分享上行（如和铂×Solstice、康诺亚×Ouro）。"
+    ),
+    "capital.bd.filter.structure": "按出海模式筛选",
 }

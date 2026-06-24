@@ -31,11 +31,17 @@ POS_SRC_PATH = _EXT / "china_fund_hc_positioning_source.txt"
 # Committed CSV baked by jobs/cn_pharma_headcount_2025.py from 年报公告 / ESG / iFind.
 HC_PATH = _EXT / "cn_pharma_headcount.csv"
 
-# Panel layout: (panel_id, hero_series_id, [peer_series_ids]).
+# Panel layout: (panel_id, hero_series_id, [peer_series_ids]). A series may recur
+# across panels (^NBI / XBI in both nbi + ai_bio) — the baked CSV carries one row-set
+# per (series, panel), so panel_series() slices cleanly. The hero is the CMSI-red
+# emphasis line; peers default to muted grey unless the page passes peer_styles.
 PANELS = [
-    ("hk",   "HSHCI.HK",  ["HSI.HK", "HSTECH.HK"]),
-    ("nbi",  "^NBI",      ["^IXIC"]),
-    ("sphc", "^SP500-35", ["^GSPC"]),
+    ("hk",     "HSHCI.HK",  ["HSI.HK", "HSTECH.HK"]),
+    ("msci",   "KURE",      ["MCHI"]),       # MSCI 口径 ETF 代理 — 全中国医疗 vs 全中国宽基
+    ("nbi",    "^NBI",      ["^IXIC", "XBI"]),  # +XBI 等权生科(SMID breadth) vs ^NBI 大盘
+    ("sphc",   "^SP500-35", ["^GSPC"]),
+    # 跨板块主题对比：生物科技(NBI 大盘 + XBI 等权) vs AI 硬件(^SOX 费城半导体)。
+    ("ai_bio", "^NBI",      ["XBI", "^SOX"]),
 ]
 
 

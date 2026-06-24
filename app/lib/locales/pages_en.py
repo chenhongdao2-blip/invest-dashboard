@@ -160,8 +160,34 @@ STRINGS = {
     "hc.rs.section": "Relative Performance",
     "hc.rs.section_meta": "Since last Aug · rebased=100",
     "hc.rs.hk.title": "Hang Seng Healthcare vs Hang Seng vs Hang Seng TECH",
-    "hc.rs.nbi.title": "Nasdaq Biotech (NBI) vs Nasdaq Composite",
+    "hc.rs.msci.title": "MSCI China Health Care vs MSCI China (ETF proxy: KURE / MCHI)",
+    "hc.rs.msci.src": "yfinance · ETF proxy (total return · USD)",
+    "hc.rs.hc_indices_note": (
+        "**Two China-healthcare indices — how they differ.**　"
+        "**① Hang Seng Healthcare (HSHCI)** — **HK-listed** healthcare only (innovative pharma / "
+        "biotech / devices / services), biotech-heavy and volatile; purely offshore, **no A-shares**; "
+        "an HKD price index (ex-dividend). The **HK-healthcare beta**.　"
+        "**② MSCI China Health Care (KURE tracks MSCI China All Shares Health Care)** — **all-China** "
+        "healthcare (A-shares + H-shares + ADRs, incl. A-share giants like Hengrui & Mindray), a broader "
+        "universe whose A-share inclusion dampens the HK biotech swings; a USD, total-return ETF. The "
+        "**all-China healthcare beta**.　"
+        "→ They diverge: use HSHCI for the **HK-healthcare / biotech de-positioning** story, MSCI (KURE) "
+        "for **all-China healthcare beta**."
+    ),
+    "hc.rs.nbi.title": "Nasdaq Biotech (NBI) · S&P Biotech (XBI) vs Nasdaq Composite",
     "hc.rs.sphc.title": "S&P 500 Health Care vs S&P 500",
+    "hc.rs.aibio.title": "Biotech (NBI large-cap · XBI equal-weight) vs AI Hardware (PHLX Semis, SOX)",
+    "hc.rs.aibio.note": (
+        "**How to read it.**　The two hottest themes on one anchor (last Aug): **red = biotech** "
+        "(solid NBI, market-cap-weighted large-cap / red-dashed XBI, S&P Biotech equal-weight = the "
+        "SMID-cap breadth read), **teal = AI hardware** (^SOX, PHLX Semiconductor).　"
+        "**① The NBI–XBI gap** = large- vs small/mid-cap biotech: XBI leading = broad SMID-cap "
+        "participation (M&A / small-cap squeeze); XBI lagging = gains concentrated in the megacaps, "
+        "weak breadth.　**② the biotech-vs-AI scissor** = the relative rotation between "
+        "the two themes — when AI hardware leads for long, biotech tends to get starved of flow; a "
+        "converging / reversing scissor often flags a risk-appetite or rate-expectations shift.　"
+        "All three same-basis rebased — beta only, no single-name alpha."
+    ),
     "hc.rs.ylabel": "Rebased (start = 100)",
     "hc.rs.caption": "Anchored {anchor} (last Aug) · {detail}. Source: {src}, as of {asof}.",
     "hc.rs.read": (
@@ -898,4 +924,18 @@ STRINGS = {
     "capital.bd.filter.licensee": "Filter by Licensee (MNC)",
     "capital.bd.filter.licensor": "Filter by Licensor",
     "capital.bd.filter.all": "All",
+    # Out-licensing structure: License-out / Co-Co / NewCo
+    "capital.bd.col.structure": "Structure",
+    "capital.bd.struct.licenseout": "License-out",
+    "capital.bd.struct.coco": "Co-Co",
+    "capital.bd.struct.newco": "NewCo",
+    "capital.bd.section.bystructure": "By Out-licensing Structure (License-out / Co-Co / NewCo)",
+    "capital.bd.section.bystructure_meta": "by deal count · License-out vs Co-Co (co-develop + co-commercialize) vs NewCo (assets into a new co + equity)",
+    "capital.bd.chart.structure": "Out-licensing Structure (deal count)",
+    "capital.bd.note.structure": (
+        "License-out {lo} · Co-Co {coco} · NewCo {newco}. "
+        "Co-Co = co-development + co-commercialization with cost/profit split (e.g. Innovent × Takeda, IBI363); "
+        "NewCo = assets dropped into a newly-formed company, licensor takes equity for upside (e.g. Harbour × Solstice, Keymed × Ouro)."
+    ),
+    "capital.bd.filter.structure": "Filter by Structure",
 }

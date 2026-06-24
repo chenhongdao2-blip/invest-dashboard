@@ -176,6 +176,7 @@ def index_compare_chart(
     title: str = "",
     ylabel: str = "Rebased (start=100)",
     height: int = 360,
+    peer_styles: dict[str, dict] | None = None,
 ) -> tuple[go.Figure | None, dict | None]:
     """Rebased=100 comparison of one 'hero' index vs peer index/indices.
 
@@ -187,6 +188,12 @@ def index_compare_chart(
     dashed/dotted, distinguished by STYLE not color (DESIGN.md §4). All series are
     inner-joined on common trading days and rebased to 100 at the first common
     date (the anchor) — never each series' own start — so no spurious start-gap.
+
+    `peer_styles` (optional) overrides the muted-grey default per peer (keyed by the
+    peer's display name) with {"color", "dash", "width"} — used for cross-sector
+    panels (e.g. a biotech-family peer in CMSI-red, an AI-hardware peer in teal) where
+    STYLE-only differentiation isn't enough. Omitted/missing keys fall back to the
+    grey dash-cycle, so the 4 existing healthcare panels render byte-identically.
 
     Returns (figure, meta) where meta = {"anchor": iso, "spreads": {peer: pp}}.
     `spreads[peer]` = hero_final − peer_final in points of rebased index, i.e. the
@@ -207,11 +214,14 @@ def index_compare_chart(
 
     fig = go.Figure()
     dash_cycle = ["dash", "dot", "dashdot"]
+    styles = peer_styles or {}
     peer_cols = [c for c in rebased.columns if c != hero_name]
     for i, col in enumerate(peer_cols):
+        s = styles.get(col, {})
         fig.add_trace(go.Scatter(
             x=rebased.index, y=rebased[col], mode="lines", name=col,
-            line=dict(width=1.4, color=theme.INK_3, dash=dash_cycle[i % len(dash_cycle)]),
+            line=dict(width=s.get("width", 1.4), color=s.get("color", theme.INK_3),
+                      dash=s.get("dash", dash_cycle[i % len(dash_cycle)])),
             hovertemplate="%{x|%Y-%m-%d}<br>" + col + " %{y:.1f}<extra></extra>",
         ))
     # Hero on top — solid CMSI-red emphasis.

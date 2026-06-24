@@ -149,9 +149,18 @@ if _idx.empty:
 else:
     _cn = i18n.get_lang() == "zh"
     _asof = _idx["date"].max().date().isoformat()
-    _PANEL_TITLE = {"hk": "hc.rs.hk.title", "nbi": "hc.rs.nbi.title", "sphc": "hc.rs.sphc.title"}
+    _PANEL_TITLE = {"hk": "hc.rs.hk.title", "msci": "hc.rs.msci.title",
+                    "nbi": "hc.rs.nbi.title", "sphc": "hc.rs.sphc.title",
+                    "ai_bio": "hc.rs.aibio.title"}
+    # Cross-sector colouring (series_id-keyed): biotech family = CMSI-red, AI hardware
+    # = teal — so a peer that's *also* healthcare (XBI) isn't mistaken for broad market,
+    # and the AI-hardware line is visually separated from the red biotech cluster.
+    _RED_BIOTECH = {"color": theme.CMSI_RED, "dash": "dash", "width": 1.6}
+    _TEAL_AI = {"color": theme.UP, "dash": "solid", "width": 1.8}
 
-    def _render_rs_panel(panel_id: str, *, height: int = 360) -> None:
+    def _render_rs_panel(panel_id: str, *, height: int = 360,
+                         src: str = "iFind · yfinance",
+                         peer_styles: dict[str, dict] | None = None) -> None:
         cfg = next((h, p) for pid, h, p in hco.PANELS if pid == panel_id)
         hero_id, peer_ids = cfg
         ser = hco.panel_series(_idx, panel_id)
@@ -159,9 +168,13 @@ else:
             return
         hero_nm = hco.series_name(_idx, hero_id, prefer_cn=_cn)
         peers = {hco.series_name(_idx, p, prefer_cn=_cn): ser[p] for p in peer_ids if p in ser}
+        # peer_styles is series_id-keyed; the chart wants display-name keys.
+        styles_by_name = {hco.series_name(_idx, sid, prefer_cn=_cn): st
+                          for sid, st in (peer_styles or {}).items()}
         fig, meta = charts.index_compare_chart(
             ser[hero_id], peers, hero_name=hero_nm, height=height,
             title=i18n.t(_PANEL_TITLE[panel_id]), ylabel=i18n.t("hc.rs.ylabel"),
+            peer_styles=styles_by_name or None,
         )
         if fig is None:
             return
@@ -169,14 +182,32 @@ else:
         # Scannable FT-style spread: "<peer> ±N.Npp" (vs hero, since anchor). −0.0 → 0.0.
         parts = [f"{pn} {(pp if abs(pp) >= 0.05 else 0.0):+.1f}pp" for pn, pp in meta["spreads"].items()]
         st.caption(i18n.t("hc.rs.caption", anchor=meta["anchor"], detail=" / ".join(parts),
-                          src="iFind · yfinance", asof=_asof))
+                          src=src, asof=_asof))
 
     _render_rs_panel("hk")                          # headline: 3-line HK comparison, full width
+
+    # MSCI 口径（ETF 代理）— 与 HK 口径并列的「全中国医疗 beta vs 全中国宽基」。KURE/MCHI 是
+    # ETF 市价(USD·含息)，非 MSCI 指数本体(免费源/iFind 都拿不到)，故 title + caption 双重标注
+    # 「ETF 代理」。之后的 note 讲清两个医疗指数的成分与区别。
+    if "KURE" in hco.panel_series(_idx, "msci"):
+        _render_rs_panel("msci", src=i18n.t("hc.rs.msci.src"))
+        st.info(i18n.t("hc.rs.hc_indices_note"))    # 两个医疗指数：成分 + 区别
+
     _c1, _c2 = st.columns(2)
     with _c1:
-        _render_rs_panel("nbi", height=260)         # supporting pair: shorter (visual hierarchy)
+        # nbi now carries 3 lines: ^NBI (red hero) · XBI (red dashed = biotech family) ·
+        # Nasdaq (grey = broad market). XBI styled red so it doesn't read as "broad market".
+        _render_rs_panel("nbi", height=260, peer_styles={"XBI": _RED_BIOTECH})
     with _c2:
         _render_rs_panel("sphc", height=260)
+
+    # Cross-sector theme: biotech (NBI + XBI, red family) vs AI hardware (^SOX, teal).
+    # Full-width below the supporting pair — the "rotation between the two hottest themes"
+    # read. Hero = NBI (red), XBI red-dashed, ^SOX teal solid so the sectors separate.
+    if "^SOX" in hco.panel_series(_idx, "ai_bio"):
+        _render_rs_panel("ai_bio", height=300,
+                         peer_styles={"XBI": _RED_BIOTECH, "^SOX": _TEAL_AI})
+        st.info(i18n.t("hc.rs.aibio.note"))
 
     # HSHCI full-cycle context (calendar time, absolute level): −70% → 翻倍 → 回调.
     # Milestones (start/trough/recovery-peak/now) computed from data — never hardcoded.

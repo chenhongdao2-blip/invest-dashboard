@@ -385,6 +385,60 @@ _IPO_TIER_COLORS = {
 }
 
 
+# 市值分层 → marker color (HK HC IPO tracker). 大=anchor red (恒瑞 outlier),
+# 中=teal (winners cohort), 小=grey (the 破发 cluster).
+_IPO_MKT_TIER_COLORS = {
+    "大市值": theme.CMSI_RED,
+    "中市值": theme.UP,
+    "小市值": theme.INK_3,
+}
+
+
+def scatter_returns(
+    df: pd.DataFrame,
+    *,
+    mktcap_col: str = "cur_mktcap_yi",
+    ret_col: str = "ret_pct",
+    tier_col: str = "mktcap_tier",
+    name_col: str = "name_cn",
+    title: str = "",
+    x_label: str = "现市值 (亿 HKD, log)",
+    y_label: str = "自发行价涨幅 %",
+) -> go.Figure:
+    """Return-since-offer vs current market cap, colored by 市值分层; y=0 dotted = 破发线.
+
+    Renders the 'larger-cap = stays above water' story: 小市值 dots cluster below the line,
+    中/大市值 above. Log x-axis (恒瑞 is a 3700亿 outlier vs a sub-100亿 long tail)."""
+    fig = go.Figure()
+    d = df.dropna(subset=[mktcap_col, ret_col])
+    if d.empty:
+        return theme.style_plotly(fig)
+    for tier, color in _IPO_MKT_TIER_COLORS.items():
+        sub = d[d[tier_col] == tier]
+        if sub.empty:
+            continue
+        txt = [f"{n}<br>{tier} · 市值 {mc:,.0f}亿<br>涨幅 {r:+.0f}%"
+               for n, mc, r in zip(sub[name_col], sub[mktcap_col], sub[ret_col])]
+        fig.add_trace(go.Scatter(
+            x=sub[mktcap_col], y=sub[ret_col], mode="markers", name=tier,
+            marker=dict(size=11, color=color, line=dict(width=0.8, color="white"), opacity=0.9),
+            text=txt, hovertemplate="%{text}<extra></extra>",
+        ))
+    fig.add_hline(y=0, line=dict(width=1.2, color=theme.INK_2, dash="dot"))
+    fig.update_layout(title=_clean_title(title), height=420)
+    fig = theme.style_plotly(fig)
+    fig.update_layout(
+        xaxis=dict(title=dict(text=x_label, font=dict(size=12, color=theme.INK_2)),
+                   type="log", tickfont=dict(size=11, color=theme.INK_2)),
+        yaxis=dict(title=dict(text=y_label, font=dict(size=12, color=theme.INK_2)),
+                   tickfont=dict(size=11, color=theme.INK_2), zeroline=False),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0,
+                    font=dict(size=11, color=theme.INK_2)),
+        margin=dict(l=8, r=24, t=70, b=44),
+    )
+    return fig
+
+
 def ipo_score_scatter(
     df: pd.DataFrame,
     *,

@@ -46,6 +46,10 @@ regions:
     name: Japan Healthcare
     universe_file: hc_japan.yml
     benchmark: 1305.T           # TOPIX ETF 代理（yfinance 无 ^TPX；1306.T 拆股断崖弃用）
+  - id: hk_hc_ipo
+    name: HK HC IPO Tracker
+    universe_file: hk_hc_ipo.yml
+    benchmark: ^HSI             # 仅供 fetch_eod 取价进 snapshots.db（IPO tab 读 tracker CSV / 价overlay）；不渲染 region section
 
 # Domain-level benchmarks
 benchmarks:

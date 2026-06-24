@@ -20,6 +20,7 @@ import streamlit as st
 from lib import charts
 from lib import funding
 from lib import i18n
+from lib import ipo_tracker
 from lib import theme
 from lib import ui
 
@@ -39,6 +40,7 @@ ma = deals[deals["deal_type"] == "M&A"].copy()        # true acquisitions only
 mnc_bd = deals[deals["deal_type"] == "BD"].copy()      # 39-row BD subset — M&A-tab YTD count card only
 
 BD_ACCENT = theme.SECTOR_PALETTE[3]   # "#4a6fa5" muted slate-blue — BD value bars (NOT teal/red)
+IPO_ACCENT = theme.SECTOR_PALETTE[2]  # IPO break-rate bars (distinct from M&A/BD)
 
 # ── Column labels ──────────────────────────────────────────────────────────
 c_tgt = i18n.t("mnc_ma.col.target")
@@ -167,7 +169,7 @@ st.caption(i18n.t("mnc_ma.intro"))
 st.info(i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
 st.info(i18n.t("capital.def"))
 
-tab_ma, tab_bd = st.tabs([i18n.t("capital.tab.ma"), i18n.t("capital.tab.bd")])
+tab_ma, tab_bd, tab_ipo = st.tabs([i18n.t("capital.tab.ma"), i18n.t("capital.tab.bd"), i18n.t("capital.tab.ipo")])
 
 
 # ══════════════════════════════ M&A TAB ═══════════════════════════════════
@@ -357,6 +359,122 @@ with tab_bd:
     if _pick_st != _all:
         _bsub = _bsub[_bsub["structure"].astype(str) == _pick_st]
     _bd_table(_bsub.sort_values("total_musd", ascending=False), height=620)
+
+
+# ══════════════════════════════ IPO TAB ═══════════════════════════════════
+with tab_ipo:
+    ipo = ipo_tracker.load_hk_ipo_tracker()
+    im = ipo_tracker.hk_ipo_meta()
+    if ipo.empty:
+        st.info(i18n.t("capital.ipo.empty"))
+    else:
+        st.caption(i18n.t("capital.ipo.asof", asof=im.get("as_of", "")))
+        clean = ipo_tracker.clean_view(ipo)
+        broke_n = int((clean["broke"] == True).sum())  # noqa: E712
+        broke_d = int(clean["broke"].notna().sum())
+        n_big = int(ipo["mktcap_tier"].isin(["大市值", "中市值"]).sum())
+        med = clean["ret_pct"].median()
+        cards = [
+            _kpi(i18n.t("capital.ipo.kpi.total"), f"{len(ipo)}",
+                 i18n.t("capital.ipo.kpi.total_foot", w=int(im.get("n_with_offer", 0)),
+                        s=int(im.get("n_suspended", 0)))),
+            _kpi(i18n.t("capital.ipo.kpi.broke"), f"{broke_n / broke_d * 100:.0f}%" if broke_d else "—",
+                 i18n.t("capital.ipo.kpi.broke_foot", n=broke_n, d=broke_d,
+                        fn=im.get("break_rate_full", "—"))),
+            _kpi(i18n.t("capital.ipo.kpi.big"), f"{n_big}", i18n.t("capital.ipo.kpi.big_foot")),
+        ]
+        if not clean.empty and clean["ret_pct"].notna().any():
+            top = clean.loc[clean["ret_pct"].idxmax()]
+            cards.append(_kpi(i18n.t("capital.ipo.kpi.top"), f"{top['ret_pct']:+.0f}%",
+                              i18n.t("capital.ipo.kpi.top_foot", name=str(top["name_cn"]))))
+        cards.append(_kpi(i18n.t("capital.ipo.kpi.median"), f"{med:+.0f}%" if pd.notna(med) else "—",
+                          i18n.t("capital.ipo.kpi.median_foot", n=len(clean))))
+        theme.kpi_strip(cards)
+        st.caption(i18n.t("capital.ipo.methodology"))
+
+        # Chart 1 (the conclusion) — 破发率 × 市值分层 (monotonic)
+        theme.section_header(i18n.t("capital.ipo.section.bymkt"), meta=i18n.t("capital.ipo.section.bymkt_meta"))
+        brm = ipo_tracker.break_rate_by(ipo, "mktcap_tier", ["大市值", "中市值", "小市值"])
+        brm = brm[brm["n"] > 0]
+        st.plotly_chart(charts.ranked_hbar(
+            [f"{b} (n={n})" for b, n in zip(brm["bucket"], brm["n"])], brm["rate_pct"].tolist(),
+            title=i18n.t("capital.ipo.chart.bymkt"), xlabel=i18n.t("capital.ipo.unit.break"),
+            color=IPO_ACCENT, value_fmt="%.0f%%"), width="stretch", theme=None)
+        st.caption(i18n.t("capital.ipo.note.bymkt"))
+
+        # Chart 2 — 涨幅 × 市值散点 (excl. no-offer + suspended frozen prices)
+        theme.section_header(i18n.t("capital.ipo.section.scatter"), meta=i18n.t("capital.ipo.section.scatter_meta"))
+        st.plotly_chart(charts.scatter_returns(
+            ipo[(~ipo["no_offer"]) & (~ipo["suspended"])], title=i18n.t("capital.ipo.chart.scatter")),
+            width="stretch", theme=None)
+
+        # Chart 3 — 破发率 × 流动性 (secondary; noisy, descriptive only)
+        theme.section_header(i18n.t("capital.ipo.section.byliq"), meta=i18n.t("capital.ipo.section.byliq_meta"))
+        brl = ipo_tracker.break_rate_by(ipo, "liquidity_tier", [">$20M", "$10-20M", "<$10M"])
+        brl = brl[brl["n"] > 0]
+        st.plotly_chart(charts.ranked_hbar(
+            [f"{b} (n={n})" for b, n in zip(brl["bucket"], brl["n"])], brl["rate_pct"].tolist(),
+            title=i18n.t("capital.ipo.chart.byliq"), xlabel=i18n.t("capital.ipo.unit.break"),
+            color=theme.INK_3, value_fmt="%.0f%%"), width="stretch", theme=None)
+        st.caption(i18n.t("capital.ipo.note.byliq"))
+
+        # Full roster — filterable
+        theme.section_header(i18n.t("capital.ipo.section.table"))
+        _iall = i18n.t("capital.ipo.filter.all")
+        _above, _below = i18n.t("capital.ipo.filter.above"), i18n.t("capital.ipo.filter.below")
+        _ai = i18n.t("capital.ipo.filter.ai")
+        _g1, _g2, _g3 = st.columns(3)
+        with _g1:
+            _pick_mkt = st.selectbox(i18n.t("capital.ipo.filter.mkt"),
+                                     [_iall, "大市值", "中市值", "小市值"], key="ipo_flt_mkt")
+        with _g2:
+            _pick_w = st.selectbox(i18n.t("capital.ipo.filter.water"), [_iall, _above, _below], key="ipo_flt_w")
+        with _g3:
+            _pick_tag = st.selectbox(i18n.t("capital.ipo.filter.tag"), [_iall, "18A", _ai], key="ipo_flt_tag")
+        _isub = ipo.copy()
+        if _pick_mkt != _iall:
+            _isub = _isub[_isub["mktcap_tier"] == _pick_mkt]
+        if _pick_w == _above:
+            _isub = _isub[_isub["broke"] == False]   # noqa: E712
+        elif _pick_w == _below:
+            _isub = _isub[_isub["broke"] == True]     # noqa: E712
+        if _pick_tag == "18A":
+            _isub = _isub[_isub["is_18a"] == True]    # noqa: E712
+        elif _pick_tag == _ai:
+            _isub = _isub[_isub["is_ai_pharma"] == True]  # noqa: E712
+
+        ic = {k: i18n.t(f"capital.ipo.col.{k}") for k in
+              ("name", "date", "offer", "close", "ret", "mktcap", "mkttier", "turnover", "liqtier", "broke", "flag")}
+
+        def _flag(r) -> str:
+            if r["suspended"]:
+                return "停牌"
+            if r["no_offer"]:
+                return "介绍上市"
+            if r["is_ai_pharma"]:
+                return "AI"
+            return "18A" if r["is_18a"] else ""
+
+        disp = pd.DataFrame({
+            ic["date"]: _isub["ipo_date"].astype(str),
+            ic["offer"]: _isub["offer_price_hkd"],
+            ic["close"]: _isub["close"],
+            ic["ret"]: _isub["ret_pct"],
+            ic["mktcap"]: _isub["cur_mktcap_yi"],
+            ic["mkttier"]: _isub["mktcap_tier"].fillna("—"),
+            ic["turnover"]: _isub["avg_turnover_usdm"],
+            ic["liqtier"]: _isub["liquidity_tier"].fillna("—"),
+            ic["broke"]: _isub["broke"].map({True: "破发", False: "水上"}).fillna("—"),
+            ic["flag"]: [_flag(r) for _, r in _isub.iterrows()],
+        })
+        disp.index = _isub["name_cn"].astype(str)
+        disp.index.name = ic["name"]
+        ui.render_html_table(
+            disp, price_cols=[ic["offer"], ic["close"]],
+            extra_formats={ic["ret"]: "%+.0f%%", ic["mktcap"]: "%.0f", ic["turnover"]: "%.1f"},
+            text_cols=[ic["mkttier"], ic["liqtier"], ic["broke"], ic["flag"]],
+            right_text_cols=[ic["date"]], index_label=ic["name"],
+            height=min(1100, 80 + 30 * len(disp)))
 
 
 # ══ MNC dry-powder (SEC XBRL — who can fund the next wave, M&A or BD) ═══════

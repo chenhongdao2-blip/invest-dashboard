@@ -1,0 +1,71 @@
+name: Fetch public market data
+
+# P0 pure-cloud refresh: the yfinance-sourced datasets that were written but never
+# wired into CI. Runs on the GitHub ubuntu runner (US — reaches Yahoo directly, no
+# proxy) and commits to main; Streamlit Cloud auto-redeploys.
+#
+# Covers: FX / MSCI World (benchmarks_daily), biotech price backfill (prices_daily),
+# and the relative-performance US lines (hc_index_comparison.csv, --public-only so
+# the local-only audited xlsx fund-positioning block is skipped).
+#
+# Stays out of the way of fetch_eod / fetch_sec_facts via the shared concurrency
+# group `data-writer-main` (only one data-writing workflow touches main at a time),
+# plus an offset cron so they don't all wake at the same minute.
+
+on:
+  schedule:
+    # US close 16:00 ET → 20:00/21:00 UTC. Run 22:45 UTC (after fetch_eod's 22:30),
+    # weekdays. Serialized with fetch_eod via concurrency group regardless.
+    - cron: '45 22 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: data-writer-main
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Init schema (idempotent)
+        run: python jobs/init_db.py
+
+      - name: Load universe
+        run: python jobs/load_universe.py
+
+      - name: Fetch FX / MSCI World
+        run: |
+          python jobs/fetch_fx_world.py
+          python jobs/update_manifest.py benchmarks_fx ok
+
+      - name: Fetch biotech prices
+        run: |
+          python jobs/fetch_biotech_new.py
+          python jobs/update_manifest.py biotech_prices ok
+
+      - name: Rebuild relative-performance (public/US panels only)
+        run: |
+          python jobs/build_hc_overview_data.py --public-only
+          python jobs/update_manifest.py hc_index_comparison ok --note "US panels via yfinance; HK lines from committed iFind provenance"
+
+      - name: Commit data
+        run: |
+          ./scripts/commit_data.sh "data: public market refresh $(date -u +%Y-%m-%d) [skip ci]" \
+            data/snapshots.db \
+            data/refresh_manifest.json \
+            data/external/hc_index_comparison.csv

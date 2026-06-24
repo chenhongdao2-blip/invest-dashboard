@@ -18,6 +18,7 @@ from lib import ui
 from lib import theme
 from lib import i18n
 from lib import heatmap as hm
+from lib import freshness
 
 st.set_page_config(
     page_title="invest-dashboard",
@@ -29,6 +30,7 @@ st.set_page_config(
 # --- Unified sidebar search ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="home")
+    freshness.render_freshness_panel()
 
 # --- Language ---
 i18n.init_lang()

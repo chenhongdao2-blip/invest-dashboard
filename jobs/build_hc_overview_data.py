@@ -32,6 +32,7 @@ Run locally (proxy needed for yfinance in CN):
 
 from __future__ import annotations
 
+import argparse
 from datetime import date, timedelta
 from pathlib import Path
 
@@ -205,6 +206,17 @@ def anonymise(pos: pd.DataFrame) -> pd.DataFrame:
 
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--public-only", action="store_true",
+        help="Cloud/CI mode: rebuild only the yfinance-sourced index comparison "
+             "(relative-performance US lines + committed HK provenance). SKIPS the "
+             "institutional fund-positioning block, which needs the local audited "
+             "Desktop xlsx unavailable on a CI runner. The committed "
+             "china_fund_hc_positioning.csv is left untouched.",
+    )
+    args = ap.parse_args()
+
     OUT.mkdir(parents=True, exist_ok=True)
 
     idx = build_index_comparison()
@@ -215,6 +227,11 @@ def main() -> None:
         spread = g.groupby("series_id")["date"].agg(["min", "max", "count"])
         print(f"   panel {panel}:")
         print(spread.to_string().replace("\n", "\n      "))
+
+    if args.public_only:
+        print("[public-only] skipping fund-positioning block "
+              "(needs local audited xlsx; committed CSV left untouched).")
+        return
 
     pos = build_fund_positioning()
     # FULL (real names) — gitignored, local-only. App prefers this when present.

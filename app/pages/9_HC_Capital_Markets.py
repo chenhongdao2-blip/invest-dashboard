@@ -57,6 +57,12 @@ bd_ms = i18n.t("mnc_ma.col.milestone")
 bd_tot = i18n.t("mnc_ma.col.total")
 bd_dt = i18n.t("mnc_ma.bd.col.date")
 bd_src = i18n.t("mnc_ma.col.src")
+bd_struct = i18n.t("capital.bd.col.structure")
+_STRUCT_LABEL = {
+    "License-out": i18n.t("capital.bd.struct.licenseout"),
+    "Co-Co": i18n.t("capital.bd.struct.coco"),
+    "NewCo": i18n.t("capital.bd.struct.newco"),
+}
 
 
 def _kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
@@ -121,6 +127,7 @@ def _bd_table(df: pd.DataFrame, height: int) -> None:
     canonical TA / canonical phase / upfront / milestone / total (USD bn) / date.
     Mirrors _deal_table_b3 but for BD's licensor→asset→licensee economics."""
     disp = pd.DataFrame({
+        bd_struct: [_STRUCT_LABEL.get(str(s), str(s)) for s in df["structure"]],
         bd_ast: df["asset"].astype(str),
         bd_lee: df["licensee"].astype(str),
         bd_src: df["source_url"].astype(str),
@@ -135,7 +142,7 @@ def _bd_table(df: pd.DataFrame, height: int) -> None:
     disp.index.name = bd_lor
     ui.render_html_table(
         disp, extra_formats={bd_up: "%.2f", bd_ms: "%.2f", bd_tot: "%.2f"},
-        text_cols=[bd_lee, bd_ast, bd_ta, bd_pha], right_text_cols=[bd_dt], link_cols=[bd_src],
+        text_cols=[bd_struct, bd_lee, bd_ast, bd_ta, bd_pha], right_text_cols=[bd_dt], link_cols=[bd_src],
         index_label=bd_lor, height=height,
     )
 
@@ -312,24 +319,43 @@ with tab_bd:
                     width="stretch", theme=None)
     st.caption(i18n.t("capital.bd.note.year"))
 
+    # Chart 5 — by out-licensing STRUCTURE (License-out / Co-Co / NewCo) — the模式升级 view
+    theme.section_header(i18n.t("capital.bd.section.bystructure"), meta=i18n.t("capital.bd.section.bystructure_meta"))
+    by_st = funding.bd_by_structure(bd)
+    _st_lbl = [_STRUCT_LABEL.get(s, s) for s in by_st["structure"]]
+    st.plotly_chart(charts.ranked_hbar(_st_lbl, by_st["n"].tolist(),
+                    title=i18n.t("capital.bd.chart.structure"), xlabel=i18n.t("capital.bd.unit.deals"),
+                    color=BD_ACCENT, value_fmt="%d"),
+                    width="stretch", theme=None)
+    st.caption(i18n.t("capital.bd.note.structure",
+                      lo=int(by_st.set_index("structure").loc["License-out", "n"]),
+                      coco=int(by_st.set_index("structure").loc["Co-Co", "n"]),
+                      newco=int(by_st.set_index("structure").loc["NewCo", "n"])))
+
     # ── TOP 20 + dual-filter detail table ──
     theme.section_header(i18n.t("capital.bd.section.top"))
     _bd_table(bd.sort_values("total_musd", ascending=False).head(20), height=760)
 
     theme.section_header(i18n.t("capital.bd.section.table"))
     _all = i18n.t("capital.bd.filter.all")
-    _fc1, _fc2 = st.columns(2)
+    _fc1, _fc2, _fc3 = st.columns(3)
     with _fc1:
         _lee_opts = [_all] + sorted(bd["licensee"].dropna().astype(str).unique().tolist())
         _pick_lee = st.selectbox(i18n.t("capital.bd.filter.licensee"), _lee_opts, key="bd_flt_lee")
     with _fc2:
         _lor_opts = [_all] + sorted(bd["licensor"].dropna().astype(str).unique().tolist())
         _pick_lor = st.selectbox(i18n.t("capital.bd.filter.licensor"), _lor_opts, key="bd_flt_lor")
+    with _fc3:
+        _st_opts = [_all] + funding.BD_STRUCTURE_ORDER
+        _pick_st = st.selectbox(i18n.t("capital.bd.filter.structure"), _st_opts, key="bd_flt_st",
+                                format_func=lambda s: _STRUCT_LABEL.get(s, s) if s != _all else _all)
     _bsub = bd.copy()
     if _pick_lee != _all:
         _bsub = _bsub[_bsub["licensee"].astype(str) == _pick_lee]
     if _pick_lor != _all:
         _bsub = _bsub[_bsub["licensor"].astype(str) == _pick_lor]
+    if _pick_st != _all:
+        _bsub = _bsub[_bsub["structure"].astype(str) == _pick_st]
     _bd_table(_bsub.sort_values("total_musd", ascending=False), height=620)
 
 

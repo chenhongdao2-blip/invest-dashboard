@@ -443,6 +443,11 @@ def load_bd_enriched() -> pd.DataFrame:
     import re
 
     df = load_bd_report().copy()
+    # Out-licensing structure (License-out / Co-Co / NewCo). Default-fill so the page
+    # never KeyErrors if an older CSV (pre-structure-column) is loaded.
+    if "structure" not in df.columns:
+        df["structure"] = "License-out"
+    df["structure"] = df["structure"].fillna("License-out").astype(str)
     df["ta_canon"] = df["ta"].map(bd_canon_ta)
     df["phase_canon"] = df["phase"].map(bd_canon_phase)
     up = pd.to_numeric(df["upfront_musd"], errors="coerce")
@@ -488,6 +493,24 @@ def bd_by_year(df: pd.DataFrame) -> pd.DataFrame:
     """Deal COUNT per year (value is milestone-inflated; count avoids cross-year distortion)."""
     return (df.groupby("year").agg(n=("asset", "size"))
               .reset_index().sort_values("year"))
+
+
+# Out-licensing structures, ordered traditional → equity-heavy. Co-Co (co-develop +
+# co-commercialize, profit-share) and NewCo (assets dropped into a new co, licensor
+# takes equity) are the two "升级" models vs a plain License-out.
+BD_STRUCTURE_ORDER = ["License-out", "Co-Co", "NewCo"]
+
+
+def bd_by_structure(df: pd.DataFrame) -> pd.DataFrame:
+    """Deal COUNT (all rows) + announced VALUE (USD bn, value_ok rows only) per
+    out-licensing structure, ordered License-out → Co-Co → NewCo. Value is a
+    milestone-inflated ceiling, so the headline read should lead with count."""
+    n = df.groupby("structure").size()
+    v = df[df["value_ok"]].groupby("structure")["total_musd"].sum() / 1000.0
+    g = (pd.DataFrame({"n": n, "total_bn": v})
+         .reindex(BD_STRUCTURE_ORDER).fillna({"n": 0, "total_bn": 0.0}))
+    g["n"] = g["n"].astype(int)
+    return g.reset_index().rename(columns={"index": "structure"})
 
 
 def bd_kpis(df: pd.DataFrame) -> dict:

@@ -21,8 +21,8 @@ jobs:
   fetch:
     runs-on: ubuntu-latest
     concurrency:
-      group: fetch-eod
-      cancel-in-progress: false
+      group: data-writer-main   # shared by ALL data-writing workflows → only one
+      cancel-in-progress: false # touches main at a time (no push race / clobber)
     steps:
       - uses: actions/checkout@v4
 
@@ -41,13 +41,15 @@ jobs:
         run: python jobs/load_universe.py
 
       - name: Fetch EOD data
-        run: python jobs/fetch_eod.py --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
+        run: |
+          python jobs/fetch_eod.py --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
+          python jobs/update_manifest.py eod_prices ok
 
       - name: Commit data
         run: |
           git config user.email "data-bot@github.com"
           git config user.name "data-bot"
-          git add data/snapshots.db
+          git add data/snapshots.db data/refresh_manifest.json
           if git diff-index --quiet HEAD; then
             echo "No data changes to commit"
           else

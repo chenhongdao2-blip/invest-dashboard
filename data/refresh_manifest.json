@@ -1,0 +1,66 @@
+{
+  "eod_prices": {
+    "label": "美股/港股 EOD 价格·估值",
+    "source": "yfinance",
+    "max_age_days": 4,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:22+00:00",
+    "source_date": "2026-06-24"
+  },
+  "sec_facts": {
+    "label": "SEC 公司基本面",
+    "source": "SEC EDGAR",
+    "max_age_days": 10,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:23+00:00",
+    "source_date": "2026-06-24"
+  },
+  "benchmarks_fx": {
+    "label": "FX / MSCI World 基准",
+    "source": "yfinance",
+    "max_age_days": 4,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:23+00:00",
+    "source_date": "2026-06-24"
+  },
+  "biotech_prices": {
+    "label": "Biotech 价格回补",
+    "source": "yfinance",
+    "max_age_days": 4,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:23+00:00",
+    "source_date": "2026-06-24"
+  },
+  "hc_index_comparison": {
+    "label": "相对表现(美股线)",
+    "source": "yfinance",
+    "max_age_days": 4,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:23+00:00",
+    "source_date": "2026-06-24"
+  },
+  "hk_ipo_tracker": {
+    "label": "港股 IPO 散点/破发",
+    "source": "Wind+Futu(本地)",
+    "max_age_days": 9,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:23+00:00",
+    "source_date": "2026-06-24"
+  },
+  "mnc_ma_deals": {
+    "label": "MNC M&A / BD 交易",
+    "source": "PharmCube",
+    "max_age_days": 4,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:24+00:00",
+    "source_date": "2026-06-22"
+  },
+  "hshci_monthly": {
+    "label": "HSHCI 月线/长周期",
+    "source": "iFind(本地)",
+    "max_age_days": 40,
+    "status": "ok",
+    "refreshed_at": "2026-06-24T23:44:24+00:00",
+    "source_date": "2026-06-01"
+  }
+}

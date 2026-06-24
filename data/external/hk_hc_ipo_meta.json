@@ -1,0 +1,16 @@
+{
+  "as_of": "2026-06-24",
+  "source": "Wind (price/mktcap/20d turnover) + Futu OpenD cross-check",
+  "fx_hkd_usd": 7.8,
+  "n_listed": 38,
+  "n_with_offer": 37,
+  "n_suspended": 2,
+  "n_clean": 32,
+  "break_rate_full": "19/37",
+  "break_rate_clean": "17/32",
+  "n_large_300yi": 1,
+  "n_mid_100_300yi": 16,
+  "n_small_100yi": 21,
+  "tier_note": "市值: 大>=300亿 / 中100-300亿 / 小<100亿 (亿 HKD, Wind). 流动性: Wind 20日均成交额, >=20交易日方分档.",
+  "methodology": "cross-check 2026-06-24: 破发/回报排除无招股价(介绍上市)与停牌名(冻结价); 市值用Wind非yfinance; 流动性单源Wind 20日均."
+}

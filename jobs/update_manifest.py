@@ -40,7 +40,6 @@ DATASETS: dict[str, dict] = {
     "eod_prices":         {"label": "美股/港股 EOD 价格·估值", "source": "yfinance",        "max_age_days": 4},
     "sec_facts":          {"label": "SEC 公司基本面",          "source": "SEC EDGAR",        "max_age_days": 10},
     "benchmarks_fx":      {"label": "FX / MSCI World 基准",    "source": "yfinance",        "max_age_days": 4},
-    "biotech_prices":     {"label": "Biotech 价格回补",        "source": "yfinance",        "max_age_days": 4},
     "hc_index_comparison":{"label": "相对表现(美股线)",       "source": "yfinance",        "max_age_days": 4},
     "hk_ipo_tracker":     {"label": "港股 IPO 散点/破发",      "source": "Wind+Futu(本地)", "max_age_days": 9},
     "mnc_ma_deals":       {"label": "MNC M&A / BD 交易",       "source": "PharmCube",        "max_age_days": 4},
@@ -75,8 +74,6 @@ def resolve_source_date(key: str) -> str | None:
         return _db_max_date("prices_daily")
     if key in ("benchmarks_fx",):
         return _db_max_date("benchmarks_daily", "ticker IN ('CNY=X','HKD=X','URTH')")
-    if key in ("biotech_prices",):
-        return _db_max_date("prices_daily")
     if key == "hc_index_comparison":
         return _csv_max_date(EXT / "hc_index_comparison.csv")
     if key == "hk_ipo_tracker":

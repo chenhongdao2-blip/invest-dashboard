@@ -23,14 +23,6 @@
     "refreshed_at": "2026-06-24T23:44:23+00:00",
     "source_date": "2026-06-24"
   },
-  "biotech_prices": {
-    "label": "Biotech 价格回补",
-    "source": "yfinance",
-    "max_age_days": 4,
-    "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:23+00:00",
-    "source_date": "2026-06-24"
-  },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",

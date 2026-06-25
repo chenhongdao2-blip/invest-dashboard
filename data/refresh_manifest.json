@@ -20,16 +20,17 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:23+00:00",
-    "source_date": "2026-06-24"
+    "refreshed_at": "2026-06-25T00:56:15+00:00",
+    "source_date": "2026-06-25"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:23+00:00",
-    "source_date": "2026-06-24"
+    "refreshed_at": "2026-06-25T00:56:17+00:00",
+    "source_date": "2026-06-24",
+    "note": "US panels via yfinance; HK lines from committed iFind provenance"
   },
   "hk_ipo_tracker": {
     "label": "港股 IPO 散点/破发",

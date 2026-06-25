@@ -53,10 +53,10 @@ jobs:
           python jobs/fetch_fx_world.py
           python jobs/update_manifest.py benchmarks_fx ok
 
-      - name: Fetch biotech prices
-        run: |
-          python jobs/fetch_biotech_new.py
-          python jobs/update_manifest.py biotech_prices ok
+      # NB: biotech prices are already refreshed daily by fetch_eod.py (full
+      # universe_member). jobs/fetch_biotech_new.py is a one-off onboarding tool
+      # for a specific expansion batch (reads a manual /tmp TSV) — NOT a daily job,
+      # so it is intentionally not wired here.
 
       - name: Rebuild relative-performance (public/US panels only)
         run: |

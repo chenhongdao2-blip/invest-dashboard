@@ -1,10 +1,11 @@
 """Healthcare · Capital Markets 投融资 — Pharma MNC M&A + BD/licensing (deal-level).
 
 Two co-equal domains, split into tabs so "M&A is M&A, BD is BD":
-- **M&A** (control transfer): the acquisition history of 13 global pharma MNCs from the
-  MNCs basket xlsx (mnc-deal-scanner skill). 2026-YTD surfaced at the top.
-- **BD** (license / option / collaboration — NO control transfer): the 99-row
-  bd_deals.csv, given its own insight layer (KPI strip + MNC-buyer league + by-TA +
+- **M&A** (control transfer): the acquisition history of global pharma/biotech buyers
+  (original 13-MNC basket + 2026 expansion: Gilead/Biogen/UCB/Merck KGaA…). 2026-YTD at
+  the top. M&A is web/deal-tracker sourced — PharmCube carries no corporate M&A.
+- **BD** (license / option / collaboration — NO control transfer): the
+  bd_deals.csv canonical set, given its own insight layer (KPI strip + MNC-buyer league + by-TA +
   depth-of-reach by phase + timeline + filter table). Hengrui-BMS $15.2B is BD, not M&A.
 
 CRITICAL: the two are never mixed in one scroll. BD value is milestone-CONTINGENT — the

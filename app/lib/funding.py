@@ -282,8 +282,11 @@ def fy_baselines() -> list[dict]:
 
 
 # ── Pharma MNC M&A deal-level (mnc_ma_deals.csv) ───────────────────────────
-# 398 deals across 13 pharma MNCs, 1986-2026, ~$1.5T. Source = the MNCs basket
-# xlsx maintained by the mnc-deal-scanner skill. Columns: ticker, company, target,
+# Deal-level acquisitions across global pharma/biotech buyers, 1986-2026. Original
+# 13-MNC basket (mnc-deal-scanner skill) expanded 2026-06 to add active buyers
+# (GILD/BIIB/UCB/MRK.DE…). M&A rows are sourced via web/deal-tracker (Fierce,
+# BioPharma Dive, BioBucks) — PharmCube drugDeal carries NO corporate M&A, only BD.
+# Columns: ticker, company, target,
 # date, year, deal_size_mn, ta_group (canonical TA bucket), specialty, size_basis
 # (Actual/Estimated), note.
 
@@ -303,6 +306,11 @@ MNC_IR_URL = {
     "SNY": "https://www.sanofi.com/en/media-room/press-releases",
     "ROG": "https://www.roche.com/media/releases",
     "NVO": "https://www.novonordisk.com/news-and-media/latest-news.html",
+    # 2026 universe expansion — additional global biopharma buyers active in M&A.
+    "GILD": "https://www.gilead.com/news/press-releases",
+    "BIIB": "https://investors.biogen.com/news-releases",
+    "UCB": "https://www.ucb.com/stories-media/Press-Releases",
+    "MRK.DE": "https://www.merckgroup.com/en/news.html",  # Merck KGaA (Darmstadt) — NOT Merck & Co
 }
 
 

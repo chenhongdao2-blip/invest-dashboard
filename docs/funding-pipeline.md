@@ -22,7 +22,9 @@
 新 M&A / BD deal 的刷新是 3 个 workflow + merge,**需交互 session**(web/MCP + 分析师拍板值冲突,投资人面数字必须人验):
 
 ### Step 1 · 扫新 deal(web)
-13 家 MNC(PFE/MRK/LLY/JNJ/ABBV/BMY/AMGN/AZN/GSK/NVS/SNY/ROG/NVO)分头 WebSearch + 各家 IR/newsroom/8-K + deal tracker(BioPharma Dive/Endpoints/Fierce/labiotech),找窗口内(上次刷新→今天)新 deal。
+核心 13 家 MNC(PFE/MRK/LLY/JNJ/ABBV/BMY/AMGN/AZN/GSK/NVS/SNY/ROG/NVO)+ 2026-06 扩入的活跃买家(GILD/BIIB/UCB/MRK.DE「Merck KGaA」/VRTX/TAK 等),分头 WebSearch + 各家 IR/newsroom/8-K + deal tracker(BioPharma Dive/Endpoints/Fierce/labiotech/BioBucks),找窗口内(上次刷新→今天)新 deal。
+- ⚠️ **M&A 必须走 web/deal-tracker,不能用医药魔方**:PharmCube `drugDeal` 是药物交易库(license/合作/期权/资产出售),**结构上不收整体公司收购**(实测 Arcellx/Apellis/Apogee 反查全 0)。魔方只供 BD 那半;M&A 全靠 web/PR/8-K。
+- universe 已超出原 13 家:M&A 收购方扩到"研发驱动的全球 biopharma";剔除仿制药/区域 specialty(Sun Pharma/Angelini/Chiesi 这类)与 PE 财团杠杆收购(Recordati 这类)。tools/诊断标的(如 Bio-Techne)入库时标 `deal_subtype=other` + note 注明"非药物管线"。
 - **markdown scanner(不强制 schema)→ structurer 出 JSON** —— 强制 schema 的 agent 会因过度研究漏调 StructuredOutput 集体失败(踩过坑)。
 
 ### Step 2 · 分类 M&A vs BD

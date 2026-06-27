@@ -473,7 +473,8 @@ with tab_ipo:
         ui.render_html_table(
             disp, price_cols=[ic["offer"], ic["close"]],
             extra_formats={ic["ret"]: "%+.0f%%", ic["mktcap"]: "%.0f", ic["turnover"]: "%.1f"},
-            text_cols=[ic["mkttier"], ic["liqtier"], ic["broke"], ic["flag"]],
+            text_cols=[ic["mkttier"], ic["liqtier"], ic["flag"]],
+            status_cols={ic["broke"]: {"水上": "up", "破发": "down"}},
             right_text_cols=[ic["date"]], index_label=ic["name"],
             height=min(1100, 80 + 30 * len(disp)))
 

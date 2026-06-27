@@ -282,6 +282,7 @@ def render_html_table(
     price_cols: list[str] | None = None,
     text_cols: list[str] | None = None,
     right_text_cols: list[str] | None = None,
+    status_cols: dict[str, dict[str, str]] | None = None,
     link_cols: list[str] | None = None,
     nav_cols: list[str] | None = None,
     spark_cols: list[str] | None = None,
@@ -332,6 +333,7 @@ def render_html_table(
     price_cols = set(price_cols or [])
     text_cols = set(text_cols or [])
     right_text_cols = set(right_text_cols or [])
+    status_cols = status_cols or {}
     link_cols = set(link_cols or [])
     nav_cols = set(nav_cols or [])
     spark_cols = set(spark_cols or [])
@@ -414,6 +416,16 @@ def render_html_table(
             # value already formatted by caller (unit-aware) — right-align + ink-strong
             s = '<span class="flat">—</span>' if _na(v) else _html.escape(str(v))
             return s, ("" if _na(v) else str(v).lower()), "strong", "s", ""
+        if col in status_cols:
+            # left text whose colour is keyed off the cell VALUE (e.g. 水上→up/teal,
+            # 破发→down/red). Reuses the locked .up/.down classes so a status column
+            # shares the table's teal=good / red=bad convention; bold for prominence.
+            if _na(v):
+                return '<span class="flat">—</span>', "", "l", "s", ""
+            s = _html.escape(str(v))
+            cls = status_cols[col].get(str(v), "")
+            inner = f'<span class="{cls}" style="font-weight:700">{s}</span>' if cls else s
+            return inner, str(v).lower(), "l", "s", ""
         if col in text_cols:
             s = "" if _na(v) else _html.escape(str(v))
             return s, ("" if _na(v) else str(v).lower()), "l nm", "s", ""

@@ -64,7 +64,12 @@ def _build_relative(wb) -> None:
     name_cn = dict(zip(df["series_id"], df["name_cn"]))
 
     for sheet_name, (hero, order) in _REL_PANELS.items():
-        sub = df[df["series_id"].isin(order)]
+        # A series may recur across panels (^NBI / XBI live in both `nbi` and
+        # `ai_bio`); isin() alone would pull both copies and pivot would choke on
+        # duplicate (date, series_id) pairs. The copies carry identical closes, so
+        # dedup-keep-first is exact and panel-agnostic.
+        sub = (df[df["series_id"].isin(order)]
+               .drop_duplicates(subset=["date", "series_id"], keep="first"))
         wide = (sub.pivot(index="date", columns="series_id", values="close")
                 .reindex(columns=order).dropna().sort_index())
         if wide.empty:

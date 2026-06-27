@@ -134,21 +134,23 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
 
         last = float(ser.iloc[-1])
 
-        # Split / bad-tick guard: a single-day move beyond this is almost never a
-        # real return — it's an un-back-adjusted stock split (yfinance sometimes
+        # Split / bad-tick guard: a single-day DROP beyond this is almost never a
+        # real return — it's an un-back-adjusted forward split (yfinance sometimes
         # MISSES the split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB
         # mixes pre- and post-split closes) or a bad tick. Any window spanning such
-        # a discontinuity is suppressed (NaN) so the heatmap drops the tile rather
-        # than printing a fake -90%. 0.65 sits ABOVE genuine one-day crashes
-        # (e.g. 2617.HK -60% real distress) and BELOW split jumps (-80/-90%).
-        SPLIT_GUARD = 0.65
+        # a drop is suppressed (NaN) so the heatmap drops the tile rather than
+        # printing a fake -90%. DOWNWARD-only + 0.75 by design: real biotech
+        # catalysts pop UP big (e.g. 2565.HK +66% on 2026-05-18, no split — must
+        # NOT be suppressed), and genuine one-day crashes rarely exceed -75%
+        # (2617.HK -60% real distress stays), while forward-split jumps are -80/-90%.
+        SPLIT_GUARD = 0.75
 
         def ret_back(n: int) -> float:
             if len(ser) <= n:
                 return NAN
             seg = ser.iloc[-n - 1:]
-            if (seg.pct_change().abs() > SPLIT_GUARD).any():
-                return NAN  # window crosses a split/bad-tick discontinuity
+            if (seg.pct_change() < -SPLIT_GUARD).any():
+                return NAN  # window crosses a split/bad-tick down-discontinuity
             prev = seg.iloc[0]
             if pd.isna(prev) or prev == 0:
                 return NAN
@@ -158,7 +160,7 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
         year = ser.index.max().year
         this_year = ser[ser.index >= pd.Timestamp(f"{year}-01-01")]
         if (not this_year.empty and this_year.iloc[0] != 0
-                and not (this_year.pct_change().abs() > SPLIT_GUARD).any()):
+                and not (this_year.pct_change() < -SPLIT_GUARD).any()):
             ytd = float((ser.iloc[-1] / this_year.iloc[0] - 1) * 100)
         else:
             ytd = NAN

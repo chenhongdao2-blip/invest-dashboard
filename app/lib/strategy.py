@@ -43,15 +43,37 @@ IPO_INTRADAY_CSV = DATA_EXT / "ipo_day1_intraday.csv"
 DELISTED_CSV = DATA_EXT / "delisted_overrides.csv"
 
 
+def _delisted_mtime() -> float:
+    """mtime of the override CSV (0.0 if absent). Used as a cache key so editing the
+    file invalidates fetch_picks_closes / _delisted_overrides instead of going stale."""
+    return DELISTED_CSV.stat().st_mtime if DELISTED_CSV.exists() else 0.0
+
+
 @st.cache_data(ttl=3600)
-def _delisted_overrides() -> dict[str, float]:
-    """{yf_sym: final_cash_price} for acquired/delisted picks. Empty if file absent."""
+def _delisted_overrides(_mtime: float) -> dict[str, tuple[float, float, object]]:
+    """{yf_sym: (entry_price, final_price, delist_ts)} for acquired/delisted picks.
+
+    entry_price defaults to final_price when blank → the holding is flat at the
+    cash-out value (correct for a merger-arb pick entered ~at the deal price). When
+    the pick ran up before acquisition, the analyst fills entry_price so the realized
+    return = final/entry, recognized as a step at delist_date. `_mtime` is only a
+    cache key (see _delisted_mtime). Empty if file absent."""
     if not DELISTED_CSV.exists():
         return {}
     d = pd.read_csv(DELISTED_CSV)
-    fp = pd.to_numeric(d["final_price"], errors="coerce")
-    return {str(s): float(p) for s, p in zip(d["yf_sym"], fp)
-            if pd.notna(s) and pd.notna(p)}
+    fin = pd.to_numeric(d["final_price"], errors="coerce")
+    ent = (pd.to_numeric(d["entry_price"], errors="coerce")
+           if "entry_price" in d.columns else pd.Series([float("nan")] * len(d)))
+    dl = d["delist_date"] if "delist_date" in d.columns else pd.Series([None] * len(d))
+    out: dict[str, tuple[float, float, object]] = {}
+    for i, s in enumerate(d["yf_sym"]):
+        if pd.isna(s) or pd.isna(fin.iloc[i]):
+            continue
+        f = float(fin.iloc[i])
+        e = float(ent.iloc[i]) if pd.notna(ent.iloc[i]) else f          # blank → flat
+        ts = pd.Timestamp(dl.iloc[i]) if pd.notna(dl.iloc[i]) else None
+        out[str(s)] = (e, f, ts)
+    return out
 
 
 @st.cache_data(ttl=900)
@@ -167,7 +189,8 @@ STRATEGIES = {
 
 
 @st.cache_data(ttl=3600, show_spinner="Fetching picks prices…")
-def fetch_picks_closes(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
+def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
+                       _ovr_mtime: float = 0.0) -> pd.DataFrame:
     """Wide-format close DataFrame for picks. Live yfinance, cached 1h.
 
     yfinance occasionally fails a whole burst of symbols in one batch
@@ -218,15 +241,20 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
         time.sleep(2)  # rate-limit pause before the retry batch
         out.update(_download(missing))
 
-    # Acquired/delisted picks (yfinance returns nothing): pin to cash-out value, a
-    # flat series from `start` to today, so the book holds them as cash at the deal
-    # price instead of dropping them + warning. Done BEFORE the missing-warning so a
-    # known cash-out is never flagged as a fetch failure.
-    overrides = _delisted_overrides()
-    flat_idx = pd.bdate_range(start=start, end=date.today())
+    # Acquired/delisted picks (yfinance returns nothing): synthesize a held-then-
+    # cashed-out series — entry_price until delist_date, then final cash price — so
+    # the book books the REALIZED return (final/entry) instead of dropping the name.
+    # entry defaults to final (flat) for merger-arb picks. Done BEFORE the missing-
+    # warning so a known cash-out is never flagged as a fetch failure.
+    overrides = _delisted_overrides(_ovr_mtime)
+    idx = pd.bdate_range(start=start, end=date.today())
     for sym in yf_syms:
-        if sym in overrides and len(flat_idx):
-            out[sym] = pd.Series(overrides[sym], index=flat_idx, name=sym)
+        if sym in overrides and len(idx):
+            entry, final, delist_ts = overrides[sym]
+            ser = pd.Series(final, index=idx, name=sym, dtype="float64")
+            if delist_ts is not None and entry != final:
+                ser[idx < delist_ts] = entry  # held at entry until cash-out step
+            out[sym] = ser
 
     still = [s for s in yf_syms if s not in out]
     if still:

@@ -115,7 +115,8 @@ def render_strategy(strat_id: str) -> None:
     # trailing 15D/30D columns have data even on a freshly built book (v2).
     earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
     bench_syms = tuple(s for s in (bench_sym, bench2_sym) if s)
-    closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest)
+    closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest,
+                                      _ovr_mtime=strat._delisted_mtime())
 
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
@@ -372,7 +373,8 @@ def render_hd_compare() -> None:
     all_syms = tuple(dict.fromkeys(
         v1_syms + v2_syms + [s for s in (bench_sym, bench2_sym) if s]))
     earliest = (pd.Timestamp(cfg1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
-    closes = strat.fetch_picks_closes(all_syms, start=earliest)
+    closes = strat.fetch_picks_closes(all_syms, start=earliest,
+                                      _ovr_mtime=strat._delisted_mtime())
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
         return

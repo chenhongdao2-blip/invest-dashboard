@@ -1,2 +1,2 @@
-yf_sym,final_price,delist_date,reason
-FOLD,14.50,2026-04-27,"Amicus Therapeutics acquired by BioMarin $14.50/sh all-cash ($4.8bn); NASDAQ delisted 2026-04-27 (picked 2026-04-22 in v4; merger-arb price ~ deal so realized return ≈ flat / cash-out)"
+yf_sym,entry_price,final_price,delist_date,reason
+FOLD,,14.50,2026-04-27,"Amicus Therapeutics acquired by BioMarin $14.50/sh all-cash ($4.8bn); NASDAQ delisted 2026-04-27 (picked 2026-04-22 in v4; merger-arb price ~ deal so entry left blank = held flat at cash-out, realized ≈ 0%). For a pick that ran UP before acquisition, fill entry_price with the pick-date price so realized = final/entry."

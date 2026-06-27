@@ -134,10 +134,22 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
 
         last = float(ser.iloc[-1])
 
+        # Split / bad-tick guard: a single-day move beyond this is almost never a
+        # real return — it's an un-back-adjusted stock split (yfinance sometimes
+        # MISSES the split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB
+        # mixes pre- and post-split closes) or a bad tick. Any window spanning such
+        # a discontinuity is suppressed (NaN) so the heatmap drops the tile rather
+        # than printing a fake -90%. 0.65 sits ABOVE genuine one-day crashes
+        # (e.g. 2617.HK -60% real distress) and BELOW split jumps (-80/-90%).
+        SPLIT_GUARD = 0.65
+
         def ret_back(n: int) -> float:
             if len(ser) <= n:
                 return NAN
-            prev = ser.iloc[-n - 1]
+            seg = ser.iloc[-n - 1:]
+            if (seg.pct_change().abs() > SPLIT_GUARD).any():
+                return NAN  # window crosses a split/bad-tick discontinuity
+            prev = seg.iloc[0]
             if pd.isna(prev) or prev == 0:
                 return NAN
             return float((ser.iloc[-1] / prev - 1) * 100)
@@ -145,7 +157,8 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
         # YTD: first close in current year (use each ticker's own anchor)
         year = ser.index.max().year
         this_year = ser[ser.index >= pd.Timestamp(f"{year}-01-01")]
-        if not this_year.empty and this_year.iloc[0] != 0:
+        if (not this_year.empty and this_year.iloc[0] != 0
+                and not (this_year.pct_change().abs() > SPLIT_GUARD).any()):
             ytd = float((ser.iloc[-1] / this_year.iloc[0] - 1) * 100)
         else:
             ytd = NAN

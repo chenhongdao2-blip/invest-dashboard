@@ -36,6 +36,22 @@ HD_CSV = DATA_EXT / "hd_picks.csv"
 HD_V2_CSV = DATA_EXT / "hd_picks_v2.csv"
 IPO_CSV = DATA_EXT / "ipo_picks.csv"
 IPO_INTRADAY_CSV = DATA_EXT / "ipo_day1_intraday.csv"
+# Acquired / delisted picks: yfinance purges their history, so a live fetch returns
+# nothing and the book silently drops the name (+ "possibly delisted" warning). This
+# map pins each to its cash-out value (held as cash from delist_date), so the book
+# accounts an acquired pick at the deal price instead of losing it. Analyst-editable.
+DELISTED_CSV = DATA_EXT / "delisted_overrides.csv"
+
+
+@st.cache_data(ttl=3600)
+def _delisted_overrides() -> dict[str, float]:
+    """{yf_sym: final_cash_price} for acquired/delisted picks. Empty if file absent."""
+    if not DELISTED_CSV.exists():
+        return {}
+    d = pd.read_csv(DELISTED_CSV)
+    fp = pd.to_numeric(d["final_price"], errors="coerce")
+    return {str(s): float(p) for s, p in zip(d["yf_sym"], fp)
+            if pd.notna(s) and pd.notna(p)}
 
 
 @st.cache_data(ttl=900)
@@ -201,9 +217,20 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
     if missing:
         time.sleep(2)  # rate-limit pause before the retry batch
         out.update(_download(missing))
-        still = [s for s in yf_syms if s not in out]
-        if still:
-            st.warning(f"Price fetch incomplete after retry: {', '.join(still)}")
+
+    # Acquired/delisted picks (yfinance returns nothing): pin to cash-out value, a
+    # flat series from `start` to today, so the book holds them as cash at the deal
+    # price instead of dropping them + warning. Done BEFORE the missing-warning so a
+    # known cash-out is never flagged as a fetch failure.
+    overrides = _delisted_overrides()
+    flat_idx = pd.bdate_range(start=start, end=date.today())
+    for sym in yf_syms:
+        if sym in overrides and len(flat_idx):
+            out[sym] = pd.Series(overrides[sym], index=flat_idx, name=sym)
+
+    still = [s for s in yf_syms if s not in out]
+    if still:
+        st.warning(f"Price fetch incomplete after retry: {', '.join(still)}")
     if not out:
         return pd.DataFrame()
     return pd.DataFrame(out).sort_index()

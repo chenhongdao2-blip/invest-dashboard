@@ -1,0 +1,13 @@
+# ETF — Biotech sub-sector (2 tickers)
+sector_id: etf_biotech
+domain: etf
+
+tickers:
+  - ticker: IBB
+    name_cn: iShares生物科技ETF
+    name_en: iShares Biotechnology ETF
+    region: US
+  - ticker: XBI
+    name_cn: SPDR标普生物科技ETF
+    name_en: SPDR S&P Biotech ETF
+    region: US

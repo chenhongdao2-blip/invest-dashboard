@@ -1,0 +1,13 @@
+# ETF — Pharma sub-sector (2 tickers)
+sector_id: etf_pharma
+domain: etf
+
+tickers:
+  - ticker: XPH
+    name_cn: SPDR标普制药ETF
+    name_en: SPDR S&P Pharmaceuticals ETF
+    region: US
+  - ticker: PPH
+    name_cn: VanEck制药ETF
+    name_en: VanEck Pharmaceutical ETF
+    region: US

@@ -1,0 +1,1193 @@
+etf_ticker,rank,symbol,name,weight_pct
+XLV,1,LLY,Eli Lilly and Company,16.42
+XLV,2,JNJ,Johnson & Johnson,10.53
+XLV,3,ABBV,AbbVie Inc.,7.69
+XLV,4,UNH,UnitedHealth Group Incorporated,6.68
+XLV,5,MRK,"Merck & Co., Inc.",5.46
+XLV,6,AMGN,Amgen Inc.,3.32
+XLV,7,TMO,Thermo Fisher Scientific Inc.,3.28
+XLV,8,ABT,Abbott Laboratories,2.82
+XLV,9,GILD,"Gilead Sciences, Inc.",2.73
+XLV,10,ISRG,"Intuitive Surgical, Inc.",2.46
+XLV,11,PFE,Pfizer Inc.,2.38
+XLV,12,CVS,CVS Health Corporation,2.29
+XLV,13,VRTX,Vertex Pharmaceuticals Incorporated,2.14
+XLV,14,DHR,Danaher Corporation,2.12
+XLV,15,BMY,Bristol-Myers Squibb Company,2.02
+XLV,16,SYK,Stryker Corporation,1.97
+XLV,17,MDT,Medtronic plc,1.79
+XLV,18,MCK,McKesson Corporation,1.58
+XLV,19,ELV,"Elevance Health, Inc.",1.47
+XLV,20,CI,The Cigna Group,1.29
+XLV,21,BSX,Boston Scientific Corporation,1.13
+XLV,22,REGN,"Regeneron Pharmaceuticals, Inc.",1.09
+XLV,23,HCA,"HCA Healthcare, Inc.",1.04
+XLV,24,CAH,"Cardinal Health, Inc.",0.96
+XLV,25,COR,"Cencora, Inc.",0.96
+XLV,,EW,,
+XLV,,HUM,,
+XLV,,IDXX,,
+XLV,,BDX,,
+XLV,,A,,
+XLV,,WAT,,
+XLV,,ZTS,,
+XLV,,IQV,,
+XLV,,CNC,,
+XLV,,BIIB,,
+XLV,,GEHC,,
+XLV,,RMD,,
+XLV,,DXCM,,
+XLV,,MTD,,
+XLV,,WST,,
+XLV,,VEEV,,
+XLV,,DGX,,
+XLV,,LH,,
+XLV,,MRNA,,
+XLV,,STE,,
+XLV,,VTRS,,
+XLV,,INCY,,
+XLV,,ZBH,,
+XLV,,COO,,
+XLV,,RVTY,,
+XLV,,ALGN,,
+XLV,,SOLV,,
+XLV,,BAX,,
+XLV,,TECH,,
+XLV,,PODD,,
+XLV,,CRL,,
+XLV,,HSIC,,
+XLV,,UHS,,
+XLV,,DVA,,
+XLV,,IXCU6,,
+XLV,,2602335D,,
+VHT,1,LLY,Eli Lilly and Company,13.99
+VHT,2,JNJ,Johnson & Johnson,8.44
+VHT,3,ABBV,AbbVie Inc.,6.07
+VHT,4,UNH,UnitedHealth Group Incorporated,5.44
+VHT,5,MRK,"Merck & Co., Inc.",4.63
+VHT,6,TMO,Thermo Fisher Scientific Inc.,2.88
+VHT,7,AMGN,Amgen Inc.,2.86
+VHT,8,GILD,"Gilead Sciences, Inc.",2.63
+VHT,9,ISRG,"Intuitive Surgical, Inc.",2.38
+VHT,10,ABT,Abbott Laboratories,2.35
+VHT,11,PFE,Pfizer Inc.,2.35
+VHT,12,BMY,Bristol-Myers Squibb Company,1.84
+VHT,13,DHR,Danaher Corporation,1.83
+VHT,14,CVS,CVS Health Corporation,1.82
+VHT,15,VRTX,Vertex Pharmaceuticals Incorporated,1.79
+VHT,16,SYK,Stryker Corporation,1.66
+VHT,17,MDT,Medtronic plc,1.49
+VHT,18,MCK,McKesson Corporation,1.43
+VHT,19,ELV,"Elevance Health, Inc.",1.33
+VHT,20,CI,The Cigna Group,1.15
+VHT,21,BSX,Boston Scientific Corporation,1.13
+VHT,22,REGN,"Regeneron Pharmaceuticals, Inc.",1.01
+VHT,23,HCA,"HCA Healthcare, Inc.",0.93
+VHT,24,EW,Edwards Lifesciences Corporation,0.79
+VHT,25,COR,"Cencora, Inc.",0.78
+VHT,,ZTS,,
+VHT,,CAH,,
+VHT,,IDXX,,
+VHT,,BDX,,
+VHT,,ALNY,,
+VHT,,A,,
+VHT,,RMD,,
+VHT,,WAT,,
+VHT,,INSM,,
+VHT,,HUM,,
+VHT,,BIIB,,
+VHT,,GEHC,,
+VHT,,NTRA,,
+VHT,,IQV,,
+VHT,,CNC,,
+VHT,,MTD,,
+VHT,,VEEV,,
+VHT,,UTHR,,
+VHT,,RVMD,,
+VHT,,DXCM,,
+VHT,,DGX,,
+VHT,,WST,,
+VHT,,LH,,
+VHT,,STE,,
+VHT,,ILMN,,
+VHT,,VTRS,,
+VHT,,ZBH,,
+VHT,,INCY,,
+VHT,,THC,,
+VHT,,MRNA,,
+VHT,,NBIX,,
+VHT,,COO,,
+VHT,,PEN,,
+VHT,,PODD,,
+VHT,,ALGN,,
+VHT,,IONS,,
+VHT,,EXEL,,
+VHT,,ELAN,,
+VHT,,JAZZ,,
+VHT,,ENSG,,
+VHT,,ROIV,,
+VHT,,SOLV,,
+VHT,,BBIO,,
+VHT,,MDLN,,
+VHT,,GMED,,
+VHT,,EHC,,
+VHT,,MOH,,
+VHT,,BMRN,,
+VHT,,RVTY,,
+VHT,,GH,,
+VHT,,MEDP,,
+VHT,,UHS,,
+VHT,,BAX,,
+VHT,,ARWR,,
+VHT,,TECH,,
+VHT,,GKOS,,
+VHT,,CRL,,
+VHT,,MASI,,
+VHT,,HSIC,,
+VHT,,MDGL,,
+VHT,,PRAX,,
+VHT,,HALO,,
+VHT,,CYTK,,
+VHT,,AXSM,,
+VHT,,HQY,,
+VHT,,BTSG,,
+VHT,,PCVX,,
+VHT,,RGEN,,
+VHT,,CHE,,
+VHT,,DVA,,
+VHT,,KRYS,,
+VHT,,LNTH,,
+VHT,,AVTR,,
+VHT,,TFX,,
+VHT,,HIMS,,
+VHT,,ALKS,,
+VHT,,BIO,,
+VHT,,TEM,,
+VHT,,TGTX,,
+VHT,,PTGX,,
+VHT,,PTCT,,
+VHT,,RYTM,,
+VHT,,LGND,,
+VHT,,CORT,,
+VHT,,NVST,,
+VHT,,IRTC,,
+VHT,,MMSI,,
+VHT,,NUVL,,
+VHT,,INDV,,
+VHT,,BRKR,,
+VHT,,KYMR,,
+VHT,,ALHC,,
+VHT,,RDNT,,
+VHT,,MIRM,,
+VHT,,SYRE,,
+VHT,,TVTX,,
+VHT,,TWST,,
+VHT,,CRNX,,
+VHT,,OGN,,
+VHT,,VKTX,,
+VHT,,SMMT,,
+VHT,,SHC,,
+VHT,,LIVN,,
+VHT,,TMDX,,
+VHT,,CPRX,,
+VHT,,BKD,,
+VHT,,OPCH,,
+VHT,,APGE,,
+VHT,,APLS,,
+VHT,,ITGR,,
+VHT,,DNTH,,
+VHT,,DOCS,,
+VHT,,TERN,,
+VHT,,COGT,,
+VHT,,SRRK,,
+VHT,,CGON,,
+VHT,,HAE,,
+VHT,,ICUI,,
+VHT,,BEAM,,
+VHT,,SUPN,,
+VHT,,PBH,,
+VHT,,ACAD,,
+VHT,,NKTR,,
+VHT,,VCYT,,
+VHT,,DNLI,,
+VHT,,CON,,
+VHT,,ARQT,,
+VHT,,CELC,,
+VHT,,IBRX,,
+VHT,,WAY,,
+VHT,,ADMA,,
+VHT,,PRVA,,
+VHT,,SLNO,,
+VHT,,LQDA,,
+VHT,,LMAT,,
+VHT,,XRAY,,
+VHT,,TXG,,
+VHT,,IDYA,,
+VHT,,NHC,,
+VHT,,ACHC,,
+VHT,,RCUS,,
+VHT,,CLDX,,
+VHT,,IMVT,,
+VHT,,IMNM,,
+VHT,,RARE,,
+VHT,,SRPT,,
+VHT,,DYN,,
+VHT,,TARS,,
+VHT,,AMRX,,
+VHT,,AXGN,,
+VHT,,KNSA,,
+VHT,,MD,,
+VHT,,NEOG,,
+VHT,,GRAL,,
+VHT,,BCRX,,
+VHT,,OMCL,,
+VHT,,SEM,,
+VHT,,ERAS,,
+VHT,,ADUS,,
+VHT,,CRVL,,
+VHT,,VCEL,,
+VHT,,DFTX,,
+VHT,,SNDX,,
+VHT,,AUPH,,
+VHT,,ORKA,,
+VHT,,EWTX,,
+VHT,,INVA,,
+VHT,,PRGO,,
+VHT,,ADPT,,
+VHT,,NVCR,,
+VHT,,IRON,,
+VHT,,ALMS,,
+VHT,,PACS,,
+VHT,,INSP,,
+VHT,,RLAY,,
+VHT,,AGIO,,
+VHT,,ASTH,,
+VHT,,ARDX,,
+VHT,,PGNY,,
+VHT,,RXRX,,
+VHT,,OCUL,,
+VHT,,NTLA,,
+VHT,,AORT,,
+VHT,,ANIP,,
+VHT,,UFPT,,
+VHT,,ATRC,,
+VHT,,VERA,,
+VHT,,HRMY,,
+VHT,,ENOV,,
+VHT,,ELVN,,
+VHT,,PRCT,,
+VHT,,TNDM,,
+VHT,,LFST,,
+VHT,,TRVI,,
+VHT,,STOK,,
+VHT,,NAMS,,
+VHT,,HROW,,
+VHT,,NRIX,,
+VHT,,WGS,,
+VHT,,KOD,,
+VHT,,PVLA,,
+VHT,,BHVN,,
+VHT,,AHCO,,
+VHT,,MLYS,,
+VHT,,NEO,,
+VHT,,VIR,,
+VHT,,ESTA,,
+VHT,,CLOV,,
+VHT,,ATEC,,
+VHT,,AVNS,,
+VHT,,CNMD,,
+VHT,,SGRY,,
+VHT,,NVAX,,
+VHT,,PNTG,,
+VHT,,PAHC,,
+VHT,,USPH,,
+VHT,,COLL,,
+VHT,,TDOC,,
+VHT,,FTRE,,
+VHT,,AMLX,,
+VHT,,CDNA,,
+VHT,,PCRX,,
+VHT,,OMER,,
+VHT,,IOVA,,
+VHT,,ZYME,,
+VHT,,AZTA,,
+VHT,,XERS,,
+VHT,,NUVB,,
+VHT,,EYPT,,
+VHT,,TNGX,,
+VHT,,BFLY,,
+VHT,,RAPP,,
+VHT,,URGN,,
+VHT,,ANAB,,
+VHT,,GRDN,,
+VHT,,VRDN,,
+VHT,,TSHA,,
+VHT,,STAA,,
+VHT,,BLFS,,
+VHT,,CRVS,,
+VHT,,QDEL,,
+VHT,,MNKD,,
+VHT,,AMPH,,
+VHT,,AMN,,
+VHT,,HNGE,,
+VHT,,WVE,,
+VHT,,SDGR,,
+VHT,,TALK,,
+VHT,,KALV,,
+VHT,,GERN,,
+VHT,,CERT,,
+VHT,,PGEN,,
+VHT,,TLRY,,
+VHT,,CSTL,,
+VHT,,IART,,
+VHT,,ANNX,,
+VHT,,IRMD,,
+VHT,,CTMX,,
+VHT,,MBX,,
+VHT,,AVBP,,
+VHT,,KURA,,
+VHT,,TBPH,,
+VHT,,ABUS,,
+VHT,,IRWD,,
+VHT,,BCAX,,
+VHT,,EHAB,,
+VHT,,XNCR,,
+VHT,,GLUE,,
+VHT,,SANA,,
+VHT,,JANX,,
+VHT,,CRMD,,
+VHT,,MLAB,,
+VHT,,PHR,,
+VHT,,OLMA,,
+VHT,,OCGN,,
+VHT,,ARVN,,
+VHT,,ALLO,,
+VHT,,PHAT,,
+VHT,,MLTX,,
+VHT,,TCMD,,
+VHT,,EMBC,,
+VHT,,SIBN,,
+VHT,,PRTA,,
+VHT,,HSTM,,
+VHT,,VREX,,
+VHT,,CTKB,,
+VHT,,ALT,,
+VHT,,CYRX,,
+VHT,,ESPR,,
+VHT,,OPK,,
+VHT,,TYRA,,
+VHT,,SPRY,,
+VHT,,ANGO,,
+VHT,,MYGN,,
+VHT,,EBS,,
+VHT,,KMTS,,
+VHT,,ORIC,,
+VHT,,PLSE,,
+VHT,,XOMA,,
+VHT,,PACB,,
+VHT,,MGTX,,
+VHT,,MDXG,,
+VHT,,MRVI,,
+VHT,,VNDA,,
+VHT,,CERS,,
+VHT,,BVS,,
+VHT,,CGEM,,
+VHT,,RGNX,,
+VHT,,FDMT,,
+VHT,,CATX,,
+VHT,,OFIX,,
+VHT,,CBLL,,
+VHT,,SVRA,,
+VHT,,CYH,,
+VHT,,EVH,,
+VHT,,AGL,,
+VHT,,AKBA,,
+VHT,,AVAH,,
+VHT,,TRAX,,
+VHT,,AURA,,
+VHT,,PRME,,
+VHT,,ZBIO,,
+VHT,,FLGT,,
+VHT,,CCRN,,
+VHT,,AVXL,,
+VHT,,DNA,,
+VHT,,LXRX,,
+VHT,,PSNL,,
+VHT,,EDIT,,
+VHT,,AVIR,,
+VHT,,RCKT,,
+VHT,,ARDT,,
+VHT,,FULC,,
+VHT,,SEPN,,
+VHT,,KIDS,,
+VHT,,EOLS,,
+VHT,,TRDA,,
+VHT,,SLP,,
+VHT,,RXST,,
+VHT,,VSTM,,
+VHT,,RZLT,,
+VHT,,LAB,,
+VHT,,ACH,,
+VHT,,ARCT,,
+VHT,,UPB,,
+VHT,,GDRX,,
+VHT,,ZNTL,,
+VHT,,SIGA,,
+VHT,,OSUR,,
+VHT,,KROS,,
+VHT,,QSI,,
+VHT,,ALEC,,
+VHT,,HRTX,,
+VHT,,MGNX,,
+VHT,,NMRA,,
+VHT,,LYEL,,
+VHT,,ORGO,,
+VHT,,CTEV,,
+VHT,,HUMA,,
+VHT,,QTRX,,
+VHT,,FATE,,
+VHT,,REPL,,
+VHT,,OABI,,
+VHT,,LENZ,,
+VHT,,KRRO,,
+VHT,,TMCI,,
+VHT,,MXCT,,
+VHT,,ALDX,,
+VHT,,GOSS,,
+VHT,,HCAT,,
+VHT,,FLNA,,
+VHT,,PLRX,,
+VHT,,DCGO,,
+VHT,,ALXO,,
+VHT,,DH,,
+VHT,,USD,,
+IYH,1,LLY,Eli Lilly and Company,15.5
+IYH,2,JNJ,Johnson & Johnson,10.11
+IYH,3,ABBV,AbbVie Inc.,7.39
+IYH,4,UNH,UnitedHealth Group Incorporated,6.49
+IYH,5,MRK,"Merck & Co., Inc.",5.35
+IYH,6,TMO,Thermo Fisher Scientific Inc.,3.28
+IYH,7,AMGN,Amgen Inc.,3.26
+IYH,8,ABT,Abbott Laboratories,2.77
+IYH,9,GILD,"Gilead Sciences, Inc.",2.65
+IYH,10,ISRG,"Intuitive Surgical, Inc.",2.42
+IYH,11,PFE,Pfizer Inc.,2.31
+IYH,12,VRTX,Vertex Pharmaceuticals Incorporated,2.09
+IYH,13,DHR,Danaher Corporation,2.08
+IYH,14,BMY,Bristol-Myers Squibb Company,1.94
+IYH,15,SYK,Stryker Corporation,1.87
+IYH,16,MDT,Medtronic plc,1.76
+IYH,17,ELV,"Elevance Health, Inc.",1.48
+IYH,18,CI,The Cigna Group,1.27
+IYH,19,BSX,Boston Scientific Corporation,1.12
+IYH,20,REGN,"Regeneron Pharmaceuticals, Inc.",1.08
+IYH,21,HCA,"HCA Healthcare, Inc.",1.08
+IYH,22,CAH,"Cardinal Health, Inc.",0.96
+IYH,23,EW,Edwards Lifesciences Corporation,0.89
+IYH,24,HUM,Humana Inc.,0.78
+IYH,25,IDXX,"IDEXX Laboratories, Inc.",0.76
+IYH,,BDX,,
+IYH,,ALNY,,
+IYH,,ZTS,,
+IYH,,WAT,,
+IYH,,A,,
+IYH,,RMD,,
+IYH,,GEHC,,
+IYH,,IQV,,
+IYH,,CNC,,
+IYH,,DXCM,,
+IYH,,BIIB,,
+IYH,,RVMD,,
+IYH,,NTRA,,
+IYH,,UTHR,,
+IYH,,VEEV,,
+IYH,,INSM,,
+IYH,,WST,,
+IYH,,ILMN,,
+IYH,,DGX,,
+IYH,,STE,,
+IYH,,LH,,
+IYH,,RPRX,,
+IYH,,VTRS,,
+IYH,,MRNA,,
+IYH,,ZBH,,
+IYH,,INCY,,
+IYH,,THC,,
+IYH,,NBIX,,
+IYH,,JAZZ,,
+IYH,,ROIV,,
+IYH,,EXEL,,
+IYH,,PEN,,
+IYH,,COO,,
+IYH,,IONS,,
+IYH,,MDLN,,
+IYH,,SOLV,,
+IYH,,PODD,,
+IYH,,ALGN,,
+IYH,,RVTY,,
+IYH,,ELAN,,
+IYH,,EHC,,
+IYH,,BMRN,,
+IYH,,BAX,,
+IYH,,MEDP,,
+IYH,,GMED,,
+IYH,,MOH,,
+IYH,,UHS,,
+IYH,,MASI,,
+IYH,,HALO,,
+IYH,,CRL,,
+IYH,,HSIC,,
+IYH,,TECH,,
+IYH,,QGEN,,
+IYH,,DVA,,
+IYH,,CHE,,
+IYH,,RGEN,,
+IYH,,TFX,,
+IYH,,CORT,,
+IYH,,BIO,,
+IYH,,AVTR,,
+IYH,,BRKR,,
+IYH,,TEM,,
+IYH,,SHC,,
+IYH,,NVST,,
+IYH,,OGN,,
+IYH,,VKTX,,
+IYH,,DOCS,,
+IYH,,RARE,,
+IYH,,ACHC,,
+IYH,,SMMT,,
+IYH,,XRAY,,
+IYH,,SRPT,,
+IYH,,PRGO,,
+IYH,,CAI,,
+IYH,,INSP,,
+IYH,,CERT,,
+IBB,1,VRTX,Vertex Pharmaceuticals Incorporated,8.09
+IBB,2,AMGN,Amgen Inc.,7.9
+IBB,3,GILD,"Gilead Sciences, Inc.",6.94
+IBB,4,REGN,"Regeneron Pharmaceuticals, Inc.",5.05
+IBB,5,ARGX,argenx SE,3.73
+IBB,6,ALNY,"Alnylam Pharmaceuticals, Inc.",3.15
+IBB,7,NTRA,"Natera, Inc.",2.87
+IBB,8,RVMD,"Revolution Medicines, Inc.",2.74
+IBB,9,BIIB,Biogen Inc.,2.39
+IBB,10,ILMN,"Illumina, Inc.",2.16
+IBB,11,INSM,Insmed Incorporated,1.81
+IBB,12,UTHR,United Therapeutics Corporation,1.8
+IBB,13,ONC,BeOne Medicines AG,1.77
+IBB,14,MRNA,"Moderna, Inc.",1.75
+IBB,15,INCY,Incyte Corporation,1.72
+IBB,16,ROIV,Roivant Sciences Ltd.,1.42
+IBB,17,,"Neurocrine Biosciences, Inc.",1.31
+IBB,18,ASND,Ascendis Pharma A/S,1.31
+IBB,19,GMAB,Genmab A/S,1.1
+IBB,20,EXEL,"Exelixis, Inc.",1.05
+IBB,21,IONS,"Ionis Pharmaceuticals, Inc.",1.03
+IBB,22,MEDP,"Medpace Holdings, Inc.",0.97
+IBB,23,BBIO,"BridgeBio Pharma, Inc.",0.95
+IBB,24,MDGL,"Madrigal Pharmaceuticals, Inc.",0.9
+IBB,25,TECH,Bio-Techne Corporation,0.89
+IBB,,NBIX,,
+IBB,,BMRN,,
+IBB,,AXSM,,
+IBB,,ARWR,,
+IBB,,CYTK,,
+IBB,,PRAX,,
+IBB,,HALO,,
+IBB,,CRL,,
+IBB,,KRYS,,
+IBB,,BNTX,,
+IBB,,PCVX,,
+IBB,,ABVX,,
+IBB,,PTGX,,
+IBB,,RGEN,,
+IBB,,ALKS,,
+IBB,,RYTM,,
+IBB,,KYMR,,
+IBB,,PTCT,,
+IBB,,MIRM,,
+IBB,,XENE,,
+IBB,,NUVL,,
+IBB,,TEM,,
+IBB,,SYRE,,
+IBB,,BRKR,,
+IBB,,CRSP,,
+IBB,,SRRK,,
+IBB,,COGT,,
+IBB,,TVTX,,
+IBB,,APGE,,
+IBB,,LEGN,,
+IBB,,CRNX,,
+IBB,,ACAD,,
+IBB,,VCYT,,
+IBB,,TWST,,
+IBB,,CGON,,
+IBB,,IMVT,,
+IBB,,TXG,,
+IBB,,CNTA,,
+IBB,,DNLI,,
+IBB,,IBRX,,
+IBB,,NAMS,,
+IBB,,BEAM,,
+IBB,,TARS,,
+IBB,,EWTX,,
+IBB,,IDYA,,
+IBB,,ORKA,,
+IBB,,GRAL,,
+IBB,,ARQT,,
+IBB,,RARE,,
+IBB,,ERAS,,
+IBB,,DFTX,,
+IBB,,DYN,,
+IBB,,KOD,,
+IBB,,ADPT,,
+IBB,,TNGX,,
+IBB,,GPCR,,
+IBB,,RCUS,,
+IBB,,ADMA,,
+IBB,,IRON,,
+IBB,,VERA,,
+IBB,,CAI,,
+IBB,,BCRX,,
+IBB,,SMMT,,
+IBB,,NVCR,,
+IBB,,ELVN,,
+IBB,,AUPH,,
+IBB,,RLAY,,
+IBB,,ZYME,,
+IBB,,MLYS,,
+IBB,,VCEL,,
+IBB,,NRIX,,
+IBB,,SRPT,,
+IBB,,SNDX,,
+IBB,,ALMS,,
+IBB,,ZLAB,,
+IBB,,ANAB,,
+IBB,,AGIO,,
+IBB,,RXRX,,
+IBB,,NVAX,,
+IBB,,NTLA,,
+IBB,,QURE,,
+IBB,,STOK,,
+IBB,,IOVA,,
+IBB,,AMLX,,
+IBB,,ATAI,,
+IBB,,TSHA,,
+IBB,,FTRE,,
+IBB,,TYRA,,
+IBB,,ABCL,,
+IBB,,BHVN,,
+IBB,,TRVI,,
+IBB,,NUVB,,
+IBB,,URGN,,
+IBB,,CMPS,,
+IBB,,INBX,,
+IBB,,IMCR,,
+IBB,,RAPP,,
+IBB,,GRFS,,
+IBB,,SION,,
+IBB,,LKFT,,
+IBB,,WVE,,
+IBB,,KALV,,
+IBB,,CDNA,,
+IBB,,VIR,,
+IBB,,MNKD,,
+IBB,,GHRS,,
+IBB,,OLMA,,
+IBB,,KURA,,
+IBB,,MESO,,
+IBB,,GLUE,,
+IBB,,STVN,,
+IBB,,MBX,,
+IBB,,CRVS,,
+IBB,,MAZE,,
+IBB,,PHVS,,
+IBB,,ANNX,,
+IBB,,XNCR,,
+IBB,,TBPH,,
+IBB,,BCAX,,
+IBB,,GERN,,
+IBB,,JANX,,
+IBB,,SEPN,,
+IBB,,AVBP,,
+IBB,,ABUS,,
+IBB,,ABSI,,
+IBB,,CTMX,,
+IBB,,MGTX,,
+IBB,,PGEN,,
+IBB,,ANRO,,
+IBB,,CGEM,,
+IBB,,IRWD,,
+IBB,,CSTL,,
+IBB,,ZVRA,,
+IBB,,PHAT,,
+IBB,,SVRA,,
+IBB,,SANA,,
+IBB,,SLDB,,
+IBB,,RIGL,,
+IBB,,PSNL,,
+IBB,,SPRY,,
+IBB,,OPK,,
+IBB,,ARVN,,
+IBB,,ORIC,,
+IBB,,BIOA,,
+IBB,,ZBIO,,
+IBB,,ACRS,,
+IBB,,CTKB,,
+IBB,,MRVI,,
+IBB,,ALLO,,
+IBB,,CADL,,
+IBB,,EBS,,
+IBB,,PRTA,,
+IBB,,BBOT,,
+IBB,,FDMT,,
+IBB,,REPL,,
+IBB,,CTNM,,
+IBB,,LAB,,
+IBB,,ENTA,,
+IBB,,ALVO,,
+IBB,,FULC,,
+IBB,,ALT,,
+IBB,,CABA,,
+IBB,,CATX,,
+IBB,,MYGN,,
+IBB,,DSGN,,
+IBB,,DNA,,
+IBB,,NGNE,,
+IBB,,PACB,,
+IBB,,AURA,,
+IBB,,FLGT,,
+IBB,,VNDA,,
+IBB,,LXEO,,
+IBB,,RCKT,,
+IBB,,RGNX,,
+IBB,,ADCT,,
+IBB,,AUTL,,
+IBB,,KYTX,,
+IBB,,OABI,,
+IBB,,TECX,,
+IBB,,CCCC,,
+IBB,,LCTX,,
+IBB,,PRME,,
+IBB,,IMRX,,
+IBB,,EDIT,,
+IBB,,AVIR,,
+IBB,,AVXL,,
+IBB,,UPB,,
+IBB,,CDXS,,
+IBB,,KROS,,
+IBB,,LENZ,,
+IBB,,HUMA,,
+IBB,,SGMT,,
+IBB,,ARCT,,
+IBB,,ACIU,,
+IBB,,LRMR,,
+IBB,,QSI,,
+IBB,,VYGR,,
+IBB,,CRBU,,
+IBB,,BDTX,,
+IBB,,CLLS,,
+IBB,,SLN,,
+IBB,,BCYC,,
+IBB,,TRDA,,
+IBB,,NBP,,
+IBB,,TNYA,,
+IBB,,LYEL,,
+IBB,,FHTX,,
+IBB,,NMRA,,
+IBB,,QTRX,,
+IBB,,PYXS,,
+IBB,,PEPG,,
+IBB,,MENS,,
+IBB,,AARD,,
+IBB,,IMMP,,
+IBB,,AKE,,
+IBB,,TKNO,,
+IBB,,GOSS,,
+IBB,,ADRO,,
+IBB,,THRD,,
+IBB,,CRGX,,
+XBI,1,APGE,"Apogee Therapeutics, Inc.",1.51
+XBI,2,TWST,Twist Bioscience Corporation,1.39
+XBI,3,MRNA,"Moderna, Inc.",1.38
+XBI,4,ORKA,"Oruka Therapeutics, Inc.",1.34
+XBI,5,KYMR,"Kymera Therapeutics, Inc.",1.3
+XBI,6,VKTX,"Viking Therapeutics, Inc.",1.29
+XBI,7,PRAX,"Praxis Precision Medicines, Inc.",1.29
+XBI,8,MIRM,"Mirum Pharmaceuticals, Inc.",1.24
+XBI,9,CGON,"CG Oncology, Inc.",1.24
+XBI,10,RYTM,"Rhythm Pharmaceuticals, Inc.",1.21
+XBI,11,RVMD,"Revolution Medicines, Inc.",1.19
+XBI,12,TVTX,"Travere Therapeutics, Inc.",1.19
+XBI,13,ALKS,Alkermes plc,1.19
+XBI,14,DNTH,"Dianthus Therapeutics, Inc.",1.18
+XBI,15,PCVX,"Vaxcyte, Inc.",1.17
+XBI,16,SRRK,Scholar Rock Holding Corporation,1.17
+XBI,17,CYTK,"Cytokinetics, Incorporated",1.16
+XBI,18,COGT,"Cogent Biosciences, Inc.",1.15
+XBI,19,NTRA,"Natera, Inc.",1.14
+XBI,20,ROIV,Roivant Sciences Ltd.,1.13
+XBI,21,TGTX,"TG Therapeutics, Inc.",1.13
+XBI,22,ERAS,"Erasca, Inc.",1.13
+XBI,23,KRYS,"Krystal Biotech, Inc.",1.12
+XBI,24,BEAM,Beam Therapeutics Inc.,1.11
+XBI,25,RLAY,"Relay Therapeutics, Inc.",1.11
+XBI,,QURE,,
+XBI,,SYRE,,
+XBI,,PTGX,,
+XBI,,PTCT,,
+XBI,,INSM,,
+XBI,,ARWR,,
+XBI,,VRTX,,
+XBI,,CRSP,,
+XBI,,MDGL,,
+XBI,,CELC,,
+XBI,,ABBV,,
+XBI,,VERA,,
+XBI,,RARE,,
+XBI,,IONS,,
+XBI,,SMMT,,
+XBI,,AMGN,,
+XBI,,BIIB,,
+XBI,,BBIO,,
+XBI,,REGN,,
+XBI,,HALO,,
+XBI,,BMRN,,
+XBI,,NBIX,,
+XBI,,INCY,,
+XBI,,GILD,,
+XBI,,EXEL,,
+XBI,,ALNY,,
+XBI,,NUVL,,
+XBI,,UTHR,,
+XBI,,IMVT,,
+XBI,,IBRX,,
+XBI,,GRAL,,
+XBI,,BCRX,,
+XBI,,ACAD,,
+XBI,,CPRX,,
+XBI,,NTLA,,
+XBI,,SLS,,
+XBI,,VCYT,,
+XBI,,TNGX,,
+XBI,,DNLI,,
+XBI,,DYN,,
+XBI,,IDYA,,
+XBI,,RCUS,,
+XBI,,ARQT,,
+XBI,,MLYS,,
+XBI,,RXRX,,
+XBI,,AGIO,,
+XBI,,SRPT,,
+XBI,,SNDX,,
+XBI,,CLDX,,
+XBI,,VRDN,,
+XBI,,ADMA,,
+XBI,,IRON,,
+XBI,,CAPR,,
+XBI,,NVAX,,
+XBI,,IOVA,,
+XBI,,BHVN,,
+XBI,,IMNM,,
+XBI,,PVLA,,
+XBI,,NRIX,,
+XBI,,ABSI,,
+XBI,,VCEL,,
+XBI,,KOD,,
+XBI,,PURR,,
+XBI,,VIR,,
+XBI,,STOK,,
+XBI,,ANAB,,
+XBI,,GLUE,,
+XBI,,ARDX,,
+XBI,,CGEM,,
+XBI,,TYRA,,
+XBI,,PGEN,,
+XBI,,CRVS,,
+XBI,,INBX,,
+XBI,,AVTX,,
+XBI,,TSHA,,
+XBI,,MNKD,,
+XBI,,JBIO,,
+XBI,,ZBIO,,
+XBI,,KURA,,
+XBI,,ANNX,,
+XBI,,CDNA,,
+XBI,,OLMA,,
+XBI,,ORIC,,
+XBI,,REPL,,
+XBI,,GERN,,
+XBI,,AVBP,,
+XBI,,BCAX,,
+XBI,,XNCR,,
+XBI,,JANX,,
+XBI,,SION,,
+XBI,,VOR,,
+XBI,,CTMX,,
+XBI,,ALLO,,
+XBI,,RIGL,,
+XBI,,ALT,,
+XBI,,SANA,,
+XBI,,SLDB,,
+XBI,,IRWD,,
+XBI,,IMMX,,
+XBI,,RGNX,,
+XBI,,SVRA,,
+XBI,,CADL,,
+XBI,,OCGN,,
+XBI,,FDMT,,
+XBI,,SPRY,,
+XBI,,PRME,,
+XBI,,MYGN,,
+XBI,,ABUS,,
+XBI,,DMRA,,
+XBI,,MPLT,,
+XBI,,CABA,,
+XBI,,TRAX,,
+XBI,,CMPX,,
+XBI,,EBS,,
+XBI,,PRTA,,
+XBI,,VNDA,,
+XBI,,CATX,,
+XBI,,OVID,,
+XBI,,VSTM,,
+XBI,,LXEO,,
+XBI,,MDXG,,
+XBI,,ACHV,,
+XBI,,SGMT,,
+XBI,,BBOT,,
+XBI,,RNA,,
+XBI,,2200963D,,
+XBI,,2200964D,,
+XPH,1,DFTX,"Definium Therapeutics, Inc.",2.98
+XPH,2,MBX,"MBX Biosciences, Inc.",2.6
+XPH,3,ATAI,AtaiBeckley Inc.,2.15
+XPH,4,MANE,"Veradermics, Incorporated",2.1
+XPH,5,TRVI,"Trevi Therapeutics, Inc.",2.08
+XPH,6,ELVN,"Enliven Therapeutics, Inc.",2.08
+XPH,7,AMLX,"Amylyx Pharmaceuticals, Inc.",2.03
+XPH,8,ALMS,Alumis Inc.,2.02
+XPH,9,EWTX,"Edgewise Therapeutics, Inc.",1.94
+XPH,10,NUVB,Nuvation Bio Inc.,1.9
+XPH,11,LGND,Ligand Pharmaceuticals Incorporated,1.88
+XPH,12,LQDA,Liquidia Corporation,1.84
+XPH,13,HROW,"Harrow, Inc.",1.8
+XPH,14,MAZE,"Maze Therapeutics, Inc.",1.78
+XPH,15,OCUL,"Ocular Therapeutix, Inc.",1.73
+XPH,16,AMRX,"Amneal Pharmaceuticals, Inc.",1.73
+XPH,17,NKTR,Nektar Therapeutics,1.72
+XPH,18,CORT,Corcept Therapeutics Incorporated,1.72
+XPH,19,EYPT,"EyePoint, Inc.",1.7
+XPH,20,INDV,"Indivior Pharmaceuticals, Inc.",1.69
+XPH,21,MRK,"Merck & Co., Inc.",1.66
+XPH,22,PCRX,"Pacira BioSciences, Inc.",1.66
+XPH,23,ELAN,Elanco Animal Health Incorporated,1.65
+XPH,24,CRNX,"Crinetics Pharmaceuticals, Inc.",1.65
+XPH,25,JNJ,Johnson & Johnson,1.64
+XPH,,OMER,,
+XPH,,TARS,,
+XPH,,VTRS,,
+XPH,,ANIP,,
+XPH,,WVE,,
+XPH,,INVA,,
+XPH,,OGN,,
+XPH,,ESPR,,
+XPH,,RPRX,,
+XPH,,COLL,,
+XPH,,BMY,,
+XPH,,LLY,,
+XPH,,SUPN,,
+XPH,,JAZZ,,
+XPH,,AXSM,,
+XPH,,HRMY,,
+XPH,,PBH,,
+XPH,,ZTS,,
+XPH,,PFE,,
+XPH,,BIOA,,
+XPH,,RAPP,,
+XPH,,PRGO,,
+XPH,,AMPH,,
+XPH,,PAHC,,
+XPH,,XERS,,
+XPH,,ETON,,
+XPH,,ARVN,,
+XPH,,ZVRA,,
+XPH,,ANRO,,
+XPH,,SEPN,,
+XPH,,PHAT,,
+XPH,,CRMD,,
+XPH,,RLMD,,
+XPH,,TBPH,,
+XPH,,ACRS,,
+XPH,,AQST,,
+XPH,,LBRX,,
+XPH,,FULC,,
+XPH,,LXRX,,
+XPH,,EOLS,,
+PPH,1,LLY,Eli Lilly and Company,20.41
+PPH,2,NVSN.MX,Novartis AG ADR,10.55
+PPH,3,MRK,"Merck & Co., Inc.",9.87
+PPH,4,NVO,Novo Nordisk A/S,5.39
+PPH,5,ABBV,AbbVie Inc.,4.61
+PPH,6,PFE,Pfizer Inc.,4.55
+PPH,7,BMY,Bristol-Myers Squibb Company,4.47
+PPH,8,GSK,GSK plc,4.43
+PPH,9,JNJ,Johnson & Johnson,4.37
+PPH,10,AZN,AstraZeneca PLC,4.31
+PPH,11,MCK,McKesson Corporation,4.17
+PPH,12,SNY,Sanofi,4.04
+PPH,13,COR,"Cencora, Inc.",3.4
+PPH,14,HLN,Haleon plc,3.07
+PPH,15,TEVA,Teva Pharmaceutical Industries Limited,3.0
+PPH,16,TAK,Takeda Pharmaceutical Company Limited,2.86
+PPH,17,ZTS,Zoetis Inc.,2.23
+PPH,18,VTRS,Viatris Inc.,1.13
+PPH,19,JAZZ,Jazz Pharmaceuticals plc,1.03
+PPH,20,AXSM,"Axsome Therapeutics, Inc.",0.76
+PPH,21,CORT,Corcept Therapeutics Incorporated,0.51
+PPH,22,ELAN,Elanco Animal Health Incorporated,0.35
+PPH,23,OGN,Organon & Co.,0.23
+PPH,24,,Us Dollar,0.09
+PPH,25,BHC,Bausch Health Companies Inc.,0.09
+PPH,,NVS,,
+PPH,,PRGO,,
+IHI,1,ABT,Abbott Laboratories,17.15
+IHI,2,ISRG,"Intuitive Surgical, Inc.",14.95
+IHI,3,SYK,Stryker Corporation,11.51
+IHI,4,EW,Edwards Lifesciences Corporation,4.65
+IHI,5,BDX,"Becton, Dickinson and Company",4.56
+IHI,6,GEHC,GE HealthCare Technologies Inc.,4.51
+IHI,7,IDXX,"IDEXX Laboratories, Inc.",4.44
+IHI,8,MDT,Medtronic plc,4.43
+IHI,9,RMD,ResMed Inc.,4.4
+IHI,10,BSX,Boston Scientific Corporation,4.07
+IHI,11,DXCM,"DexCom, Inc.",4.04
+IHI,12,STE,STERIS plc,3.15
+IHI,13,ZBH,"Zimmer Biomet Holdings, Inc.",2.69
+IHI,14,PEN,"Penumbra, Inc.",1.91
+IHI,15,BAX,Baxter International Inc.,1.7
+IHI,16,PODD,Insulet Corporation,1.63
+IHI,17,GMED,"Globus Medical, Inc.",1.46
+IHI,18,GKOS,Glaukos Corporation,1.28
+IHI,19,TFX,Teleflex Incorporated,0.86
+IHI,20,LIVN,LivaNova PLC,0.68
+IHI,21,NVST,Envista Holdings Corporation,0.66
+IHI,22,IRTC,"iRhythm Holdings, Inc.",0.58
+IHI,23,ITGR,Integer Holdings Corporation,0.48
+IHI,24,TMDX,"TransMedics Group, Inc.",0.41
+IHI,25,AXGN,"Axogen, Inc.",0.36
+IHI,,MASI,,
+IHI,,LMAT,,
+IHI,,OMCL,,
+IHI,,NVCR,,
+IHI,,PRCT,,
+IHI,,ATRC,,
+IHI,,ENOV,,
+IHI,,INSP,,
+IHI,,CNMD,,
+IHI,,TNDM,,
+IHI,,IART,,
+IHI,,AORT,,
+IHI,,ATEC,,
+IHI,,BFLY,,
+IHI,,QDEL,,
+IHI,,IRMD,,
+IHI,,SIBN,,
+IHI,,ANGO,,
+IHI,,BBNX,,
+IHI,,VREX,,
+IHI,,OFIX,,
+IHF,1,UNH,UnitedHealth Group Incorporated,22.26
+IHF,2,CVS,CVS Health Corporation,15.21
+IHF,3,ELV,"Elevance Health, Inc.",7.26
+IHF,4,HCA,"HCA Healthcare, Inc.",4.52
+IHF,5,HUM,Humana Inc.,4.49
+IHF,6,CNC,Centene Corporation,4.33
+IHF,7,CI,The Cigna Group,4.16
+IHF,8,VEEV,Veeva Systems Inc.,3.6
+IHF,9,DGX,Quest Diagnostics Incorporated,3.47
+IHF,10,LH,Labcorp Holdings Inc.,3.32
+IHF,11,GH,"Guardant Health, Inc.",2.88
+IHF,12,THC,Tenet Healthcare Corporation,2.41
+IHF,13,MOH,"Molina Healthcare, Inc.",1.71
+IHF,14,BTSG,"BrightSpring Health Services, Inc.",1.67
+IHF,15,EHC,Encompass Health Corporation,1.5
+IHF,16,ENSG,"The Ensign Group, Inc.",1.46
+IHF,17,UHS,"Universal Health Services, Inc.",1.17
+IHF,18,HQY,"HealthEquity, Inc.",1.07
+IHF,19,HIMS,"Hims & Hers Health, Inc.",1.05
+IHF,20,DVA,DaVita Inc.,1.04
+IHF,21,CHE,Chemed Corporation,0.91
+IHF,22,RDNT,"RadNet, Inc.",0.65
+IHF,23,BKD,Brookdale Senior Living Inc.,0.56
+IHF,24,CON,"Concentra Group Holdings Parent, Inc.",0.54
+IHF,25,OPCH,"Option Care Health, Inc.",0.52
+IHF,,ALHC,,
+IHF,,PRVA,,
+IHF,,DOCS,,
+IHF,,NHC,,
+IHF,,WAY,,
+IHF,,ACHC,,
+IHF,,PGNY,,
+IHF,,CRVL,,
+IHF,,SEM,,
+IHF,,MD,,
+IHF,,ADUS,,
+IHF,,LFST,,
+IHF,,PACS,,
+IHF,,ASTH,,
+IHF,,CLOV,,
+IHF,,PNTG,,
+IHF,,NEO,,
+IHF,,TDOC,,
+IHF,,WGS,,
+IHF,,SGRY,,
+IHF,,AMN,,
+IHF,,USPH,,
+IHF,,HNGE,,
+IHF,,SDGR,,
+IHF,,CERT,,
+IHF,,CSTL,,
+IHF,,HSTM,,
+IHF,,OPK,,
+IHF,,AVAH,,
+IHF,,HTFL,,
+IHF,,PHR,,
+IHF,,EVH,,
+IHF,,CCRN,,
+IHF,,FLGT,,
+IHF,,CYH,,
+ARKG,1,TWST,Twist Bioscience Corporation,9.15
+ARKG,2,TEM,"Tempus AI, Inc.",7.55
+ARKG,3,TXG,"10x Genomics, Inc.",6.86
+ARKG,4,CRSP,CRISPR Therapeutics AG,6.83
+ARKG,5,ABSI,Absci Corporation,6.74
+ARKG,6,PSNL,"Personalis, Inc.",6.11
+ARKG,7,BEAM,Beam Therapeutics Inc.,4.51
+ARKG,8,GH,"Guardant Health, Inc.",4.29
+ARKG,9,ILMN,"Illumina, Inc.",4.22
+ARKG,10,NTRA,"Natera, Inc.",4.14
+ARKG,11,VCYT,"Veracyte, Inc.",3.4
+ARKG,12,CDNA,"CareDx, Inc.",3.16
+ARKG,13,NTLA,"Intellia Therapeutics, Inc.",2.9
+ARKG,14,LLY,Eli Lilly and Company,2.78
+ARKG,15,CMPS,COMPASS Pathways plc,2.72
+ARKG,16,RXRX,"Recursion Pharmaceuticals, Inc.",2.66
+ARKG,17,ADPT,Adaptive Biotechnologies Corporation,2.5
+ARKG,18,BFLY,"Butterfly Network, Inc.",2.37
+ARKG,19,NRIX,"Nurix Therapeutics, Inc.",2.34
+ARKG,20,SDGR,"Schrödinger, Inc.",2.04
+ARKG,21,WGS,GeneDx Holdings Corp.,1.9
+ARKG,22,IONS,"Ionis Pharmaceuticals, Inc.",1.37
+ARKG,23,CERS,Cerus Corporation,1.28
+ARKG,24,ATAI,AtaiBeckley Inc.,1.21
+ARKG,25,ARCT,Arcturus Therapeutics Holdings Inc.,1.16
+ARKG,,ATAI UQ,,
+ARKG,,ARCT UQ,,
+ARKG,,MASS,,
+ARKG,,ALMR,,
+ARKG,,PACB,,
+ARKG,,PRME,,
+ARKG,,BNTX,,
+ARKG,,GENB,,
+ARKG,,QSI,,

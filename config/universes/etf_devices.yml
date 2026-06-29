@@ -1,0 +1,9 @@
+# ETF — Medical devices sub-sector (1 ticker)
+sector_id: etf_devices
+domain: etf
+
+tickers:
+  - ticker: IHI
+    name_cn: iShares美国医疗器械ETF
+    name_en: iShares U.S. Medical Devices ETF
+    region: US

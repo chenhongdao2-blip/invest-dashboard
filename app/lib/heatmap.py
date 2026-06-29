@@ -63,6 +63,8 @@ _SECTOR_CN = {
     "managed_care": "管理式医疗",
     "ai_equip": "半导体设备材料", "ai_chip": "芯片设计", "ai_memory": "存储芯片",
     "ai_foundry": "代工封测", "ai_interconnect": "光互联/PCB", "ai_server": "服务器/温控/电源",
+    "etf_broad": "广基医疗", "etf_biotech": "生物科技", "etf_pharma": "制药",
+    "etf_devices": "医疗器械", "etf_providers": "医疗服务", "etf_genomics": "基因/主题",
 }
 _SECTOR_EN = {
     "biotech": "Biotech", "pharma": "Pharma", "medtech": "MedTech",
@@ -70,9 +72,11 @@ _SECTOR_EN = {
     "managed_care": "Managed Care",
     "ai_equip": "Semi Equip & Materials", "ai_chip": "Chip Design", "ai_memory": "Memory",
     "ai_foundry": "Foundry & OSAT", "ai_interconnect": "Interconnect", "ai_server": "Server/Power",
+    "etf_broad": "Broad HC", "etf_biotech": "Biotech", "etf_pharma": "Pharma",
+    "etf_devices": "MedDevices", "etf_providers": "Providers", "etf_genomics": "Genomics",
 }
-_DOMAIN_CN = {"healthcare": "医疗", "ai": "AI"}
-_DOMAIN_EN = {"healthcare": "HEALTHCARE", "ai": "AI"}
+_DOMAIN_CN = {"healthcare": "医疗", "ai": "AI", "etf": "ETF"}
+_DOMAIN_EN = {"healthcare": "HEALTHCARE", "ai": "AI", "etf": "ETF"}
 
 
 # ── data layer ────────────────────────────────────────────────────────────
@@ -93,30 +97,43 @@ def _domain_sectors(domain_id: str) -> list[str]:
     return df["sector"].tolist() if not df.empty else []
 
 
-def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool) -> dict | None:
+_ALL_KEY = "__all__"
+
+
+def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool, *,
+                       single_block: bool = False, single_cn: str | None = None,
+                       single_en: str | None = None) -> dict | None:
     """Assemble one domain's ranked-bento payload, or None if the domain has no data.
 
     Returns: {id, cn, en, median, n_total, sectors: [block, ...]} where each block is
     {id, cn, en, median, pct_up, n_valid, n_members, n_shown, rank, tiles:[{tk,ret,mcap,name}]}
     sorted by rank (hottest first). Sectors with zero valid returns are dropped.
+
+    single_block=True collapses ALL of the domain's members into ONE basket (one block)
+    instead of per-sub-sector blocks — "one industry, one basket" (e.g. the ETF column,
+    where the 6 HC sub-sectors are all 医药 and a single basket reads cleaner). The block
+    label falls back to single_cn/single_en (else the domain label). Default False leaves
+    the stock heatmaps' per-sub-sector grouping unchanged.
     """
     sectors = _domain_sectors(domain_id)
     if not sectors:
         return None
 
     # First-wins sector assignment (a ticker in two sectors is counted once).
+    # single_block routes every member into one synthetic basket key.
     sector_of: dict[str, str] = {}
     members_count: dict[str, int] = {}
     for sec in sectors:
         m = db.sector_tickers(domain_id, sec)
         if m.empty:
             continue
+        tgt = _ALL_KEY if single_block else sec
         cnt = 0
         for t in m["ticker"].tolist():
             if t not in sector_of:
-                sector_of[t] = sec
+                sector_of[t] = tgt
                 cnt += 1
-        members_count[sec] = members_count.get(sec, 0) + cnt
+        members_count[tgt] = members_count.get(tgt, 0) + cnt
     tickers = tuple(sector_of.keys())
     if not tickers:
         return None
@@ -162,12 +179,15 @@ def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool) -> dict
 
     blocks = []
     for rank, (sec, med, pct_up, n_valid, items) in enumerate(ranked):
-        slots = min(SLOT_SCHEDULE[rank] if rank < len(SLOT_SCHEDULE) else SLOT_SCHEDULE[-1], n_valid)
+        # single basket shows every member (no per-rank slot cap).
+        slots = n_valid if single_block else min(
+            SLOT_SCHEDULE[rank] if rank < len(SLOT_SCHEDULE) else SLOT_SCHEDULE[-1], n_valid)
         tiles = _pick_tiles(items, slots)
+        is_all = sec == _ALL_KEY
         blocks.append({
             "id": sec,
-            "cn": _SECTOR_CN.get(sec, sec),
-            "en": _SECTOR_EN.get(sec, sec),
+            "cn": (single_cn or _DOMAIN_CN.get(domain_id, domain_id)) if is_all else _SECTOR_CN.get(sec, sec),
+            "en": (single_en or _DOMAIN_EN.get(domain_id, domain_id.upper())) if is_all else _SECTOR_EN.get(sec, sec),
             "median": med,
             "pct_up": pct_up,
             "n_valid": n_valid,

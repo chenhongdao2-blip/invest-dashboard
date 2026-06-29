@@ -97,6 +97,22 @@ hc_capital = st.Page(
     title="HC Capital Markets 投融资",
     url_path="HC_Capital_Markets",
 )
+# --- ETF 专栏 (own top-level section; ETFs are first-class instruments like stocks) ---
+etf_overview = st.Page(
+    "pages/e1_etf_overview.py",
+    title="ETF Overview 总览/表现",
+    url_path="ETF_Overview",
+)
+etf_heatmap = st.Page(
+    "pages/e2_etf_heatmap.py",
+    title="ETF Heatmap 热力图",
+    url_path="ETF_Heatmap",
+)
+etf_rotation = st.Page(
+    "pages/e3_etf_rotation.py",
+    title="ETF Rotation 动能轮动",
+    url_path="ETF_Rotation",
+)
 
 # --- AI children ---
 ai_coverage = st.Page(
@@ -144,6 +160,11 @@ pg = st.navigation(
             ai_heatmap,
             ai_valuation,
             ai_sec,
+        ],
+        "ETF 专栏": [
+            etf_overview,
+            etf_heatmap,
+            etf_rotation,
         ],
     },
     # Force all sections fully expanded. Default behavior collapses overflow

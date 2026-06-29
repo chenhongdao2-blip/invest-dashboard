@@ -1,0 +1,46 @@
+# ETF 专栏 domain config
+name: ETF
+emoji: 🧺
+description: |
+  美股医疗 ETF 专栏 —— 把 ETF 当作一等标的(跟个股一样)纳入 universe_member +
+  prices_daily,从而复用全站行情/热力图/动能/Ticker Drill 组件。v1 仅医疗 ETF
+  (按 broad/biotech/pharma/devices/providers/genomics 六个子赛道),domain-agnostic
+  可扩到其它行业/跨市场 ETF。成分股(holdings)数据走 data/external/etf_hc_*.csv
+  (ETF 专有,不在价格 DB)。来源:etf-data MCP (stockanalysis+barchart+yfinance)。
+
+# 子赛道列表(sector_id 加 etf_ 前缀,避免与 healthcare 的 biotech/pharma 撞名)
+sectors:
+  - id: etf_broad
+    name: Broad Healthcare
+    universe_file: etf_broad.yml
+    benchmark: XLV
+  - id: etf_biotech
+    name: Biotech
+    universe_file: etf_biotech.yml
+    benchmark: XBI
+  - id: etf_pharma
+    name: Pharma
+    universe_file: etf_pharma.yml
+    benchmark: XPH
+  - id: etf_devices
+    name: Medical Devices
+    universe_file: etf_devices.yml
+    benchmark: IHI
+  - id: etf_providers
+    name: Providers / Payers
+    universe_file: etf_providers.yml
+    benchmark: IHF
+  - id: etf_genomics
+    name: Genomics / Thematic
+    universe_file: etf_genomics.yml
+    benchmark: XLV
+
+# Domain-level benchmark —— broad-HC anchor for RRG/相对强弱 (XLV 本身也是成员，
+# prices_daily 已含其价；动能页用它作 benchmark 序列)。
+benchmarks:
+  primary: XLV
+  secondary:
+    - XBI                        # Biotech
+    - XPH                        # Pharma
+
+# NB: 无 coverage list(ETF 无 CMSI 覆盖名单)。

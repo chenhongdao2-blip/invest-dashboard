@@ -1,0 +1,48 @@
+{
+  "feature": "ETF 专栏 v1 (Healthcare)",
+  "plan": "~/.claude/plans/etf-etf-linear-rain.md",
+  "max_cycles": 2,
+  "cycle": 1,
+  "stages": [
+    {
+      "id": "0.6_data_bake",
+      "desc": "bake 3 data files via jobs/build_etf_panel.py",
+      "passes": true
+    },
+    {
+      "id": "0.5_contract",
+      "desc": "freeze ACCEPTANCE.md + Evaluator authors tests/test_etf_panel.py",
+      "passes": true
+    },
+    {
+      "id": "1_build_loader",
+      "desc": "app/lib/etf_panel.py + scripts/etf_init.sh",
+      "passes": true
+    },
+    {
+      "id": "1_build_page",
+      "desc": "app/pages/10_HC_ETF.py + streamlit_app.py nav + locales hc_etf.*",
+      "passes": true
+    },
+    {
+      "id": "2_eval_gate",
+      "desc": "pytest gate green (A,B,E,G)",
+      "passes": true
+    },
+    {
+      "id": "2_eval_realmachine",
+      "desc": "Streamlit+browser real-machine check (C,D,F)",
+      "passes": true
+    },
+    {
+      "id": "4_codex_audit",
+      "desc": "cross-model read-only audit APPROVE",
+      "passes": true
+    },
+    {
+      "id": "5_ship_gate",
+      "desc": "George 可以 ship -> commit/push",
+      "passes": false
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+# ETF — Genomics / thematic sub-sector (1 ticker)
+sector_id: etf_genomics
+domain: etf
+
+tickers:
+  - ticker: ARKG
+    name_cn: ARK基因革命ETF
+    name_en: ARK Genomic Revolution ETF
+    region: US

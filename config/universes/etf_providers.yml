@@ -1,0 +1,9 @@
+# ETF — Providers / payers sub-sector (1 ticker)
+sector_id: etf_providers
+domain: etf
+
+tickers:
+  - ticker: IHF
+    name_cn: iShares美国医疗服务ETF
+    name_en: iShares U.S. Healthcare Providers ETF
+    region: US

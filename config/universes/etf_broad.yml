@@ -1,0 +1,17 @@
+# ETF — Broad healthcare sub-sector (3 tickers)
+sector_id: etf_broad
+domain: etf
+
+tickers:
+  - ticker: XLV
+    name_cn: 医疗精选行业SPDR
+    name_en: Health Care Select Sector SPDR
+    region: US
+  - ticker: VHT
+    name_cn: 先锋医疗ETF
+    name_en: Vanguard Health Care ETF
+    region: US
+  - ticker: IYH
+    name_cn: iShares美国医疗ETF
+    name_en: iShares U.S. Healthcare ETF
+    region: US

@@ -141,15 +141,15 @@ def load_ipo_intraday() -> pd.DataFrame:
 
 STRATEGIES = {
     "v4_biotech": {
-        "name": "🧬 v4 biotech",
-        "emoji": "🧬",
+        "name": "v4 biotech",
+        "emoji": "🧬",  # tagged data only — never concatenated into a rendered label (DESIGN Emoji=0)
         "loader": load_v4,
         "pick_date": "2026-04-22",
         "benchmark": "XBI",
         "benchmark_name": "SPDR S&P Biotech",
     },
     "v5_biotech": {
-        "name": "🧬 v5 biotech",
+        "name": "v5 biotech",
         "emoji": "🧬",
         "loader": load_v5,
         "pick_date": "2026-05-15",
@@ -160,7 +160,7 @@ STRATEGIES = {
     # Dividend 30 ETF (was 3110.HK), plus ^HSI as a broad-market reference
     # overlay — both versions, so the v1/v2 curves stay comparable.
     "hk_hd": {
-        "name": "💰 HK 高股息 v1",
+        "name": "HK 高股息 v1",
         "emoji": "💰",
         "loader": load_hd,
         "pick_date": "2026-03-20",
@@ -170,7 +170,7 @@ STRATEGIES = {
         "benchmark2_name": "恒生指数",
     },
     "hk_hd_v2": {
-        "name": "💰 HK 高股息 v2",
+        "name": "HK 高股息 v2",
         "emoji": "💰",
         "loader": load_hd_v2,
         "pick_date": "2026-06-11",

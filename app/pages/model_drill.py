@@ -48,7 +48,7 @@ if qp:
 
 if not avail:
     # No model extracts on disk (e.g. public Cloud) — degrade, don't crash.
-    st.info(i18n.t("model.none_any"))
+    st.caption(i18n.t("model.none_any"))
     st.stop()
 
 cur = st.session_state.global_ticker
@@ -312,7 +312,7 @@ if _comps:
     theme.section_header(i18n.t("model.sec.r40"))
     _r40 = db.rule_of_40_comps(_comps)
     if _r40.empty:
-        st.info(i18n.t("model.r40_none"))
+        st.caption(i18n.t("model.r40_none"))
     else:
         st.plotly_chart(
             charts.rule_of_40_scatter(_r40, highlight=ticker, prefer_cn=prefer_cn),

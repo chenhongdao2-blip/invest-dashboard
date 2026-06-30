@@ -241,7 +241,7 @@ def _render_full_holdings(tkr: str) -> None:
     n_total = (0 if weighted.empty else int(weighted["rank"].notna().sum())) + len(tail)
     with st.expander(i18n.t("etf.card.expand", n=n_total)):
         if weighted.empty:
-            st.info("—")
+            st.caption("—")
             return
         hd = weighted[["rank", "symbol", "name", "weight_pct"]].copy()
         hd["m1"] = [_crow(str(s))[0] if pd.notna(s) else pd.NA for s in hd["symbol"]]

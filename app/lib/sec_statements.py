@@ -546,7 +546,7 @@ def statements_section(ticker: str, tax: str, prefer_cn: bool, *,
 
     if not prds:
         import streamlit as st
-        st.info("该标的暂无可用的结构化报表数据。" if prefer_cn
+        st.caption("该标的暂无可用的结构化报表数据。" if prefer_cn
                 else "No structured statement data available for this ticker.")
         return
 

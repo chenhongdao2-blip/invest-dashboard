@@ -88,7 +88,7 @@ if pick:
 ticker = st.session_state.global_ticker
 
 if not ticker:
-    st.info(i18n.t("sec.pick_prompt"))
+    st.caption(i18n.t("sec.pick_prompt"))
     st.stop()
 
 if ticker not in us_tickers:
@@ -223,7 +223,7 @@ if ts_opts:
     tax, concept, unit = ts_opts[sel]
     ts = sf.concept_timeseries(ticker, tax, concept, unit, freq=period)
     if ts.empty:
-        st.info(i18n.t("sec.ts.empty"))
+        st.caption(i18n.t("sec.ts.empty"))
     else:
         # readable axis: scale USD / share counts to bn/mn (raw values are huge)
         scale, scale_lbl = 1.0, unit
@@ -258,7 +258,7 @@ if ts_opts:
             },
         )
 else:
-    st.info(i18n.t("sec.ts.empty"))
+    st.caption(i18n.t("sec.ts.empty"))
 
 # ══════════════════════════════════════════════════════════════════════════
 # ③ full fact browser
@@ -267,7 +267,7 @@ theme.section_header(i18n.t("sec.section.browser"))
 _raw_title = "展开全量 XBRL 字段（搜索 / 筛选 / 导出）" if prefer_cn else "Expand raw XBRL fields (search / filter / export)"
 with st.expander(_raw_title, expanded=False):
     if all_df.empty:
-        st.info(i18n.t("sec.ts.empty"))
+        st.caption(i18n.t("sec.ts.empty"))
     else:
         fc1, fc2, fc3 = st.columns([2, 1, 1])
         q = fc1.text_input(i18n.t("sec.browser.search"), key="sec_browse_q")

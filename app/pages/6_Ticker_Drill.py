@@ -17,6 +17,8 @@ Resolved ticker priority:
 from __future__ import annotations
 
 import hashlib
+import re
+from html import escape as _esc
 
 import pandas as pd
 import streamlit as st
@@ -397,24 +399,44 @@ _has_consensus = (mults_row is not None and pd.notna(n_analysts)
                   and (pd.notna(reco_mean) or pd.notna(tp)))
 if _has_house and _has_consensus:
     theme.section_header(i18n.t("drill.variant.title"))
-    house_foot = (i18n.t("drill.variant.tp_foot", tp=_wiki_variant.tp)
-                  if _wiki_variant.tp else None)
-    cons_foot = i18n.t("drill.variant.cons_foot",
-                       tp=(f"{tp:,.2f}" if pd.notna(tp) else "—"),
-                       n=int(n_analysts))
+    # Side-by-side 一致预期 vs 自有观点 (theme.consensus_house) — upgrade of the prior
+    # 3-KPI-card layout. Same data/gating/compliance disclaimer; richer visual diff.
+    _zh = i18n.get_lang() == "zh"
+    _lbl_reco = "评级" if _zh else "Rating"
+    _lbl_tp = "目标价" if _zh else "Target Price"
+    _lbl_n = "覆盖券商" if _zh else "Analysts"
+    _lbl_up = "一致上行空间" if _zh else "Consensus Upside"
+    # Consensus (left, neutral ink) — relabelled 仅供参考 via drill.variant.consensus.
+    _cons_rows: list[tuple[str, str]] = [(_lbl_reco, _esc(_reco_label(reco_mean)))]
+    if pd.notna(tp):
+        _cons_rows.append((_lbl_tp, f"{_esc(ccy)} {tp:,.2f}"))
+    if pd.notna(n_analysts):
+        _cons_rows.append((_lbl_n, f"{int(n_analysts)}"))
     if upside_pct is not None:
-        gap_val = f"{upside_pct:+.1f}%"
-        gap_dir = "up" if upside_pct > 0 else ("down" if upside_pct < 0 else "flat")
-    else:
-        gap_val, gap_dir = "—", "flat"
-    theme.kpi_strip([
-        theme.kpi_metric(i18n.t("drill.variant.house"),
-                         _wiki_variant.rating or "—", foot=house_foot),
-        theme.kpi_metric(i18n.t("drill.variant.consensus"),
-                         _reco_label(reco_mean), foot=cons_foot),
-        theme.kpi_metric(i18n.t("drill.variant.gap"), gap_val,
-                         foot=i18n.t("drill.variant.gap_foot"), direction=gap_dir),
-    ])
+        _up_cls = "cmsi-ch-up" if upside_pct >= 0 else "cmsi-ch-down"
+        _cons_rows.append((_lbl_up, f"<span class='{_up_cls}'>{upside_pct:+.1f}%</span>"))
+    # House (right, red tint) — CMS HK wiki rating/TP, with TP divergence vs consensus.
+    _house_rows: list[tuple[str, str]] = []
+    if _wiki_variant.rating:
+        _house_rows.append((_lbl_reco, f"<b>{_esc(_wiki_variant.rating)}</b>"))
+    if _wiki_variant.tp:
+        _tp_html = _esc(_wiki_variant.tp)
+        # Annotate "(±x% vs 一致)" ONLY when the wiki TP explicitly carries the SAME
+        # currency code as the consensus (no symbol/empty-ccy guesses → no cross-ccy
+        # false diff, audit MEDIUM C1) and parse the LAST monetary number so a leading
+        # "12-month TP HK$120" isn't read as 12 (audit MEDIUM C2).
+        _nums = re.findall(r"\d[\d,]*\.?\d*", _wiki_variant.tp)
+        _same_ccy = bool(ccy) and ccy in _wiki_variant.tp
+        if _nums and _same_ccy and pd.notna(tp) and tp > 0:
+            _hp = float(_nums[-1].replace(",", ""))
+            _d = (_hp / tp - 1) * 100
+            _dcls = "cmsi-ch-up" if _d >= 0 else "cmsi-ch-down"
+            _vs = "vs 一致" if _zh else "vs cons."
+            _tp_html += f" <span class='{_dcls}'>({_d:+.0f}% {_vs})</span>"
+        _house_rows.append((_lbl_tp, _tp_html))
+    theme.consensus_house(_cons_rows, _house_rows,
+                          consensus_label=i18n.t("drill.variant.consensus"),
+                          house_label=i18n.t("drill.variant.house"))
     st.caption(i18n.t("drill.variant.disclaimer"))
 
 st.divider()
@@ -426,7 +448,7 @@ if wiki_page is None:
 else:
     # Compliance gate — different banner for internal vs sanitized public view.
     if wiki_page.is_sanitized:
-        st.info(i18n.t("drill.wiki.banner_public"))
+        theme.md_note("公开研究摘要" if i18n.get_lang() == "zh" else "Public research summary", i18n.t("drill.wiki.banner_public"))
     else:
         st.warning(
             "**本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "

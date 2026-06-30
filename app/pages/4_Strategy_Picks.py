@@ -15,7 +15,6 @@ import math
 
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 import streamlit as st
 
 from lib import db  # noqa: F401  (kept for parity with other pages / future use)
@@ -25,6 +24,8 @@ from lib import charts
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import strategy_hero
+from lib import strategy_banner as sb
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -35,25 +36,105 @@ st.set_page_config(
 # Language: seed once + render the top-bar switch BEFORE any t() call so the
 # whole page renders in one language per run (cccg ship-gate #3).
 i18n.init_lang()
-i18n.render_lang_toggle()
+# [08] 语言切换:banner 的 中/EN 描边分段 = ?lang= 真链接(替代顶部实心红钮,不留两个语言钮)。
+_qp_lang = st.query_params.get("lang")
+if _qp_lang in ("zh", "en") and _qp_lang != st.session_state.get("lang"):
+    st.session_state["lang"] = _qp_lang
+    st.rerun()
 
 # Sidebar global search + chart settings
 with st.sidebar:
     ui.sidebar_search(key_prefix="strategy")
-    st.divider()
-    st.subheader(i18n.t("strategy.sidebar.chart_settings"))
-    show_lines = st.checkbox(
-        i18n.t("strategy.sidebar.show_individual"), value=False,
-        help=i18n.t("strategy.sidebar.show_individual_help"),
-    )
-    show_rebal = st.checkbox(
-        i18n.t("strategy.sidebar.show_rebalanced"), value=False,
-        help=i18n.t("strategy.sidebar.show_rebalanced_help"),
-    )
+    # (Chart-settings toggles removed — the Tearsheet Hero replaced the Plotly chart
+    #  and its show-individual / show-rebalanced controls.)
 
-theme.page_header(i18n.t("strategy.page.title"))
-st.caption(i18n.t("strategy.page.caption"))
+# ── Strategy-banner overview cards (computed eagerly at page top; cached) ──────
+def _overview_curve_card(strat_id: str) -> dict | None:
+    """One overview card (mini sparkline + cum/α) for a curve strategy. Same compute
+    path as render_strategy (@st.cache_data, so the per-tab call hits cache). None if
+    no data / no benchmark overlap (no fabrication)."""
+    cfg = strat.STRATEGIES.get(strat_id)
+    if not cfg:
+        return None
+    picks = cfg["loader"]()
+    if picks.empty:
+        return None
+    pick_date, bench_sym = cfg["pick_date"], cfg["benchmark"]
+    top_n = min(20, len(picks))
+    pr = picks.sort_values("rank") if "rank" in picks.columns else picks
+    top_syms = pr.head(top_n)["yf_sym"].dropna().tolist()
+    wc = cfg.get("weight_col")
+    cash_pct = float(cfg.get("cash_pct", 0.0))
+    weights = None
+    if wc and wc in picks.columns:
+        weights = picks.set_index("yf_sym")[wc].astype(float) / 100.0
+    yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
+    earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
+    closes = strat.fetch_picks_closes(yf_syms + (bench_sym,), start=earliest,
+                                      _ovr_mtime=strat._delisted_mtime())
+    if closes.empty or bench_sym not in closes.columns:
+        return None
+    bench_close = closes[bench_sym]
+    normed, portfolio, _, _ = strat.compute_strategy_returns(
+        closes.drop(columns=[bench_sym], errors="ignore"), pick_date,
+        portfolio_syms=top_syms, weights=weights, cash_pct=cash_pct)
+    if portfolio.empty:
+        return None
+    sub = bench_close[bench_close.index >= pd.Timestamp(pick_date)].dropna()
+    if sub.empty:
+        return None
+    bench_norm = (sub / sub.iloc[0]) * 100
+    b_al = (bench_norm.reindex(bench_norm.index.union(portfolio.index))
+            .ffill().reindex(portfolio.index).bfill())
+    if not pd.notna(b_al.iloc[-1]):
+        return None
+
+    def _ds(series, n=44):
+        vals = series.values
+        if len(vals) <= n:
+            return [round(float(v), 2) for v in vals]
+        idx = np.linspace(0, len(vals) - 1, n).round().astype(int)
+        return [round(float(vals[i]), 2) for i in idx]
+
+    cum = float(portfolio.iloc[-1] - 100)
+    bret = float(b_al.iloc[-1] - 100)
+    return {
+        "name": i18n.t(f"strategy.name.{strat_id}"),
+        "bench_code": bench_sym, "pick_date": str(pick_date), "n_picks": top_n,
+        "cum_ret": cum, "bench_ret": bret, "alpha": cum - bret,
+        "wins": int((normed.iloc[-1] > 100).sum()), "total": int(normed.shape[1]),
+        "hold_days": (pd.Timestamp.now().normalize() - pd.Timestamp(pick_date)).days,
+        "curve": (_ds(portfolio), _ds(b_al)),
+        "_as_of": portfolio.index[-1].date().isoformat(),
+    }
+
+
+def _overview_ipo_card() -> dict | None:
+    """IPO overview card from load_ipo — REAL day-1 returns (the demo's +12.4%/+384%
+    were illustrative mock; this shows the actual median/hi/lo)."""
+    df = strat.load_ipo()
+    if df.empty:
+        return None
+    d1 = pd.to_numeric(df[df["status"] == "listed"]["day1_ret"], errors="coerce").dropna()
+    if d1.empty or float(d1.max()) <= 0:   # bar widths divide by hi; guard non-positive
+        return None
+    return {
+        "kind": "ipo", "name": i18n.t("strategy.name.ipo"), "tag": "六因子 v6.7",
+        "n": len(df), "listed": int((df["status"] == "listed").sum()),
+        "median": float(d1.median()), "hi": float(d1.max()), "lo": float(d1.min()),
+    }
+
+
+# ── Opening banner: LIVE title + 3-strategy overview strip + dual-track ────────
+_ov_cards = [c for c in (_overview_curve_card("v5_biotech"),
+                         _overview_curve_card("hk_hd"),
+                         _overview_ipo_card()) if c]
+sb.live_title(i18n.t("strategy.page.title"),
+              as_of=next((c.get("_as_of") for c in _ov_cards if c.get("_as_of")), None),
+              lang=("中" if i18n.get_lang() == "zh" else "EN"))
 st.markdown(i18n.t("strategy.pitch"))
+if _ov_cards:
+    sb.overview_strip(_ov_cards)
 
 
 def render_strategy(strat_id: str) -> None:
@@ -95,19 +176,8 @@ def render_strategy(strat_id: str) -> None:
 
     # --- Header metrics (KPI cards — house style, replaces st.metric) ---
     days_since = (pd.Timestamp.now().normalize() - pd.Timestamp(pick_date)).days
-    holdings_foot = (
-        i18n.t("strategy.metric.holdings_foot_weighted", cash=cash_pct)
-        if weights is not None
-        else i18n.t("strategy.metric.holdings_foot", n=n_total)
-    )
-    theme.kpi_strip([
-        theme.kpi_metric(i18n.t("strategy.metric.pick_date"), str(pick_date)),
-        theme.kpi_metric(i18n.t("strategy.metric.n_picks"), str(top_n),
-                         foot=holdings_foot),
-        theme.kpi_metric(i18n.t("strategy.metric.days_since"), str(days_since)),
-        theme.kpi_metric(i18n.t("strategy.metric.benchmark"), bench_sym,
-                         foot=bench_name),
-    ])
+    # (Header KPI strip removed per user — the Tearsheet Hero's bottom KPI row carries
+    #  选股日 / 持仓数 / 持有天数 / 基准 + 胜率 / MDD / 夏普.)
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
@@ -144,98 +214,52 @@ def render_strategy(strat_id: str) -> None:
     bench_norm = _bench_norm(bench_close)
     bench2_norm = _bench_norm(bench2_close)
 
+    # --- Tearsheet Hero (showpiece headline; consumes the precomputed curves) ---
+    # mdd/sharpe/win computed here (portfolio_math has no risk metrics). Bench curve
+    # aligned via UNION index then ffill (a plain reindex(portfolio.index) would DROP
+    # bench values on bench-only trading days → cross-market benchmarks misalign).
+    # Gated on ≥10 days history + a real (non-degenerate) sharpe + a non-NaN bench
+    # tail, so we never display a fabricated 0.0 sharpe / 0 win count (audit MEDIUM
+    # B1/B2); below the gate the summary strip + chart below still render.
+    if (not portfolio.empty and not bench_norm.empty
+            and not normed.empty and len(portfolio) >= 10):
+        _b_aligned = (bench_norm.reindex(bench_norm.index.union(portfolio.index))
+                      .ffill().reindex(portfolio.index).bfill())
+        _rets = portfolio.pct_change().dropna()
+        if pd.notna(_b_aligned.iloc[-1]) and len(_rets) > 1 and _rets.std() > 0:
+            _cum = float(portfolio.iloc[-1] - 100.0)
+            _bret = float(_b_aligned.iloc[-1] - 100.0)
+            strategy_hero.render(
+                strat_name=disp_name,
+                strat_dates=[d.date().isoformat() for d in portfolio.index],
+                strat_curve=portfolio.values,
+                bench_name=bench_name, bench_curve=_b_aligned.values,
+                cum_ret=_cum, bench_ret=_bret, alpha_pp=_cum - _bret,
+                pick_date=str(pick_date), n_hold=top_n, pool=n_total, days=days_since,
+                wins=int((normed.iloc[-1] > 100.0).sum()), n_total=int(normed.shape[1]),
+                mdd=float((portfolio / portfolio.cummax() - 1.0).min() * 100.0),
+                sharpe=float(_rets.mean() / _rets.std()) * (252 ** 0.5),
+                bench_code=bench_sym, bench_sub=bench_name,
+                as_of=portfolio.index[-1].date().isoformat(),
+                source=f"yfinance · 含息复权 total return · 基准 {bench_sym}",
+            )
+
     # --- Summary metrics (KPI cards — house style, replaces st.metric) ---
     asof = (picks_closes.index[-1].date().isoformat()
             if not picks_closes.empty else "")
     if not portfolio.empty:
-        port_last = portfolio.iloc[-1] - 100
-        rebal_last = (portfolio_rebal.iloc[-1] - 100) if not portfolio_rebal.empty else None
-        bench_last = (bench_norm.iloc[-1] - 100) if not bench_norm.empty else None
-        alpha = (port_last - bench_last) if bench_last is not None else None
-
-        def _dir(x) -> str:
-            return "up" if x is not None and x > 0 else (
-                "down" if x is not None and x < 0 else "flat")
-
-        def _gly(x) -> str:
-            return "▲" if x is not None and x > 0 else (
-                "▼" if x is not None and x < 0 else "·")
-
-        cards = [theme.kpi_metric(
-            i18n.t("strategy.metric.port_bh"), f"{port_last:+.2f}%",
-            delta_abs=_gly(port_last), direction=_dir(port_last),
-        )]
-        if show_rebal and rebal_last is not None:
-            delta_bp = (rebal_last - port_last) * 100  # pp diff → basis points
-            cards.append(theme.kpi_metric(
-                i18n.t("strategy.metric.port_rebal"), f"{rebal_last:+.2f}%",
-                delta_pct=i18n.t("strategy.metric.delta_vs_bh", bp=delta_bp),
-                direction="flat",
-            ))
-        cards.append(theme.kpi_metric(
-            i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
-            f"{bench_last:+.2f}%" if bench_last is not None else "—",
-            delta_abs=_gly(bench_last), direction=_dir(bench_last),
-        ))
-        if not bench2_norm.empty:
-            b2_last = bench2_norm.iloc[-1] - 100
-            cards.append(theme.kpi_metric(
-                i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
-                f"{b2_last:+.2f}%",
-                delta_abs=_gly(b2_last), direction=_dir(b2_last),
-            ))
-        delta_word = (
-            i18n.t("strategy.delta.outperform") if alpha and alpha > 0
-            else i18n.t("strategy.delta.underperform") if alpha
-            else i18n.t("strategy.delta.tied")
-        )
-        cards.append(theme.kpi_metric(
-            i18n.t("strategy.metric.alpha"),
-            f"{alpha:+.2f}pp" if alpha is not None else "—",
-            delta_abs=delta_word, direction=_dir(alpha),
-        ))
-        theme.kpi_strip(cards)
+        # (Summary KPI strip 组合/基准/超额 removed per user — the Tearsheet Hero above
+        #  already carries cum / benchmark / alpha + mdd / sharpe / win. Keep only the
+        #  provenance captions: total-return basis + the v2 idle-cash note.)
         # 口径声明: auto_adjust=True → "Close" 是复权总回报(含息); 组合与基准同口径
         # (lib/strategy.py fetch_picks_closes)。高息股除息日股价机械下跌已被复权抵消。
         st.caption(i18n.t("strategy.metric.totalreturn_note"))
         if weights is not None:
             st.caption(i18n.t("strategy.hd.v2.cash_note", cash=cash_pct))
 
-    # --- Cumulative return chart (consumes precomputed series) ---
-    if not portfolio.empty:
-        labels = {
-            "portfolio": i18n.t("strategy.chart.line.portfolio"),
-            "rebalanced": i18n.t("strategy.chart.line.rebalanced"),
-            "band": i18n.t("strategy.chart.line.band"),
-            "y": i18n.t("strategy.chart.y"),
-        }
-        fig = charts.cumulative_return_chart(
-            normed, portfolio,
-            portfolio_rebalanced=portfolio_rebal,
-            title=i18n.t("strategy.chart.title", name=disp_name, date=pick_date),
-            show_individual=show_lines,
-            show_rebalanced=show_rebal,
-            labels=labels,
-        )
-        # Benchmark overlay
-        if not bench_norm.empty:
-            fig.add_trace(go.Scatter(
-                x=bench_norm.index, y=bench_norm.values,
-                mode="lines",
-                name=i18n.t("strategy.chart.line.benchmark", sym=bench_sym, name=bench_name),
-                line=dict(width=1.5, color="#8a8580", dash="dash"),
-            ))
-        if not bench2_norm.empty:
-            fig.add_trace(go.Scatter(
-                x=bench2_norm.index, y=bench2_norm.values,
-                mode="lines",
-                name=i18n.t("strategy.chart.line.benchmark", sym=bench2_sym, name=bench2_name),
-                line=dict(width=1.5, color="#4a6fa5", dash="dot"),
-            ))
-        # theme=None: keep our PLOTLY_LAYOUT authoritative (cream bg + INK text).
-        st.plotly_chart(fig, width="stretch", theme=None)
-        if asof:
-            theme.provenance(i18n.t("common.provenance", src="yfinance", asof=asof))
+    # (The Plotly cumulative-return chart + the header/summary KPI strips were removed
+    #  per user — the Tearsheet Hero above is now the single net-value curve and carries
+    #  all the headline metrics.)
 
     # --- Top/Worst ranking tables ---
     if perf.empty:
@@ -420,45 +444,50 @@ def render_hd_compare() -> None:
                      f"{bench2_norm.iloc[-1] - 100:+.2f}%",
                      help=f"anchor {cfg1['pick_date']}")
 
-    # --- Overlay chart: v1 + v2 + benchmark, v2 inception marked ---
-    fig = go.Figure()
+    # --- Overlay chart: v1 + v2 + benchmarks (ECharts, Hero-aligned) ---
+    # Common date axis = union of all four series (so v2's later-start line begins
+    # exactly at its inception via None gaps). v2 = CMSI red (the "current" book,
+    # prominent like the Hero strategy line); v1 = teal; benchmarks muted dash/dot.
+    _all_idx = pd.DatetimeIndex([])
+    for _s in (bench_norm, bench2_norm, port_v1, port_v2):
+        if not _s.empty:
+            _all_idx = _all_idx.union(_s.index)
+    _all_idx = _all_idx.sort_values()
+
+    def _aligned(s):
+        r = s.reindex(_all_idx)
+        return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
+
+    _lines = []
     if not bench_norm.empty:
-        fig.add_trace(go.Scatter(
-            x=bench_norm.index, y=bench_norm.values, mode="lines",
-            name=i18n.t("strategy.chart.line.benchmark",
-                        sym=bench_sym, name=cfg1["benchmark_name"]),
-            line=dict(width=1.5, color="#8a8580", dash="dash"),
-        ))
+        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                      sym=bench_sym, name=cfg1["benchmark_name"]),
+                       "values": _aligned(bench_norm), "color": theme.INK_3,
+                       "dash": "dashed", "width": 1.5})
     if not bench2_norm.empty:
-        fig.add_trace(go.Scatter(
-            x=bench2_norm.index, y=bench2_norm.values, mode="lines",
-            name=i18n.t("strategy.chart.line.benchmark",
-                        sym=bench2_sym, name=cfg1.get("benchmark2_name", "")),
-            line=dict(width=1.5, color="#4a6fa5", dash="dot"),
-        ))
+        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                      sym=bench2_sym, name=cfg1.get("benchmark2_name", "")),
+                       "values": _aligned(bench2_norm), "color": "#4a6fa5",
+                       "dash": "dotted", "width": 1.5})
     if not port_v1.empty:
-        fig.add_trace(go.Scatter(
-            x=port_v1.index, y=port_v1.values, mode="lines",
-            name=i18n.t("strategy.hd.compare.v1_line"),
-            line=dict(width=1.5, color=charts.SECONDARY),
-        ))
+        _lines.append({"name": i18n.t("strategy.hd.compare.v1_line"),
+                       "values": _aligned(port_v1), "color": theme.UP,
+                       "dash": "solid", "width": 1.8})
     if not port_v2.empty:
-        fig.add_trace(go.Scatter(
-            x=port_v2.index, y=port_v2.values, mode="lines",
-            name=i18n.t("strategy.hd.compare.v2_line"),
-            line=dict(width=2.0, color=charts.PRIMARY),
-        ))
-    fig.add_vline(x=pd.Timestamp(cfg2["pick_date"]), line_width=1,
-                  line_dash="dot", line_color="#8a8580")
-    fig.add_annotation(x=pd.Timestamp(cfg2["pick_date"]), y=1.02, yref="paper",
-                       text=i18n.t("strategy.hd.compare.rebal_label"),
-                       showarrow=False, font=dict(size=11, color="#4a4a4a"))
-    fig.update_layout(
-        title=i18n.t("strategy.hd.compare.title"),
-        yaxis_title=i18n.t("strategy.chart.y"),
-        height=450,
-    )
-    st.plotly_chart(theme.style_plotly(fig), width="stretch", theme=None)
+        _lines.append({"name": i18n.t("strategy.hd.compare.v2_line"),
+                       "values": _aligned(port_v2), "color": theme.CMSI_RED,
+                       "dash": "solid", "width": 2.4})
+
+    if _lines and len(_all_idx):
+        # marker = v2's actual first trading day (guarantees it matches a real x
+        # category even if the nominal pick_date is a weekend/holiday).
+        _marker = port_v2.index[0].date().isoformat() if not port_v2.empty else None
+        strategy_hero.render_compare_chart(
+            dates=[d.date().isoformat() for d in _all_idx], lines=_lines,
+            marker_date=_marker, marker_label=i18n.t("strategy.hd.compare.rebal_label"),
+            title=i18n.t("strategy.hd.compare.title"),
+            source=f"yfinance · 含息复权 · 截至 {_all_idx[-1].date().isoformat()}",
+        )
     st.caption(i18n.t("strategy.hd.compare.note"))
 
     # --- Rebalance diff: kept / added / removed, computed from the two CSVs ---
@@ -567,7 +596,7 @@ def render_ipo_strategy() -> None:
     # rows, the KPI/scatter/intraday blocks (which assume ≥1 listed name) would
     # crash on idxmax/mean. Render the pending table only and bail early.
     if listed.empty:
-        st.info(i18n.t("strategy.ipo.caveat"))
+        theme.md_note("提示 · 后测口径" if i18n.get_lang() == "zh" else "Caveat · backtest basis", i18n.t("strategy.ipo.caveat"))
         _render_ipo_table(picks)
         st.caption(i18n.t("strategy.ipo.source"))
         return
@@ -674,7 +703,7 @@ def render_ipo_strategy() -> None:
     _render_ipo_table(picks)
 
     # --- Caveat + source ---
-    st.info(i18n.t("strategy.ipo.caveat"))
+    theme.md_note("提示 · 后测口径" if i18n.get_lang() == "zh" else "Caveat · backtest basis", i18n.t("strategy.ipo.caveat"))
     st.caption(i18n.t("strategy.ipo.source"))
 
 
@@ -757,9 +786,19 @@ def _render_ipo_table(picks: pd.DataFrame) -> None:
     )
 
 
-# --- Onboarding expander (i18n) ---
-with st.expander(i18n.t("strategy.onboarding.title")):
-    st.markdown(i18n.t("strategy.onboarding.body"))
+# --- Dual-track guide cards (replaces the old 如何阅读 expander) ---
+sb.dual_track(
+    [
+        ("01", "催化剂驱动",
+         "围绕生物科技的临床读出、FDA / NMPA 审批节点、财报与公司治理事件,捕捉事件前后的"
+         "价值重估。前三个标签页 = 自选股日起的<b>真实累计收益 vs 基准</b>。"),
+        ("02", "新股打新多维评分",
+         "以六因子模型(流通盘稀缺度、基石阵容、板块景气、认购倍数、估值、基本面)为港股新股"
+         "打分分档,<b>量化首日申购胜率</b>。末标签页为静态截面后测。"),
+    ],
+    footer="两条线共用同一套<b>数据纪律</b>:数字标来源与时效、卖方一致预期与自有观点分离、"
+           "结论可操作。后续将扩展至更多行业 domain。",
+)
 
 # --- Tabs: 3 time-series strategies + 1 independent static IPO backtest ---
 # Strategies with "version_of" render INSIDE their group's tab (version toggle),

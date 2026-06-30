@@ -18,6 +18,7 @@ from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import sector_overview as so
 
 
 def _render_pct_table(
@@ -102,65 +103,59 @@ else:
 
 st.divider()
 
-# --- Domain benchmark snapshot (AI: ^SOX primary + peers) ---
+# --- Domain benchmark snapshot (AI: ^SOX primary + peers) — [10] sector_overview ---
 theme.section_header(i18n.t("ai.section.benchmark"))
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
     focus = ["^SOX", "SMH", "AIQ", "512480.SS", "515880.SS", "442580.KS"]
-    sub = bench_df.loc[bench_df.index.intersection(focus)].copy()
-    if not sub.empty:
-        sub = sub.rename(columns={
-            "name": "Name", "last": "Last",
-            "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "3m_%": "3M %", "ytd_%": "YTD %",
-        })
-        sub["Name"] = [i18n.bench_name(s, n) for s, n in zip(sub.index, sub["Name"])]
-        _render_pct_table(
-            sub,
-            pct_cols=["1D %", "5D %", "1M %", "3M %", "YTD %"],
-            num_cols=["Last"],
-            column_labels=i18n.common_cols(),
-        )
+    _present = [s for s in focus if s in bench_df.index]
+    if _present:
+        _cs = bm.close_series()
+        _gspc_ytd = bench_df.loc["^GSPC", "ytd_%"] if "^GSPC" in bench_df.index else None
+        _pmap = {"1日": "1d_%", "5日": "5d_%", "1月": "1m_%", "3月": "3m_%", "YTD": "ytd_%"}
+        _rows = []
+        for _s in _present:
+            _r = bench_df.loc[_s]
+            _ser = _cs.get(_s)
+            _spark = ([float(v) for v in _ser.dropna().sort_index().tail(30).tolist()]
+                      if _ser is not None else [])
+            _ytd = _r["ytd_%"]
+            _rel = (float(_ytd) - float(_gspc_ytd)
+                    if (_gspc_ytd is not None and not pd.isna(_ytd) and not pd.isna(_gspc_ytd)) else 0.0)
+            _rows.append({
+                "tk": _s,
+                "name": i18n.bench_name(_s, _r["name"]),
+                "periods": {lbl: (0.0 if pd.isna(_r[col]) else float(_r[col])) for lbl, col in _pmap.items()},
+                "rel_sp": _rel,
+                "spark": _spark,
+            })
+        _asof = db.latest_snapshot_date()
+        _src = (f"来源 Yahoo Finance cron EOD · 截至 {_asof} · 仅供参考"
+                if i18n.get_lang() == "zh"
+                else f"Source: Yahoo Finance cron EOD · as of {_asof} · for reference")
+        so.benchmark_table(_rows, source=_src)
 
 st.divider()
 
-# --- Per-sector top 3 movers / drags ---
-theme.section_header(i18n.t("hc.section.movers"))
+# --- Movers — [10] sector_overview: domain-wide top-10 gainers / losers (行内动量条) ---
+_name_map = db.ticker_to_name(prefer_cn=(i18n.get_lang() == "zh"))
+_all_rets = [df for df in all_returns_by_sector.values() if df is not None and not df.empty]
+if _all_rets:
+    _combined = pd.concat(_all_rets)
+    _combined = _combined[~_combined.index.duplicated(keep="first")]   # 跨子层去重(一票只算一次)
+    _combined = _combined[pd.notna(_combined["1d_%"])]
 
-name_map = db.ticker_to_name(prefer_cn=True)
-for sec in cfg["sectors"]:
-    rets = all_returns_by_sector.get(sec["id"])
-    if rets is None or rets.empty:
-        continue
-    with st.expander(f"**{i18n.sector_name(sec['id'])}**  ({len(rets)} tickers)"):
-        rets = rets.copy()
-        rets["name"] = rets.index.map(name_map)
-        rets = rets[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]]
-        rets.index.name = "Ticker"
+    def _mv_rows(_df: pd.DataFrame) -> list[dict]:
+        return [{"tk": fmt.fmt_ticker_bbg(_tk),
+                 "name": _name_map.get(_tk, _tk),
+                 "last": (0.0 if pd.isna(_row["last"]) else float(_row["last"])),
+                 "d1": float(_row["1d_%"])}
+                for _tk, _row in _df.iterrows()]
 
-        rename_map = {"name": "Name", "last": "Last",
-                      "1d_%": "1D %", "5d_%": "5D %",
-                      "1m_%": "1M %", "ytd_%": "YTD %"}
-        c1, c2 = st.columns(2)
-        gainers = rets.sort_values("1d_%", ascending=False).head(3).rename(columns=rename_map)
-        drags = rets.sort_values("1d_%", ascending=True).head(3).rename(columns=rename_map)
-        gainers.index = [fmt.fmt_ticker_bbg(t) for t in gainers.index]
-        drags.index = [fmt.fmt_ticker_bbg(t) for t in drags.index]
-        with c1:
-            st.markdown(f"**{i18n.t('hc.movers.gainers')}**")
-            _render_pct_table(
-                gainers,
-                pct_cols=["1D %", "5D %", "1M %", "YTD %"],
-                num_cols=["Last"],
-                column_labels=i18n.common_cols(),
-            )
-        with c2:
-            st.markdown(f"**{i18n.t('hc.movers.drags')}**")
-            _render_pct_table(
-                drags,
-                pct_cols=["1D %", "5D %", "1M %", "YTD %"],
-                num_cols=["Last"],
-                column_labels=i18n.common_cols(),
-            )
+    _gainers = _mv_rows(_combined.sort_values("1d_%", ascending=False).head(10))
+    _losers = _mv_rows(_combined.sort_values("1d_%", ascending=True).head(10))
+    so.movers(gainers=_gainers, losers=_losers,
+              window=("1 日" if i18n.get_lang() == "zh" else "1D"))
 
 # --- Onboarding ---
 with st.expander(i18n.t("hc.onboarding.title")):

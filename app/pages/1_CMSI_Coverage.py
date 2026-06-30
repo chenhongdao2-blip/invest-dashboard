@@ -154,7 +154,7 @@ tabs = st.tabs([f"{r} ({sum(merged['region']==r) if r != 'All' else len(merged)}
 
 def render_region(df: pd.DataFrame) -> None:
     if df.empty:
-        st.info("No tickers in this region.")
+        st.caption("No tickers in this region.")
         return
 
     # BUGFIX: Build NUMERIC DataFrame (not pre-formatted strings) so column sort

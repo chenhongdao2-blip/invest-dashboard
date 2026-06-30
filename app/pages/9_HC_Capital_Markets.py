@@ -167,8 +167,8 @@ def _source_links(df: pd.DataFrame) -> None:
 theme.page_header(i18n.t("capital.page.title"),
                   meta=i18n.t("mnc_ma.page.asof", asof=meta.get("as_of", "")))
 st.caption(i18n.t("mnc_ma.intro"))
-st.info(i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
-st.info(i18n.t("capital.def"))
+theme.md_note("来源 · 口径" if i18n.get_lang() == "zh" else "Source · basis", i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
+theme.md_note("释义 · M&A vs BD" if i18n.get_lang() == "zh" else "Definitions · M&A vs BD", i18n.t("capital.def"))
 
 tab_ma, tab_bd, tab_ipo = st.tabs([i18n.t("capital.tab.ma"), i18n.t("capital.tab.bd"), i18n.t("capital.tab.ipo")])
 
@@ -367,7 +367,7 @@ with tab_ipo:
     ipo = ipo_tracker.load_hk_ipo_tracker()
     im = ipo_tracker.hk_ipo_meta()
     if ipo.empty:
-        st.info(i18n.t("capital.ipo.empty"))
+        st.caption(i18n.t("capital.ipo.empty"))
     else:
         st.caption(i18n.t("capital.ipo.asof", asof=im.get("as_of", "")))
         clean = ipo_tracker.clean_view(ipo)
@@ -511,4 +511,4 @@ _links = [
 st.markdown(" · ".join(_links))
 
 st.divider()
-st.info(i18n.t("mnc_ma.disclaimer"))
+theme.md_note("免责声明" if i18n.get_lang() == "zh" else "Disclaimer", i18n.t("mnc_ma.disclaimer"))

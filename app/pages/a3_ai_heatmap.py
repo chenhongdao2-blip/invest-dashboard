@@ -91,7 +91,7 @@ def render_sector(sec: dict) -> None:
         merged = merged.sort_values(sort_field, ascending=ascending, na_position="last")
 
     if merged.empty:
-        st.info(f"No tickers in {sec['name']} after min-mcap filter (>= ${min_mcap_b:.1f}B)")
+        st.caption(f"No tickers in {sec['name']} after min-mcap filter (>= ${min_mcap_b:.1f}B)")
         return
 
     # --- Build NUMERIC display DataFrame (sort-bug fix) ---

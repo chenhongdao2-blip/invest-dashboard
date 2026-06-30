@@ -349,7 +349,7 @@ def _render_xmkt(prefer_cn: bool) -> None:
         per_n = st.slider(i18n.t("rot.xmkt.pern"), 4, 10, 6, 1,
                           help=i18n.t("rot.xmkt.pern_help"), key="xmkt_pern")
     if not sel:
-        st.info(i18n.t("rot.xmkt.pick"))
+        st.caption(i18n.t("rot.xmkt.pick"))
         return
 
     fx_for = {"a_share": raw["fx"].get("CNY=X"), "hk": raw["fx"].get("HKD=X"), "us": None}

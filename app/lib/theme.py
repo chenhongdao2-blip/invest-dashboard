@@ -698,6 +698,35 @@ pre code {{
 .cmsi-kpi-num.up {{ color: {UP} !important; }}
 .cmsi-kpi-num.up-deep {{ color: {UP_DEEP} !important; }}
 
+/* KPI B — 52周区间微条 + 1M/YTD 情境脚注 */
+.cmsi-kpi-range {{
+  margin-top: 12px; position: relative; height: 3px; background: {PAPER_RULE};
+}}
+.cmsi-kpi-range-fill {{
+  position: absolute; left: 0; top: 0; height: 3px; background: {UP};
+}}
+.cmsi-kpi-range-mark {{
+  position: absolute; top: -3px; width: 2px; height: 9px; background: {INK};
+}}
+.cmsi-kpi-range-ends {{
+  display: flex; justify-content: space-between; margin-top: 5px;
+  font-family: {FONT_MONO}; font-size: 9px; color: {INK_4}; letter-spacing: 0.04em;
+}}
+.cmsi-kpi-ctx {{
+  margin-top: 8px; font-family: {FONT_MONO}; font-size: 10px;
+  letter-spacing: 0.04em; color: {INK_3}; text-transform: uppercase;
+}}
+.cmsi-kpi-ctx .up {{ color: {UP}; font-weight: 600; }}
+.cmsi-kpi-ctx .down {{ color: {DOWN}; font-weight: 600; }}
+.cmsi-kpi-ctx .flat {{ color: {INK_3}; }}
+
+/* Strategy banner LIVE pulse dot (lib/strategy_banner.live_title) */
+.cmsi-live-dot {{
+  width: 8px; height: 8px; border-radius: 50%; background: {UP};
+  display: inline-block; animation: cmsiPulse 1.5s ease-in-out infinite;
+}}
+@keyframes cmsiPulse {{ 0%,100% {{ opacity:1; transform:scale(1); }} 50% {{ opacity:.35; transform:scale(.82); }} }}
+
 /* Page hero header — [NN/07] code + title + 4px red bar */
 .cmsi-page-hero {{
   display: flex;
@@ -800,6 +829,33 @@ pre code {{
   font-variant-numeric: tabular-nums lining-nums;
 }}
 
+/* 研究 memo — 卖方一致预期 vs CMSI 自有观点 对照(中性墨色 vs 红 tint） */
+.cmsi-ch {{
+  display: grid; grid-template-columns: 1fr 1fr;
+  border: 1px solid {PAPER_EDGE}; background: {PAPER}; margin: 0.4rem 0 1rem;
+}}
+.cmsi-ch-side {{ padding: 18px 22px; }}
+.cmsi-ch-cons {{ border-right: 1px solid {PAPER_RULE}; }}
+.cmsi-ch-house {{ background: {CMSI_RED_TINT}; border-left: 3px solid {CMSI_RED}; }}
+.cmsi-ch-head {{
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 600; color: {INK_3}; margin-bottom: 12px;
+}}
+.cmsi-ch-head-red {{ color: {CMSI_RED}; }}
+.cmsi-ch-row {{ display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 9px; }}
+.cmsi-ch-row:last-child {{ margin-bottom: 0; }}
+.cmsi-ch-k {{ font-size: 13px; color: {INK_2}; }}
+.cmsi-ch-house .cmsi-ch-k {{ color: {INK}; }}
+.cmsi-ch-v {{
+  font-size: 14px; font-weight: 600; color: {INK_2};
+  font-variant-numeric: tabular-nums lining-nums; text-align: right;
+}}
+.cmsi-ch-house .cmsi-ch-v {{ color: {INK}; font-weight: 700; }}
+.cmsi-ch-up {{ color: {UP}; font-weight: 600; }}
+.cmsi-ch-down {{ color: {DOWN}; font-weight: 600; }}
+@media (max-width: 680px) {{ .cmsi-ch {{ grid-template-columns: 1fr; }}
+  .cmsi-ch-cons {{ border-right: none; border-bottom: 1px solid {PAPER_RULE}; }} }}
+
 /* Eyebrow label (摘要 / 投资逻辑 …) — ▎red + uppercase; body markdown follows. */
 .cmsi-eyebrow {{
   font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -810,6 +866,25 @@ pre code {{
 .cmsi-eyebrow::before {{
   content: ''; width: 3px; height: 13px; background: {CMSI_RED}; display: inline-block;
 }}
+
+/* 编辑部释义块 — 替换蓝色 st.info(留在 cream/红/墨调色板,one-accent-lock) */
+.cmsi-note {{
+  background: {PAPER_DEEP}; border-left: 3px solid {CMSI_RED};
+  padding: 18px 24px; margin: 0.4rem 0 1.2rem;
+}}
+.cmsi-note-title {{
+  font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+  font-weight: 600; color: {CMSI_RED}; margin-bottom: 12px;
+}}
+.cmsi-note-body {{ font-size: 13px; line-height: 1.65; color: {INK_2}; }}
+.cmsi-note-body b {{ color: {INK}; font-weight: 600; }}
+.cmsi-note-cols {{ display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }}
+.cmsi-note-col:not(:last-child) {{ border-right: 1px solid {PAPER_RULE}; padding-right: 20px; }}
+.cmsi-note-col-head {{ display: flex; align-items: baseline; gap: 8px; margin-bottom: 6px; }}
+.cmsi-note-num {{ font-family: {FONT_MONO}; font-size: 13px; font-weight: 700; color: {CMSI_RED}; }}
+.cmsi-note-col-ttl {{ font-size: 14px; font-weight: 700; color: {INK}; }}
+@media (max-width: 680px) {{ .cmsi-note-cols {{ grid-template-columns: 1fr; }}
+  .cmsi-note-col:not(:last-child) {{ border-right: none; padding-right: 0; }} }}
 
 /* Sector / tag chips — hairline, mono, no fill, no emoji. */
 .cmsi-chips {{ display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 0.8rem; }}
@@ -906,16 +981,25 @@ def provenance(text: str) -> None:
 
 def kpi_metric(label: str, value: str, delta_abs: str | None = None,
                delta_pct: str | None = None, foot: str | None = None,
-               direction: str = "flat") -> str:
-    """Render one KPI card. Returns the HTML — use kpi_strip([...]) to compose.
+               direction: str = "flat",
+               range52: tuple | None = None,
+               context: list[tuple] | None = None) -> str:
+    """Render one KPI card (direction B · 情境). Returns the HTML — use
+    kpi_strip([...]) to compose. `direction` ∈ {'up','down','flat'} drives delta
+    color. Backward compatible: range52/context default None → 旧的克制版.
 
-    `direction` ∈ {'up', 'down', 'flat'} drives delta color.
+    New (direction B):
+      range52=(lo_str, hi_str, pos)  → 52-week range micro-bar (hairline, no
+        shadow); pos ∈ [0,1] = current price position in the 52w range.
+      context=[(lbl, val_str, dir)]  → mono footnote "1M -7.9% · YTD -12.6%"
+        (dir ∈ up/down/flat tints the value).
 
     Usage:
         kpi_strip([
-            kpi_metric("HSI · HANG SENG", "19,247.82",
-                       delta_abs="▲ +183.42", delta_pct="+0.96%",
-                       foot="AS OF 28 MAY · 16:08 HKT", direction="up"),
+            kpi_metric("恒生指数 · HSI", "23,026.68",
+                       delta_pct="+1.57%", direction="up",
+                       range52=("18,420", "24,310", 0.78),
+                       context=[("1M", "-7.9%", "down"), ("YTD", "-12.6%", "down")]),
             kpi_metric("S&P 500", "5,328.10", direction="flat"),
         ])
     """
@@ -926,7 +1010,27 @@ def kpi_metric(label: str, value: str, delta_abs: str | None = None,
             parts.append(f'<span class="abs">{delta_abs}</span>')
         if delta_pct:
             parts.append(f'<span class="pct">{delta_pct}</span>')
-        delta_html = f'<div class="cmsi-kpi-delta {direction}">{"".join(parts)}</div>'
+        delta_html = f'<div class="cmsi-kpi-delta {direction}">{"&nbsp;&nbsp;".join(parts)}</div>'
+
+    range_html = ""
+    if range52:
+        lo, hi, pos = range52
+        pct = max(0.0, min(float(pos), 1.0)) * 100
+        range_html = (
+            f'<div class="cmsi-kpi-range">'
+            f'<div class="cmsi-kpi-range-fill" style="width:{pct:.0f}%;"></div>'
+            f'<div class="cmsi-kpi-range-mark" style="left:{pct:.0f}%;"></div></div>'
+            f'<div class="cmsi-kpi-range-ends"><span>52W {lo}</span><span>{hi}</span></div>'
+        )
+
+    ctx_html = ""
+    if context:
+        items = " · ".join(
+            f'{lbl} <span class="{d}">{val}</span>' for lbl, val, d in context
+        )
+        ctx_html = f'<div class="cmsi-kpi-ctx">{items}</div>'
+
+    # foot kept for backward compat; range/context are the B additions.
     foot_html = f'<div class="cmsi-kpi-foot">{foot}</div>' if foot else ""
 
     return dedent(f"""
@@ -937,6 +1041,8 @@ def kpi_metric(label: str, value: str, delta_abs: str | None = None,
           </div>
           <div class="cmsi-kpi-num">{value}</div>
           {delta_html}
+          {range_html}
+          {ctx_html}
           {foot_html}
         </div>
     """).strip()
@@ -971,11 +1077,92 @@ def memo_meta_bar(items: list[tuple[str, str]]) -> None:
     st.markdown(f'<div class="cmsi-memo-bar">{cells}</div>', unsafe_allow_html=True)
 
 
+def consensus_house(consensus: list[tuple], house: list[tuple],
+                    consensus_label: str = "卖方一致预期 · Consensus",
+                    house_label: str = "CMSI 自有观点 · House") -> None:
+    """并排对照块:左(一致)= 中性墨色;右(自有)= cream 红 tint 底 + 红左肋。每边是
+    [(行标签, 值HTML), …];值可内嵌 <span class='cmsi-ch-up'>(+7%)</span> 标分歧。
+
+        theme.consensus_house(
+            consensus=[("一致评级", "买入(均值 2.1)"), ("一致目标价", "HKD 24.3")],
+            house=[("CMSI 评级", "<b>买入</b>"),
+                   ("CMSI 目标价", "HKD 26.0 <span class='cmsi-ch-up'>(+7% vs 一致)</span>")])
+    """
+    def _rows(items):
+        return "".join(
+            f'<div class="cmsi-ch-row"><span class="cmsi-ch-k">{_esc(str(k))}</span>'
+            f'<span class="cmsi-ch-v">{v}</span></div>'
+            for k, v in items
+        )
+
+    st.markdown(
+        f'<div class="cmsi-ch">'
+        f'<div class="cmsi-ch-side cmsi-ch-cons">'
+        f'<div class="cmsi-ch-head">{_esc(consensus_label)}</div>{_rows(consensus)}</div>'
+        f'<div class="cmsi-ch-side cmsi-ch-house">'
+        f'<div class="cmsi-ch-head cmsi-ch-head-red">{_esc(house_label)}</div>{_rows(house)}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
 def eyebrow(label: str) -> None:
     """Editorial eyebrow label (▎red + uppercase). Follow it with st.markdown(body)
     so the body keeps normal markdown rendering."""
     st.markdown(f'<div class="cmsi-eyebrow">{_esc(str(label))}</div>',
                 unsafe_allow_html=True)
+
+
+def note_block(title: str, body_html: str) -> None:
+    """编辑部释义块(替换蓝色 st.info)。title = 红 eyebrow;body_html 可含 <b>/<br>。
+    Use for 释义/口径/免责/caveat — NOT for empty-state placeholders (those stay
+    a muted st.caption; a red rib on 'no data' over-emphasises an empty state).
+
+        theme.note_block("释义 · 数据口径",
+                         "<b>Fwd P/E</b> 取 yfinance forwardPE(LSEG NTM 口径)……")
+    """
+    st.markdown(
+        f'<div class="cmsi-note">'
+        f'<div class="cmsi-note-title">{_esc(str(title))}</div>'
+        f'<div class="cmsi-note-body">{body_html}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def note_split(title: str, columns: list[tuple]) -> None:
+    """多栏释义块 — columns=[(序号, 小标题, body_html), ...]。用于「①…②…」对照释义,
+    序号(①②)用招商红。
+
+        theme.note_split("释义 · 两个医疗指数怎么区分", [
+            ("①", "恒生医疗保健 HSHCI", "成分为<b>香港上市</b>医疗股…代表<b>港股医疗 beta</b>。"),
+            ("②", "MSCI 中国医疗 KURE", "覆盖<b>全中国</b>医疗(A+H+ADR)…代表<b>全中国医疗 beta</b>。"),
+        ])
+    """
+    cells = "".join(
+        f'<div class="cmsi-note-col">'
+        f'<div class="cmsi-note-col-head"><span class="cmsi-note-num">{_esc(str(num))}</span>'
+        f'<span class="cmsi-note-col-ttl">{_esc(str(ttl))}</span></div>'
+        f'<div class="cmsi-note-body">{body}</div></div>'
+        for num, ttl, body in columns
+    )
+    st.markdown(
+        f'<div class="cmsi-note">'
+        f'<div class="cmsi-note-title">{_esc(str(title))}</div>'
+        f'<div class="cmsi-note-cols">{cells}</div></div>',
+        unsafe_allow_html=True,
+    )
+
+
+def md_note(title: str, md_text: str) -> None:
+    """Render an existing markdown-ish i18n string (with `**bold**` + line breaks)
+    inside the editorial note block — drop-in for `st.info(i18n.t(key))` that keeps
+    the bilingual copy untouched (no locale surgery). Escapes HTML, then pairs
+    `**…**` into <b>…</b> and turns newlines into <br>."""
+    esc = _esc(str(md_text))
+    parts = esc.split("**")            # paired ** → <b>…</b>
+    body = "".join(p if i % 2 == 0 else f"<b>{p}</b>" for i, p in enumerate(parts))
+    body = body.replace("\n", "<br>")
+    note_block(title, body)
 
 
 def chips_tagged(items: list[tuple[str, str]]) -> None:

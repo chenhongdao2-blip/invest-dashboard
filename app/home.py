@@ -18,6 +18,8 @@ from lib import ui
 from lib import theme
 from lib import i18n
 from lib import heatmap as hm
+from lib import heatmap_treemap
+from lib import market_hub_tiles
 from lib import freshness
 
 st.set_page_config(
@@ -168,10 +170,14 @@ def _render_stock_heatmap() -> None:
         if d and d["sectors"]:
             domains.append(d)
     if not domains:
-        st.info(i18n.t("home.panel.empty"))
+        st.caption(i18n.t("home.panel.empty"))
         return
-    doc, h = hm.render_bento_html(domains, prefer_cn=prefer_cn, window_label=win, as_of=latest)
-    st.iframe(doc, height=h)
+    # v3: one ECharts Treemap (面积=市值 / 颜色=涨跌) per domain — replaces the bento.
+    _h = 600 if len(domains) > 1 else 720
+    for _d in domains:
+        _doc, _hh = heatmap_treemap.render_treemap_html(
+            _d, window_label=win, as_of=latest, prefer_cn=prefer_cn, height=_h)
+        st.iframe(_doc, height=_hh)
     st.caption(
         (f"子行业按中位涨跌排名分配席位 · 青绿涨/红跌（港美股惯例，与 A 股相反）· 截至 {latest}"
          if prefer_cn else
@@ -217,32 +223,61 @@ def _render_benchmark_table(panel_id: str, syms: list[str]) -> None:
     )
 
 
-# --- 1. Market Overview — KPI cards (^GSPC / ^NDX / ^HSI) ---
-theme.section_header(i18n.t("home.panel.broad_market"))
+# --- 1. Market Overview — [09] index tiles (sparkline + 52w range, real EOD data) ---
 _bm_present = [s for s in _panels["broad_market"] if s in bench_df.index]
 if not _bm_present:
+    theme.section_header(i18n.t("home.panel.broad_market"))
     st.caption(i18n.t("home.panel.empty"))
 else:
-    cards = []
+    # 52w range micro-bar + ~30d sparkline from the DB-backed close series (real, not MOCK).
+    _bm_series = bm.close_series()
+
+    def _range52(sym: str, last) -> tuple | None:
+        """Real trailing-52-week (lo_str, hi_str, pos) from the close series; None
+        if no series, last missing, or the window spans <~330d (never mislabel a
+        short window as '52W' — anti-slop 数字非编造)."""
+        ser = _bm_series.get(sym)
+        if ser is None or last is None or pd.isna(last):
+            return None
+        ser = ser.dropna().sort_index()
+        if ser.empty:
+            return None
+        win = ser[ser.index >= ser.index.max() - pd.Timedelta(days=365)]
+        if win.empty or (win.index.max() - win.index.min()).days < 330:
+            return None
+        lo, hi = float(win.min()), float(win.max())
+        if hi <= lo:
+            return None
+        _f = lambda v: f"{v:,.2f}" if v < 1000 else f"{v:,.0f}"
+        return (_f(lo), _f(hi), (float(last) - lo) / (hi - lo))
+
+    def _spark(sym: str) -> list[float]:
+        """近 ~30 个收盘点(real)给 sparkline;不足 2 点则空(瓦片不画线)。"""
+        ser = _bm_series.get(sym)
+        if ser is None:
+            return []
+        ser = ser.dropna().sort_index()
+        return [float(v) for v in ser.tail(30).tolist()]
+
+    _tiles = []
     for sym in _bm_present:
         row = bench_df.loc[sym]
-        d1 = row["1d_%"]
-        direction = "flat" if pd.isna(d1) else ("up" if d1 > 0 else "down" if d1 < 0 else "flat")
-        delta_pct = f"{d1:+.2f}%" if not pd.isna(d1) else None
-        m1, ytd = row["1m_%"], row["ytd_%"]
-        foot_parts = []
-        if not pd.isna(m1):
-            foot_parts.append(f"1M {m1:+.1f}%")
-        if not pd.isna(ytd):
-            foot_parts.append(f"YTD {ytd:+.1f}%")
-        foot = " · ".join(foot_parts) if foot_parts else None
         last = row["last"]
-        cards.append(theme.kpi_metric(
-            label=i18n.bench_name(sym, row["name"]),
-            value=f"{last:,.2f}" if not pd.isna(last) else "—",
-            delta_pct=delta_pct, foot=foot, direction=direction,
-        ))
-    theme.kpi_strip(cards)
+        r52 = _range52(sym, last)
+        _tiles.append({
+            "name": i18n.bench_name(sym, row["name"]),
+            "value": f"{last:,.2f}" if not pd.isna(last) else "—",
+            "chg_pct": None if pd.isna(row["1d_%"]) else float(row["1d_%"]),
+            "lo": r52[0] if r52 else None,
+            "hi": r52[1] if r52 else None,
+            "pos": r52[2] if r52 else None,
+            "m1": None if pd.isna(row["1m_%"]) else float(row["1m_%"]),
+            "ytd": None if pd.isna(row["ytd_%"]) else float(row["ytd_%"]),
+            "spark": _spark(sym),
+        })
+    _doc, _h = market_hub_tiles.render_index_tiles(
+        _tiles, as_of=latest, prefer_cn=(i18n.get_lang() == "zh"))
+    st.iframe(_doc, height=_h)
 
 # --- 1b. Single-stock heatmap v2 (ranked bento grid, Healthcare + AI) — sits under the
 #     KPI strip, high on the page. Size = market cap, color = selectable-window

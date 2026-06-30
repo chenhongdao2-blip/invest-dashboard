@@ -20,7 +20,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-06-29T23:42:31+00:00",
+    "refreshed_at": "2026-06-30T12:53:36+00:00",
     "source_date": "2026-06-30"
   },
   "hc_index_comparison": {
@@ -28,7 +28,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-06-29T23:42:33+00:00",
+    "refreshed_at": "2026-06-30T12:53:37+00:00",
     "source_date": "2026-06-29",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"
   },

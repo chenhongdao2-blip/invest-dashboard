@@ -499,6 +499,17 @@ else:
     st.caption(f"{i18n.t('drill.wiki.source_file')}: `{wiki_page.file_path}`")
     st.divider()
 
+# ---------- 行情终端 (dark candlestick — Hybrid 基调:chart-heavy surface 局部上暗色交易台) ----------
+# DB 只存 close;K 线单独取真实 OHLCV(yfinance,cached 1h)。无数据则整段跳过(不留空标题)。
+from lib import candlestick_terminal as cterm
+
+_ohlcv = cterm.fetch_ohlcv(ticker)
+if not _ohlcv.empty:
+    theme.section_header("行情终端" if i18n.get_lang() == "zh" else "Price Terminal")
+    cterm.render(ticker=ticker, name=display_name, df=_ohlcv, ccy=ccy,
+                 prefer_cn=(i18n.get_lang() == "zh"))
+    st.divider()
+
 # ---------- Relative strength (vs sector benchmark) ----------
 # Replaces the old absolute USD price line — a single ticker's absolute curve has
 # near-zero judgment value for a sell-side desk; what matters is whether it is

@@ -183,6 +183,12 @@ def _render_stock_heatmap() -> None:
          if prefer_cn else
          f"Slots by sub-sector median-return rank · teal up / red down (HK/US convention) · as of {latest}")
     )
+    # 点热力图里看到的股 → 这里选代码 → K 线弹窗(cream 终端,不离开本页 / 不跳新页)。
+    from lib import candlestick_terminal as cterm
+    _hm_tickers = sorted(db.all_tickers())
+    if _hm_tickers:
+        cterm.kline_picker(_hm_tickers, db.ticker_to_name(prefer_cn=prefer_cn),
+                           prefer_cn=prefer_cn, key="home_hm_kline")
 
 
 # ---- Benchmark data (cron-cached, read-only) ----
@@ -267,6 +273,7 @@ else:
         _tiles.append({
             "name": i18n.bench_name(sym, row["name"]),
             "value": f"{last:,.2f}" if not pd.isna(last) else "—",
+            "value_raw": None if pd.isna(last) else float(last),  # enables count-up
             "chg_pct": None if pd.isna(row["1d_%"]) else float(row["1d_%"]),
             "lo": r52[0] if r52 else None,
             "hi": r52[1] if r52 else None,

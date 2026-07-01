@@ -223,6 +223,32 @@ with tab_ma:
                     title=i18n.t("mnc_ma.chart.by_company"), xlabel=i18n.t("capital.unit.bn")),
                     width="stretch", theme=None)
 
+    # ── 资金流 Sankey:收购方 × 治疗领域(bold 新 viz — 一图看钱流向哪个 TA)──
+    from lib import deal_sankey
+    _zh = i18n.get_lang() == "zh"
+    _topN = by_co.head(12)
+    _agg = (ma[ma["ticker"].isin(set(_topN["ticker"]))]
+            .groupby(["ticker", "ta_group"], as_index=False)["deal_size_mn"].sum())
+    _agg["bn"] = _agg["deal_size_mn"] / 1000.0
+    _agg = _agg[_agg["bn"] >= 2.0]                       # 去 <$2B 细碎链路,保持可读
+    if not _agg.empty:
+        _acq = [tk for tk in _topN["ticker"].tolist() if tk in set(_agg["ticker"])]
+        _tas = list(_agg.groupby("ta_group")["bn"].sum().sort_values(ascending=False).index)
+        _nodes = ([{"name": tk, "side": "L"} for tk in _acq]
+                  + [{"name": i18n.ta_name(ta), "side": "R"} for ta in _tas])
+        _links = [{"source": r["ticker"], "target": i18n.ta_name(r["ta_group"]), "value": r["bn"]}
+                  for _, r in _agg.iterrows()]
+        theme.section_header("资金流 · 收购方 × 治疗领域" if _zh else "Capital Flow · Acquirer × TA",
+                             meta=("连线宽 = 累计交易额" if _zh else "link width = cumulative deal value"))
+        deal_sankey.render(
+            _nodes, _links,
+            title=("M&A 资金流向" if _zh else "M&A capital flow"),
+            source=(f"来源 web / deal-tracker · M&A 累计交易额(USD bn)· 头部 {len(_acq)} 收购方 · 链路 ≥ $2B"
+                    if _zh else
+                    f"Source: web / deal-tracker · cumulative M&A value (USD bn) · top {len(_acq)} acquirers · links ≥ $2B"),
+            prefer_cn=_zh,
+        )
+
     theme.section_header(i18n.t("mnc_ma.section.ta"), meta=i18n.t("mnc_ma.section.ta_meta"))
     st.plotly_chart(charts.ranked_hbar([i18n.ta_name(t) for t in by_ta["ta_group"]], by_ta["total_bn"].tolist(),
                     title=i18n.t("mnc_ma.chart.by_ta"), xlabel=i18n.t("capital.unit.bn"), color=theme.UP_DEEP),

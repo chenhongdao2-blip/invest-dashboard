@@ -22,7 +22,10 @@ import json
 from lib import theme
 from lib import echarts_boot
 
-ECHARTS_SRC = "/app/static/echarts.min.js"
+# 相对路径(NO 前导 /):云端 Streamlit 服务在 /~/+/ 前缀下,srcdoc iframe baseURI = 该前缀。
+# 相对 "app/static/..." 云端解析为 /~/+/app/static/...(实测 load ✓),本地解析为 /app/static/...。
+# **禁改回绝对 "/app/static/..."**(云端丢前缀 → echarts undefined → 空图)。
+ECHARTS_SRC = "app/static/echarts.min.js"
 
 # 左(收购方)节点配 teal 家族;右(TA)节点配 招商红/暖家族;连线随源色低透明度。
 _L_COLOR = theme.UP            # 收购方节点 teal #0d7680

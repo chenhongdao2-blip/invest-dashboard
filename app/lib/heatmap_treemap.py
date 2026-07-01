@@ -28,8 +28,10 @@ import json
 from lib import theme
 from lib import echarts_boot
 
-# 自托管(China 安全):/app/static/echarts.min.js 在 srcdoc iframe 内也解析(继承父页 base URL)。
-_ECHARTS_SRC = "/app/static/echarts.min.js"
+# 自托管(China 安全)+ 相对路径(NO 前导 /):云端 Streamlit 服务在 /~/+/ 前缀下,srcdoc
+# iframe baseURI = 该前缀;相对 "app/static/..." 云端解析为 /~/+/app/static/...(实测 load ✓),
+# 本地解析为 /app/static/...。**禁改回绝对 "/app/static/..."**(云端丢前缀 → echarts undefined → 空图)。
+_ECHARTS_SRC = "app/static/echarts.min.js"
 
 CAP = 12.0   # 颜色饱和上限 ±%
 

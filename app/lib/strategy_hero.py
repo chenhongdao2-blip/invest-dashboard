@@ -29,9 +29,12 @@ from html import escape as _esc
 from lib import theme
 from lib import echarts_boot
 
-# 自托管(China 安全):app/static/echarts.min.js,iframe srcdoc 继承父页 base URL → /app/static 可达。
+# 自托管(China 安全)+ 相对路径(NO 前导 /):云端 Streamlit 服务在 /~/+/ 前缀下,srcdoc iframe
+# baseURI = 该前缀;相对 "app/static/..." 云端解析为 /~/+/app/static/...(2026-07-01 实机 load ✓),
+# 本地(无前缀)解析为 /app/static/...。**禁改回绝对 "/app/static/..."** —— 云端丢前缀 → 撞 login
+# 重定向 → echarts 永远 undefined → 全站图空白(旧「0 宽竞态」诊断错靶,真因是此路径)。
 # 若要回退 CDN(本地快速验证),改成 "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"。
-ECHARTS_SRC = "/app/static/echarts.min.js"
+ECHARTS_SRC = "app/static/echarts.min.js"
 
 
 def _kpi_tile(label: str, value_attr: str, suffix: str = "", color: str = None,

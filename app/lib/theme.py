@@ -143,20 +143,24 @@ def style_plotly(fig):
 
 # ── Self-hosted fonts ────────────────────────────────────────────────────
 # Variable woff2 served from app/static/ (enableStaticServing) instead of the
-# Google Fonts CDN, which is blocked for mainland-China viewers. The /app/static
-# path also resolves inside components.html srcdoc iframes (they inherit the
-# parent base URL), so the same block works for ui.render_html_table.
+# Google Fonts CDN, which is blocked for mainland-China viewers.
+# RELATIVE url (NO leading /): Streamlit Cloud serves the app under a /~/+/ path
+# prefix, so the srcdoc iframe's baseURI carries that prefix. A relative
+# "app/static/fonts/..." resolves to /~/+/app/static/... on Cloud (verified load ✓
+# 2026-07-01) and to /app/static/... locally. An ABSOLUTE "/app/static/..." drops
+# the prefix on Cloud → hits the login redirect → fonts fall back to system sans.
+# **Do NOT revert to a leading slash.** Same fix class as ECHARTS_SRC.
 FONT_FACE_CSS = """
 @font-face {
   font-family: 'Inter';
-  src: url('/app/static/fonts/inter-var.woff2') format('woff2-variations');
+  src: url('app/static/fonts/inter-var.woff2') format('woff2-variations');
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('/app/static/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
+  src: url('app/static/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
   font-weight: 100 800;
   font-style: normal;
   font-display: swap;

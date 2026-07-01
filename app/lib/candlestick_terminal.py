@@ -33,7 +33,11 @@ import streamlit as st
 from lib import theme
 from lib import echarts_boot
 
-ECHARTS_SRC = "/app/static/echarts.min.js"
+# 相对路径(NO 前导 /):Streamlit Cloud 把 app 服务在 /~/+/ 前缀下,srcdoc iframe 的
+# baseURI = 该前缀;相对 "app/static/..." 解析为 /~/+/app/static/...(云端实测 load ✓),
+# 本地(无前缀)解析为 /app/static/...。**禁改回绝对 "/app/static/..."** —— 云端丢前缀
+# → 撞 login 重定向 → echarts 永远 undefined → 全站图空白(2026-07-01 实机验证根因)。
+ECHARTS_SRC = "app/static/echarts.min.js"
 
 # 亮版(cream)终端调色板 — 全站统一 cream FT 调,终端的「冲击力」来自密度/结构而非暗色皮。
 # (George 2026-06-30:暗色太跳,要亮版;放弃 Hybrid 的 dark-terminal,整站留 cream。)

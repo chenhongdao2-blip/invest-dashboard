@@ -83,8 +83,18 @@ def _fmt(v: float) -> str:
 
 
 def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
-           prefer_cn: bool, as_of: str | None = None, height: int = 540) -> bool:
-    """渲染暗色 K 线终端;成功 True,数据不足 False(上层回退原图)。"""
+           prefer_cn: bool, as_of: str | None = None, height: int = 540,
+           bench_overlay: tuple[str, list] | None = None,
+           show_header: bool = True) -> bool:
+    """渲染 cream K 线终端;成功 True,数据不足 False(上层回退原图)。
+
+    bench_overlay = (基准名, [值…]) — 板块基准相对强弱**折进 K 线**(George 指示:
+    基准跟 K 线放一起不另开一栏)。值已由上层按区间起点 rebase 到本股价格,故与蜡烛同
+    一价格轴;画成灰色虚线,蜡烛在虚线上方=跑赢板块。None → 只画蜡烛。
+
+    show_header — 顶部「代码 + 名称 + 交易所 chip + meta」头。页面用 False(masthead 已带
+    身份,设计稿 个股行情 美化 的 price panel 无重复头);弹窗 modal 用 True(无 masthead)。
+    卡片走毛玻璃(rgba 白 + blur)叠角落径向微光,对齐设计稿 glass price panel。"""
     if df is None or df.empty or len(df) < 5:
         return False
 
@@ -117,9 +127,13 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
         next((s for s in [".HK", ".SS", ".SZ", ".T", ".KS", ".KQ"] if ticker.endswith(s)), ""),
         "US · 美股")
 
+    bench_name = bench_overlay[0] if bench_overlay else None
+    bench_vals = bench_overlay[1] if bench_overlay else None
+
     payload = {
         "dates": dates, "kline": kline, "vol": vol, "volUp": vol_up,
         "ma5": _ma(c, 5), "ma10": _ma(c, 10), "ma20": _ma(c, 20),
+        "bench": bench_vals, "benchName": bench_name,
         "UP": _UP, "DOWN": _DOWN, "INK": _INK, "MUTE": _MUTE, "FAINT": _FAINT,
         "EDGE": _EDGE, "GRID": _GRID, "PANEL": _PANEL, "BG": _BG, "PAPER": theme.PAPER,
         "MA5C": _MA5, "MA10C": _MA10, "MA20C": _MA20,
@@ -138,6 +152,9 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
 
     meta = ("日K · MA5/10/20 · 成交量 · EOD 收盘" if prefer_cn
             else "Daily · MA5/10/20 · Volume · EOD close")
+    if bench_overlay:
+        meta += (" · 虚线 vs 板块基准(起点对齐)" if prefer_cn
+                 else " · dashed = vs sector (rebased)")
     src = (f"来源 yfinance · 复权 OHLCV · {ticker} · 截至 {as_of or df.index[-1].strftime('%Y-%m-%d')}"
            if prefer_cn else
            f"Source: yfinance · adj OHLCV · {ticker} · as of {as_of or df.index[-1].strftime('%Y-%m-%d')}")
@@ -165,38 +182,49 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
         + '</div></div>'
     )
 
+    # 毛玻璃卡(rgba 白 + blur)叠角落径向微光 —— 对齐设计稿「个股行情 美化」glass price panel。
+    chart_h = (height - 150) if show_header else (height - 56)
+    _GLASS = "rgba(255,255,255,.5)"      # chart card
+    _GLASS2 = "rgba(255,255,255,.55)"    # side cards
+    _GBORD = "rgba(255,255,255,.7)"      # glass hairline
+    _term_pad = "14px 16px 12px" if show_header else "4px 4px 8px"
     css = f"""
     *{{box-sizing:border-box;margin:0;padding:0}}
     html,body{{height:100%;background:{_BG};color:{_INK};font-family:{theme.FONT_STACK};
       font-feature-settings:'tnum','ss01';-webkit-font-smoothing:antialiased;color-scheme:light}}
-    .term{{padding:18px 20px 14px;min-height:100%}}
+    body{{position:relative;overflow:hidden}}
+    .glow{{position:absolute;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(820px 480px at 8% -10%,rgba(200,16,46,.08),transparent 60%),
+                 radial-gradient(760px 480px at 96% 4%,rgba(13,118,128,.10),transparent 60%)}}
+    .term{{position:relative;z-index:1;padding:{_term_pad};min-height:100%}}
     .thead{{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}}
     .tk{{display:flex;align-items:baseline;gap:13px}}
-    .tk .tick{{width:4px;height:26px;background:{theme.CMSI_RED};display:inline-block;align-self:center}}
-    .tk .code{{font-family:{theme.FONT_MONO};font-size:27px;font-weight:700;color:{_INK};letter-spacing:.01em}}
-    .tk .nm{{font-size:22px;font-weight:600;color:{_INK};letter-spacing:.01em}}
+    .tk .tick{{width:4px;height:24px;background:{theme.CMSI_RED};display:inline-block;align-self:center}}
+    .tk .code{{font-family:{theme.FONT_MONO};font-size:24px;font-weight:700;color:{_INK};letter-spacing:.01em}}
+    .tk .nm{{font-size:20px;font-weight:600;color:{_INK};letter-spacing:.01em}}
     .tk .ex{{font-family:{theme.FONT_MONO};font-size:11px;color:{_MUTE};border:1px solid {_EDGE};
       border-radius:4px;padding:3px 8px;align-self:center}}
-    .tmeta{{font-family:{theme.FONT_MONO};font-size:11.5px;color:{_FAINT};letter-spacing:.04em;text-align:right;padding-top:6px}}
-    .body{{display:grid;grid-template-columns:1fr 296px;gap:18px;align-items:stretch}}
-    .chartcard{{background:{_PANEL};border:1px solid {_EDGE};border-radius:6px;padding:6px 6px 2px;min-width:0}}
-    #kc{{width:100%;height:{height - 150}px}}
-    .side{{display:flex;flex-direction:column;gap:13px}}
-    .pcard{{background:{_PANEL};border:1px solid {_EDGE};border-radius:6px;padding:15px 17px}}
-    .plbl{{font-family:{theme.FONT_MONO};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:{_FAINT};margin-bottom:9px}}
+    .tmeta{{font-family:{theme.FONT_MONO};font-size:11px;color:{_FAINT};letter-spacing:.04em;text-align:right;padding-top:6px}}
+    .body{{display:grid;grid-template-columns:1fr 300px;gap:16px;align-items:stretch}}
+    .chartcard{{background:{_GLASS};-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);
+      border:1px solid {_GBORD};border-radius:4px;padding:8px;min-width:0}}
+    #kc{{width:100%;height:{chart_h}px}}
+    .side{{display:flex;flex-direction:column;gap:14px}}
+    .pcard{{background:{_GLASS2};-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+      border:1px solid {_GBORD};border-radius:4px;padding:18px 20px;box-shadow:0 1px 0 rgba(26,26,26,.04)}}
+    .plbl{{font-family:{theme.FONT_MONO};font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:{_FAINT};margin-bottom:9px;font-weight:600}}
     .prow{{display:flex;align-items:baseline;gap:9px}}
-    .pbig{{font-family:{theme.FONT_MONO};font-size:40px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}}
+    .pbig{{font-family:{theme.FONT_MONO};font-size:34px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}}
     .pccy{{font-size:13px;color:{_FAINT}}}
-    .pchg{{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:{theme.FONT_MONO};font-size:15px}}
-    .chip{{font-family:{theme.FONT_MONO};font-size:13px;font-weight:700;padding:2px 9px;border-radius:4px}}
-    .ohlc{{display:flex;flex-direction:column;gap:9px}}
+    .pchg{{display:flex;align-items:center;gap:10px;margin-top:10px;font-family:{theme.FONT_MONO};font-size:14px}}
+    .chip{{font-family:{theme.FONT_MONO};font-size:13px;font-weight:700;padding:2px 8px;border-radius:3px}}
+    .ohlc{{display:flex;flex-direction:column;gap:8px}}
     .ohlc>div{{display:flex;justify-content:space-between;font-family:{theme.FONT_MONO};font-size:13px}}
-    .ohlc span{{color:{_MUTE}}}
+    .ohlc span{{color:{_MUTE};font-family:{theme.FONT_STACK}}}
     .ohlc b{{font-weight:600;font-variant-numeric:tabular-nums}}
-    .pgrid{{display:grid;grid-template-columns:1fr 1fr;gap:15px 14px}}
+    .pgrid{{display:grid;grid-template-columns:1fr 1fr;gap:14px}}
     .st .stl{{font-family:{theme.FONT_MONO};font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:{_FAINT};margin-bottom:5px}}
-    .st .stv{{font-family:{theme.FONT_MONO};font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}}
-    .foot{{margin-top:11px;font-family:{theme.FONT_MONO};font-size:10.5px;color:{_FAINT};letter-spacing:.02em}}
+    .st .stv{{font-family:{theme.FONT_MONO};font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}}
     @media (max-width:760px){{.body{{grid-template-columns:1fr}}}}
     """
 
@@ -206,18 +234,40 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
       var el=document.getElementById('kc'); if(!el) return;
       var ch=echarts.init(el,null,{renderer:'canvas'});
       function fmt(x){return Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+      var legendData=['MA5','MA10','MA20'];
+      var series=[];
+      // 板块基准折进 K 线:已 rebase 到本股价格 → 同价格轴灰虚线,蜡烛在它上方=跑赢。
+      // 先 push(z 低)→ 落在蜡烛/MA 之下,不抢价格信号。
+      if(D.bench){
+        legendData.push(D.benchName);
+        series.push({name:D.benchName,type:'line',data:D.bench,xAxisIndex:0,yAxisIndex:0,
+          smooth:false,symbol:'none',connectNulls:true,z:1,
+          lineStyle:{width:1.5,color:D.FAINT,type:'dashed',opacity:0.95}});
+      }
+      series.push(
+        {name:'日K',type:'candlestick',data:D.kline,xAxisIndex:0,yAxisIndex:0,z:3,
+          itemStyle:{color:D.UP,color0:D.DOWN,borderColor:D.UP,borderColor0:D.DOWN}},
+        {name:'MA5',type:'line',data:D.ma5,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA5C}},
+        {name:'MA10',type:'line',data:D.ma10,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA10C}},
+        {name:'MA20',type:'line',data:D.ma20,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA20C}},
+        {name:'Vol',type:'bar',xAxisIndex:1,yAxisIndex:1,
+          data:D.vol.map(function(v,i){return {value:v,itemStyle:{color:D.volUp[i]?'rgba(13,118,128,.45)':'rgba(204,0,0,.4)'}};})});
       ch.setOption({
         backgroundColor:'transparent', animation:true, animationDuration:680, animationEasing:'cubicOut',
-        legend:{top:6,left:12,data:['MA5','MA10','MA20'],
+        legend:{top:6,left:12,data:legendData,
           textStyle:{color:D.MUTE,fontFamily:D.MONO,fontSize:11},itemWidth:14,itemHeight:3,itemGap:15},
         tooltip:{trigger:'axis',axisPointer:{type:'cross',lineStyle:{color:'#4a4f5a',type:'dashed'}},
           backgroundColor:D.INK,borderColor:D.INK,borderWidth:1,
           textStyle:{color:D.PAPER,fontFamily:D.MONO,fontSize:12},padding:[9,13],
           formatter:function(ps){var k=ps.find(function(p){return p.seriesName==='日K';});
             if(!k){return '';}var v=k.data;
-            return '<div style="font-size:11px;color:'+D.MUTE+';margin-bottom:5px">'+k.name+'</div>'
+            var html='<div style="font-size:11px;color:'+D.MUTE+';margin-bottom:5px">'+k.name+'</div>'
               +'<div>开 <b>'+fmt(v[1])+'</b></div><div>收 <b>'+fmt(v[2])+'</b></div>'
-              +'<div>低 <b>'+fmt(v[3])+'</b></div><div>高 <b>'+fmt(v[4])+'</b></div>';}},
+              +'<div>低 <b>'+fmt(v[3])+'</b></div><div>高 <b>'+fmt(v[4])+'</b></div>';
+            if(D.bench){var b=ps.find(function(p){return p.seriesName===D.benchName;});
+              if(b&&b.data!=null){html+='<div style="margin-top:5px;color:'+D.FAINT+'">'+D.benchName
+                +' <b>'+fmt(b.data)+'</b></div>';}}
+            return html;}},
         axisPointer:{link:[{xAxisIndex:'all'}],label:{backgroundColor:D.EDGE}},
         grid:[{left:14,right:58,top:40,height:'62%'},{left:14,right:58,top:'74%',height:'15%'}],
         xAxis:[
@@ -236,14 +286,7 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
           {type:'slider',xAxisIndex:[0,1],bottom:4,height:15,start:Math.max(0,100-100*120/D.n),end:100,
             borderColor:D.EDGE,fillerColor:'rgba(13,118,128,.10)',handleStyle:{color:D.UP},
             textStyle:{color:D.FAINT,fontSize:9},dataBackground:{lineStyle:{color:D.EDGE},areaStyle:{color:D.GRID}}}],
-        series:[
-          {name:'日K',type:'candlestick',data:D.kline,xAxisIndex:0,yAxisIndex:0,
-            itemStyle:{color:D.UP,color0:D.DOWN,borderColor:D.UP,borderColor0:D.DOWN}},
-          {name:'MA5',type:'line',data:D.ma5,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA5C}},
-          {name:'MA10',type:'line',data:D.ma10,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA10C}},
-          {name:'MA20',type:'line',data:D.ma20,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA20C}},
-          {name:'Vol',type:'bar',xAxisIndex:1,yAxisIndex:1,
-            data:D.vol.map(function(v,i){return {value:v,itemStyle:{color:D.volUp[i]?'rgba(13,118,128,.45)':'rgba(204,0,0,.4)'}};})}]
+        series:series
       });
       window.addEventListener('resize',function(){ch.resize();});
     }
@@ -251,13 +294,16 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
     """
 
     head_name = f'<span class="nm">{name}</span>' if name and name != ticker else ""
-    doc = (
-        '<!doctype html><html><head><meta charset="utf-8">'
-        f'<style>{css}</style></head><body><div class="term">'
+    thead = (
         '<div class="thead"><div class="tk">'
         f'<span class="tick"></span><span class="code">{ticker}</span>{head_name}'
         f'<span class="ex">{exch}</span></div>'
         f'<div class="tmeta">{meta}<br>{src}</div></div>'
+    ) if show_header else ""
+    doc = (
+        '<!doctype html><html><head><meta charset="utf-8">'
+        f'<style>{css}</style></head><body><div class="glow"></div><div class="term">'
+        f'{thead}'
         '<div class="body">'
         '<div class="chartcard"><div id="kc"></div></div>'
         f'{panel}</div></div>'
@@ -266,7 +312,7 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
         f'<script>{chart_js}</script>'
         '</body></html>'
     )
-    st.iframe(doc, height=height)
+    st.iframe(doc, height=(height if show_header else chart_h + 30))
     return True
 
 

@@ -798,6 +798,23 @@ pre code {{
   font-weight: 600;
   color: {INK};
 }}
+/* Bilingual EN smallcaps subtitle (行情终端 · PRICE TERMINAL) — mono, wide-tracked,
+   muted, with a faint · separator. Sits right after the CN title, before .meta. */
+.cmsi-section .en {{
+  align-self: center;
+  font-family: {FONT_MONO};
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: {INK_3};
+  font-weight: 600;
+}}
+.cmsi-section .en::before {{
+  content: '·';
+  margin: 0 8px 0 4px;
+  color: {INK_4};
+  font-weight: 400;
+}}
 .cmsi-section .meta {{
   margin-left: auto;
   font-size: 11px;
@@ -807,6 +824,23 @@ pre code {{
   font-weight: 500;
   font-family: {FONT_MONO};
 }}
+
+/* Section eyebrow — Claude Design 「个股行情 美化.dc.html」 light style: ▎red tick +
+   MONO uppercase tracked label (行情终端 · PRICE TERMINAL) + muted meta. Lighter than
+   .cmsi-section (Tier-2 21px ink title + ink top-rule); used on Ticker Drill so the
+   broadsheet hero sections read as quiet editorial eyebrows, matching the design. */
+.cmsi-eyebrow-sec {{
+  display: flex; align-items: baseline; gap: 11px; flex-wrap: wrap;
+  margin: 1.9rem 0 0.85rem;
+}}
+.cmsi-eyebrow-sec .tick {{
+  width: 4px; height: 16px; background: {CMSI_RED}; display: inline-block; align-self: center;
+}}
+.cmsi-eyebrow-sec .lbl {{
+  font-family: {FONT_MONO}; font-size: 12px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: {INK}; font-weight: 600;
+}}
+.cmsi-eyebrow-sec .meta {{ font-size: 12px; color: {INK_3}; letter-spacing: 0.01em; }}
 
 /* ── Research-memo editorial block (Ticker Drill wiki memo) ─────────────── */
 /* Rating / TP meta strip — hairline cells, eyebrow label over INK value. */
@@ -828,6 +862,28 @@ pre code {{
   font-size: 18px; font-weight: 600; color: {INK};
   font-variant-numeric: tabular-nums lining-nums;
 }}
+
+/* Stat strip — editorial hairline cells with MONO eyebrow label + MONO tabular value
+   (区间收益率 / 估值倍数 on Ticker Drill). Same cream-hairline + mono-numeral language
+   as the glass terminal panel; value carries optional teal/red sign spans. */
+.cmsi-stat-strip {{
+  display: grid; gap: 0; border: 1px solid {PAPER_EDGE}; background: {PAPER};
+  margin: 0.1rem 0 1.1rem;
+}}
+.cmsi-stat-cell {{
+  padding: 13px 16px; border-right: 1px solid {PAPER_RULE};
+  display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}}
+.cmsi-stat-cell:last-child {{ border-right: none; }}
+.cmsi-stat-k {{
+  font-family: {FONT_MONO}; font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: {INK_3}; font-weight: 600; white-space: nowrap;
+}}
+.cmsi-stat-v {{
+  font-family: {FONT_MONO}; font-size: 18px; font-weight: 600; color: {INK};
+  font-variant-numeric: tabular-nums lining-nums;
+}}
+@media (max-width: 860px) {{ .cmsi-stat-strip {{ grid-template-columns: repeat(3,1fr) !important; }} }}
 
 /* 研究 memo — 卖方一致预期 vs CMSI 自有观点 对照(中性墨色 vs 红 tint） */
 .cmsi-ch {{
@@ -950,19 +1006,43 @@ def page_header(title: str, meta: str | None = None,
     )
 
 
-def section_header(title: str, meta: str | None = None) -> None:
+def section_header(title: str, meta: str | None = None,
+                   en: str | None = None) -> None:
     """Render a Claude Design Tier-2 section header (replaces st.subheader).
 
     Use:
         section_header("Top Movers · 5D", meta="Across 7 sectors")
+        section_header("行情终端", en="Price Terminal", meta="日K · MA5/10/20")
+
+    `en` adds a mono smallcaps English subtitle after a faint · separator
+    (行情终端 · PRICE TERMINAL). Pass it ONLY in zh mode — in en mode the title is
+    already English, so a duplicate subtitle would read "Price Terminal · PRICE…".
     """
     meta_html = f'<span class="meta">{meta}</span>' if meta else ""
+    en_html = f'<span class="en">{_esc(str(en))}</span>' if en else ""
     st.markdown(
         f'<div class="cmsi-section">'
         f'<span class="bar"></span>'
         f'<span class="ttl">{title}</span>'
+        f'{en_html}'
         f'{meta_html}'
         f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def section_eyebrow(label: str, meta: str | None = None) -> None:
+    """Claude Design 「个股行情 美化」 light section eyebrow: ▎red tick + MONO uppercase
+    tracked label + muted meta — e.g.
+
+        section_eyebrow("行情终端 · Price Terminal", meta="日K · MA5/10/20 · 成交量 · EOD")
+
+    Lighter than section_header (which is a Tier-2 21px ink title with an ink top-rule).
+    Used on Ticker Drill so the broadsheet hero reads as quiet editorial eyebrows."""
+    meta_html = f'<span class="meta">{_esc(str(meta))}</span>' if meta else ""
+    st.markdown(
+        f'<div class="cmsi-eyebrow-sec"><span class="tick"></span>'
+        f'<span class="lbl">{_esc(str(label))}</span>{meta_html}</div>',
         unsafe_allow_html=True,
     )
 
@@ -1075,6 +1155,28 @@ def memo_meta_bar(items: list[tuple[str, str]]) -> None:
         for k, v in items
     )
     st.markdown(f'<div class="cmsi-memo-bar">{cells}</div>', unsafe_allow_html=True)
+
+
+def stat_strip(cells: list[tuple[str, str]]) -> None:
+    """Editorial hairline strip of metric cells — [(label, value_html), …]. MONO
+    eyebrow label over a MONO tabular value; `value_html` is RAW (un-escaped) so it
+    can carry teal/red sign spans (class cmsi-ch-up / cmsi-ch-down). The same
+    cream-hairline + mono-numeral language as the glass terminal panel.
+
+        theme.stat_strip([("1D", "<span class='cmsi-ch-up'>▲ +6.4%</span>"),
+                          ("YTD", "<span class='cmsi-ch-down'>▼ -3.1%</span>")])
+    """
+    n = len(cells) or 1
+    body = "".join(
+        f'<div class="cmsi-stat-cell"><span class="cmsi-stat-k">{_esc(str(k))}</span>'
+        f'<span class="cmsi-stat-v">{v}</span></div>'
+        for k, v in cells
+    )
+    st.markdown(
+        f'<div class="cmsi-stat-strip" style="grid-template-columns:repeat({n},minmax(0,1fr));">'
+        f'{body}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def consensus_house(consensus: list[tuple], house: list[tuple],

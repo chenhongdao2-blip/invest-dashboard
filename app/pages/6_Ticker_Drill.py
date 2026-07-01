@@ -98,6 +98,8 @@ def _fmt_turnover(v, ccy: str) -> str:
     the card foot)."""
     if v is None or pd.isna(v):
         return "—"
+    if v >= 1e12:   # 万亿级(KRW/JPY 大盘市值) → T,避免 "1881115.5B" 溢出(设计稿 "1,881T")
+        return f"{v / 1e12:,.0f}T" if v >= 1e14 else f"{v / 1e12:.1f}T"
     if v >= 1e9:
         return f"{v / 1e9:.1f}B"
     if v >= 1e6:
@@ -149,6 +151,61 @@ def _route_benchmarks(ticker: str, sectors: list[str]) -> list[str]:
         return ["IGV", "^NDX"]
     # Unclassified → broad healthcare.
     return [_BROAD_BENCH]
+
+
+def _terminal_bench_overlay(ticker: str, sectors: list[str], stock_df):
+    """Primary sector-benchmark close (yfinance), aligned to the terminal's OHLCV
+    dates and rebased to the stock's ANCHOR PRICE so it overlays on the candlestick's
+    own price axis — a relative-strength reference folded INTO the K-line (George:
+    基准跟 K 线放一起,不另列一栏). Returns (label, [values…]) or None when no
+    benchmark routes / no overlap / the benchmark can't be fetched.
+
+    Picks ONE benchmark (the most-specific sector ETF from _route_benchmarks). A
+    single dashed reference keeps the price chart legible — unlike the old standalone
+    2-line rebased=100 RS panel, this rebases to PRICE so candle-above-dash reads
+    directly as outperformance on the same axis.
+    """
+    chosen = _route_benchmarks(ticker, sectors)
+    if not chosen:
+        return None
+    from lib import candlestick_terminal as cterm
+    from lib import benchmarks as bench
+
+    sym = chosen[0]
+    bdf = cterm.fetch_ohlcv(sym)
+    if bdf is None or bdf.empty or "Close" not in bdf.columns:
+        return None
+    stock_close = stock_df["Close"]
+    # benchmark close on each stock trading day (ffill across calendar gaps).
+    aligned = bdf["Close"].reindex(stock_close.index, method="ffill")
+    both = pd.concat([stock_close, aligned], axis=1).dropna()
+    if both.empty:
+        return None
+    anchor_px = float(stock_close.loc[both.index[0]])
+    anchor_bm = float(aligned.loc[both.index[0]])
+    if not anchor_bm or anchor_bm <= 0:
+        return None
+    label = i18n.bench_name(sym, bench.BENCHMARKS.get(sym, sym))
+    vals = [None if pd.isna(v) else round(anchor_px * float(v) / anchor_bm, 2)
+            for v in aligned]
+    return (label, vals)
+
+
+def _render_wiki_disclaimer(wiki_page) -> None:
+    """Compliance banner for wiki-derived content — internal-use warning, or the
+    softer note for the sanitized public view. Rendered ONCE, before the first wiki
+    block on the page (多空看板 when it exists, else 研究备忘)."""
+    if wiki_page.is_sanitized:
+        theme.md_note("公开研究摘要" if i18n.get_lang() == "zh" else "Public research summary",
+                      i18n.t("drill.wiki.banner_public"))
+    else:
+        st.warning(
+            "**本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
+            "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
+            "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
+            "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
+            icon="⚠️",
+        )
 
 
 st.set_page_config(
@@ -289,8 +346,9 @@ def _pick_membership(t: str) -> list[str]:
 pick_strategies = _pick_membership(ticker)
 
 # ---------- Header hero ----------
-# Identity row: company name (section-header weight) + Bloomberg ticker in meta.
-theme.section_header(display_name, meta=bbg)
+# 个股 broadsheet 头(masthead + 玻璃 KPI 带 + 一致 TP)在下方拿到 KPI 值后渲染(lib/stock_header,
+# 对照设计稿「个股行情 美化」)。无 multiples 的票 → else 分支回退 section_header。
+from lib import stock_header
 
 # Listing currency (per user: individual stock shown in LOCAL currency). Prefer the
 # multiples `currency` column (authoritative), fall back to the ticker suffix. Used
@@ -359,29 +417,34 @@ if mults_row is not None:
     ytd_dir = ("up" if ytd > 0 else "down" if ytd < 0 else "flat") if ytd_ok else "flat"
     adv_val = _fmt_turnover(db.adv_20d(ticker), ccy)
 
-    theme.kpi_strip([
-        theme.kpi_metric(i18n.t("drill.metric.last_local"), last_val, foot=last_foot),
-        theme.kpi_metric(i18n.t("drill.metric.mcap"), mcap_val, foot=mcap_foot),
-        theme.kpi_metric(i18n.t("drill.metric.fwd_pe"), pe_val, foot=pe_foot),
-        theme.kpi_metric(i18n.t("drill.metric.ytd"), ytd_val,
-                         foot=i18n.t("drill.kpi.ytd_foot", ccy=ccy), direction=ytd_dir),
-        theme.kpi_metric(i18n.t("drill.metric.adv"), adv_val,
-                         foot=i18n.t("drill.kpi.adv_foot", ccy=ccy)),
-    ])
-
-    # Discreet consensus-TP line (kept OUT of the colored KPI cards per user). Shown
-    # only when there is no house-view Variant block below to avoid duplication.
-    # Compliance (GLM /cccg): labeled third-party reference, hidden if no coverage.
+    # broadsheet 玻璃头(masthead + 5 玻璃 KPI 卡 + 一致 TP 行)。值色只让信号染(YTD 按符号),
+    # 价/市值/PE 中性墨;顶部色条 accent 走品牌色做 bold 玻璃质感(对照设计稿「个股行情 美化」)。
+    _zh = i18n.get_lang() == "zh"
+    _kpis = [
+        {"label": i18n.t("drill.metric.last_local"), "value": last_val,
+         "sub": last_foot or ("本币口径" if _zh else "local ccy"), "accent": "teal"},
+        {"label": i18n.t("drill.metric.mcap"), "value": mcap_val, "sub": mcap_foot or "—"},
+        {"label": i18n.t("drill.metric.fwd_pe"), "value": pe_val, "sub": pe_foot or "NTM"},
+        {"label": i18n.t("drill.metric.ytd"), "value": ytd_val,
+         "sub": i18n.t("drill.kpi.ytd_foot", ccy=ccy), "color": ytd_dir, "accent": ytd_dir},
+        {"label": i18n.t("drill.metric.adv"), "value": adv_val,
+         "sub": i18n.t("drill.kpi.adv_foot", ccy=ccy)},
+    ]
+    # 一致 TP 行(第三方参考,有 house view 时隐藏免重复;合规:标注仅供参考)。
     _wiki_pv = wiki.find_wiki(ticker)
     _house_pv = (_wiki_pv is not None and not _wiki_pv.is_sanitized
                  and bool(_wiki_pv.rating or _wiki_pv.tp))
+    _cons_str = None
     if upside_pct is not None and not _house_pv:
-        st.caption(i18n.t(
-            "drill.consensus_line",
-            tp=f"{tp:,.2f}", upside=f"{upside_pct:+.1f}%",
-            n=(f"{int(n_analysts)}" if pd.notna(n_analysts) else "—"),
-        ))
+        _cons_str = i18n.t("drill.consensus_line", tp=f"{tp:,.2f}",
+                           upside=f"{upside_pct:+.1f}%",
+                           n=(f"{int(n_analysts)}" if pd.notna(n_analysts) else "—"))
+    stock_header.render(name=display_name, ticker=bbg, exchange="",
+                        sector_sub=None, as_of=db.latest_snapshot_date(),
+                        kpis=_kpis, consensus=_cons_str, prefer_cn=_zh)
 else:
+    # 无 multiples 的票:回退普通 section_header(玻璃头需要 KPI 值)。
+    theme.section_header(display_name, meta=bbg)
     st.caption(i18n.t("drill.no_mults"))
 
 # ---------- Variant: House view vs Consensus (the alpha block) ----------
@@ -398,7 +461,7 @@ _has_consensus = (mults_row is not None and pd.notna(n_analysts)
                   and n_analysts and n_analysts > 0
                   and (pd.notna(reco_mean) or pd.notna(tp)))
 if _has_house and _has_consensus:
-    theme.section_header(i18n.t("drill.variant.title"))
+    theme.section_eyebrow(i18n.t("drill.variant.title"))
     # Side-by-side 一致预期 vs 自有观点 (theme.consensus_house) — upgrade of the prior
     # 3-KPI-card layout. Same data/gating/compliance disclaimer; richer visual diff.
     _zh = i18n.get_lang() == "zh"
@@ -441,27 +504,104 @@ if _has_house and _has_consensus:
 
 st.divider()
 
-# ---------- LLM Wiki memo ----------
+# Close series (DB) — used by the RS fallback below AND the return-windows panel.
+closes = db.get_close_series((ticker,))
+# Wiki memo fetched ONCE — reused by the 多空看板 (right under the terminal) and the
+# 研究备忘 prose block (moved below the decision surface).
 wiki_page = wiki.find_wiki(ticker)
+_zh = i18n.get_lang() == "zh"
+
+# ---------- 行情终端 (terminal FIRST — George: 把行情终端放到最前面) ----------
+# 板块相对强弱「折进 K 线」(George: 基准跟 K 线放一起,不另列一栏)。页面把 sector 基准
+# close 按区间起点 rebase 到本股价格 → 灰虚线叠在蜡烛同一价格轴(蜡烛在虚线上方=跑赢)。
+# 终端取真实 OHLCV(yfinance);取不到时回退原 plotly 相对强弱图(DB close)。
+from lib import candlestick_terminal as cterm
+
+_ohlcv = cterm.fetch_ohlcv(ticker)
+if not _ohlcv.empty:
+    _bench_ov = _terminal_bench_overlay(ticker, sectors, _ohlcv)
+    theme.section_eyebrow(
+        "行情终端 · Price Terminal" if _zh else "Price Terminal",
+        meta=("日K · MA5/10/20 · 成交量 · EOD" if _zh else "Daily · MA5/10/20 · Vol · EOD"))
+    # show_header=False: masthead 已带身份,设计稿 price panel 无重复头(glass 卡叠微光)。
+    cterm.render(ticker=ticker, name=display_name, df=_ohlcv, ccy=ccy,
+                 prefer_cn=_zh, bench_overlay=_bench_ov, show_header=False)
+    if _bench_ov:
+        st.caption(
+            f"灰色虚线 = 板块基准 {_bench_ov[0]},按区间起点对齐到本股价格;"
+            f"蜡烛在虚线上方即跑赢板块(本币 {ccy})。"
+            if _zh else
+            f"Dashed grey = sector benchmark {_bench_ov[0]}, rebased to the stock's "
+            f"start price — candles above it = outperforming ({ccy})."
+        )
+    st.divider()
+else:
+    # 终端无 OHLCV(外资小票 yfinance 取不到)→ 回退原 plotly 相对强弱图(DB close)。
+    theme.section_eyebrow(i18n.t("drill.section.rs"))
+    ser = closes[ticker].dropna() if (not closes.empty and ticker in closes.columns) else None
+    if ser is None or ser.empty:
+        st.warning(i18n.t("drill.warn.no_price"))
+    else:
+        from lib import charts
+        from lib import benchmarks as bench
+
+        chosen = _route_benchmarks(ticker, sectors)
+        bench_series = bench.close_series()
+        avail = [s for s in chosen if s in bench_series]
+        labels = {s: i18n.bench_name(s, bench.BENCHMARKS.get(s, s)) for s in avail}
+        bdict = {labels[s]: bench_series[s] for s in avail}
+
+        fig_rs, anchor_iso = (None, None)
+        if bdict:
+            fig_rs, anchor_iso = charts.relative_strength_chart(
+                ser, bdict, stock_name=display_name,
+                title=i18n.t("drill.rs.title", bbg=bbg),
+            )
+        if fig_rs is not None:
+            st.plotly_chart(fig_rs, width="stretch", theme=None, config={"displayModeBar": False})
+            bench_names = " · ".join(labels[s] for s in avail)
+            st.caption(i18n.t("drill.rs.caption", date=anchor_iso, benches=bench_names, ccy=ccy))
+        else:
+            ydf = ser.to_frame(name=display_name)
+            fig = charts.price_line_chart(
+                ydf,
+                title=i18n.t("drill.chart.title", bbg=bbg, n=len(ser), ccy=ccy),
+                ylabel=f"{ccy} close",
+            )
+            st.plotly_chart(fig, width="stretch", theme=None, config={"displayModeBar": False})
+            st.caption(i18n.t("drill.rs.fallback"))
+    st.divider()
+
+# ---------- 多空看板 (decision surface — right under the terminal) ----------
+# BULL/BEAR(催化剂/风险点 玻璃卡)+ 矛盾 callout。先于研究备忘 prose,因价格 + 多空是
+# 卖方桌面的 above-the-fold 决策面(对照设计稿 Image#4)。免责声明随首块 wiki 内容上提。
+_board_done = False
+_disc_done = False
+if wiki_page is not None:
+    _has_cat = bool(wiki_page.sections.get("催化剂") or wiki_page.sections.get("风险点"))
+    if _has_cat:
+        theme.section_eyebrow(
+            "多空看板 · Catalysts vs Risks" if _zh else "Catalysts vs Risks",
+            meta=("研究备忘 · 决策导向重排" if _zh else "from memo · decision-ranked"))
+        _render_wiki_disclaimer(wiki_page)
+        _disc_done = True
+        _board_done = stock_header.render_bull_bear(
+            wiki_page.sections.get("催化剂"), wiki_page.sections.get("风险点"),
+            prefer_cn=_zh,
+            contradiction=wiki_page.sections.get("矛盾与待验证"))
+        st.divider()
+
+# ---------- 研究备忘 (memo prose — below the decision surface) ----------
 if wiki_page is None:
     st.caption(i18n.t("drill.wiki.none"))
 else:
-    # Compliance gate — different banner for internal vs sanitized public view.
-    if wiki_page.is_sanitized:
-        theme.md_note("公开研究摘要" if i18n.get_lang() == "zh" else "Public research summary", i18n.t("drill.wiki.banner_public"))
-    else:
-        st.warning(
-            "**本材料仅供内部参考，不构成任何证券的投资建议或邀请。** "
-            "分析师个人观点不代表 CMS HK / 招商证券国际公司立场。"
-            "Rating / TP 引用自 CMS HK 官方研报，请勿对外分发。"
-            "Source-of-truth 仍是 Bloomberg / Wind / 官方研报 PDF。",
-            icon="⚠️",
-        )
     # Editorial memo: ▎red section title (updated date in meta) → rating/TP hairline
-    # strip → sector chips → eyebrow-labelled Summary / Thesis. Replaces the old
-    # generic "### title / **评级**: x · **目标价**: y / **摘要**: …" markdown.
-    theme.section_header(i18n.t("drill.wiki.memo_title"),
-                         meta=(wiki_page.last_updated or None))
+    # strip → sector chips → eyebrow-labelled Summary / Thesis.
+    theme.section_eyebrow(
+        (i18n.t("drill.wiki.memo_title") + " · Research Memo") if _zh else "Research Memo",
+        meta=(wiki_page.last_updated or None))
+    if not _disc_done:   # disclaimer not yet shown (no 多空看板 above) → show it here
+        _render_wiki_disclaimer(wiki_page)
     _bar: list[tuple[str, str]] = []
     if wiki_page.rating:
         _bar.append((i18n.t("drill.wiki.rating"), wiki_page.rating))
@@ -482,8 +622,10 @@ else:
         st.caption(f"{i18n.t('drill.wiki.sources')}: {wiki_page.sources}")
 
     # Pull the high-value sections to the top, leave the rest in expanders.
-    priority_keys = ["核心投资逻辑", "催化剂", "风险点", "财务快照"]
-    rendered: set[str] = set()
+    # 催化剂/风险点/矛盾 已进多空看板则不再 expander 重复。
+    _board = {"催化剂", "风险点", "矛盾与待验证"} if _board_done else set()
+    priority_keys = [k for k in ["核心投资逻辑", "催化剂", "风险点", "财务快照"] if k not in _board]
+    rendered: set[str] = set(_board)
     for key in priority_keys:
         body = wiki_page.sections.get(key)
         if body:
@@ -499,118 +641,52 @@ else:
     st.caption(f"{i18n.t('drill.wiki.source_file')}: `{wiki_page.file_path}`")
     st.divider()
 
-# ---------- 行情终端 (dark candlestick — Hybrid 基调:chart-heavy surface 局部上暗色交易台) ----------
-# DB 只存 close;K 线单独取真实 OHLCV(yfinance,cached 1h)。无数据则整段跳过(不留空标题)。
-from lib import candlestick_terminal as cterm
-
-_ohlcv = cterm.fetch_ohlcv(ticker)
-if not _ohlcv.empty:
-    theme.section_header("行情终端" if i18n.get_lang() == "zh" else "Price Terminal")
-    cterm.render(ticker=ticker, name=display_name, df=_ohlcv, ccy=ccy,
-                 prefer_cn=(i18n.get_lang() == "zh"))
-    st.divider()
-
-# ---------- Relative strength (vs sector benchmark) ----------
-# Replaces the old absolute USD price line — a single ticker's absolute curve has
-# near-zero judgment value for a sell-side desk; what matters is whether it is
-# out/under-performing its sector. Falls back to the absolute price line when no
-# benchmark overlap is available (no sector tag, or benchmarks_daily empty).
-theme.section_header(i18n.t("drill.section.rs"))
-# LOCAL currency (per user): HK stock in HKD, A-share in CNY, US in USD — matched
-# against a same-currency benchmark so the rebased comparison carries no FX noise.
-closes = db.get_close_series((ticker,))
-ser = closes[ticker].dropna() if (not closes.empty and ticker in closes.columns) else None
-if ser is None or ser.empty:
-    st.warning(i18n.t("drill.warn.no_price"))
-else:
-    from lib import charts
-    from lib import benchmarks as bench
-
-    chosen = _route_benchmarks(ticker, sectors)
-    bench_series = bench.close_series()
-    avail = [s for s in chosen if s in bench_series]
-    # Chart legend + caption use LOCALIZED benchmark names (user: 中文描述, not raw
-    # symbols like HSHCI.HK / ^HSI / ^SP500-352020).
-    labels = {s: i18n.bench_name(s, bench.BENCHMARKS.get(s, s)) for s in avail}
-    bdict = {labels[s]: bench_series[s] for s in avail}
-
-    fig_rs, anchor_iso = (None, None)
-    if bdict:
-        fig_rs, anchor_iso = charts.relative_strength_chart(
-            ser, bdict, stock_name=display_name,
-            title=i18n.t("drill.rs.title", bbg=bbg),
-        )
-
-    if fig_rs is not None:
-        st.plotly_chart(fig_rs, width="stretch", theme=None, config={"displayModeBar": False})
-        bench_names = " · ".join(labels[s] for s in avail)
-        st.caption(i18n.t("drill.rs.caption", date=anchor_iso, benches=bench_names, ccy=ccy))
-    else:
-        # Graceful fallback: absolute close in the stock's LOCAL currency
-        # (foreign listing with no healthcare benchmark, or benchmarks_daily empty).
-        ydf = ser.to_frame(name=display_name)
-        fig = charts.price_line_chart(
-            ydf,
-            title=i18n.t("drill.chart.title", bbg=bbg, n=len(ser), ccy=ccy),
-            ylabel=f"{ccy} close",
-        )
-        st.plotly_chart(fig, width="stretch", theme=None, config={"displayModeBar": False})
-        st.caption(i18n.t("drill.rs.fallback"))
-
 # ---------- Return windows + multiples panel ----------
 rets = db.compute_returns(closes)
-col_perf, col_mult = st.columns(2)
-with col_perf:
-    theme.subsection(i18n.t("drill.ret_windows"))
-    if rets.empty or ticker not in rets.index:
-        st.caption(i18n.t("drill.warn.no_return"))
-    else:
-        r = rets.loc[ticker]
-        perf_df = pd.DataFrame({
-            "Window": ["1D", "5D", "1M", "3M", "6M", "YTD"],
-            "Return %": [
-                r.get("1d_%"), r.get("5d_%"), r.get("1m_%"),
-                r.get("3m_%"), r.get("6m_%"), r.get("ytd_%"),
-            ],
-        })
-        ui.render_styled_table(
-            perf_df.set_index("Window"),
-            pct_cols=["Return %"],
-            height=260,
-            column_labels={"Return %": i18n.t("drill.col.return")},
-            index_label=i18n.t("drill.col.window"),
-        )
 
-with col_mult:
-    theme.subsection(i18n.t("drill.latest_mults"))
-    if mults_row is None:
-        st.caption(i18n.t("drill.warn.no_mult_snap"))
-    else:
-        mult_rows = []
-        for label, key, kind in [
-            (i18n.t("drill.mult.trailing_pe"), "trailing_pe", "x"),
-            (i18n.t("drill.mult.forward_pe"), "forward_pe", "x"),
-            (i18n.t("drill.mult.ev_ebitda"), "ev_ebitda", "x"),
-            (i18n.t("drill.mult.ev_sales"), "ev_sales", "x"),
-            (i18n.t("drill.mult.pb"), "pb", "x"),
-            (i18n.t("drill.mult.fcf_yield"), "fcf_yield", "pct_dec"),
-        ]:
-            v = mults_row.get(key)
-            if pd.isna(v):
-                disp = "—"
-            elif kind == "x":
-                disp = fmt.fmt_ratio(v)
-            else:
-                disp = fmt.fmt_pct_decimal(v)
-            mult_rows.append({"Metric": label, "Value": disp})
-        # st.table renders a static, non-sortable grid — correct for vertical
-        # properties lists where Value column is mixed-type ($/%/x).
-        _mlabel, _vlabel = i18n.t("drill.ext.col.metric"), i18n.t("drill.ext.col.value")
-        st.table(
-            pd.DataFrame(mult_rows)
-            .rename(columns={"Metric": _mlabel, "Value": _vlabel})
-            .set_index(_mlabel)
-        )
+# 区间收益率 — editorial hairline 收益条(mono %,teal/red 符号),替代旧 styled table,
+# 延展设计稿玻璃/mono 语言到下半页(George:就算设计稿没标也用这套 idea 美化)。
+theme.section_eyebrow("区间收益率 · Returns" if _zh else "Return Windows")
+if rets.empty or ticker not in rets.index:
+    st.caption(i18n.t("drill.warn.no_return"))
+else:
+    r = rets.loc[ticker]
+    _ret_cells: list[tuple[str, str]] = []
+    for _w, _key in [("1D", "1d_%"), ("5D", "5d_%"), ("1M", "1m_%"),
+                     ("3M", "3m_%"), ("6M", "6m_%"), ("YTD", "ytd_%")]:
+        _v = r.get(_key)
+        if _v is None or pd.isna(_v):
+            _ret_cells.append((_w, f"<span style='color:{theme.INK_3}'>—</span>"))
+        else:
+            _cls = "cmsi-ch-up" if _v >= 0 else "cmsi-ch-down"
+            _ar = "▲" if _v >= 0 else "▼"
+            _ret_cells.append((_w, f"<span class='{_cls}'>{_ar} {_v:+.1f}%</span>"))
+    theme.stat_strip(_ret_cells)
+
+# 估值倍数 — same hairline-strip language(mono 数值,中性墨;倍数非方向性故不染色)。
+theme.section_eyebrow("估值倍数 · Valuation" if _zh else "Valuation Multiples",
+                      meta=("yfinance · 静态 + NTM" if _zh else "yfinance · trailing + NTM"))
+if mults_row is None:
+    st.caption(i18n.t("drill.warn.no_mult_snap"))
+else:
+    _val_cells: list[tuple[str, str]] = []
+    for _label, _key, _kind in [
+        (i18n.t("drill.mult.trailing_pe"), "trailing_pe", "x"),
+        (i18n.t("drill.mult.forward_pe"), "forward_pe", "x"),
+        (i18n.t("drill.mult.ev_ebitda"), "ev_ebitda", "x"),
+        (i18n.t("drill.mult.ev_sales"), "ev_sales", "x"),
+        (i18n.t("drill.mult.pb"), "pb", "x"),
+        (i18n.t("drill.mult.fcf_yield"), "fcf_yield", "pct_dec"),
+    ]:
+        _v = mults_row.get(_key)
+        if pd.isna(_v):
+            _disp = "—"
+        elif _kind == "x":
+            _disp = fmt.fmt_ratio(_v)
+        else:
+            _disp = fmt.fmt_pct_decimal(_v)
+        _val_cells.append((_label, _esc(_disp)))
+    theme.stat_strip(_val_cells)
 
 st.divider()
 
@@ -622,7 +698,7 @@ st.divider()
 from lib import sec_facts as _sf
 from lib import charts as _charts
 
-theme.section_header(i18n.t("drill.sec.section"))
+theme.section_eyebrow(i18n.t("drill.sec.section"))
 _sec_status = _sf.company_status(ticker)
 if not _sec_status or _sec_status.get("sec_status") != "ok":
     st.caption(i18n.t("drill.sec.na"))

@@ -31,6 +31,7 @@ import pandas as pd
 import streamlit as st
 
 from lib import theme
+from lib import echarts_boot
 
 ECHARTS_SRC = "/app/static/echarts.min.js"
 
@@ -229,10 +230,7 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
     """
 
     chart_js = """
-    function go(){
-      if(typeof echarts==='undefined'){return setTimeout(go,80);}
-      var el=document.getElementById('kc'); if(!el) return;
-      var ch=echarts.init(el,null,{renderer:'canvas'});
+    mountEChart('kc', function(){
       function fmt(x){return Number(x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
       var legendData=['MA5','MA10','MA20'];
       var series=[];
@@ -252,7 +250,7 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
         {name:'MA20',type:'line',data:D.ma20,xAxisIndex:0,yAxisIndex:0,smooth:true,symbol:'none',lineStyle:{width:1.3,color:D.MA20C}},
         {name:'Vol',type:'bar',xAxisIndex:1,yAxisIndex:1,
           data:D.vol.map(function(v,i){return {value:v,itemStyle:{color:D.volUp[i]?'rgba(13,118,128,.45)':'rgba(204,0,0,.4)'}};})});
-      ch.setOption({
+      return {
         backgroundColor:'transparent', animation:true, animationDuration:680, animationEasing:'cubicOut',
         legend:{top:6,left:12,data:legendData,
           textStyle:{color:D.MUTE,fontFamily:D.MONO,fontSize:11},itemWidth:14,itemHeight:3,itemGap:15},
@@ -287,10 +285,8 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
             borderColor:D.EDGE,fillerColor:'rgba(13,118,128,.10)',handleStyle:{color:D.UP},
             textStyle:{color:D.FAINT,fontSize:9},dataBackground:{lineStyle:{color:D.EDGE},areaStyle:{color:D.GRID}}}],
         series:series
-      });
-      window.addEventListener('resize',function(){ch.resize();});
-    }
-    go();
+      };
+    });
     """
 
     head_name = f'<span class="nm">{name}</span>' if name and name != ticker else ""
@@ -309,6 +305,7 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
         f'{panel}</div></div>'
         f'<script>var D={json.dumps(payload)};</script>'
         f'<script src="{ECHARTS_SRC}"></script>'
+        f'<script>{echarts_boot.MOUNT_JS}</script>'
         f'<script>{chart_js}</script>'
         '</body></html>'
     )

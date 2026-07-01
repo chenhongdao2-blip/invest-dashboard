@@ -26,6 +26,7 @@ from __future__ import annotations
 import json
 
 from lib import theme
+from lib import echarts_boot
 
 # 自托管(China 安全):/app/static/echarts.min.js 在 srcdoc iframe 内也解析(继承父页 base URL)。
 _ECHARTS_SRC = "/app/static/echarts.min.js"
@@ -96,8 +97,7 @@ def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
     lib = f'{TAG} src="{_ECHARTS_SRC}">{ETAG}'
     js = (
         "var DATA=" + data + ";"
-        "function go(){if(typeof echarts==='undefined'){return setTimeout(go,60);}"
-        "var ch=echarts.init(document.getElementById('m'));ch.setOption({"
+        "mountEChart('m',function(){return {"
         "backgroundColor:'transparent',animationDuration:900,animationEasing:'cubicOut',"
         "tooltip:{backgroundColor:'" + t.INK + "',borderColor:'" + t.INK + "',padding:[8,12],"
         "textStyle:{color:'" + t.PAPER + "',fontFamily:'JetBrains Mono',fontSize:11},"
@@ -114,7 +114,7 @@ def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
         "itemStyle:{borderColor:'" + t.PAPER + "',borderWidth:0,gapWidth:2},"
         "levels:[{itemStyle:{gapWidth:3,borderWidth:0,color:'" + t.PAPER_DEEP + "'},upperLabel:{show:true}},"
         "{itemStyle:{gapWidth:1,borderWidth:1,borderColor:'" + t.PAPER + "'},upperLabel:{show:false}}],"
-        "data:DATA}]});window.addEventListener('resize',function(){ch.resize();});}go();"
+        "data:DATA}]};});"
     )
     head = (
         f'<div style="display:flex;justify-content:space-between;align-items:center;'
@@ -132,6 +132,6 @@ def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
         f'font-family:{t.FONT_STACK};font-feature-settings:\'tnum\';color-scheme:light;}}'
         f'.wrap{{padding:6px 4px;}}#m{{width:100%;height:{height - 90}px;}}</style></head>'
         f'<body><div class="wrap">{head}<div id="m"></div></div>'
-        f'{lib}{TAG}>{js}{ETAG}</body></html>'
+        f'{lib}{TAG}>{echarts_boot.MOUNT_JS}{ETAG}{TAG}>{js}{ETAG}</body></html>'
     )
     return doc, height

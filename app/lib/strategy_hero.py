@@ -27,6 +27,7 @@ import json
 from html import escape as _esc
 
 from lib import theme
+from lib import echarts_boot
 
 # 自托管(China 安全):app/static/echarts.min.js,iframe srcdoc 继承父页 base URL → /app/static 可达。
 # 若要回退 CDN(本地快速验证),改成 "https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"。
@@ -124,6 +125,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     doc = f"""<!doctype html><html><head><meta charset='utf-8'>
     <style>{css}</style></head><body>{body}
     <script src="{ECHARTS_SRC}"></script>
+    <script>{echarts_boot.MOUNT_JS}</script>
     <script>
     const D = {json.dumps(data)};
     const C = {json.dumps(counts)};
@@ -144,10 +146,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     }}
     requestAnimationFrame(tick);
     // ---- equity curve ----
-    function draw() {{
-      if (typeof echarts === 'undefined') return setTimeout(draw, 80);
-      const ch = echarts.init(document.getElementById('eq'), null, {{renderer:'canvas'}});
-      ch.setOption({{
+    mountEChart('eq', function() {{
+      return {{
         backgroundColor:'transparent', animationDuration:1900, animationEasing:'cubicOut',
         grid:{{left:44,right:104,top:50,bottom:28}},
         legend:{{top:14,right:6,data:[D.stratName,D.benchName],icon:'roundRect',
@@ -173,10 +173,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
             lineStyle:{{width:1.5,color:D.INK3,type:'dashed'}},
             endLabel:{{show:true,formatter:'基准 {{@[1]}}',color:D.INK3,fontFamily:D.MONO,fontSize:11}}}}
         ]
-      }});
-      window.addEventListener('resize',()=>ch.resize());
-    }}
-    draw();
+      }};
+    }});
     </script></body></html>"""
 
     st.iframe(doc, height=470)
@@ -224,11 +222,10 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
     <div class="cmp-wrap"><div class="cmp-title">{_esc(title)}</div><div id="cmp"></div></div>
     <div class="cmp-prov">SOURCE: {_esc(source)}</div>
     <script src="{ECHARTS_SRC}"></script>
+    <script>{echarts_boot.MOUNT_JS}</script>
     <script>
     const D = {json.dumps(payload)};
-    function draw() {{
-      if (typeof echarts === 'undefined') return setTimeout(draw, 80);
-      const ch = echarts.init(document.getElementById('cmp'), null, {{renderer:'canvas'}});
+    mountEChart('cmp', function() {{
       const dash = {{solid:'solid', dashed:'dashed', dotted:'dotted'}};
       const series = D.lines.map((s, i) => ({{
         name: s.name, type: 'line', data: s.values, smooth: true, symbol: 'none',
@@ -243,7 +240,7 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
         label: {{ formatter: D.markerLabel, color: D.INK3, fontFamily: D.MONO,
                  fontSize: 10, position: 'insideEndTop' }},
         data: [{{ xAxis: D.marker }}] }};
-      ch.setOption({{
+      return {{
         backgroundColor: 'transparent', animationDuration: 1500, animationEasing: 'cubicOut',
         grid: {{ left: 50, right: 66, top: 44, bottom: 30 }},
         legend: {{ top: 8, left: 0, data: D.lines.map(s => s.name), icon: 'roundRect',
@@ -266,10 +263,8 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
           axisLabel: {{ color:D.INK3, fontFamily:D.MONO, fontSize:10 }},
           splitLine: {{ lineStyle:{{color:D.RULE}} }} }},
         series: series
-      }});
-      window.addEventListener('resize', () => ch.resize());
-    }}
-    draw();
+      }};
+    }});
     </script></body></html>"""
 
     st.iframe(doc, height=height)

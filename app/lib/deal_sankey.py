@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 
 from lib import theme
+from lib import echarts_boot
 
 ECHARTS_SRC = "/app/static/echarts.min.js"
 
@@ -78,11 +79,8 @@ def render(nodes: list[dict], links: list[dict], *, title: str, source: str,
     """
 
     js = """
-    function go(){
-      if(typeof echarts==='undefined'){return setTimeout(go,80);}
-      var el=document.getElementById('sk'); if(!el) return;
-      var ch=echarts.init(el,null,{renderer:'canvas'});
-      ch.setOption({
+    mountEChart('sk', function(){
+      return {
         backgroundColor:'transparent', animationDuration:780, animationEasing:'cubicOut',
         tooltip:{trigger:'item',triggerOn:'mousemove',
           backgroundColor:D.INK,borderColor:D.INK,padding:[8,12],
@@ -100,10 +98,8 @@ def render(nodes: list[dict], links: list[dict], *, title: str, source: str,
           lineStyle:{curveness:0.5},
           itemStyle:{borderWidth:0}
         }]
-      });
-      window.addEventListener('resize',function(){ch.resize();});
-    }
-    go();
+      };
+    });
     """
 
     doc = (
@@ -117,6 +113,7 @@ def render(nodes: list[dict], links: list[dict], *, title: str, source: str,
         f'<div class="foot">{source}</div></div>'
         f'<script>var D={json.dumps(payload)};</script>'
         f'<script src="{ECHARTS_SRC}"></script>'
+        f'<script>{echarts_boot.MOUNT_JS}</script>'
         f'<script>{js}</script>'
         '</body></html>'
     )

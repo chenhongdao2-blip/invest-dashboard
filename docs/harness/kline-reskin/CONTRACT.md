@@ -87,7 +87,7 @@ Builder↔Evaluator 协商记录见文末附录 N。
 - **JS**:claude-in-chrome `javascript_tool`。srcdoc iframe 同源:`var f=[...document.querySelectorAll('iframe')].find(f=>(f.srcdoc||'').includes('id="kc"')); var d=f.contentDocument;` → `getComputedStyle`。断言用 rgb() 归一形。
 - **EO**:`f.contentWindow.echarts.getInstanceByDom(f.contentDocument.getElementById('kc')).getOption()`。
 - **SS**:参照 = Claude Design 画布截图(首选)或 DesignSync 源剥壳本地渲;实现 = Browser :8599 定视口 1440×900。截图为旁证,颜色/尺寸判定一律 JS/EO。
-- **GR 电池(零命中,白名单注明)**:① `echarts.init(` 除 echarts_boot.MOUNT_JS ② `fonts.googleapis.com|fonts.gstatic.com` ③ `src="/app/static|url('/app/static` 绝对路径 ④ `setInterval` 于 candlestick_terminal/6_Ticker_Drill(stock_header 真挂钟白名单一处)⑤ `bench_overlay|_terminal_bench_overlay|benchName` 全 repo ⑥ `MOCK`(app/ UI 串)⑦ `2\.69|1\.34|28\.4` 演示字面量(改动文件)⑧ `box-shadow`(新皮 CSS 域)⑨ emoji(新增 UI 串)⑩ `border-radius:\s*([5-9]|\d{2,})px`(新皮域)。
+- **GR 电池(零命中,白名单注明)**:① `echarts.init(` 除 echarts_boot.MOUNT_JS ② `fonts.googleapis.com|fonts.gstatic.com` ③ `src="/app/static|url('/app/static` 绝对路径 ④ `setInterval` 于 candlestick_terminal/6_Ticker_Drill(stock_header 真挂钟白名单一处)⑤ `bench_overlay|_terminal_bench_overlay` 全 repo;`benchName` 限 candlestick_terminal.py/6_Ticker_Drill.py(白名单:strategy_hero.py 的 benchName 为策略页自身基准曲线变量,非终端通道——Stage 1 构建期发现的规格 bug,2026-07-03 orchestrator 修正,非事后放水) ⑥ `MOCK`(app/ UI 串)⑦ `2\.69|1\.34|28\.4` 演示字面量(改动文件)⑧ `box-shadow`(新皮 CSS 域)⑨ emoji(新增 UI 串)⑩ `border-radius:\s*([5-9]|\d{2,})px`(新皮域)。
 
 ## §4 SUPERSEDED INVARIANTS(对 docs/harness/echarts-race/CONTRACT.md 的显式改废;Auditor 勿报 regression)
 

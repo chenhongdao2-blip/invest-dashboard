@@ -2,15 +2,15 @@
   "task": "K线行情 FT-salmon glass 1:1 重实现 — Ticker Drill 整页 reskin",
   "mode": "code",
   "max_cycles": 4,
-  "cycles_used": 2,
+  "cycles_used": 3,
   "contract": "docs/harness/kline-reskin/CONTRACT.md",
-  "status": "Round 2 evaluated — ALL 11 features PASS; zero outstanding FAILs; ready for Stage 4 Codex audit + Stage 5 George ship",
+  "status": "Round 3 — NOT clean: Codex tooltip fix regressed OHLC values (开 shows dataIndex). U5 reverted to false. Bounce to Builder: revert candlestick_terminal.py:347-350 v[0..3]→v[1..4]. Other 2 Codex fixes (量比/PE) PASS.",
   "features": [
     {"id": "U1-fonts",         "desc": "自托管 Space Grotesk + FONT_DISPLAY 栈 + iframe @font-face 接线,零 CDN", "accept": ["P7"], "passes": true},
     {"id": "U2-term-shell",    "desc": "candlestick_terminal iframe 壳:底色/双wash/玻璃配方/1fr-340-gap26/560px", "accept": ["T1","T2","T3","T4","T11"], "passes": true},
     {"id": "U3-term-header",   "desc": "头排:红条5x44+名30px+chip #e4d2bd+副行+EOD状态块(D1)", "accept": ["P3","P4","P5","P6"], "passes": true},
     {"id": "U4-term-panel",    "desc": "右面板:Last Price 46px 动态色+change chip+OHLC 行色+指标 only-available(D3)", "accept": ["T5","T6","T7","T8","T9","T10"], "passes": true},
-    {"id": "U5-chart-option",  "desc": "option 换肤:蜡烛/MA新三色/legend/墨tooltip/%双grid/右y轴/红dataZoom/量柱α.5", "accept": ["C1","C2","C3","C4","C5","C6","C7","C8","C9","C11"], "passes": true},
+    {"id": "U5-chart-option",  "desc": "option 换肤:蜡烛/MA新三色/legend/墨tooltip/%双grid/右y轴/红dataZoom/量柱α.5", "accept": ["C1","C2","C3","C4","C5","C6","C7","C8","C9","C11"], "passes": false},
     {"id": "U6-bench-removal", "desc": "基准 overlay 全通道拆除(D2)", "accept": ["C10","G5"], "passes": true},
     {"id": "U7-page-shell",    "desc": "页级:#fff1e5+双wash+masthead 新语言(页面局部注入)", "accept": ["P1","P2","P9"], "passes": true},
     {"id": "U8-page-sections", "desc": "整页区块玻璃语言(KPI带/consensus/多空/memo/stat strips/expanders)", "accept": ["P8a","P8b","P8c","P8d","P8e","P8f"], "passes": true},
@@ -19,25 +19,32 @@
     {"id": "U11-harness-init", "desc": "docs/harness/kline-reskin/init.sh", "accept": ["G3"], "passes": true}
   ],
   "round_1": {
-    "evaluator": "independent (Stage 2)",
     "verdict_doc": "docs/harness/kline-reskin/eval/round-1.md",
     "pass": 37, "fail": 4,
-    "fails": ["P8c (contract-amended in R2)", "T2", "T10", "T11"],
-    "minor_deviations": ["T5 eyebrow", "T6 down-chip"]
+    "fails": ["P8c (contract-amended in R2)", "T2", "T10", "T11"]
   },
   "round_2": {
-    "evaluator": "independent (Stage 2)",
     "verdict_doc": "docs/harness/kline-reskin/eval/round-2.md",
     "commit": "20cb669",
-    "fixed_verified_live": ["T2", "T5", "T6", "T10", "T11"],
-    "p8c_rescored": "PASS under amended CONTRACT P8 (bull/bear teal/red top-border sanctioned; four glass values conform)",
-    "code_verified_env_blocked": {
-      "items": ["P8b (consensus_house)", "P8d (memo bar)"],
-      "reason": "internal wiki ~/Documents/LLM Wiki/Wiki/companies absent on eval machine; only sanitized public wiki (is_sanitized=True, Rating/TP stripped) → neither renders. GLASS_CARD_CSS applies identical !important glass block to .cmsi-memo-bar/.cmsi-ch as the live-confirmed .cmsi-stat-strip → compute-identical proof.",
-      "recommend": "render one covered name w/ house rating+TP on a machine with the internal wiki to retire the caveat"
+    "verdict": "11/11 features PASS (T2/T5/T6/T10/T11 fixed live; P8c amended; P8b/P8d code-verified env-blocked)"
+  },
+  "round_3": {
+    "evaluator": "independent (Stage 2)",
+    "verdict_doc": "docs/harness/kline-reskin/eval/round-3.md",
+    "commit": "3f2c839",
+    "codex_fixes_reverified": {
+      "tooltip_ohlc_index": "FAIL — Codex changed v[1..4]→v[0..3] but live params.data=[dataIndex,open,close,low,high]; now 开 shows dataIndex(266). REGRESSION.",
+      "vol_ratio_nullable_guard": "PASS — 000977 量比 1.12x; BNTX 1.92x on real data",
+      "pe_isfinite_guard": "PASS — BNTX forward_pe=-19.37 → PE cell suppressed, 4→3 degrade, no nanx/NaN"
     },
-    "regression_sweep": "no drift — T1/T3/T4/T7/T8 + C6/dataZoom + P8a/P8e/P8f all re-confirmed on up(000977) and down(AVGO) terminals",
-    "verdict": "11/11 features PASS; zero outstanding FAILs"
+    "new_fail": {
+      "item": "C5 (tooltip value correctness — new value-level assertion)",
+      "sev": "MAJOR",
+      "evidence": "live params.data=[266,67,66.35,63.79,69.21]; deployed formatter outputs 开=266.00/收=67.00/低=66.35/高=63.79 vs truth 67.00/66.35/63.79/69.21; real hover showed 开 263.00 + 低>高",
+      "fix": "app/lib/candlestick_terminal.py:347-350 — revert to fmt(v[1])/v[2]/v[3]/v[4]; fix comment 342-344"
+    },
+    "regression_clean": ["T10 footer", "T2 glow", "T11 #kc=560", "C1", "C2", "C10"],
+    "verdict": "NOT clean — U5 reverted to false; bounce MAJOR-1 revert to Builder (1 of 4 cycles remaining)"
   },
   "acceptance": { "note": "只有独立 Evaluator 可翻 passes;每翻挂真机证据(eval/round-N.md)" },
   "auditor_codex": { "model": "TBD", "scope": "CONTRACT.md §6", "verdict": null }

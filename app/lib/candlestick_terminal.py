@@ -339,15 +339,16 @@ mountEChart('kc', function(){
       formatter:function(ps){
         var k=ps.find(function(p){return p.seriesName==='日K';});
         if(!k){return '';}
-        // k.data = raw series item = [open,close,low,high] (indices 0-3)
-        // k.value on category axis = [xCategoryValue,open,close,low,high] (indices 1-4)
-        // We use k.data → correct indices: [0]=open [1]=close [2]=low [3]=high
+        // 防御性归一: live 实测 2026-07-03(category 轴) params.data 与 params.value
+        // 同为 5 元带前置 dataIndex [idx,open,close,low,high]; getOption().series.data
+        // 为剥索引 4 元 [open,close,low,high]。两形状均兼容:
         var v=k.data;
+        var a=(v && v.length===5) ? v.slice(1) : v;  // 5元剥索引→[o,c,l,h]; 4元直用
         return '<div style="font-size:11px;color:'+D.FAINT+';margin-bottom:5px">'+k.name+'</div>'
-          +'<div>开 <b>'+fmt(v[0])+'</b></div>'
-          +'<div>收 <b>'+fmt(v[1])+'</b></div>'
-          +'<div>低 <b>'+fmt(v[2])+'</b></div>'
-          +'<div>高 <b>'+fmt(v[3])+'</b></div>';
+          +'<div>开 <b>'+fmt(a[0])+'</b></div>'
+          +'<div>收 <b>'+fmt(a[1])+'</b></div>'
+          +'<div>低 <b>'+fmt(a[2])+'</b></div>'
+          +'<div>高 <b>'+fmt(a[3])+'</b></div>';
       }
     },
     axisPointer:{link:[{xAxisIndex:'all'}],label:{backgroundColor:D.EDGE}},

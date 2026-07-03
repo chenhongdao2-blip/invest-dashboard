@@ -265,6 +265,21 @@ def adv_20d(ticker: str) -> float | None:
     return float(turn.mean()) if not turn.empty else None
 
 
+@st.cache_data(ttl=3600)
+def shares_outstanding(ticker: str) -> float | None:
+    """Total shares outstanding from company_profile (yfinance snapshot; 484/494
+    tickers non-null). Used by the Ticker Drill terminal for the EOD turnover-rate
+    cell — None → the cell is simply not rendered (CONTRACT T8 only-available)."""
+    df = query(
+        "SELECT sharesOutstanding FROM company_profile WHERE ticker = ?",
+        (ticker,),
+    )
+    if df.empty or pd.isna(df.iloc[0, 0]):
+        return None
+    v = float(df.iloc[0, 0])
+    return v if v > 0 else None
+
+
 @st.cache_data(ttl=300)
 def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
     """M1 audit fix: USD-converted close series (so cross-region returns are comparable).

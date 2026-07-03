@@ -284,10 +284,12 @@ STRINGS = {
     "strategy.ipo.rank.by_score": "By score",
     "strategy.ipo.rank.by_ret": "By day-1 return",
     "strategy.ipo.rank.pending": "Pending ({date})",
+    "strategy.ipo.rank.pending_short": "Pending",
     # rank table columns
     "strategy.ipo.col.rank": "Rank",
     "strategy.ipo.col.code": "Code",
     "strategy.ipo.col.name": "Name",
+    "strategy.ipo.col.list_date": "List Date",
     "strategy.ipo.col.score": "Score",
     "strategy.ipo.col.tier": "Subscription Tier",
     "strategy.ipo.col.sub_sector": "Sub-sector",

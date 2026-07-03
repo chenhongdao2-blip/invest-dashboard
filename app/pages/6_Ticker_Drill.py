@@ -153,42 +153,22 @@ def _route_benchmarks(ticker: str, sectors: list[str]) -> list[str]:
     return [_BROAD_BENCH]
 
 
-def _terminal_bench_overlay(ticker: str, sectors: list[str], stock_df):
-    """Primary sector-benchmark close (yfinance), aligned to the terminal's OHLCV
-    dates and rebased to the stock's ANCHOR PRICE so it overlays on the candlestick's
-    own price axis — a relative-strength reference folded INTO the K-line (George:
-    基准跟 K 线放一起,不另列一栏). Returns (label, [values…]) or None when no
-    benchmark routes / no overlap / the benchmark can't be fetched.
-
-    Picks ONE benchmark (the most-specific sector ETF from _route_benchmarks). A
-    single dashed reference keeps the price chart legible — unlike the old standalone
-    2-line rebased=100 RS panel, this rebases to PRICE so candle-above-dash reads
-    directly as outperformance on the same axis.
-    """
-    chosen = _route_benchmarks(ticker, sectors)
-    if not chosen:
-        return None
-    from lib import candlestick_terminal as cterm
-    from lib import benchmarks as bench
-
-    sym = chosen[0]
-    bdf = cterm.fetch_ohlcv(sym)
-    if bdf is None or bdf.empty or "Close" not in bdf.columns:
-        return None
-    stock_close = stock_df["Close"]
-    # benchmark close on each stock trading day (ffill across calendar gaps).
-    aligned = bdf["Close"].reindex(stock_close.index, method="ffill")
-    both = pd.concat([stock_close, aligned], axis=1).dropna()
-    if both.empty:
-        return None
-    anchor_px = float(stock_close.loc[both.index[0]])
-    anchor_bm = float(aligned.loc[both.index[0]])
-    if not anchor_bm or anchor_bm <= 0:
-        return None
-    label = i18n.bench_name(sym, bench.BENCHMARKS.get(sym, sym))
-    vals = [None if pd.isna(v) else round(anchor_px * float(v) / anchor_bm, 2)
-            for v in aligned]
-    return (label, vals)
+def _market_hours(ticker: str, zh: bool) -> str:
+    """Trading-hours meta string for the masthead sub-line and eyebrow (contract O3).
+    Maps by ticker suffix to the exchange's actual trading session."""
+    if ticker.endswith(".HK"):
+        hours = "09:30 — 16:00 (UTC+8)"
+    elif ticker.endswith((".SS", ".SZ", ".SH")):
+        hours = "09:30 — 15:00 (UTC+8)"
+    elif ticker.endswith(".T"):
+        hours = "09:00 — 15:00 (JST)"
+    elif ticker.endswith((".KS", ".KQ")):
+        hours = "09:00 — 15:30 (KST)"
+    elif "." not in ticker:
+        hours = "09:30 — 16:00 (ET)"
+    else:
+        return "EOD 收盘" if zh else "EOD close"
+    return i18n.t("drill.term.meta_line", hours=hours)
 
 
 def _render_wiki_disclaimer(wiki_page) -> None:
@@ -217,6 +197,8 @@ st.set_page_config(
 # ---------- Sidebar ----------
 with st.sidebar:
     ui.sidebar_search(key_prefix="drill")
+theme.page_radial_wash()
+st.markdown(f"<style>{theme.GLASS_CARD_CSS}</style>", unsafe_allow_html=True)
 
 # ---------- Ticker resolution ----------
 all_tickers = sorted(db.all_tickers())
@@ -441,7 +423,8 @@ if mults_row is not None:
                            n=(f"{int(n_analysts)}" if pd.notna(n_analysts) else "—"))
     stock_header.render(name=display_name, ticker=bbg, exchange="",
                         sector_sub=None, as_of=db.latest_snapshot_date(),
-                        kpis=_kpis, consensus=_cons_str, prefer_cn=_zh)
+                        kpis=_kpis, consensus=_cons_str, prefer_cn=_zh,
+                        sub=_market_hours(ticker, _zh))
 else:
     # 无 multiples 的票:回退普通 section_header(玻璃头需要 KPI 值)。
     theme.section_header(display_name, meta=bbg)
@@ -519,21 +502,18 @@ from lib import candlestick_terminal as cterm
 
 _ohlcv = cterm.fetch_ohlcv(ticker)
 if not _ohlcv.empty:
-    _bench_ov = _terminal_bench_overlay(ticker, sectors, _ohlcv)
+    _pe_val: float | None = None
+    if mults_row is not None:
+        _fpe = mults_row.get("forward_pe")
+        _tpe = mults_row.get("trailing_pe")
+        _pe_val = float(_fpe) if pd.notna(_fpe) else (float(_tpe) if pd.notna(_tpe) else None)
     theme.section_eyebrow(
         "行情终端 · Price Terminal" if _zh else "Price Terminal",
-        meta=("日K · MA5/10/20 · 成交量 · EOD" if _zh else "Daily · MA5/10/20 · Vol · EOD"))
+        meta=_market_hours(ticker, _zh))
     # show_header=False: masthead 已带身份,设计稿 price panel 无重复头(glass 卡叠微光)。
     cterm.render(ticker=ticker, name=display_name, df=_ohlcv, ccy=ccy,
-                 prefer_cn=_zh, bench_overlay=_bench_ov, show_header=False)
-    if _bench_ov:
-        st.caption(
-            f"灰色虚线 = 板块基准 {_bench_ov[0]},按区间起点对齐到本股价格;"
-            f"蜡烛在虚线上方即跑赢板块(本币 {ccy})。"
-            if _zh else
-            f"Dashed grey = sector benchmark {_bench_ov[0]}, rebased to the stock's "
-            f"start price — candles above it = outperforming ({ccy})."
-        )
+                 prefer_cn=_zh, pe=_pe_val,
+                 shares_out=db.shares_outstanding(ticker), show_header=False)
     st.divider()
 else:
     # 终端无 OHLCV(外资小票 yfinance 取不到)→ 回退原 plotly 相对强弱图(DB close)。

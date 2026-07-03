@@ -446,6 +446,7 @@ STRINGS = {
     "drill.no_mults": "No multiples snapshot — ticker may be picks-only (not in main fetch universe).",
     "drill.section.price": "Price · USD-normalized",
     "drill.section.rs": "Relative Strength · vs Sector",
+    "drill.term.meta_line": "Daily K · MA5 / MA10 / MA20 · Volume · {hours}",
     "drill.rs.title": "{bbg} · Relative Strength (rebased = 100)",
     "drill.rs.caption": (
         "Rebased to 100 on {date}. Benchmarks: {benches}. Stock and benchmarks are "

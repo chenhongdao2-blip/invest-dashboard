@@ -495,9 +495,9 @@ wiki_page = wiki.find_wiki(ticker)
 _zh = i18n.get_lang() == "zh"
 
 # ---------- 行情终端 (terminal FIRST — George: 把行情终端放到最前面) ----------
-# 板块相对强弱「折进 K 线」(George: 基准跟 K 线放一起,不另列一栏)。页面把 sector 基准
-# close 按区间起点 rebase 到本股价格 → 灰虚线叠在蜡烛同一价格轴(蜡烛在虚线上方=跑赢)。
-# 终端取真实 OHLCV(yfinance);取不到时回退原 plotly 相对强弱图(DB close)。
+# K线行情.dc.html 1:1 reskin(2026-07-03,harness kline-reskin):终端只画 蜡烛+MA+量,
+# 基准折线通道已按 George D2 整体拆除(严格 1:1)。终端取真实 OHLCV(yfinance);
+# 取不到时回退原 plotly 相对强弱图(DB close,基准路由 _route_benchmarks 仍在服务该回退)。
 from lib import candlestick_terminal as cterm
 
 _ohlcv = cterm.fetch_ohlcv(ticker)

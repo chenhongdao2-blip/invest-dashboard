@@ -18,6 +18,7 @@ FT-salmon glass 设计语言(K线行情.dc.html 1:1 契约 2026-07-03):
 from __future__ import annotations
 
 import json
+import math
 from datetime import date, timedelta
 
 import pandas as pd
@@ -104,8 +105,12 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
               round(float(l.iloc[i]), 2), round(float(h.iloc[i]), 2)]
              for i in range(len(df))]
     if "Volume" in df.columns:
-        vol = [0 if pd.isna(v) else int(v) for v in df["Volume"]]
+        # vol_raw: nullable — used for metrics (量比/换手率) to avoid NaN-as-0 pollution
+        vol_raw: list[int | None] = [None if pd.isna(v) else int(v) for v in df["Volume"]]
+        # vol: 0-filled — used only for chart bar rendering
+        vol = [0 if v is None else v for v in vol_raw]
     else:
+        vol_raw = [None] * len(df)
         vol = [0] * len(df)
     vol_up = [bool(kline[i][1] >= kline[i][0]) for i in range(len(df))]
 
@@ -136,21 +141,28 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
     metrics_cells: list[tuple[str, str]] = []
     # 振幅: 始终显示
     metrics_cells.append(("振幅" if prefer_cn else "AMPL", f"{ampl:.2f}%"))
-    # 量比(5日): 需有成交量且历史足够
-    if vol and len(vol) >= 6 and vol[-1] > 0:
-        avg5 = sum(vol[-6:-1]) / 5
+    # 量比(5日): 当日+前5日共6点全部非空且 prev5.mean()>0 才渲染
+    # 用 vol_raw(nullable)避免 NaN-as-0 伪造可得性
+    if (len(vol_raw) >= 6
+            and all(vol_raw[i] is not None for i in range(-6, 0))
+            and vol_raw[-1] > 0):  # type: ignore[operator]
+        prev5_sum = sum(vol_raw[i] for i in range(-6, -1))  # type: ignore[misc]
+        avg5 = prev5_sum / 5
         if avg5 > 0:
             metrics_cells.append(
-                ("量比(5日)" if prefer_cn else "VOL/5D", f"{vol[-1] / avg5:.2f}x")
+                ("量比(5日)" if prefer_cn else "VOL/5D",
+                 f"{vol_raw[-1] / avg5:.2f}x")  # type: ignore[operator]
             )
-    # 换手率: 仅当 shares_out 传入
-    if shares_out and shares_out > 0 and vol and vol[-1] > 0:
+    # 换手率: shares_out 传入且当日成交量真实非空
+    if (shares_out is not None
+            and math.isfinite(float(shares_out)) and shares_out > 0
+            and len(vol_raw) >= 1 and vol_raw[-1] is not None and vol_raw[-1] > 0):
         metrics_cells.append(
             ("换手率" if prefer_cn else "TURNOVER",
-             f"{vol[-1] / shares_out * 100:.2f}%")
+             f"{vol_raw[-1] / shares_out * 100:.2f}%")
         )
-    # PE: 仅当 pe 传入
-    if pe is not None:
+    # PE: 传入、有限、正值(负PE/亏损公司不显示)
+    if pe is not None and math.isfinite(float(pe)) and pe > 0:
         metrics_cells.append(("市盈率" if prefer_cn else "P/E", f"{pe:.1f}x"))
 
     if len(metrics_cells) >= 2:
@@ -327,12 +339,15 @@ mountEChart('kc', function(){
       formatter:function(ps){
         var k=ps.find(function(p){return p.seriesName==='日K';});
         if(!k){return '';}
+        // k.data = raw series item = [open,close,low,high] (indices 0-3)
+        // k.value on category axis = [xCategoryValue,open,close,low,high] (indices 1-4)
+        // We use k.data → correct indices: [0]=open [1]=close [2]=low [3]=high
         var v=k.data;
         return '<div style="font-size:11px;color:'+D.FAINT+';margin-bottom:5px">'+k.name+'</div>'
-          +'<div>开 <b>'+fmt(v[1])+'</b></div>'
-          +'<div>收 <b>'+fmt(v[2])+'</b></div>'
-          +'<div>低 <b>'+fmt(v[3])+'</b></div>'
-          +'<div>高 <b>'+fmt(v[4])+'</b></div>';
+          +'<div>开 <b>'+fmt(v[0])+'</b></div>'
+          +'<div>收 <b>'+fmt(v[1])+'</b></div>'
+          +'<div>低 <b>'+fmt(v[2])+'</b></div>'
+          +'<div>高 <b>'+fmt(v[3])+'</b></div>';
       }
     },
     axisPointer:{link:[{xAxisIndex:'all'}],label:{backgroundColor:D.EDGE}},

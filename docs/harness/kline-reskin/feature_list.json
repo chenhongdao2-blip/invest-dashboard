@@ -2,18 +2,18 @@
   "task": "K线行情 FT-salmon glass 1:1 重实现 — Ticker Drill 整页 reskin",
   "mode": "code",
   "max_cycles": 4,
-  "cycles_used": 1,
+  "cycles_used": 2,
   "contract": "docs/harness/kline-reskin/CONTRACT.md",
-  "status": "Round 1 evaluated — 8/11 features PASS; U2(T2,T11)/U4(T10)/U8(P8c) held false; back to Builder",
+  "status": "Round 2 evaluated — ALL 11 features PASS; zero outstanding FAILs; ready for Stage 4 Codex audit + Stage 5 George ship",
   "features": [
     {"id": "U1-fonts",         "desc": "自托管 Space Grotesk + FONT_DISPLAY 栈 + iframe @font-face 接线,零 CDN", "accept": ["P7"], "passes": true},
-    {"id": "U2-term-shell",    "desc": "candlestick_terminal iframe 壳:底色/双wash/玻璃配方/1fr-340-gap26/560px", "accept": ["T1","T2","T3","T4","T11"], "passes": false},
+    {"id": "U2-term-shell",    "desc": "candlestick_terminal iframe 壳:底色/双wash/玻璃配方/1fr-340-gap26/560px", "accept": ["T1","T2","T3","T4","T11"], "passes": true},
     {"id": "U3-term-header",   "desc": "头排:红条5x44+名30px+chip #e4d2bd+副行+EOD状态块(D1)", "accept": ["P3","P4","P5","P6"], "passes": true},
-    {"id": "U4-term-panel",    "desc": "右面板:Last Price 46px 动态色+change chip+OHLC 行色+指标 only-available(D3)", "accept": ["T5","T6","T7","T8","T9","T10"], "passes": false},
+    {"id": "U4-term-panel",    "desc": "右面板:Last Price 46px 动态色+change chip+OHLC 行色+指标 only-available(D3)", "accept": ["T5","T6","T7","T8","T9","T10"], "passes": true},
     {"id": "U5-chart-option",  "desc": "option 换肤:蜡烛/MA新三色/legend/墨tooltip/%双grid/右y轴/红dataZoom/量柱α.5", "accept": ["C1","C2","C3","C4","C5","C6","C7","C8","C9","C11"], "passes": true},
     {"id": "U6-bench-removal", "desc": "基准 overlay 全通道拆除(D2)", "accept": ["C10","G5"], "passes": true},
     {"id": "U7-page-shell",    "desc": "页级:#fff1e5+双wash+masthead 新语言(页面局部注入)", "accept": ["P1","P2","P9"], "passes": true},
-    {"id": "U8-page-sections", "desc": "整页区块玻璃语言(KPI带/consensus/多空/memo/stat strips/expanders)", "accept": ["P8a","P8b","P8c","P8d","P8e","P8f"], "passes": false},
+    {"id": "U8-page-sections", "desc": "整页区块玻璃语言(KPI带/consensus/多空/memo/stat strips/expanders)", "accept": ["P8a","P8b","P8c","P8d","P8e","P8f"], "passes": true},
     {"id": "U9-i18n-guards",   "desc": "zh/en 文案 + grep 电池 + py_compile", "accept": ["P10","G1","G4"], "passes": true},
     {"id": "U10-regression",   "desc": "AppTest/回退/弹窗/列表模式/连刷/截图对照", "accept": ["G2","G3","G6","G7","G8","G9"], "passes": true},
     {"id": "U11-harness-init", "desc": "docs/harness/kline-reskin/init.sh", "accept": ["G3"], "passes": true}
@@ -22,17 +22,22 @@
     "evaluator": "independent (Stage 2)",
     "verdict_doc": "docs/harness/kline-reskin/eval/round-1.md",
     "pass": 37, "fail": 4,
-    "fails": [
-      {"id": "P8c", "sev": "medium", "fix": "app/lib/stock_header.py:211,218 — bull/bear border-top teal/red not #1a1a1a (or amend contract to exempt semantic coloring)"},
-      {"id": "T2",  "sev": "medium", "fix": "app/lib/candlestick_terminal.py:218-221 — .glow wash 820x480@8%/-10% α.08 + 760x480@96%/4% ≠ P2 params (900x520@10%/-8% α.09 + 820x520@94%/4%)"},
-      {"id": "T10", "sev": "high",   "fix": "app/lib/candlestick_terminal.py:372-376 — footer missing 色约定注 青=涨/红=跌(与A股相反); §4 invariant regression"},
-      {"id": "T11", "sev": "low",    "fix": "app/lib/candlestick_terminal.py:207 — page-mode #kc=504 not 560 (borderline; grids %-proportional, slider unclipped; fix or amend)"}
-    ],
-    "minor_deviations": [
-      {"id": "T5", "note": "eyebrow 10px/.1em vs spec 11px/.16em (candlestick_terminal.py:232-233); price 46/700 correct"},
-      {"id": "T6", "note": "down-chip alpha .12 vs contract .10 (candlestick_terminal.py:131); up-case live correct"}
-    ],
-    "untested_code_verified": ["P8b (consensus_house)", "P8d (memo bar)"]
+    "fails": ["P8c (contract-amended in R2)", "T2", "T10", "T11"],
+    "minor_deviations": ["T5 eyebrow", "T6 down-chip"]
+  },
+  "round_2": {
+    "evaluator": "independent (Stage 2)",
+    "verdict_doc": "docs/harness/kline-reskin/eval/round-2.md",
+    "commit": "20cb669",
+    "fixed_verified_live": ["T2", "T5", "T6", "T10", "T11"],
+    "p8c_rescored": "PASS under amended CONTRACT P8 (bull/bear teal/red top-border sanctioned; four glass values conform)",
+    "code_verified_env_blocked": {
+      "items": ["P8b (consensus_house)", "P8d (memo bar)"],
+      "reason": "internal wiki ~/Documents/LLM Wiki/Wiki/companies absent on eval machine; only sanitized public wiki (is_sanitized=True, Rating/TP stripped) → neither renders. GLASS_CARD_CSS applies identical !important glass block to .cmsi-memo-bar/.cmsi-ch as the live-confirmed .cmsi-stat-strip → compute-identical proof.",
+      "recommend": "render one covered name w/ house rating+TP on a machine with the internal wiki to retire the caveat"
+    },
+    "regression_sweep": "no drift — T1/T3/T4/T7/T8 + C6/dataZoom + P8a/P8e/P8f all re-confirmed on up(000977) and down(AVGO) terminals",
+    "verdict": "11/11 features PASS; zero outstanding FAILs"
   },
   "acceptance": { "note": "只有独立 Evaluator 可翻 passes;每翻挂真机证据(eval/round-N.md)" },
   "auditor_codex": { "model": "TBD", "scope": "CONTRACT.md §6", "verdict": null }

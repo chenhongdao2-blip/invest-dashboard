@@ -753,6 +753,7 @@ def _render_ipo_table(picks: pd.DataFrame) -> None:
     disp = pd.DataFrame({
         i18n.t("strategy.ipo.col.code"): tbl["code"].astype(str),
         i18n.t("strategy.ipo.col.name"): tbl["name_cn"].astype(str),
+        i18n.t("strategy.ipo.col.list_date"): tbl["list_date"].astype(str),
         i18n.t("strategy.ipo.col.score"): tbl["score"].astype(float),
         i18n.t("strategy.ipo.col.tier"): [i18n.ipo_tier(str(x)) for x in tbl["tier"]],
         i18n.t("strategy.ipo.col.sub_sector"): tbl["sub_sector"].astype(str),
@@ -767,9 +768,9 @@ def _render_ipo_table(picks: pd.DataFrame) -> None:
     day1_lbl = i18n.t("strategy.ipo.col.day1_ret")
     for i, (_, r) in enumerate(tbl.iterrows()):
         if r["status"] != "listed":
+            # date now lives in its own 上市日期 column → name only tags 待上市
             disp.iloc[i, disp.columns.get_loc(name_lbl)] = (
-                f"{r['name_cn']} · "
-                + i18n.t("strategy.ipo.rank.pending", date=str(r["list_date"]))
+                f"{r['name_cn']} · " + i18n.t("strategy.ipo.rank.pending_short")
             )
 
     ui.render_html_table(
@@ -780,7 +781,8 @@ def _render_ipo_table(picks: pd.DataFrame) -> None:
                    i18n.t("strategy.ipo.col.sub_sector"),
                    i18n.t("strategy.ipo.col.source")],
         extra_formats={i18n.t("strategy.ipo.col.score"): "%.2f"},
-        right_text_cols=[i18n.t("strategy.ipo.col.code")],
+        right_text_cols=[i18n.t("strategy.ipo.col.code"),
+                         i18n.t("strategy.ipo.col.list_date")],
         index_label=i18n.t("strategy.ipo.col.rank"),
         height=720,
     )

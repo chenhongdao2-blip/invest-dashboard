@@ -264,10 +264,12 @@ STRINGS = {
     "strategy.ipo.rank.by_score": "按评分",
     "strategy.ipo.rank.by_ret": "按首日涨幅",
     "strategy.ipo.rank.pending": "待上市 ({date})",
+    "strategy.ipo.rank.pending_short": "待上市",
     # 排名表列
     "strategy.ipo.col.rank": "排名",
     "strategy.ipo.col.code": "代码",
     "strategy.ipo.col.name": "名称",
+    "strategy.ipo.col.list_date": "上市日期",
     "strategy.ipo.col.score": "评分",
     "strategy.ipo.col.tier": "申购档位",
     "strategy.ipo.col.sub_sector": "子板块",

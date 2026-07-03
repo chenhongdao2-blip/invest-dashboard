@@ -31,7 +31,7 @@ Builder↔Evaluator 协商记录见文末附录 N。
 | P5 | 页头副行 mono 12.5px:`日K线 · MA5/MA10/MA20 · 成交量 · <O3 时段>` | JS+SS |
 | P6 | EOD 状态块:青呼吸点 `#0d7680` + animation 周期 1.5s 无限;文案 `EOD 数据 · 截至 YYYY-MM-DD`(真 as-of);可含真实时钟;**全页零** `tick interval` 字样、零 暂停/重置按钮 | JS+GR+SS |
 | P7 | 标题字 Space Grotesk 自托管相对路径 + **iframe srcdoc 内 @font-face 存在**(修字体注入 bug);数字 JetBrains Mono;全 repo 零 `fonts.googleapis.com|fonts.gstatic.com` | JS+GR |
-| P8a-f | 六区块玻璃配方统一(=T3 四值断言:bg `rgba(255,255,255,0.55)`、`blur(14px)`、`border-top:3px solid #1a1a1a`、`border-radius:0`,且 `box-shadow:none`):a KPI带 / b consensus_house / c 多空看板 / d memo bar / e stat strips / f expander 面 | JS |
+| P8a-f | 六区块玻璃配方统一(=T3 四值断言:bg `rgba(255,255,255,0.55)`、`blur(14px)`、`border-top:3px solid #1a1a1a`、`border-radius:0`,且 `box-shadow:none`):a KPI带 / b consensus_house / c 多空看板 / d memo bar / e stat strips / f expander 面。**P8c 例外(R1 裁决 2026-07-03)**:多空看板顶边允许 BULL teal `#0d7680`/BEAR red 语义色(3px)——设计稿未画此区块,「色即信号」站规优先;其余四值照断 | JS |
 | P9 | 新皮零泄漏他页:Sector Heatmap + Strategy Picks 抽查无 wash/新卡皮;theme._CSS 零本次新增规则 | RM+GR |
 | P10 | zh/en 双语等价(pages_zh/pages_en parity 保持);零新增 emoji | RM+GR |
 

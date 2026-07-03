@@ -128,7 +128,8 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
     # 涨跌 rgb 分量(chip 背景用)
     rgb = "13,118,128" if up else "200,16,46"
 
-    chg_chip = (f'<span class="chip" style="color:{col};background:rgba({rgb},.12)">'
+    chip_alpha = ".12" if up else ".10"  # T6: 涨.12/跌.10 CONTRACT 精确值
+    chg_chip = (f'<span class="chip" style="color:{col};background:rgba({rgb},{chip_alpha})">'
                 f'{"+" if up else ""}{chgpct:.2f}%</span>')
 
     # ── 只显示可用指标 (T8 only-available — 无 hardcoded demo 值) ─────────
@@ -204,8 +205,9 @@ def render(*, ticker: str, name: str, df: pd.DataFrame, ccy: str,
     }
 
     # ── CSS ──────────────────────────────────────────────────────────────
-    chart_h  = (height - 120) if show_header else (height - 56)
-    iframe_h = (height + 92)  if show_header else (height + 26)
+    # T11: page-mode #kc 实际高度 = height 参数(不扣 footer); iframe 多包 +56 足额
+    chart_h  = (height - 120) if show_header else height
+    iframe_h = (height + 92)  if show_header else (height + 82)
     _tpad    = "14px 16px 12px" if show_header else "6px 16px 10px"
 
     css = f"""\
@@ -217,8 +219,8 @@ html,body{{height:100%;background:{theme.PAPER};color:{theme.INK};
 body{{position:relative;overflow:hidden}}
 .glow{{position:absolute;inset:0;z-index:0;pointer-events:none;
   background:
-    radial-gradient(820px 480px at 8% -10%,rgba(200,16,46,.08),transparent 60%),
-    radial-gradient(760px 480px at 96% 4%,rgba(13,118,128,.10),transparent 60%)}}
+    radial-gradient(900px 520px at 10% -8%,rgba(200,16,46,0.09),transparent 60%),
+    radial-gradient(820px 520px at 94% 4%,rgba(13,118,128,0.10),transparent 60%)}}
 .term{{position:relative;z-index:1;padding:{_tpad};display:flex;flex-direction:column;height:100%}}
 .body{{display:grid;grid-template-columns:1fr 340px;gap:26px;flex:1;min-height:0;align-items:stretch}}
 .chartcard{{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(14px);
@@ -229,7 +231,7 @@ body{{position:relative;overflow:hidden}}
 .pcard{{background:rgba(255,255,255,.55);-webkit-backdrop-filter:blur(14px);
   backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.7);
   border-top:3px solid {theme.INK};border-radius:0;padding:18px 20px}}
-.plbl{{font-family:{theme.FONT_MONO};font-size:10px;letter-spacing:.1em;
+.plbl{{font-family:{theme.FONT_MONO};font-size:11px;letter-spacing:.16em;
   text-transform:uppercase;color:{theme.INK_3};margin-bottom:9px;font-weight:600}}
 .prow{{display:flex;align-items:baseline;gap:9px}}
 .pbig{{font-family:{theme.FONT_MONO};font-size:46px;font-weight:700;line-height:1;
@@ -368,10 +370,12 @@ mountEChart('kc', function(){
 });
 """
 
-    # ── 来源脚注 ──────────────────────────────────────────────────────────
+    # ── 来源脚注 (T10: §4 INVARIANT — 配色惯例注不可省略) ───────────────────
     src_note = (
+        f"配色(港美股惯例):青 = 涨 · 红 = 跌(与 A 股红涨绿跌相反) · "
         f"来源: yfinance · 复权 OHLCV · {ticker} · 截至 {as_of_str}"
         if prefer_cn else
+        f"Colors (HK/US convention): teal = up · red = down (inverse of A-share) · "
         f"Source: yfinance · adj. OHLCV · {ticker} · as of {as_of_str}"
     )
 

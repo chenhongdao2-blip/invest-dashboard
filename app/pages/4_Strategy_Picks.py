@@ -20,12 +20,12 @@ import streamlit as st
 from lib import db  # noqa: F401  (kept for parity with other pages / future use)
 from lib import format as fmt
 from lib import strategy as strat
-from lib import charts
 from lib import ui
 from lib import theme
 from lib import i18n
 from lib import strategy_hero
 from lib import strategy_banner as sb
+from lib import ipo_stage
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -105,6 +105,7 @@ def _overview_curve_card(strat_id: str) -> dict | None:
         "wins": int((normed.iloc[-1] > 100).sum()), "total": int(normed.shape[1]),
         "hold_days": (pd.Timestamp.now().normalize() - pd.Timestamp(pick_date)).days,
         "curve": (_ds(portfolio), _ds(b_al)),
+        "win_list": (normed.iloc[-1] > 100).tolist(),
         "_as_of": portfolio.index[-1].date().isoformat(),
     }
 
@@ -124,6 +125,9 @@ def _overview_ipo_card() -> dict | None:
         "median": float(d1.median()), "hi": float(d1.max()), "lo": float(d1.min()),
     }
 
+
+# wave-2: radial wash for glass card backdrops (BANR1)
+theme.page_radial_wash(1240)
 
 # ── Opening banner: LIVE title + 3-strategy overview strip + dual-track ────────
 _ov_cards = [c for c in (_overview_curve_card("v5_biotech"),
@@ -569,223 +573,17 @@ def _spearman_pval(rho: float, n: int) -> float:
 
 
 def render_ipo_strategy() -> None:
-    """HK IPO 打新 backtest — STATIC cross-section snapshot.
+    """HK IPO 打新 1a — newspaper-precision reskin (wave-2).
 
-    Structurally different from the 3 time-series strategies: reads ONLY the two
-    frozen CSVs (ipo_picks / ipo_day1_intraday), never yfinance /
-    compute_strategy_returns. Day-1 figures are frozen on the listing date.
+    Delegates to ipo_stage.render() which emits one self-contained st.iframe.
+    Data pipeline: strat.load_ipo() + strat.load_ipo_intraday() — unchanged.
     """
-    picks = strat.load_ipo()
-    if picks.empty:
-        st.warning("No IPO picks — check data/external/ipo_picks.csv")
-        return
+    picks    = strat.load_ipo()
+    intraday = strat.load_ipo_intraday()
+    prefer_cn = st.session_state.get("lang", "zh") != "en"
+    as_of = picks["list_date"].dropna().max() if "list_date" in picks.columns else "2026-07-03"
+    ipo_stage.render(picks, intraday, prefer_cn=prefer_cn, as_of=str(as_of))
 
-    st.markdown(i18n.t("strategy.ipo.tab.intro"))
-
-    # day1_ret is a DECIMAL (3.84 = +384%) → ×100 once here for the whole tab.
-    picks = picks.copy()
-    picks["ret_pct"] = picks["day1_ret"] * 100  # NaN for pending
-    listed = picks[picks["status"] == "listed"].copy()
-    pending = picks[picks["status"] != "listed"].copy()
-
-    # --- Methodology expander (six-factor; NOT biotech clinical/FDA) ---
-    with st.expander(i18n.t("strategy.ipo.method_expander")):
-        st.markdown(i18n.t("strategy.ipo.method"))
-
-    # Defensive: the CSV is hand-edited & frozen. If it ever holds only pending
-    # rows, the KPI/scatter/intraday blocks (which assume ≥1 listed name) would
-    # crash on idxmax/mean. Render the pending table only and bail early.
-    if listed.empty:
-        theme.md_note("提示 · 后测口径" if i18n.get_lang() == "zh" else "Caveat · backtest basis", i18n.t("strategy.ipo.caveat"))
-        _render_ipo_table(picks)
-        st.caption(i18n.t("strategy.ipo.source"))
-        return
-
-    # --- KPI strip: 3 dead-simple single numbers (规模 + 上行 + 下行). The
-    # "does a higher score actually do better?" question is answered by the
-    # by-tier staircase TABLE below — not by cramming a contrast into a card
-    # (contrast cards read as cryptic; user feedback 2026-06). ---
-    n_total, n_listed, n_pending = len(picks), len(listed), len(pending)
-    top_row = listed.loc[listed["ret_pct"].idxmax()]
-    worst_row = listed.loc[listed["ret_pct"].idxmin()]
-
-    def _ipo_kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
-        return (
-            '<div class="cmsi-kpi">'
-            f'<div class="cmsi-kpi-head"><span class="cmsi-kpi-label ipo">{label}</span></div>'
-            f'<div class="cmsi-kpi-num {vcls}">{value}</div>'
-            f'<div class="cmsi-kpi-foot ink">{sub}</div>'
-            '</div>'
-        )
-
-    theme.kpi_strip([
-        _ipo_kpi(i18n.t("strategy.ipo.kpi.sample"), str(n_total),
-                 i18n.t("strategy.ipo.kpi.sample_delta", listed=n_listed, pending=n_pending)),
-        _ipo_kpi(i18n.t("strategy.ipo.kpi.max"), f"{top_row['ret_pct']:+.0f}%",
-                 i18n.t("strategy.ipo.kpi.max_delta", name=str(top_row["name_cn"])),
-                 vcls="up-deep"),
-        _ipo_kpi(i18n.t("strategy.ipo.kpi.worst"), f"{worst_row['ret_pct']:+.1f}%",
-                 i18n.t("strategy.ipo.kpi.worst_delta", name=str(worst_row["name_cn"]))),
-    ])
-
-    # --- By-tier staircase: does a higher 申购档 actually perform better? Read it
-    # top-to-bottom. The data shows the model nails the EXTREMES (重点+ best / 不申购
-    # broke) but the middle tiers barely separate — honest, no clever single metric. ---
-    theme.section_header(i18n.t("strategy.ipo.tier.title"))
-    prefer_cn = i18n.get_lang() == "zh"
-    c_n = i18n.t("strategy.ipo.tier.col.n")
-    c_med = i18n.t("strategy.ipo.tier.col.med")
-    c_win = i18n.t("strategy.ipo.tier.col.win")
-    c_brk = i18n.t("strategy.ipo.tier.col.brk")
-    _trows: dict[str, dict] = {}
-    for _t in ["重点申购+", "重点申购", "推荐申购", "谨慎申购", "不申购"]:
-        g = listed[listed["tier"] == _t]
-        if g.empty:
-            continue
-        _up = int((g["ret_pct"] > 0).sum())
-        _trows[_t if prefer_cn else i18n.ipo_tier(_t)] = {
-            c_n: str(len(g)),
-            c_med: f"{g['ret_pct'].median():+.0f}%",
-            c_win: f"{_up}/{len(g)}",
-            c_brk: str(int((g["ret_pct"] < 0).sum())),
-        }
-    if _trows:
-        ui.render_html_table(
-            pd.DataFrame.from_dict(_trows, orient="index"),
-            text_cols=[c_n, c_med, c_win, c_brk], column_help={},
-            index_label=i18n.t("strategy.ipo.tier.col.tier"), height=260,
-        )
-    st.caption(i18n.t("strategy.ipo.tier.note"))
-
-    # --- Listing-day intraday small-multiples (open bar = 100, post-open path) ---
-    theme.section_header(i18n.t("strategy.ipo.intraday.title"))
-    intra = strat.load_ipo_intraday()
-    if not intra.empty:
-        # order by score desc so high-tier shapes read first
-        order = listed.sort_values("score", ascending=False)
-        paths = []
-        for _, r in order.iterrows():
-            code = str(r["code"])
-            g = intra[intra["code"] == code].sort_values("time")
-            g = g[g["close"].notna()]
-            if g.empty:
-                continue
-            closes = g["close"].astype(float)
-            last = float(closes.iloc[-1])
-            if last == 0:
-                continue
-            d1 = float(r["day1_ret"])  # decimal, e.g. 3.84 = +384%
-            # Plot as "% vs 发行价" at each 5-min bar. offer = last/(1+d1), so the
-            # path terminates EXACTLY at the labelled day-1 return (d1*100) — fixes
-            # the title/line mismatch from the old open-bar=100 normalisation.
-            pct = (closes * (1.0 + d1) / last - 1.0) * 100.0
-            up = bool(d1 >= 0)  # colour by FULL day-1 sign (= mini-title sign)
-            hover = [
-                i18n.t("strategy.ipo.intraday.hover",
-                       time=t.strftime("%H:%M"), path=float(v))
-                for t, v in zip(g["time"], pct)
-            ]
-            paths.append({
-                "title": i18n.t("strategy.ipo.intraday.mini_title",
-                                name=str(r["name_cn"]), ret=float(r["ret_pct"])),
-                "y": pct.tolist(), "up": up, "hover": hover,
-            })
-        if paths:
-            fig_intra = charts.ipo_intraday_facets(
-                paths, ncols=4,
-                title=i18n.t("strategy.ipo.intraday.title"),
-                use_hover=True,
-            )
-            st.plotly_chart(fig_intra, width="stretch", theme=None)
-    st.caption(i18n.t("strategy.ipo.intraday.caption"))
-
-    # --- Dual leaderboard (by score / by day-1 return); pending row kept ---
-    _render_ipo_table(picks)
-
-    # --- Caveat + source ---
-    theme.md_note("提示 · 后测口径" if i18n.get_lang() == "zh" else "Caveat · backtest basis", i18n.t("strategy.ipo.caveat"))
-    st.caption(i18n.t("strategy.ipo.source"))
-
-
-def _render_ipo_table(picks: pd.DataFrame) -> None:
-    """Dual leaderboard table (sort by score / by day-1 return).
-
-    pending rows are kept (day-1 reads 待上市/Pending) but are NOT given a
-    numeric rank — only listed names are ranked; pending shows "—" for rank.
-    `picks` must already carry the ×100 `ret_pct` column.
-    """
-    sort_opts = [i18n.t("strategy.ipo.rank.by_score"),
-                 i18n.t("strategy.ipo.rank.by_ret")]
-    choice = st.segmented_control(
-        i18n.t("strategy.ipo.rank.toggle"), sort_opts, default=sort_opts[0],
-        key="ipo_rank_sort",
-    ) or sort_opts[0]
-    by_ret = (choice == sort_opts[1])
-
-    # Build display frame. pending kept in the table; day-1 shows 待上市/Pending.
-    tbl = picks.copy()
-    if by_ret:
-        # listed sorted by ret desc; pending pinned to bottom
-        listed_sorted = tbl[tbl["status"] == "listed"].sort_values(
-            "ret_pct", ascending=False)
-        pend_sorted = tbl[tbl["status"] != "listed"]
-        tbl = pd.concat([listed_sorted, pend_sorted])
-    else:
-        tbl = tbl.sort_values("score", ascending=False)
-    tbl = tbl.reset_index(drop=True)
-    # Rank only listed names; pending isn't ranked (it hasn't traded yet) → "—".
-    is_listed = (tbl["status"] == "listed").to_numpy()
-    ranks: list[str] = []
-    _r = 0
-    for listed_flag in is_listed:
-        if listed_flag:
-            _r += 1
-            ranks.append(str(_r))
-        else:
-            ranks.append("—")
-    tbl.insert(0, "rank", ranks)
-
-    # day1 column: numeric pct for listed, text "待上市(date)" for pending.
-    # render_html_table needs one kind per column → use a text column with the
-    # signed-% string we format ourselves (keeps teal/red via inline span? no —
-    # ui colors pct_cols only). Keep day-1 as a pct col for listed; pending uses
-    # NaN → "—". The pending status is conveyed in a separate 状态 note column.
-    disp = pd.DataFrame({
-        i18n.t("strategy.ipo.col.code"): tbl["code"].astype(str),
-        i18n.t("strategy.ipo.col.name"): tbl["name_cn"].astype(str),
-        i18n.t("strategy.ipo.col.list_date"): tbl["list_date"].astype(str),
-        i18n.t("strategy.ipo.col.score"): tbl["score"].astype(float),
-        i18n.t("strategy.ipo.col.tier"): [i18n.ipo_tier(str(x)) for x in tbl["tier"]],
-        i18n.t("strategy.ipo.col.sub_sector"): tbl["sub_sector"].astype(str),
-        i18n.t("strategy.ipo.col.day1_ret"): tbl["ret_pct"].to_numpy(),
-        i18n.t("strategy.ipo.col.source"): tbl["source"].astype(str),
-    })
-    disp.index = tbl["rank"].to_numpy()
-    disp.index.name = i18n.t("strategy.ipo.col.rank")
-
-    # Pending rows: replace day-1 cell (NaN) so it reads 待上市(date), not "—".
-    name_lbl = i18n.t("strategy.ipo.col.name")
-    day1_lbl = i18n.t("strategy.ipo.col.day1_ret")
-    for i, (_, r) in enumerate(tbl.iterrows()):
-        if r["status"] != "listed":
-            # date now lives in its own 上市日期 column → name only tags 待上市
-            disp.iloc[i, disp.columns.get_loc(name_lbl)] = (
-                f"{r['name_cn']} · " + i18n.t("strategy.ipo.rank.pending_short")
-            )
-
-    ui.render_html_table(
-        disp,
-        pct_cols=[day1_lbl],
-        text_cols=[name_lbl,
-                   i18n.t("strategy.ipo.col.tier"),
-                   i18n.t("strategy.ipo.col.sub_sector"),
-                   i18n.t("strategy.ipo.col.source")],
-        extra_formats={i18n.t("strategy.ipo.col.score"): "%.2f"},
-        right_text_cols=[i18n.t("strategy.ipo.col.code"),
-                         i18n.t("strategy.ipo.col.list_date")],
-        index_label=i18n.t("strategy.ipo.col.rank"),
-        height=720,
-    )
 
 
 # --- Dual-track guide cards (replaces the old 如何阅读 expander) ---

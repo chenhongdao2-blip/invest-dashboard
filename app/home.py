@@ -174,9 +174,10 @@ def _render_stock_heatmap() -> None:
         return
     # v3: one ECharts Treemap (面积=市值 / 颜色=涨跌) per domain — replaces the bento.
     _h = 600 if len(domains) > 1 else 720
-    for _d in domains:
+    for i, _d in enumerate(domains):
         _doc, _hh = heatmap_treemap.render_treemap_html(
-            _d, window_label=win, as_of=latest, prefer_cn=prefer_cn, height=_h)
+            _d, window_label=win, as_of=latest, prefer_cn=prefer_cn, height=_h,
+            show_header=(i == 0))
         st.iframe(_doc, height=_hh)
     st.caption(
         (f"子行业按中位涨跌排名分配席位 · 青绿涨/红跌（港美股惯例，与 A 股相反）· 截至 {latest}"
@@ -230,6 +231,29 @@ def _render_benchmark_table(panel_id: str, syms: list[str]) -> None:
 
 
 # --- 1. Market Overview — [09] index tiles (sparkline + 52w range, real EOD data) ---
+# HUB1 masthead(wave-2 行情中枢设计头排):红条 + 30px 标题 + mono kicker + EOD 状态块。
+# 呼吸点复用 theme._CSS 的 .cmsi-live-dot 动画;文案语义改真(EOD,非实时)。
+_zh_hub = i18n.get_lang() == "zh"
+st.markdown(
+    f"""<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:20px;
+border-bottom:2px solid {theme.INK};padding-bottom:14px;margin:4px 0 14px;">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <span style="width:5px;height:44px;background:{theme.CMSI_RED};border-radius:1px;flex:none;"></span>
+    <div>
+      <div style="font-family:{theme.FONT_DISPLAY};font-size:30px;line-height:34px;font-weight:700;letter-spacing:-0.01em;color:{theme.INK};">{"行情中枢" if _zh_hub else "Market Hub"}</div>
+      <div style="font-family:{theme.FONT_MONO};font-size:11px;letter-spacing:.08em;color:{theme.INK_3};margin-top:5px;">CMSI · MARKET HUB · {"四大指数总览" if _zh_hub else "BROAD MARKET OVERVIEW"}</div>
+    </div>
+  </div>
+  <div style="text-align:right;flex:none;">
+    <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end;">
+      <span class="cmsi-live-dot" style="width:8px;height:8px;border-radius:50%;background:{theme.UP};display:inline-block;"></span>
+      <span style="font-family:{theme.FONT_MONO};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:{theme.UP};font-weight:600;">{"EOD · 收盘" if _zh_hub else "EOD · CLOSE"}</span>
+    </div>
+    <div style="font-family:{theme.FONT_MONO};font-size:11px;color:{theme.INK_3};margin-top:5px;">EOD {latest} HKT</div>
+  </div>
+</div>""",
+    unsafe_allow_html=True,
+)
 _bm_present = [s for s in _panels["broad_market"] if s in bench_df.index]
 if not _bm_present:
     theme.section_header(i18n.t("home.panel.broad_market"))

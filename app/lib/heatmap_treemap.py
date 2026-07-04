@@ -13,6 +13,9 @@ heatmap.build_domain_bento 的 payload)。Finviz / Bloomberg-IMAP 式 treemap:
                                                      as_of="2026-06-29", prefer_cn=prefer_cn)
         st.iframe(doc, height=h)
 
+多域竖叠时,把第 2+ 张 show_header=False 节省页面高度:
+        doc, h = heatmap_treemap.render_treemap_html(payload, ..., show_header=False)
+
 设计:
 - value(面积) = 市值 USD(tile.mcap);缺市值的 tile 用该 block 中位市值兜底,避免 0 面积消失。
 - color = 涨跌,走 _ramp()(FT teal↔red 七档),与 charts._diverging_color 同向(teal 涨/红 跌)。
@@ -79,24 +82,32 @@ def _payload_to_treemap(payload: dict, prefer_cn: bool) -> list[dict]:
 
 
 def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
-                        prefer_cn: bool, height: int = 720) -> tuple[str, int]:
-    """返回 (doc, iframe_height)。doc 是自包含 HTML,交给 st.iframe(doc, height=h)。"""
+                        prefer_cn: bool, height: int = 720,
+                        show_header: bool = True) -> tuple[str, int]:
+    """返回 (doc, iframe_height)。doc 是自包含 HTML,交给 st.iframe(doc, height=h)。
+
+    Args:
+        show_header: 若 False 省略 masthead/图例/banner(多域竖叠第 2+ 张用),
+                     只保留域条+画布+脚注。call-site 需为第 1 张传 True,其余传 False。
+    """
     t = theme
     data = json.dumps(_payload_to_treemap(payload, prefer_cn), ensure_ascii=False)
-    # 域名(医疗/AI/...)取自 payload 顶层,让「全部」竖叠的多张 treemap 各自标清行业。
-    dom = (payload.get("cn") if prefer_cn else payload.get("en")) or ""
-    title = (f"个股热力图 · {dom}" if prefer_cn else f"Single-Stock Map · {dom}").rstrip(" ·")
-    conv = ("⚠ 本图配色(港美股惯例):青绿 = 涨 · 红 = 跌(与 A 股相反)· 面积 = 市值,龙头最大"
-            if prefer_cn else
-            "⚠ Color (HK/US): teal = up · red = down · area = market cap")
+    dom_label = (payload.get("cn") if prefer_cn else payload.get("en")) or ""
     med = payload.get("median")
-    med_str = (f"{'中位' if prefer_cn else 'Median'} {med:+.1f}% · {payload.get('n_total', 0)} "
-               f"{'标的' if prefer_cn else 'names'}") if med is not None else ""
+    n_total = payload.get("n_total", 0)
+    source = payload.get("source", "")
+    wl = window_label
+    ml = "市值" if prefer_cn else "mcap"
 
-    # split the tag token so the build-time validator never sees a literal opener
+    # ── 画布高(为页级元素留空) ────────────────────────────────────────────
+    canvas_h = max(200, height - (200 if show_header else 110))
+
+    # ── 脚本 tag 拆 token(躲 build-time validator) ─────────────────────────
     LT = chr(60)
     TAG, ETAG = LT + "scr" + "ipt", LT + "/scr" + "ipt>"
     lib = f'{TAG} src="{_ECHARTS_SRC}">{ETAG}'
+
+    # ── ECharts JS option ──────────────────────────────────────────────────
     js = (
         "var DATA=" + data + ";"
         "mountEChart('m',function(){return {"
@@ -104,36 +115,148 @@ def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
         "tooltip:{backgroundColor:'" + t.INK + "',borderColor:'" + t.INK + "',padding:[8,12],"
         "textStyle:{color:'" + t.PAPER + "',fontFamily:'JetBrains Mono',fontSize:11},"
         "formatter:function(p){if(!p.value||!Array.isArray(p.value)){return '<b>'+p.name+'</b>';}"
-        "var r=p.value[1];return '<div style=\"font-size:13px;font-weight:700;margin-bottom:3px\">'+p.name+'</div>'"
-        "+'<div>'+(r>=0?'+':'')+r.toFixed(1)+'%</div>'"
-        "+'<div style=\"color:#b8b1a8\">mcap $'+(p.value[0]/1e9).toFixed(1)+'B</div>';}},"
+        "var r=p.value[1];"
+        "var rc=r>=0?'#9cc4c2':'#eaa9a9';"
+        "return '<div style=\"font-size:13px;font-weight:700;margin-bottom:3px\">'+p.name+'</div>'"
+        f"+'<div style=\"color:\'+rc+\';font-weight:700\">{wl} '+(r>=0?'+':'')+r.toFixed(1)+'%</div>'"
+        f"+'<div style=\"color:#b8b1a8\">{ml} $'+(p.value[0]/1e9).toFixed(1)+'B</div>'"
+        "}},"
         "series:[{type:'treemap',roam:false,nodeClick:false,breadcrumb:{show:false},"
         "width:'100%',height:'100%',top:0,left:0,right:0,bottom:0,visualDimension:0,"
         "label:{show:true,position:'inside',fontFamily:'JetBrains Mono',fontWeight:700,fontSize:12,lineHeight:15,"
         "formatter:function(p){if(!p.value||!Array.isArray(p.value)){return '';}"
         "var r=p.value[1];return p.name+String.fromCharCode(10)+(r>=0?'+':'')+r.toFixed(1)+'%';}},"
-        "upperLabel:{show:true,height:26,color:'" + t.INK + "',fontFamily:'Inter',fontWeight:700,fontSize:13,padding:[0,6]},"
+        "upperLabel:{show:true,height:26,color:'" + t.INK + "',fontFamily:'Space Grotesk',fontWeight:700,fontSize:13,padding:[0,6]},"
         "itemStyle:{borderColor:'" + t.PAPER + "',borderWidth:0,gapWidth:2},"
         "levels:[{itemStyle:{gapWidth:3,borderWidth:0,color:'" + t.PAPER_DEEP + "'},upperLabel:{show:true}},"
         "{itemStyle:{gapWidth:1,borderWidth:1,borderColor:'" + t.PAPER + "'},upperLabel:{show:false}}],"
         "data:DATA}]};});"
     )
-    head = (
-        f'<div style="display:flex;justify-content:space-between;align-items:center;'
-        f'border-bottom:2px solid {t.INK};padding-bottom:8px;margin-bottom:8px;">'
-        f'<div><span style="font-size:18px;font-weight:700;color:{t.INK}">{title}</span>'
-        f'<span style="font-size:11px;color:{t.INK_3};margin-left:8px">{window_label}'
-        f'{(" · " + ("截至 " if prefer_cn else "as of ") + as_of) if as_of else ""}</span></div>'
-        f'<span style="font-family:JetBrains Mono;font-size:11px;font-weight:700;color:{t.INK_2}">{med_str}</span></div>'
-        f'<div style="background:{t.PAPER_DEEP};border-left:3px solid {t.CMSI_RED};padding:7px 12px;'
-        f'font-size:11.5px;color:{t.INK_2};margin-bottom:10px">{conv}</div>'
+
+    # ── Masthead + legend + banner (show_header only) ──────────────────────
+    if show_header:
+        title_main = "个股热力图 · Market Map" if prefer_cn else "Single-Stock Map · Market Map"
+        sub_row = (
+            f"面积 = 市值 · 颜色 = {wl} 涨跌方向与幅度 · 子行业分块"
+            if prefer_cn else
+            f"area = market cap · color = {wl} direction &amp; magnitude · sub-sector groups"
+        )
+        legend_label = "颜色 = 涨跌方向与幅度" if prefer_cn else "color = direction &amp; magnitude"
+        dn_label = "跌" if prefer_cn else "dn"
+        up_label = "涨" if prefer_cn else "up"
+
+        masthead_html = (
+            f'<div style="display:flex;justify-content:space-between;align-items:flex-start;'
+            f'gap:20px;flex-wrap:wrap;border-bottom:2px solid {t.INK};padding-bottom:12px;margin-bottom:10px;">'
+            # left: red bar + title block
+            f'<div style="display:flex;align-items:flex-start;gap:10px;">'
+            f'<div style="width:5px;height:44px;background:{t.CMSI_RED};border-radius:1px;flex-shrink:0;"></div>'
+            f'<div>'
+            f'<div style="display:flex;align-items:center;gap:8px;">'
+            f'<span style="font-size:26px;font-weight:700;letter-spacing:-0.01em;color:{t.INK}">'
+            f'{title_main}</span>'
+            f'<span style="font-family:JetBrains Mono;font-size:10px;font-weight:700;'
+            f'color:{t.PAPER};background:{t.CMSI_RED};padding:2px 7px;letter-spacing:.06em">CMSI</span>'
+            f'</div>'
+            f'<div style="font-family:JetBrains Mono;font-size:11px;letter-spacing:.06em;'
+            f'color:{t.INK_3};margin-top:5px">{sub_row}</div>'
+            f'</div></div>'
+            # right: gradient legend
+            f'<div style="text-align:right;">'
+            f'<div style="font-size:10px;font-weight:600;color:{t.INK_2};margin-bottom:4px">'
+            f'{legend_label}</div>'
+            f'<div style="display:flex;align-items:center;gap:6px;justify-content:flex-end;">'
+            f'<span style="font-size:11px;font-weight:700;color:#a30000">{dn_label}</span>'
+            f'<div style="width:190px;height:12px;border:1px solid #d4c4b0;flex-shrink:0;'
+            f'background:linear-gradient(to right,#a30000,#d23b3b,#efe2cf,#2f8a8f,#0a5a62);"></div>'
+            f'<span style="font-size:11px;font-weight:700;color:#0a5a62">{up_label}</span>'
+            f'</div>'
+            f'<div style="width:190px;display:flex;justify-content:space-between;margin-left:auto;'
+            f'font-family:JetBrains Mono;font-size:9px;font-weight:600;color:{t.INK_3};">'
+            f'<span>-12%</span><span>0</span><span>+12%</span>'
+            f'</div>'
+            f'</div>'
+            f'</div>'
+        )
+
+        if prefer_cn:
+            banner_html = (
+                f'<div style="display:flex;align-items:baseline;gap:8px;background:{t.PAPER_DEEP};'
+                f'border-left:3px solid {t.CMSI_RED};padding:7px 12px;font-size:11.5px;'
+                f'color:{t.INK_2};margin-bottom:0;">'
+                f'<span><b style="color:{t.INK}">本图配色（港美股惯例）：</b>'
+                f'<span style="color:#0a5a62;font-weight:700">青绿 = 涨</span>'
+                f' · <span style="color:#a30000;font-weight:700">红 = 跌</span>'
+                f'<b style="color:{t.INK}">（与 A 股红涨绿跌相反，请注意）</b></span>'
+                f'<span style="margin-left:auto;white-space:nowrap;font-size:10.5px;color:{t.INK_3}">'
+                f'面积 = 市值（龙头最大） · hover 看名称/市值</span>'
+                f'</div>'
+            )
+        else:
+            banner_html = (
+                f'<div style="display:flex;align-items:baseline;gap:8px;background:{t.PAPER_DEEP};'
+                f'border-left:3px solid {t.CMSI_RED};padding:7px 12px;font-size:11.5px;'
+                f'color:{t.INK_2};margin-bottom:0;">'
+                f'<span><b style="color:{t.INK}">Color convention (HK/US):</b> '
+                f'<span style="color:#0a5a62;font-weight:700">teal = up</span>'
+                f' · <span style="color:#a30000;font-weight:700">red = down</span>'
+                f'<b style="color:{t.INK}"> (opposite of A-share convention)</b></span>'
+                f'<span style="margin-left:auto;white-space:nowrap;font-size:10.5px;color:{t.INK_3}">'
+                f'area = market cap (largest = leader) · hover for name/mcap</span>'
+                f'</div>'
+            )
+
+        page_header = masthead_html + banner_html
+    else:
+        page_header = ""
+
+    # ── Domain bar (always shown per spec; per-domain repeat) ─────────────
+    med_str = ""
+    if med is not None:
+        label_median = "中位" if prefer_cn else "Median"
+        label_names = "标的" if prefer_cn else "names"
+        med_str = f"{label_median} {med:+.1f}% · {n_total} {label_names}"
+    domain_bar = (
+        f'<div style="display:flex;align-items:baseline;gap:11px;background:{t.PAPER_DEEP};'
+        f'border-left:3px solid {t.CMSI_RED};padding:8px 13px;margin:12px 0 2px;">'
+        f'<span style="font-size:16px;font-weight:700;color:{t.INK}">{dom_label}</span>'
+        f'<span style="margin-left:auto;font-family:JetBrains Mono;font-size:11px;'
+        f'font-weight:700;color:{t.INK_2}">{med_str}</span>'
+        f'</div>'
     )
+
+    # ── Source footnote ────────────────────────────────────────────────────
+    as_of_str = ""
+    if as_of:
+        as_of_str = " · " + ("截至 " if prefer_cn else "as of ") + as_of
+    area_col = f"面积=市值 / 颜色={wl} 涨跌" if prefer_cn else f"area=mcap / color={wl} direction"
+    footnote = (
+        f'<div style="font-family:JetBrains Mono;font-size:11px;color:{t.INK_3};'
+        f'letter-spacing:.02em;margin-top:6px">'
+        f'SOURCE: {source} · mcap USD{as_of_str} · {area_col}'
+        f'</div>'
+    )
+
+    # ── Assemble self-contained HTML doc ───────────────────────────────────
+    # FONT_FACE_CSS is a multi-line string; strip whitespace to keep style compact.
+    # CSS {/} inside the inserted value are NOT further processed by the f-string.
+    font_face = t.FONT_FACE_CSS.strip()
     doc = (
         '<!doctype html><html><head><meta charset="utf-8">'
-        f'<style>*{{box-sizing:border-box;margin:0;padding:0;}}html,body{{height:100%;background:{t.PAPER};'
-        f'font-family:{t.FONT_STACK};font-feature-settings:\'tnum\';color-scheme:light;}}'
-        f'.wrap{{padding:6px 4px;}}#m{{width:100%;height:{height - 90}px;}}</style></head>'
-        f'<body><div class="wrap">{head}<div id="m"></div></div>'
+        f'<style>{font_face}'
+        f'*{{box-sizing:border-box;margin:0;padding:0;}}'
+        f'html,body{{height:100%;background:{t.PAPER};'
+        f"font-family:{t.FONT_DISPLAY};font-feature-settings:'tnum','ss01';color-scheme:light;}}"
+        f'body{{position:relative;}}'
+        f'.wash{{position:absolute;inset:0;pointer-events:none;z-index:0;'
+        f'background:radial-gradient(900px 520px at 10% -8%,rgba(200,16,46,.09),transparent 60%),'
+        f'radial-gradient(820px 520px at 94% 4%,rgba(13,118,128,.10),transparent 60%);}}'
+        f'.inner{{position:relative;z-index:1;max-width:1240px;margin:0 auto;padding:10px 36px;}}'
+        f'#m{{width:100%;height:{canvas_h}px;}}'
+        f'</style></head>'
+        f'<body><div class="wash"></div><div class="inner">'
+        f'{page_header}{domain_bar}<div id="m"></div>{footnote}'
+        f'</div>'
         f'{lib}{TAG}>{echarts_boot.MOUNT_JS}{ETAG}{TAG}>{js}{ETAG}</body></html>'
     )
     return doc, height

@@ -267,10 +267,12 @@ def live_title(title: str, *, as_of: str | None = None, lang: str | None = "中"
         f'<div style="display:flex;align-items:center;gap:14px;min-width:0">'
         f'<span style="width:5px;height:34px;background:{t.CMSI_RED};'
         f'display:inline-block;flex:none;border-radius:1px"></span>'
-        # BANR1: FONT_DISPLAY on H1
-        f'<h1 style="font-family:{t.FONT_DISPLAY};font-size:32px;line-height:36px;'
+        # BANR1/BANR2: styled <div> not <h1> — Streamlit's .stMarkdown h1 rule
+        # overrides inline font-family/font-weight on the <h1> tag (Space Grotesk
+        # gets replaced by Inter at 600). A <div> bypasses that cascade entirely.
+        f'<div style="font-family:{t.FONT_DISPLAY};font-size:32px;line-height:36px;'
         f'font-weight:700;letter-spacing:-.01em;margin:0;color:{t.INK}">'
-        f'{_esc(title)}</h1></div>{right}</div>',
+        f'{_esc(title)}</div></div>{right}</div>',
         unsafe_allow_html=True,
     )
 

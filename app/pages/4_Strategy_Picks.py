@@ -12,6 +12,7 @@ Phase 1 (bilingual + dual-track rebalance):
 from __future__ import annotations
 
 import math
+import re
 
 import numpy as np
 import pandas as pd
@@ -136,7 +137,15 @@ _ov_cards = [c for c in (_overview_curve_card("v5_biotech"),
 sb.live_title(i18n.t("strategy.page.title"),
               as_of=next((c.get("_as_of") for c in _ov_cards if c.get("_as_of")), None),
               lang=("中" if i18n.get_lang() == "zh" else "EN"))
-st.markdown(i18n.t("strategy.pitch"))
+# BANR4:dek 按设计包样式(14px/1.65/#4a4a4a/max-880),i18n 文案的 markdown 粗体转 <b> 墨色
+_pitch_html = re.sub(
+    r"\*\*(.+?)\*\*", r'<b style="color:#1a1a1a;">\1</b>', i18n.t("strategy.pitch")
+).replace("\n\n", "<br><br>")
+st.markdown(
+    f'<p style="font-size:14px;line-height:1.65;color:#4a4a4a;max-width:880px;'
+    f'margin:16px 0 0;">{_pitch_html}</p>',
+    unsafe_allow_html=True,
+)
 if _ov_cards:
     sb.overview_strip(_ov_cards)
 

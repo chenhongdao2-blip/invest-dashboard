@@ -5,7 +5,7 @@
   "cycles_used": 2,
   "contract": "docs/harness/reskin-wave2/CONTRACT.md",
   "frozen": "2026-07-03",
-  "status": "Round 2 CLOSED @2d420d4 (independent finisher) — 7/7 features PASS, all flipped with measured evidence (eval/round-2.md). W1-W5/W7 backed by JS getComputedStyle/EO/grep/AppTest; HERO12 CONTRACT-void @cfad103 (BANR-duplicate, D3 EOD-dot governs). BANR4 dek fix verified @HEAD: styled <p> 14px/1.65/#4a4a4a/max-880/mt16 + bold-ink → W6 flipped true. 85/85 scored items PASS (HERO12 voided from 86). Open flags for Codex Auditor/George: HERO12 void + QUANTAMENTAL omission (substantively resolved, process-noted). cycles_used=2.",
+  "status": "ALL GREEN incl. Codex fixes — awaiting Codex re-approve + George. Round 2 @c8bb06e: 7/7 features PASS + Codex §6 REJECT (1 CRITICAL+6 MAJOR, all data-correctness class) FIXED & re-verified. IPO速览卡 ×100 CRITICAL fixed → BANR9 median +76.1%/hi +384.0%/lo -56.9% (measured @HEAD = CSV ground truth, zero stale +0.8%); pending rank '—' (16 dash+38 numbered, browser); 缺数None→'—' (ipo_stage self-test all-pending/NaN + synthetic sector _pct_cell/_rel_bar/_mover_row probes, no fabricated 0.0); hero 负值色 zero t.DOWN residual → _cum_col/_alpha_col=CMSI_RED. Lesson: computed-green≠arithmetic-correct (evaluator vs Codex mutual blind spots = dual-authority raison d'être). Earlier: HERO12 CONTRACT-void @cfad103; BANR4 dek fix @2d420d4. 85/85 scored PASS. cycles_used=2.",
   "features": [
     {
       "id": "W1-ipo-stage",

@@ -112,18 +112,24 @@ def _overview_curve_card(strat_id: str) -> dict | None:
 
 
 def _overview_ipo_card() -> dict | None:
-    """IPO overview card from load_ipo — REAL day-1 returns (the demo's +12.4%/+384%
-    were illustrative mock; this shows the actual median/hi/lo)."""
+    """IPO overview card from load_ipo — day-1 returns as percentage points.
+
+    day1_ret in CSV is a decimal (3.84 = +384%); ×100 applied here before
+    computing median/hi/lo so banner _ipo_card renders the correct scale
+    (e.g. +384.0%, not +3.8%).  The banner formats values with :.1f% only —
+    no second ×100 transform on that side.
+    """
     df = strat.load_ipo()
     if df.empty:
         return None
-    d1 = pd.to_numeric(df[df["status"] == "listed"]["day1_ret"], errors="coerce").dropna()
+    d1 = (pd.to_numeric(df[df["status"] == "listed"]["day1_ret"], errors="coerce").dropna()
+          * 100)  # decimal → pct-pts (3.84 → 384.0)
     if d1.empty or float(d1.max()) <= 0:   # bar widths divide by hi; guard non-positive
         return None
     return {
         "kind": "ipo", "name": i18n.t("strategy.name.ipo"), "tag": "六因子 v6.7",
         "n": len(df), "listed": int((df["status"] == "listed").sum()),
-        "median": float(d1.median()), "hi": float(d1.max()), "lo": float(d1.min()),
+        "median": float(d1.median()), "hi": float(d1.max()), "lo": float(d1.min()),  # unit: pct-pts
     }
 
 

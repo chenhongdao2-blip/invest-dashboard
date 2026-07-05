@@ -111,7 +111,7 @@ def load_hd_v2() -> pd.DataFrame:
 
 @st.cache_data(ttl=900)
 def load_ipo() -> pd.DataFrame:
-    """HK IPO 打新 backtest — STATIC cross-section snapshot (18 rows).
+    """HK IPO 打新 backtest — STATIC cross-section snapshot.
 
     NOT a time-series strategy: this reads the frozen ipo_picks.csv only and is
     NEVER routed through compute_strategy_returns / yfinance. `code` kept as str
@@ -125,7 +125,7 @@ def load_ipo() -> pd.DataFrame:
 
 @st.cache_data(ttl=900)
 def load_ipo_intraday() -> pd.DataFrame:
-    """Listing-day 5-min intraday closes for the IPO backtest (17 listed names).
+    """Listing-day 5-min intraday closes for the IPO backtest (listed names).
 
     Columns: code(str) / time(datetime) / close(float). `time` parsed once here;
     used for the post-open intraday-path small-multiples. Missing file → empty DF

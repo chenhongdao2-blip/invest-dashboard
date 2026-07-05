@@ -46,6 +46,7 @@ rel_cap / mov_cap 控制色阶与发散条饱和上限（默认 ±25pp / 22pp）
 """
 from __future__ import annotations
 
+import math
 from html import escape as _esc
 
 import streamlit as st
@@ -83,11 +84,16 @@ tr.sovr-row:hover { background:rgba(26,26,26,.045) !important; }
 
 # ── Internal helpers ─────────────────────────────────────────────────────────
 
+def _is_missing(v) -> bool:
+    """True when v is None or NaN — used by all helpers to emit honest empty state."""
+    return v is None or (isinstance(v, float) and math.isnan(v))
+
+
 def _tint(v, cap: float = REL_CAP) -> str:
     """Diverging background tint: teal=up / #c8102e=down, alpha capped at 0.16.
-    Dead-zone: |v| < 0.05 returns transparent (SOVR9).
+    Dead-zone: |v| < 0.05 or missing returns transparent (SOVR9).
     """
-    if v is None or abs(v) < 0.05:
+    if _is_missing(v) or abs(v) < 0.05:
         return "transparent"
     a = min(abs(v) / cap, 1.0) * 0.16
     rgb = "13,118,128" if v > 0 else _DOWN_RGB
@@ -95,7 +101,15 @@ def _tint(v, cap: float = REL_CAP) -> str:
 
 
 def _pct_cell(v) -> str:
-    """Period return cell: ▲/▼/· glyph + signed pct + diverging tint bg (SOVR9)."""
+    """Period return cell: ▲/▼/· glyph + signed pct + diverging tint bg (SOVR9).
+    v=None/NaN → em-dash grey cell, no glyph, transparent bg.
+    """
+    if _is_missing(v):
+        return (
+            f'<td style="text-align:right;white-space:nowrap;padding:0 12px;'
+            f'border-bottom:1px solid {t.PAPER_RULE};background:transparent">'
+            f'<span style="color:{t.INK_3}">—</span></td>'
+        )
     gly = "▲" if v > 0 else ("▼" if v < 0 else "·")
     sign = "+" if v > 0 else ""
     col = t.UP if v > 0 else (_DOWN if v < 0 else t.INK_3)
@@ -138,7 +152,19 @@ def _rel_bar(v, cap: float = REL_CAP) -> str:
     """Center-diverging relative-to-SPX bar (SOVR9).
     Track: #f4ead9 h14; center 1px #d4c4b0; fill extends from center to ±50%.
     Down color: _DOWN (#c8102e). Geometry unchanged from wave-1.
+    v=None/NaN → empty state: track + centre line visible, no fill, '—' grey label.
     """
+    if _is_missing(v):
+        return (
+            f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">'
+            f'<div style="display:flex;align-items:center;gap:8px">'
+            f'<div style="flex:1;position:relative;height:14px;background:#f4ead9">'
+            f'<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;'
+            f'background:{t.PAPER_EDGE}"></div></div>'
+            f'<span style="font-family:{t.FONT_MONO};font-size:12px;font-weight:700;'
+            f'color:{t.INK_3};width:54px;text-align:right">—</span>'
+            f'</div></td>'
+        )
     w = min(abs(v) / cap, 1.0) * 50
     color = t.UP if v >= 0 else _DOWN
     fill = f"left:50%;width:{w:.1f}%" if v >= 0 else f"right:50%;width:{w:.1f}%"
@@ -347,12 +373,18 @@ def _mover_row(m: dict, up: bool) -> str:
     color = t.UP if up else _DOWN
     track = "rgba(13,118,128,.10)" if up else f"rgba({_DOWN_RGB},.08)"
     bar_anchor = "left:0" if up else "right:0"
-    w = min(abs(m["d1"]) / MOV_CAP, 1.0) * 100
-    # N-9: gainers "▲ +x.x%", losers "▼ -x.x%" (d1 is already negative for losers)
-    if up:
-        d1_display = f"▲ +{abs(m['d1']):.1f}%"
+    d1 = m.get("d1")
+    if _is_missing(d1):
+        w = 0
+        d1_display = "—"
+        color = t.INK_3   # neutral grey for missing magnitude
     else:
-        d1_display = f"▼ {m['d1']:.1f}%"   # m['d1'] < 0, %.1f keeps the minus sign
+        w = min(abs(d1) / MOV_CAP, 1.0) * 100
+        # N-9: gainers "▲ +x.x%", losers "▼ -x.x%" (d1 is already negative for losers)
+        if up:
+            d1_display = f"▲ +{abs(d1):.1f}%"
+        else:
+            d1_display = f"▼ {d1:.1f}%"   # d1 < 0, %.1f keeps the minus sign
     return (
         f'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;'
         f'border-bottom:1px solid {t.PAPER_RULE}">'

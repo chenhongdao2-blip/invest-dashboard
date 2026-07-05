@@ -64,8 +64,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     # Sign-color the strategy's own signals (cumulative + alpha) — a NEGATIVE return
     # must read red, not teal (港美股 convention; the reference hardcoded UP and would
     # paint a loss green). Benchmark stays neutral ink (a reference, not a signal).
-    _cum_col = t.UP if cum_ret >= 0 else t.DOWN
-    _alpha_col = t.UP if alpha_pp >= 0 else t.DOWN
+    _cum_col = t.UP if cum_ret >= 0 else t.CMSI_RED   # wave-2 D2: negative on hero surface = #c8102e
+    _alpha_col = t.UP if alpha_pp >= 0 else t.CMSI_RED  # wave-2 D2: same
     data = {
         "dates": list(strat_dates),
         "strat": [round(float(v), 2) for v in strat_curve],
@@ -100,7 +100,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
         PAPER_BAND=t.PAPER_BAND, RULE=t.PAPER_RULE, EDGE=t.PAPER_EDGE,
         EDGE_SOFT=t.PAPER_EDGE_SOFT,
         INK=t.INK, INK2=t.INK_2, INK3=t.INK_3, INK4=t.INK_4,
-        UP=t.UP, UP_DEEP=t.UP_DEEP, DOWN=t.DOWN,
+        UP=t.UP, UP_DEEP=t.UP_DEEP,
         FONT=t.FONT_DISPLAY, MONO=t.FONT_MONO, FACE=t.FONT_FACE_CSS,
     )
 

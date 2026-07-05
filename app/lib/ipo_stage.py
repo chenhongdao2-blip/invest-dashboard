@@ -244,7 +244,7 @@ function buildRankRows() {
       var sign = r.d1_pct >= 0 ? '+' : '';
       d1html = '<span style="color:' + retColor(r.d1_pct) + '">' + sign + r.d1_pct.toFixed(1) + '%</span>';
     }
-    var rankStr = String(r.rank).padStart(2, '0');
+    var rankStr = r.rank === null ? '—' : String(r.rank).padStart(2, '0');
     var listDateCell = r.list_date || (r.pending ? '待上市' : '—');
     tr.innerHTML =
       '<td class="td-no">' + rankStr + '</td>'
@@ -354,7 +354,7 @@ def _build_html(
         best_tier  = _esc(str(best_row.get("tier",  "")))
         worst_tier = _esc(str(worst_row.get("tier", "")))
     else:
-        best_pct = worst_pct = 0.0
+        best_pct = worst_pct = None
         best_name = worst_name = "—"
         best_tier = worst_tier = "—"
 
@@ -401,6 +401,9 @@ def _build_html(
                 f'</div>'
             )
 
+    if n_listed == 0:  # no listed samples → explicit empty state in tier table
+        tier_rows_html = '<div style="padding:20px 16px;color:#8a8580;font-size:13px">暂无已上市样本</div>'
+
     # ── 4. Ranking rows (all N, score DESC) ───────────────────────────────
     df_sorted = df.sort_values("score", ascending=False).reset_index(drop=True)
     d1_lookup = {
@@ -422,7 +425,7 @@ def _build_html(
         except (KeyError, TypeError):
             list_date = ""
         rank_rows.append({
-            "rank":       int(idx) + 1,
+            "rank":       None if is_pending else int(idx) + 1,
             "code":       str(row["code"]),
             "name":       str(row.get(_name_col, row.get("name_cn", ""))),
             "score":      float(row.get("score", 0) or 0),
@@ -446,13 +449,16 @@ def _build_html(
             if code_s not in d1_lookup:
                 continue
             d1 = d1_lookup[code_s]
-            closes = grp.sort_values("time")["close"].values
+            closes_s = pd.to_numeric(
+                grp.sort_values("time")["close"], errors="coerce"
+            )
+            closes = [float(v) for v in closes_s.values if math.isfinite(float(v))]
             if len(closes) < 2:
                 continue
-            last = float(closes[-1])
-            if last == 0:
+            last = closes[-1]
+            if not math.isfinite(last) or last == 0:
                 continue
-            pts = [round((float(c) * (1.0 + d1) / last - 1.0) * 100.0, 4)
+            pts = [round((c * (1.0 + d1) / last - 1.0) * 100.0, 4)
                    for c in closes]
             intraday_map[code_s] = {
                 "d1_pct": round(d1 * 100.0, 4),
@@ -480,9 +486,24 @@ def _build_html(
     scr_open  = chr(60) + "scr" + "ipt>"
     scr_close = chr(60) + "/" + "sc" + "ript>"
 
-    best_foot  = f"{best_name} · {best_tier}"
-    worst_foot = f"{worst_name} · {worst_tier}"
-    as_of_s    = _esc(as_of)
+    as_of_s = _esc(as_of)
+
+    # Pre-build KPI card content — None sentinel → explicit empty state (no fabricated 0.0%)
+    if best_pct is None:
+        _best_val       = '<span style="font-size:20px;color:#8a8580">暂无已上市样本</span>'
+        _best_foot_html = ""
+    else:
+        _best_val       = f'{best_pct:+.1f}%'
+        _best_foot_html = f'<div class="kpi-foot">{best_name} · {best_tier}</div>'
+
+    if worst_pct is None:
+        _worst_val       = '<span style="font-size:20px;color:#8a8580">暂无已上市样本</span>'
+        _worst_foot_html = ""
+    else:
+        _worst_val       = f'{worst_pct:+.1f}%'
+        _worst_foot_html = f'<div class="kpi-foot">{worst_name} · {worst_tier}</div>'
+
+    _dock_empty_msg = "暂无已上市样本" if n_listed == 0 else "hover 左侧行 → 显示盘中走势"
 
     parts: list[str] = [
         f"<!DOCTYPE html><html lang='zh-HK'><head><meta charset='utf-8'><style>{css}</style></head><body>",
@@ -517,13 +538,13 @@ def _build_html(
   </div>
   <div class="glass kpi-card" style="border-top-color:#0d7680">
     <div class="kpi-label">最高首日</div>
-    <div class="kpi-value" style="color:#0d7680">{best_pct:+.1f}%</div>
-    <div class="kpi-foot">{best_foot}</div>
+    <div class="kpi-value" style="color:#0d7680">{_best_val}</div>
+    {_best_foot_html}
   </div>
   <div class="glass kpi-card" style="border-top-color:#c8102e">
     <div class="kpi-label">最差首日</div>
-    <div class="kpi-value" style="color:#c8102e">{worst_pct:+.1f}%</div>
-    <div class="kpi-foot">{worst_foot}</div>
+    <div class="kpi-value" style="color:#c8102e">{_worst_val}</div>
+    {_worst_foot_html}
   </div>
 </div>""",
 
@@ -548,7 +569,7 @@ def _build_html(
 </div>""",
 
         # ranking + dock
-        """<div class="rank-section">
+        f"""<div class="rank-section">
   <div class="sec-hd">
     <div class="sec-bar"></div>
     <span class="sec-label">评分排行 · SCORE RANKING</span>
@@ -574,7 +595,7 @@ def _build_html(
     </div>
     <div id="dock" class="glass-strong dock">
       <div id="dock-content">
-        <div class="dock-empty">hover 左侧行 → 显示盘中走势</div>
+        <div class="dock-empty">{_dock_empty_msg}</div>
       </div>
     </div>
   </div>
@@ -738,6 +759,61 @@ if __name__ == "__main__":
     print(f"INFO: html size = {sz:,} bytes")
     if sz < 10_000:
         errs.append(f"FAIL: html suspiciously small ({sz} bytes)")
+
+    # ── Case 2: all-pending → no fabricated 0.0%, explicit empty state ──────
+    picks_all_pending = pd.DataFrame({
+        "code":       ["1111", "2222"],
+        "name_cn":    ["待上医疗", "待上科技"],
+        "name_en":    ["Pending Med", "Pending Tech"],
+        "score":      [7.0, 6.0],
+        "tier":       ["重点申购", "推荐申购"],
+        "list_date":  [None, None],
+        "day1_ret":   [0.0, 0.0],
+        "sub_sector": ["医疗器械", "生物科技"],
+        "offer_price":[10.0, 8.0],
+        "day1_close": [None, None],
+        "status":     ["pending", "pending"],
+        "source":     ["Wind", "Wind"],
+    })
+    _empty_intra = pd.DataFrame(columns=["code", "time", "close"])
+    html_p = _build_html(picks_all_pending, _empty_intra, prefer_cn=True, as_of="2026-07-05")
+
+    if "暂无已上市样本" not in html_p:
+        errs.append("FAIL [all-pending]: '暂无已上市样本' not in html")
+    else:
+        print("PASS [all-pending]: '暂无已上市样本' in html")
+
+    # KPI value divs must not contain fabricated 0.0%
+    if ">0.0%<" in html_p:
+        errs.append("FAIL [all-pending]: fabricated '>0.0%<' found in KPI html")
+    else:
+        print("PASS [all-pending]: no fabricated '0.0%' in KPI divs")
+
+    # Pending rows emit rank: null in ROWS JSON so JS renders '—'
+    if '"rank": null' not in html_p:
+        errs.append("FAIL [all-pending]: 'rank: null' not found for pending rows")
+    else:
+        print("PASS [all-pending]: pending rows have rank: null in ROWS JSON")
+
+    # ── Case 3: intraday with NaN close → no crash, finite pts still emitted ─
+    intraday_nan = pd.DataFrame({
+        "code":  ["1234", "1234", "1234", "1234"],
+        "time":  ["09:30", "11:00", "13:00", "16:00"],
+        "close": [float("nan"), 25.0, float("nan"), 48.4],
+    })
+    try:
+        html_nan = _build_html(picks_df, intraday_nan, prefer_cn=True, as_of="2026-07-05")
+        # 2 finite closes (25.0 and 48.4) → path should still be emitted
+        if '"1234"' not in html_nan:
+            errs.append("FAIL [nan-close]: intraday path for 1234 missing despite 2 finite closes")
+        else:
+            print("PASS [nan-close]: intraday path emitted after dropping NaN closes")
+        if len(html_nan) < 10_000:
+            errs.append(f"FAIL [nan-close]: html suspiciously small ({len(html_nan)} bytes)")
+        else:
+            print(f"PASS [nan-close]: html size {len(html_nan):,} bytes")
+    except Exception as exc:
+        errs.append(f"FAIL [nan-close]: unexpected exception: {exc}")
 
     if errs:
         print("\n".join(errs))

@@ -138,11 +138,11 @@ if not bench_df.empty:
                   if _ser is not None else [])
         _ytd = _r["ytd_%"]
         _rel = (float(_ytd) - float(_gspc_ytd)
-                if (_gspc_ytd is not None and not pd.isna(_ytd) and not pd.isna(_gspc_ytd)) else 0.0)
+                if (_gspc_ytd is not None and not pd.isna(_ytd) and not pd.isna(_gspc_ytd)) else None)
         _rows.append({
             "tk": _s,
             "name": i18n.bench_name(_s, _r["name"]),
-            "periods": {lbl: (0.0 if pd.isna(_r[col]) else float(_r[col])) for lbl, col in _pmap.items()},
+            "periods": {lbl: (None if pd.isna(_r[col]) else float(_r[col])) for lbl, col in _pmap.items()},
             "rel_sp": _rel,
             "spark": _spark,
         })

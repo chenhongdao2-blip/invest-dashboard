@@ -19,7 +19,7 @@ from typing import Any
 import pandas as pd
 import streamlit as st
 
-from app.lib import theme
+from lib import theme  # PYTHONPATH=app 惯例;`from app.lib` 在 AppTest/Cloud 下 ModuleNotFoundError(R1 IPO15)
 
 # ── Page-scope exemption: CONTRACT §0 D2 ─────────────────────────────────────
 # All "down / break / worst" within this reskin surface use CMSI_RED (#c8102e).

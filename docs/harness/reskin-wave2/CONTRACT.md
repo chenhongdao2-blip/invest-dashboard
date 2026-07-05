@@ -120,7 +120,7 @@ Wave-1 契约（`docs/harness/kline-reskin/CONTRACT.md`）**对 Ticker Drill 继
 | HERO9 | **曲线/数字真值（CRITICAL）**：曲线 = `compute_strategy_returns`（portfolio rebased=100）+ `_bench_norm` 页面层传入（4_Strategy_Picks L232-245 管道不回退）；count-up 目标值全 live；**零 `genCurve` 伪随机、零 118.7/106.2/+18.7/+6.2/+12.5/-6.3/1.84/102 等 mock 字面量硬编** | GR+RM |
 | HERO10 | 渲染 gate 保留（现 L224-229 等价）：曲线非空 + len≥10 + sharpe 非退化 + bench 尾非 NaN 才渲 —— 玻璃化不得绕过 gate | RM+GR |
 | HERO11 | 契约不动项：mountEChart('eq') + 零裸 init、`[data-count]` count-up 协议 1500ms easeOutCubic + MDD 强制负号 + sharpe 2dp、FONT 经 `json.dumps` 注入（勿内联单引号）、iframe height 470 + `#eq` 290px（spec §C8 钉 290，见附录 N-6）+ `html,body{height:100%}`、`@media 860px` 断点、**`render_compare_chart`(#cmp) 整体不动** | GR+EO+RM |
-| HERO12 | 页面层页头：左置红条 **5×36** r1 + H1 32/36/700 -0.01em（替尾缀 4×24）+ 右浮 mono 11/.1em UPPER「QUANTAMENTAL · 量化基本面」；卡外 provenance 行 mono 11 真值；**零 MOCK/「策略 · 提案」demo chip 残留**；不做 iframe 假 tabs（保持 st.tabs） | JS+GR |
+| HERO12 | 页面层页头：左置红条 **5×36** r1 + H1 32/36/700 -0.01em（替尾缀 4×24）+ 右浮 mono 11/.1em UPPER「QUANTAMENTAL · 量化基本面」；卡外 provenance 行 mono 11 真值；**零 MOCK/「策略 · 提案」demo chip 残留**；不做 iframe 假 tabs（保持 st.tabs） | JS+GR | **[R2 裁决 2026-07-05:作废——此项系 hero 设计稿「上下文框」与 banner 设计稿对同一页头的重复描绘;banner 版(语言钮+TRACKING,BANR1/2)为功能实现版已落地。QUANTAMENTAL 装饰标不实现;Auditor 勿报缺失。George 眼验可翻案]**
 
 ### BANR — 策略开场 Banner（`app/lib/strategy_banner.py` + 4_Strategy_Picks 调用区）
 

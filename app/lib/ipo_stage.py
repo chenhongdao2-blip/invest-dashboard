@@ -452,11 +452,15 @@ def _build_html(
             closes_s = pd.to_numeric(
                 grp.sort_values("time")["close"], errors="coerce"
             )
+            # IPO12: rebase anchor = time-last close (first-day close proxy).
+            # If the final tick is invalid, the whole path is unusable.
+            last_raw = float(closes_s.iloc[-1])
+            if not math.isfinite(last_raw) or last_raw == 0:
+                continue  # last tick NaN/inf/0 → discard entire path
+            last = last_raw
+            # Drop only intermediate non-finite ticks; require ≥2 finite pts.
             closes = [float(v) for v in closes_s.values if math.isfinite(float(v))]
             if len(closes) < 2:
-                continue
-            last = closes[-1]
-            if not math.isfinite(last) or last == 0:
                 continue
             pts = [round((c * (1.0 + d1) / last - 1.0) * 100.0, 4)
                    for c in closes]
@@ -814,6 +818,51 @@ if __name__ == "__main__":
             print(f"PASS [nan-close]: html size {len(html_nan):,} bytes")
     except Exception as exc:
         errs.append(f"FAIL [nan-close]: unexpected exception: {exc}")
+
+    # ── Case 4: last close NaN → whole path must be discarded ────────────────
+    # [10, 12, NaN] with day1_ret=1.0 (100%). Last tick=NaN → empty state.
+    picks_anchor = pd.DataFrame({
+        "code":       ["1234"],
+        "name_cn":    ["锚点医疗"],
+        "name_en":    ["Anchor Med"],
+        "score":      [8.0],
+        "tier":       ["重点申购"],
+        "list_date":  ["2025-01-01"],
+        "day1_ret":   [1.0],       # decimal; 100% day-1 return
+        "sub_sector": ["医疗器械"],
+        "offer_price":[10.0],
+        "day1_close": [12.0],
+        "status":     ["listed"],
+        "source":     ["Wind"],
+    })
+    intraday_last_nan = pd.DataFrame({
+        "code":  ["1234", "1234", "1234"],
+        "time":  ["09:30", "11:00", "16:00"],
+        "close": [10.0,    12.0,   float("nan")],
+    })
+    html_c4 = _build_html(picks_anchor, intraday_last_nan, prefer_cn=True, as_of="2026-07-05")
+    if '"1234"' in html_c4 and '"pts"' in html_c4:
+        errs.append("FAIL [last-NaN]: path emitted despite last-tick NaN (IPO12 violation)")
+    else:
+        print("PASS [last-NaN]: path correctly discarded when last tick is NaN")
+
+    # ── Case 5: mid close NaN → path emitted, endpoint = day1_ret anchor ─────
+    # [10, NaN, 12] with day1_ret=1.0. last=12, closes=[10,12], pts[-1]=100.0%.
+    intraday_mid_nan = pd.DataFrame({
+        "code":  ["1234", "1234", "1234"],
+        "time":  ["09:30", "11:00", "16:00"],
+        "close": [10.0,    float("nan"), 12.0],
+    })
+    html_c5 = _build_html(picks_anchor, intraday_mid_nan, prefer_cn=True, as_of="2026-07-05")
+    if '"1234"' not in html_c5:
+        errs.append("FAIL [mid-NaN]: path not emitted despite valid last close")
+    else:
+        print("PASS [mid-NaN]: path emitted after dropping mid NaN")
+    # endpoint must be day1_ret*100 = 100.0%
+    if "100.0" not in html_c5:
+        errs.append("FAIL [mid-NaN]: endpoint 100.0 not found in INTRADAY json")
+    else:
+        print("PASS [mid-NaN]: endpoint 100.0 present (= day1_ret anchor)")
 
     if errs:
         print("\n".join(errs))

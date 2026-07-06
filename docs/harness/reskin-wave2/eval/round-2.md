@@ -107,3 +107,17 @@ After my "7/7 ALL GREEN" verdict, the cross-model **Codex auditor (CONTRACT §6)
 5. **hero 负值色 page-scope — FIXED.** `grep DOWN app/lib/strategy_hero.py` = **ZERO 'DOWN' token** (the `{DOWN}`/`DOWN=t.DOWN` placeholder removed); `_cum_col`/`_alpha_col` = `t.UP if ≥0 else t.CMSI_RED` (`strategy_hero.py:67-68`), MDD already CMSI_RED. Negative cum/α on the hero surface now renders **#c8102e** (D2), not the global #cc0000. Latent path (my R2 data had cum=+18.5% positive) closed by code-read. ✓
 
 **Codex-fix verdict: all 7 findings FIXED & independently re-verified (real-machine + CSV arithmetic + synthetic None/NaN probes + code-read). feature_list stays 7/7 green (now data-correct, not just visually green). Awaiting Codex re-approve + George eyeball.**
+
+---
+
+# Intraday-anchor refinement re-verify (@ `9d198e2`, HEAD docs `154a36c`) — Codex APPROVE final
+
+Codex's re-review of the fixes surfaced one boundary refinement (`9d198e2`, ipo_stage.py only +52/-3): **the intraday-path rebase anchor must be the time-last close (首日收盘 proxy); if the final tick is NaN/inf/0 the whole path is discarded** — the endpoint口径 (IPO12: 终点=首日收盘) is not substitutable, so a partial path would misrepresent it. Diff scope `c8bb06e..HEAD` app-side = **ipo_stage.py only** → items 2/3/5/sector-4 byte-identical to the c8bb06e verification above (still hold); py_compile clean; AppTest Strategy_Picks OK @HEAD.
+
+**Item-4 intraday NaN — the two adversarial cases, verified TWO ways** (builder self-test + my own independent `_build_html` + INTRADAY-JSON parse, not trusting the asserts):
+- **Case A `[10,12,NaN]`** (last-tick NaN): self-test `PASS [last-NaN]`. My probe: `INTRADAY = {}` (keys empty) → no path for "1234" → empty-state. Path honestly discarded — a NaN final tick cannot anchor endpoint=首日收盘 (IPO12). ✓
+- **Case B `[10,NaN,12]`** (mid NaN): self-test `PASS [mid-NaN]` + `endpoint 100.0`. My probe: `pts=[66.67, 100.0]`, **endpoint = 100.0 = day1_ret×100** (1.0×100) anchor; mid-NaN dropped, 2 finite ticks rebased so terminal = day1 close. ✓
+- Full ipo_stage `__main__` self-test: **all assertions PASS** (incl. best +384.0% / worst -56.9% / all-pending / nan-close / last-NaN / mid-NaN).
+
+## WAVE-2 FINAL CLOSE (@ HEAD `154a36c` / app `9d198e2`)
+**7/7 features PASS at data-correctness level. All 5-item Codex-fix queue re-verified; Codex §6 auditor APPROVED final after tracing the two intraday-anchor adversarial cases.** 85/85 scored items PASS (HERO12 voided). Zero open FAILs. cycles_used=2. Remaining gate: **George eyeball ship**. Dual-authority worked as designed — real-machine evaluator (visual/computed truth) + Codex auditor (CSV arithmetic + code-path truth) each caught what the other structurally could not.

@@ -42,12 +42,6 @@ i18n.render_lang_toggle()
 latest = db.latest_snapshot_date()
 fetch_utc = db.last_fetch_utc()
 
-# --- Header (with meta: snapshot date + fetch time) ---
-theme.page_header(
-    i18n.t("home.title"),
-    meta=f"{latest} · {fetch_utc[:16] if fetch_utc else '—'}",
-)
-
 # Home-only CSS: make the domain expanders (S&P sectors / Healthcare / AI) read as
 # editorial section headers (red bar + 21px + ink top rule) while staying click-to-
 # collapse. Injected here (NOT in the global theme) so other pages' expanders
@@ -249,7 +243,7 @@ border-bottom:2px solid {theme.INK};padding-bottom:14px;margin:4px 0 14px;">
       <span class="cmsi-live-dot" style="width:8px;height:8px;border-radius:50%;background:{theme.UP};display:inline-block;"></span>
       <span style="font-family:{theme.FONT_MONO};font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:{theme.UP};font-weight:600;">{"EOD · 收盘" if _zh_hub else "EOD · CLOSE"}</span>
     </div>
-    <div style="font-family:{theme.FONT_MONO};font-size:11px;color:{theme.INK_3};margin-top:5px;">EOD {latest} HKT</div>
+    <div style="font-family:{theme.FONT_MONO};font-size:11px;color:{theme.INK_3};margin-top:5px;">{f'EOD {latest} · 取数 {fetch_utc[:16] if fetch_utc else "—"} HKT' if _zh_hub else f'EOD {latest} · fetch {fetch_utc[:16] if fetch_utc else "—"} HKT'}</div>
   </div>
 </div>""",
     unsafe_allow_html=True,

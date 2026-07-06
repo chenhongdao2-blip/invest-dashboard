@@ -37,11 +37,6 @@ st.set_page_config(
 # Language: seed once + render the top-bar switch BEFORE any t() call so the
 # whole page renders in one language per run (cccg ship-gate #3).
 i18n.init_lang()
-# [08] 语言切换:banner 的 中/EN 描边分段 = ?lang= 真链接(替代顶部实心红钮,不留两个语言钮)。
-_qp_lang = st.query_params.get("lang")
-if _qp_lang in ("zh", "en") and _qp_lang != st.session_state.get("lang"):
-    st.session_state["lang"] = _qp_lang
-    st.rerun()
 
 # Sidebar global search + chart settings
 with st.sidebar:

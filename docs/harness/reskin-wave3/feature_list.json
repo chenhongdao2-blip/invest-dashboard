@@ -1,0 +1,46 @@
+{
+  "wave": 3,
+  "branch": "feat/kline-reskin",
+  "baseline": "154a36c",
+  "contract": "docs/harness/reskin-wave3/CONTRACT.md",
+  "frozen": "2026-07-05",
+  "max_cycles": 3,
+  "cycles_used": 3,
+  "status": "ROUND-5 = C45 第二修 ✅ PASS(静态+结构+真机三证)。真机探针 team-lead 代跑(George 本机 Chrome/最终树)四门全过:A 默认宽 5 charted 行 all_no_clip:true(每行 svg≤cell/0%完整可视/终点在 cell)+dock_le_footer(1002≤1026)+dock_foot_visible+dock_fills_track(369==369 对称双栏);B 窄宽模拟 900px narrow 不裁+0%可视+dock≤footer;C sort▼+384/hover 无stale/C17 全过;console 零错。对照 round-4(svg280/cell155/裁125/0%不可见)已修——两层防御(align-self:stretch 根治测量 + SVG meet 物理不可裁)生效。F3 原列项(C16-29/C37-40/C1/C2/M3/KPI)全绿终态,F1/F2/F4 未回归。⏭ 新增 C46(§2.5:hero 净值图 endLabel 右缘裁切,strategy_hero.py grid.right 58→96)Builder 修复中未落地,待重启后轻量真机核(endLabel 全字符可见)+确认 C45 面未受影响。**wave-3 ship gate 需 C45(已过)+C46(待)俱绿。** self-test 我验时=44。建议 Case13 升渲染后 rect 断言防同类静态假阳性。",
+  "features": [
+    {
+      "id": "F1-toggle",
+      "name": "中英切换模块全站统一（描边分段 中|EN，19 调用点零改动）",
+      "items": "C01-C10 + C36 + C43/C44",
+      "passes": true,
+      "round1": "FAIL — C04/C09 真机弹回 home(i18n.py:50 st.rerun)",
+      "round2": "PASS 翻绿 — 删 st.rerun 后子页 lang=en 停留+ticker保活+in-place切语+回切还原",
+      "round3": "维持 PASS(六修态验,i18n.py 此后未动) — Codex M4(qp 多值 get_all+doseq)+m6(except 注释)修复;真机 ?foo=a&foo=b 双值全保 + 单值干净(无 list-repr) + C09 after-M4 仍过;C01/C02 PS ALL PASS"
+    },
+    {
+      "id": "F2-pitch",
+      "name": "strategy.pitch 换 B 口径（Quantamental，George 拍板 canonical）",
+      "items": "C11-C15 + C35",
+      "passes": true,
+      "round1": "PASS",
+      "round2": "PASS — C14 EN 态直证补齐",
+      "round3": "维持 PASS(六修态验,en.py 此后未动) — Codex m5(en.py docstring supersession)纯文档修复,STRINGS/pitch 值不变;4_Strategy×zh/en AppTest ok"
+    },
+    {
+      "id": "F3-ipo-rank",
+      "name": "IPO 评分排行表：列头排序 + dock 内滚重设计（iframe 定高零溢出）",
+      "items": "C16-C29 + C37-C40",
+      "passes": true,
+      "round1": "PASS — 全18项真机(54行真数据)",
+      "round3": "维持 PASS(最终树 self-test=43 重锚) — Codex C1(</script>转义)/C2(esc()全插值)/M3(NaN→—)+Codex-r2 M3-KPI 残留(df_fin/idxmax 守卫)修复确证:self-test Case10/11/12 全过 + 真机最终态 IPO 三卡零变化(54/+384.0%/-56.9%)/分档中位全有限无 nan/54行渲染正常(零 NaN%/零 u003c 泄漏)+ C19/C17/C27 功能不破 + 无 console 错"
+    },
+    {
+      "id": "F4-home-dedup",
+      "name": "首页双标题去重（删旧 page_header，fetch 时间折入 masthead）",
+      "items": "C30-C34",
+      "passes": true,
+      "round1": "PASS",
+      "round3": "维持 PASS(round-1 验,home.py 此后未动) — Codex findings 未触及 home.py,不重验"
+    }
+  ]
+}

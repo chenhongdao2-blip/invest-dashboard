@@ -165,7 +165,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     mountEChart('eq', function() {{
       return {{
         backgroundColor:'transparent', animationDuration:1900, animationEasing:'cubicOut',
-        grid:{{left:44,right:58,top:52,bottom:28}},
+        grid:{{left:44,right:96,top:52,bottom:28}},
         legend:{{top:16,right:8,data:[D.stratName,D.benchName],icon:'roundRect',
           itemWidth:18,itemHeight:2,itemGap:18,textStyle:{{color:D.INK2,fontFamily:D.FONT,fontSize:11}}}},
         tooltip:{{trigger:'axis',axisPointer:{{type:'line',lineStyle:{{color:D.INK4,type:'dashed'}}}},

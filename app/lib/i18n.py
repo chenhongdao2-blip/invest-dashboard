@@ -17,8 +17,11 @@ shares one value (avoids the half-Chinese/half-English page Codex flagged).
 
 from __future__ import annotations
 
+from urllib.parse import urlencode
+
 import streamlit as st
 
+from lib import theme
 from lib.locales import zh as _zh
 from lib.locales import en as _en
 from lib.locales import pages_zh as _pages_zh
@@ -30,18 +33,85 @@ _TABLES = {
     "zh": {**_zh.STRINGS, **_pages_zh.STRINGS},
     "en": {**_en.STRINGS, **_pages_en.STRINGS},
 }
-_LABELS = {"zh": "中文", "en": "EN"}
-
 
 def init_lang() -> None:
-    """Seed the language once. Call at app entry AND defensively per page (cheap),
-    so a deep-linked page never hits a missing key."""
+    """Seed the language once, then adopt `?lang=` from the URL (wave-3 F1:
+    the query-param → session_state sync is centralised HERE — single source,
+    no per-page `_qp_lang` blocks). Call at app entry AND defensively per page
+    (cheap), so a deep-linked page never hits a missing key.
+
+    Assignment only, NO st.rerun(): init_lang runs before any `t()` call on
+    every page, so writing session_state here already makes the whole page
+    render in the new language this same frame. A rerun here would, under
+    st.navigation, bounce a deep-linked sub-page back to the default page on the
+    first frame and drop sibling query params like `?ticker=` (wave-3 round-1
+    regression — `/Model_Drill?ticker=VEEV&lang=en` jumped to `/`)."""
     if "lang" not in st.session_state:
         st.session_state["lang"] = DEFAULT_LANG
+    qp_lang = st.query_params.get("lang")
+    if qp_lang in ("zh", "en") and qp_lang != st.session_state["lang"]:
+        st.session_state["lang"] = qp_lang
 
 
 def get_lang() -> str:
     return st.session_state.get("lang", DEFAULT_LANG)
+
+
+def _cur_qp() -> dict:
+    """Current query params as {key: [values]} — preserves repeated / list-valued
+    params (Codex M4: `to_dict()` collapses multiplicity). Empty when there is
+    no run-context.
+
+    The bare `except` is intentional (m6): `lang_toggle_html()` is exercised by
+    the C01/C02 pure-string probes at bare import (no Streamlit
+    ScriptRunContext), where touching `st.query_params` raises — degrading to
+    `{}` there yields a plain `?lang=x` href. Narrowing to a specific class is
+    avoided because the no-context exception type is not stable across Streamlit
+    versions; the fallback only loses sibling params in that offline probe path,
+    never in a live page."""
+    try:
+        return {k: st.query_params.get_all(k) for k in st.query_params.keys()}
+    except Exception:
+        return {}
+
+
+def _lang_href(code_lang: str) -> str:
+    """Anchor href that switches language while PRESERVING sibling query params
+    (`?ticker=NVDA`, plus any repeated params, stay alive across a toggle —
+    C09 / M4). Only `lang` is overridden (to a single value); everything else
+    passes through at full multiplicity via `doseq=True`."""
+    return "?" + urlencode({**_cur_qp(), "lang": [code_lang]}, doseq=True)
+
+
+def lang_toggle_html() -> str:
+    """The outlined 中|EN segmented language switch (shared HTML).
+
+    Single source for BOTH the strategy-banner toggle and the page-level
+    toggle (strategy_banner.live_title calls this too), so the two skins can
+    never drift (C05 / BANR2). Segment tokens mirror the frozen banner spec:
+    mono 11px / 600 / .08em, padding 5px 12px, active bg CMSI_RED + PAPER
+    text, inactive transparent + INK_3, container 1px solid PAPER_EDGE
+    radius 3, real `<a target="_self">` anchors (full-page reload — accepted
+    BANR2 mechanism). Active state is decided internally via `get_lang()`;
+    with no session state it falls back to zh without crashing."""
+    cur = get_lang()
+
+    def seg(code: str, code_lang: str) -> str:
+        on = (code_lang == cur)
+        return (
+            f'<a href="{_lang_href(code_lang)}" target="_self" '
+            f'style="font-family:{theme.FONT_MONO};font-size:11px;font-weight:600;'
+            f'letter-spacing:.08em;padding:5px 12px;text-decoration:none;'
+            f'display:inline-block;'
+            f'background:{theme.CMSI_RED if on else "transparent"};'
+            f'color:{theme.PAPER if on else theme.INK_3}">{code}</a>'
+        )
+
+    return (
+        f'<div style="display:inline-flex;border:1px solid {theme.PAPER_EDGE};'
+        f'border-radius:3px;overflow:hidden">'
+        f'{seg("中", "zh")}{seg("EN", "en")}</div>'
+    )
 
 
 def t(key: str, **kwargs) -> str:
@@ -239,22 +309,22 @@ def domain_name(d: str) -> str:
 
 
 def render_lang_toggle(anchor_cols: tuple[float, float] = (9.0, 1.0)) -> None:
-    """Render the language switch as a SINGLE button pinned to the top-right of
-    the content area (the user-visible "top bar"). Call it as the FIRST element
-    on a page, before the page header, so subsequent `t()` calls in the same run
-    already see the chosen language.
+    """Render the language switch as the outlined 中|EN segmented control pinned
+    to the top-right of the content area (the user-visible "top bar"). Call it
+    as the FIRST element on a page, before the page header.
 
-    One button (not a two-segment control): it shows the language you'll switch
-    TO — "EN" while Chinese is active, "中文" while English is active — the common
-    CN-site convention. `st.button` is a momentary trigger (no persistent widget
-    value), so there is no widget-state↔session_state split to fight; on click we
-    flip `st.session_state["lang"]` and rerun the whole page in the new language.
+    wave-3 F1: same skin AND same helper as the strategy-banner toggle
+    (`lang_toggle_html()`). Segments are real `<a href="?…lang=…" target=_self>`
+    anchors: clicking navigates with the lang query param (sibling params such
+    as `?ticker=` preserved), and `init_lang()` adopts it into session_state on
+    the next run — so subsequent `t()` calls already see the chosen language.
+    `anchor_cols` is retained for signature compatibility with the 19 existing
+    call sites but is ignored (a right-aligned flex row needs no column grid).
     """
+    del anchor_cols  # kept for call-site compatibility; unused
     init_lang()
-    cur = get_lang()
-    other = "en" if cur == "zh" else "zh"
-    _, right = st.columns(list(anchor_cols))
-    with right:
-        if st.button(_LABELS[other], key="_lang_btn", use_container_width=True):
-            st.session_state["lang"] = other
-            st.rerun()
+    st.markdown(
+        f'<div style="display:flex;justify-content:flex-end;margin:0 0 6px">'
+        f'{lang_toggle_html()}</div>',
+        unsafe_allow_html=True,
+    )

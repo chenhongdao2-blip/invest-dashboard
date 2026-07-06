@@ -44,6 +44,7 @@ from html import escape as _esc
 
 import streamlit as st
 
+from lib import i18n
 from lib import theme as t
 
 # page-scope 跌/亏色 —— wave-2 reskin 表面用 #c8102e (CONTRACT D2)
@@ -213,30 +214,18 @@ def _ipo_card(it: dict) -> str:
 def live_title(title: str, *, as_of: str | None = None, lang: str | None = "中") -> None:
     """H1 + 左侧红导色块 + 右侧: 中/EN 描边分段切换 + EOD 跟踪徽标 + 更新时间戳。
 
-    lang='中'/'EN' 高亮当前语言;None 不显示切换钮。
+    lang 形参仅控显隐:None 不显示切换钮,任意非 None 值显示。active 高亮
+    不再依赖传入值 —— 切换钮 HTML 统一出自 i18n.lang_toggle_html()(wave-3 F1
+    单一 helper,页级 toggle 同源,防两处发散),active 态由 i18n.get_lang()
+    内部判定,href 保留 sibling query params。
     呼吸点恢复(wave-2 D3):teal 8px cmsiPulse(theme._CSS .cmsi-live-dot),
     措辞诚实「EOD 跟踪 · DAILY」(非假实时);零「实时跟踪·TRACKING」字样。
-    切换交互:<a href="?lang=zh|en" target="_self"> 真锚点,
-    调用页读 st.query_params 切 session_state(现机制不动,只换皮)。
+    切换交互:<a href="?…lang=zh|en" target="_self"> 真锚点,
+    i18n.init_lang() 读 st.query_params 切 session_state(机制不变,只换产源)。
     """
-    def seg(code: str, code_lang: str) -> str:
-        on = (code == lang)
-        return (
-            f'<a href="?lang={code_lang}" target="_self" '
-            f'style="font-family:{t.FONT_MONO};font-size:11px;font-weight:600;'
-            f'letter-spacing:.08em;padding:5px 12px;text-decoration:none;'
-            f'display:inline-block;'
-            f'background:{t.CMSI_RED if on else "transparent"};'
-            f'color:{t.PAPER if on else t.INK_3}">{code}</a>'
-        )
-
     toggle = ""
     if lang is not None:
-        toggle = (
-            f'<div style="display:inline-flex;border:1px solid {t.PAPER_EDGE};'
-            f'border-radius:3px;overflow:hidden">'
-            f'{seg("中", "zh")}{seg("EN", "en")}</div>'
-        )
+        toggle = i18n.lang_toggle_html()
 
     # EOD tracking badge (D3: visual restored, honest wording, NOT "实时跟踪")
     # .cmsi-live-dot styled by theme._CSS (background:UP teal + cmsiPulse animation)

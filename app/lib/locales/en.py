@@ -4,6 +4,11 @@ Source of truth for keys; zh.py mirrors these exactly. Strategy methodology copy
 is sourced from the CMS HK whitepapers (us-biotech v5.2 投资人简版 / high-dividend
 methodology.md) — not invented. EN strategy copy gets a /ccg polish pass; CN copy
 gets a GLM decision pass (per user instruction).
+
+Supersession (2026-07-05, George — wave-3 F2): `strategy.pitch` was rewritten to
+the B-copy Quantamental methodology framing (mirrors the zh.py rewrite of the
+same date). Its provenance is that decision, NOT the whitepaper or /ccg note above,
+which still governs the other keys.
 """
 
 STRINGS = {
@@ -15,13 +20,14 @@ STRINGS = {
         "logic the industry calls quantamental (quant + fundamental)."
     ),
     "strategy.pitch": (
-        "**What this is** — a live showcase of **AI-agent stock-picking**. The agent acts "
-        "as an analyst: it reads clinical trials, FDA timelines, financials and governance, "
-        "scores names across several dimensions, and builds the portfolio — and **every pick "
-        "is logged the day it's chosen**, so months later we review against the original "
-        "record, hits and misses alike.\n\n"
-        "The three strategies below show **real since-inception returns vs benchmark** — not "
-        "a polished backtest."
+        "**Methodology** — this page tracks the live performance of a quantamental "
+        "stock-selection system: it ingests clinical-trial readouts, FDA review milestones, "
+        "earnings disclosures and governance events, then scores and screens names into the "
+        "pool across multiple dimensions. **Every holding is logged on the record from the "
+        "day it is selected**, and performance is reviewed against that original record — "
+        "wins and losses shown alike.\n\n"
+        "The three strategies below show **real cumulative return vs benchmark since "
+        "selection** (not a polished backtest)."
     ),
     "common.lang_label": "Language",
 

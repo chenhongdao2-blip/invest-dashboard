@@ -36,6 +36,8 @@ data/external/*.db-wal
 
 # local CSV backups (never commit)
 data/external/_bak_*/
+data/external/*.bak
+data/external/*.bak-*
 
 # stray / backup / temp — never commit (added 2026-06-01)
 /snapshots.db

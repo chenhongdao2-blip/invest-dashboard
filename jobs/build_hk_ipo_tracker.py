@@ -150,8 +150,9 @@ def main() -> None:
     # 4) Futu cross-check (independent last_price; flag >5% divergence vs Wind close)
     num = snap["code"].str.split(".").str[0]
     futu = fetch_futu(("HK." + num.str.zfill(5)).tolist())
+    futu_ok = not futu.empty  # drives honest `source` string below; empty => Wind single-source this run
     futu_price = {}
-    if not futu.empty:
+    if futu_ok:
         for _, fr in futu.iterrows():
             wc = str(fr["code"]).replace("HK.", "").lstrip("0") + ".HK"
             futu_price[wc] = fr.get("last_price")
@@ -162,6 +163,8 @@ def main() -> None:
                 diverged.append(f"{r['code']}(W{wc}/F{fp})")
         print(f"[futu] cross-check ok ({len(futu)} names)"
               + (f"; PRICE DIVERGENCE: {diverged}" if diverged else "; all prices within 5%"))
+    else:
+        print("[futu] cross-check SKIPPED this run — source string will honestly reflect Wind single-source")
 
     # 5) derive fields + apply cross-check guards
     out = []
@@ -250,7 +253,9 @@ def main() -> None:
     clean = res[res["clean"]]
     meta = {
         "as_of": today,
-        "source": "Wind (price/mktcap/20d turnover) + Futu OpenD cross-check",
+        "source": ("Wind (price/mktcap/20d turnover) + Futu OpenD cross-check" if futu_ok
+                   else f"Wind (price/mktcap/20d turnover); Futu OpenD cross-check SKIPPED this run "
+                        f"(OpenD 上游网络中断) — Wind single-source, no independent price cross-check"),
         "fx_hkd_usd": FX_HKD_USD,
         "n_listed": int(len(res)),
         "n_with_offer": int((~res["no_offer"]).sum()),

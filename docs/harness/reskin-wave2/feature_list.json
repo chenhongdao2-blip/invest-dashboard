@@ -1,0 +1,85 @@
+{
+  "task": "Reskin Wave-2 — 六区块 1:1 报纸精修 (IPO-1a / HUB / TMAP / SOVR / HERO / BANR)",
+  "mode": "code",
+  "max_cycles": 4,
+  "cycles_used": 2,
+  "contract": "docs/harness/reskin-wave2/CONTRACT.md",
+  "frozen": "2026-07-03",
+  "status": "WAVE-2 FINAL CLOSE @154a36c (app 9d198e2) — Codex §6 APPROVED final; only George eyeball ship remaining. 7/7 features PASS at data-correctness level. Codex REJECT (1 CRITICAL+6 MAJOR) all FIXED+re-verified two ways: IPO速览卡 ×100 CRITICAL → BANR9 median +76.1%/hi +384.0%/lo -56.9% (real-machine = CSV ground truth, zero stale +0.8%); pending rank '—' (16 dash+38 numbered); 缺数None→'—' (no fabricated 0.0, sector+ipo_stage probes); hero 负值色 zero t.DOWN → CMSI_RED; intraday last-tick NaN honest whole-path discard (IPO12 anchor=首日收盘) — Case A [10,12,NaN]→empty, Case B [10,NaN,12]→endpoint 100.0=day1_ret×100 (independent _build_html probe + self-test). Lesson: computed-green≠arithmetic-correct (evaluator vs Codex mutual blind spots = dual-authority raison d'être). HERO12 CONTRACT-void @cfad103; BANR4 dek fix @2d420d4. 85/85 scored PASS. cycles_used=2.",
+  "features": [
+    {
+      "id": "W1-ipo-stage",
+      "desc": "IPO 1a 报纸精修：new lib app/lib/ipo_stage.py + 4_Strategy_Picks render_ipo_strategy 重写（masthead/KPI三卡/分档表现/排行表+hover走势dock 单iframe;小图墙/双排序toggle 移除 per §4-S1）",
+      "accept": ["IPO1", "IPO2", "IPO3", "IPO4", "IPO5", "IPO6", "IPO7", "IPO8", "IPO9", "IPO10", "IPO11", "IPO12", "IPO13", "IPO14", "IPO15"],
+      "passes": true
+    },
+    {
+      "id": "W2-hub",
+      "desc": "行情中枢瓦片精修：market_hub_tiles.py 玻璃容器/mono现价/水彩垫底/呼吸点诚实措辞(D3) + home.py masthead 区（kicker/EOD真值）;spark 保持 inline SVG 真收盘",
+      "accept": ["HUB1", "HUB2", "HUB3", "HUB4", "HUB5", "HUB6", "HUB7", "HUB8", "HUB9", "HUB10", "HUB11", "HUB12"],
+      "passes": true
+    },
+    {
+      "id": "W3-treemap",
+      "desc": "个股热力图 Treemap 精修：heatmap_treemap.py masthead/渐变图例/域条/tooltip染色/upperLabel字族;payload形状不可改(ETF页共享)/mountEChart/相对路径不变",
+      "accept": ["TMAP1", "TMAP2", "TMAP3", "TMAP4", "TMAP5", "TMAP6", "TMAP7", "TMAP8", "TMAP9", "TMAP10", "TMAP11", "TMAP12", "TMAP13", "TMAP14"],
+      "passes": true
+    },
+    {
+      "id": "W4-sector",
+      "desc": "板块总览精修：sector_overview.py masthead(参数化双域)/玻璃表/th重构/hover/movers双语带负号 + 双页 page_radial_wash;⚠ 双页共用(2_Healthcare + a2_ai_overview)每项两页都核",
+      "accept": ["SOVR1", "SOVR2", "SOVR3", "SOVR4", "SOVR5", "SOVR6", "SOVR7", "SOVR8", "SOVR9", "SOVR10", "SOVR11", "SOVR12", "SOVR13", "SOVR14"],
+      "passes": true
+    },
+    {
+      "id": "W5-hero",
+      "desc": "策略表现 Hero 玻璃化：strategy_hero.py hero卡玻璃+红顶边/左栏白纱/巨号56 mono/KPI mono17/legend字族 + 页面层页头红条;曲线=compute_strategy_returns 零genCurve;gate/count-up/#cmp 不动",
+      "accept": ["HERO1", "HERO2", "HERO3", "HERO4", "HERO5", "HERO6", "HERO7", "HERO8", "HERO9", "HERO10", "HERO11", "HERO12"],
+      "passes": true
+    },
+    {
+      "id": "W6-banner",
+      "desc": "策略开场 Banner 精修：strategy_banner.py masthead/呼吸点恢复+诚实措辞(D3,可校色 theme .cmsi-live-dot 孤儿块)/节标mono+counter chip/三卡玻璃/大号mono32/盈亏点带接真/IPO最差条归一;纯 st.markdown 不迁 iframe",
+      "accept": ["BANR1", "BANR2", "BANR3", "BANR4", "BANR5", "BANR6", "BANR7", "BANR8", "BANR9", "BANR10", "BANR11", "BANR12"],
+      "passes": true
+    },
+    {
+      "id": "W7-guards",
+      "desc": "横切守卫：grep 电池(12条)/box-shadow·radius·emoji/i18n parity/py_compile+AppTest四页/零泄漏抽查(SEC Facts+Capital Markets+e2_etf_heatmap)/theme 边界(D5)/init.sh 连刷冒烟",
+      "accept": ["GRD1", "GRD2", "GRD3", "GRD4", "GRD5", "GRD6", "GRD7"],
+      "passes": true
+    }
+  ],
+  "acceptance": {
+    "note": "只有独立 Evaluator 可翻 passes;每翻挂真机证据(eval/round-N.md);同项 3 连败停机上报 George",
+    "total_items": 86
+  },
+  "round_1": {
+    "evaluator": "independent (Stage 2)",
+    "verdict_doc": "docs/harness/reskin-wave2/eval/round-1.md",
+    "commit_start": "6b568cf", "commit_end": "618319a",
+    "hard_fails_found": [
+      {"id": "IPO15/GRD4", "sev": "HIGH", "detail": "ipo_stage.py:22 from app.lib import theme → AppTest ModuleNotFoundError; Cloud-import risk", "status": "FIXED @618319a → from lib import theme; AppTest 4/4 OK — verified"}
+    ],
+    "resolved_non_fail": [
+      {"id": "HERO8", "detail": "axisPointer type:'line' — contract typo corrected (design source is line); now PASS"}
+    ],
+    "verified_pass_items": ["GRD1","GRD3","GRD4","GRD7","HUB3","HUB4","HUB6","HUB7","TMAP7","TMAP8","TMAP9","TMAP10","TMAP14","SOVR1","SOVR2","SOVR3","SOVR6","SOVR7","SOVR10","SOVR12","HERO7","HERO8","HERO9","HERO11","BANR3","BANR5","BANR7","IPO2","IPO4","IPO9","IPO10","IPO12","IPO15"],
+    "pending_browser_blocked": "computed-style spot items (~46): HUB1/5/8/9/10/12, TMAP1-6/11-13, SOVR4/8/9/11/13/14, HERO1-6/10/12, BANR1/2/4/6/8/9/10/11/12, IPO1/3/5/6/7/8/11/13",
+    "blocker": "claude-in-chrome extension disconnected (OAuth account mismatch) mid computed-style pass — persistent, not transient",
+    "nits": ["SOVR7 th border-left:1px — verify no visible vertical divider"],
+    "verdict": "no outstanding hard FAILs; passes stay false pending full computed evidence; Round 2 completes spot items"
+  },
+  "pinned": {
+    "D1": "IPO=1a 报纸精修 + 六区块全做 (George 2026-07-03)",
+    "D2": "跌色 #c8102e page-scope 豁免扩展至全部 wave-2 reskin 表面;theme.DOWN=#cc0000 全局不动;Auditor 勿报",
+    "D3": "pulse/LIVE dots: KEEP visual + 语义改真措辞(EOD/BACKTEST/截至真日期);零假 tick/clock-mock",
+    "D4": "字体已自托管 theme.FONT_FACE_CSS 三族,零 CDN",
+    "D5": "GLASS_CARD_CSS/page_radial_wash = 可复用壳原语;页级注入,禁 theme._CSS 全局新增"
+  },
+  "auditor_codex": {
+    "model": "TBD",
+    "scope": "CONTRACT.md §6",
+    "verdict": null
+  }
+}

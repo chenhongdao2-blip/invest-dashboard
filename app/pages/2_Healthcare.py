@@ -73,6 +73,8 @@ i18n.init_lang()
 i18n.render_lang_toggle()
 theme.page_header(i18n.t("hc.title"))
 st.caption(cfg.get("description", "").strip())
+prefer_cn = i18n.get_lang() == "zh"
+theme.page_radial_wash(1240)
 
 # --- 7 sector aggregate summary ---
 theme.section_header(i18n.t("hc.section.summary"), meta=i18n.t("hc.section.summary_meta"))
@@ -121,7 +123,6 @@ else:
 st.divider()
 
 # --- Domain benchmark snapshot — [10] sector_overview (sparkline + 发散色阶 + 相对标普条) ---
-theme.section_header(i18n.t("hc.section.benchmark"), meta=i18n.t("hc.section.benchmark_meta"))
 bench_df = bm.fetch_benchmarks()
 if not bench_df.empty:
     focus = ["XLV", "XBI", "XPH", "IXJ", "IHF", "IHI"]
@@ -137,11 +138,11 @@ if not bench_df.empty:
                   if _ser is not None else [])
         _ytd = _r["ytd_%"]
         _rel = (float(_ytd) - float(_gspc_ytd)
-                if (_gspc_ytd is not None and not pd.isna(_ytd) and not pd.isna(_gspc_ytd)) else 0.0)
+                if (_gspc_ytd is not None and not pd.isna(_ytd) and not pd.isna(_gspc_ytd)) else None)
         _rows.append({
             "tk": _s,
             "name": i18n.bench_name(_s, _r["name"]),
-            "periods": {lbl: (0.0 if pd.isna(_r[col]) else float(_r[col])) for lbl, col in _pmap.items()},
+            "periods": {lbl: (None if pd.isna(_r[col]) else float(_r[col])) for lbl, col in _pmap.items()},
             "rel_sp": _rel,
             "spark": _spark,
         })
@@ -149,6 +150,14 @@ if not bench_df.empty:
     _src = (f"来源 Yahoo Finance cron EOD · 截至 {_asof} · 仅供参考"
             if i18n.get_lang() == "zh"
             else f"Source: Yahoo Finance cron EOD · as of {_asof} · for reference")
+    so.masthead(
+        title=i18n.t("hc.section.benchmark"),
+        chip="HEALTHCARE",
+        subtitle="基准 ETF 分档表现 · 30 日趋势 · 相对标普超额",
+        asof=_asof,
+        source=_src,
+        prefer_cn=prefer_cn,
+    )
     so.benchmark_table(_rows, source=_src)
 
 st.divider()
@@ -519,7 +528,7 @@ if _all_rets:
     _gainers = _mv_rows(_combined.sort_values("1d_%", ascending=False).head(10))
     _losers = _mv_rows(_combined.sort_values("1d_%", ascending=True).head(10))
     so.movers(gainers=_gainers, losers=_losers,
-              window=("1 日" if i18n.get_lang() == "zh" else "1D"))
+              window=("1 日" if prefer_cn else "1D"), prefer_cn=prefer_cn)
 
 # --- Onboarding ---
 with st.expander(i18n.t("hc.onboarding.title")):

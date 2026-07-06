@@ -1,8 +1,12 @@
 """策略表现 Hero(大胆 + 动效)— lib/strategy_hero.py
 ==============================================================
 
-渲染策略页顶部的「tearsheet hero」:左侧 60px 巨号累计收益(count-up 动画)+ 基准/超额 α,
+渲染策略页顶部的「tearsheet hero」:左侧 56px 巨号累计收益(count-up 动画)+ 基准/超额 α,
 右侧净值曲线(ECharts draw-in 动画 + 终点标签 + 十字光标),底部 7 格 KPI tile(数字 count-up)。
+
+Wave-2 reskin(2026-07-04): 平面卡 → 玻璃卡(rgba .55 + blur14 + 红顶边 3px);双 radial
+洗层;mono 化字号;FONT_DISPLAY(Space Grotesk);竖线 #e4d2bd;MDD #c8102e(CONTRACT D2)。
+render_compare_chart(#cmp) 整体不动。
 
 与 ui.render_html_table / heatmap 同套路:用 st.iframe(self-contained HTML) 渲染。
 ECharts 自托管(app/static/echarts.min.js)——与 Inter/JetBrains 同理,国内访问 jsdelivr/
@@ -14,11 +18,11 @@ unpkg CDN 不稳;/app/static 路径在 components.html srcdoc iframe 内也解�
     strategy_hero.render(
         strat_name="港股高股息选股", strat_dates=dates, strat_curve=port_vals,   # rebased=100
         bench_name="恒生高股息 30", bench_curve=bench_vals,
-        cum_ret=18.7, bench_ret=6.2, alpha_pp=12.5,
-        pick_date="2026-03-20", n_hold=20, pool=34, days=102,
-        wins=14, n_total=20, mdd=-6.3, sharpe=1.84,
+        cum_ret=..., bench_ret=..., alpha_pp=...,
+        pick_date=..., n_hold=..., pool=..., days=...,
+        wins=..., n_total=..., mdd=..., sharpe=...,
         bench_code="3466.HK", bench_sub="恒生高股息 30",
-        as_of="2026-06-29", source="yfinance · ETF 代理(含息·HKD)",
+        as_of=..., source=...,
     )
 """
 from __future__ import annotations
@@ -60,8 +64,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     # Sign-color the strategy's own signals (cumulative + alpha) — a NEGATIVE return
     # must read red, not teal (港美股 convention; the reference hardcoded UP and would
     # paint a loss green). Benchmark stays neutral ink (a reference, not a signal).
-    _cum_col = t.UP if cum_ret >= 0 else t.DOWN
-    _alpha_col = t.UP if alpha_pp >= 0 else t.DOWN
+    _cum_col = t.UP if cum_ret >= 0 else t.CMSI_RED   # wave-2 D2: negative on hero surface = #c8102e
+    _alpha_col = t.UP if alpha_pp >= 0 else t.CMSI_RED  # wave-2 D2: same
     data = {
         "dates": list(strat_dates),
         "strat": [round(float(v), 2) for v in strat_curve],
@@ -69,10 +73,11 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
         "stratName": strat_name, "benchName": bench_name,
         "RED": t.CMSI_RED, "INK3": t.INK_3, "INK": t.INK, "PAPER": t.PAPER,
         "RULE": t.PAPER_RULE, "INK4": t.INK_4, "INK2": t.INK_2,
-        # Fonts go through json.dumps (NOT inlined as '{t.FONT_STACK}') — the stack
+        # Fonts go through json.dumps (NOT inlined as '{t.FONT_DISPLAY}') — the stack
         # contains single quotes, so inlining it inside a JS '...' literal breaks the
-        # whole script (Unexpected identifier 'Inter'). json escapes them safely.
-        "FONT": t.FONT_STACK, "MONO": t.FONT_MONO,
+        # whole script (Unexpected identifier 'Space Grotesk'). json escapes them safely.
+        # FONT_DISPLAY is Space Grotesk-first (wave-2 reskin surface font).
+        "FONT": t.FONT_DISPLAY, "MONO": t.FONT_MONO,
     }
     # count-up 目标值
     counts = {
@@ -85,7 +90,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
         _kpi_tile("持仓数", "hold", sub=f"/ 评分池 {pool}", color=t.INK),
         _kpi_tile("持有天数", "days", color=t.INK),
         _kpi_tile("胜率 Win", "wins", sub=f"/ {n_total}", color=t.UP),
-        _kpi_tile("最大回撤 MDD", "mdd", suffix="%", color=t.DOWN),  # JS 会补负号
+        _kpi_tile("最大回撤 MDD", "mdd", suffix="%", color=t.CMSI_RED),  # wave-2 D2: #c8102e
         _kpi_tile("夏普 Sharpe", "sharpe", color=t.INK),
         _kpi_tile("基准", "", static=bench_code, sub=bench_sub),
     ])
@@ -93,36 +98,44 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     css = _CSS.format(
         RED=t.CMSI_RED, RED_DEEP=t.CMSI_RED_DEEP, PAPER=t.PAPER, PAPER_DEEP=t.PAPER_DEEP,
         PAPER_BAND=t.PAPER_BAND, RULE=t.PAPER_RULE, EDGE=t.PAPER_EDGE,
+        EDGE_SOFT=t.PAPER_EDGE_SOFT,
         INK=t.INK, INK2=t.INK_2, INK3=t.INK_3, INK4=t.INK_4,
-        UP=t.UP, UP_DEEP=t.UP_DEEP, DOWN=t.DOWN,
-        FONT=t.FONT_STACK, MONO=t.FONT_MONO, FACE=t.FONT_FACE_CSS,
+        UP=t.UP, UP_DEEP=t.UP_DEEP,
+        FONT=t.FONT_DISPLAY, MONO=t.FONT_MONO, FACE=t.FONT_FACE_CSS,
     )
 
     body = f"""
-    <div class="hero">
-      <div class="hero-grid">
-        <div class="hero-left">
-          <div class="strat-name">{_esc(strat_name)}</div>
-          <div class="strat-sub">AI AGENT · 自 {pick_date} 建仓</div>
-          <div class="big-wrap">
-            <div class="big-lbl">累计收益 · CUMULATIVE</div>
-            <div class="big-num" data-count="cum" data-sign="1" data-suf="%" style="color:{_cum_col}">+0.0%</div>
-            <div class="big-foot">
-              <div><div class="bf-lbl">基准 {_esc(bench_code)}</div>
-                   <div class="bf-v" data-count="bench" data-sign="1" data-suf="%" style="color:{t.INK_2}">+0.0%</div></div>
-              <div class="bf-div"><div class="bf-lbl red">超额 α · ALPHA</div>
-                   <div class="bf-v" data-count="alpha" data-sign="1" data-suf="pp" style="color:{_alpha_col}">+0.0pp</div></div>
+    <div class="wash"></div>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hero-grid">
+          <div class="hero-left">
+            <div class="live">
+              <div class="dot"></div>
+              <span class="live-t">持续跟踪 · EOD</span>
+            </div>
+            <div class="strat-name">{_esc(strat_name)}</div>
+            <div class="strat-sub">AI AGENT · 自 {pick_date} 建仓</div>
+            <div class="big-wrap">
+              <div class="big-lbl">累计收益 · CUMULATIVE</div>
+              <div class="big-num" data-count="cum" data-sign="1" data-suf="%" style="color:{_cum_col}">+0.0%</div>
+              <div class="big-foot">
+                <div><div class="bf-lbl">基准 {_esc(bench_code)}</div>
+                     <div class="bf-v" data-count="bench" data-sign="1" data-suf="%" style="color:{t.INK_2}">+0.0%</div></div>
+                <div class="bf-div"><div class="bf-lbl red">超额 α · ALPHA</div>
+                     <div class="bf-v" data-count="alpha" data-sign="1" data-suf="pp" style="color:{_alpha_col}">+0.0pp</div></div>
+              </div>
             </div>
           </div>
+          <div class="hero-right">
+            <div class="chart-lbl">净值曲线 · rebased 起点 = 100</div>
+            <div id="eq"></div>
+          </div>
         </div>
-        <div class="hero-right">
-          <div class="chart-lbl">净值曲线 · rebased 起点 = 100</div>
-          <div id="eq"></div>
-        </div>
+        <div class="kpi-row">{kpi_row}</div>
       </div>
-      <div class="kpi-row">{kpi_row}</div>
+      <div class="provrow">SOURCE: {_esc(source)} · 截至 {_esc(as_of)} · 真实累计收益,非回测美化</div>
     </div>
-    <div class="provrow">SOURCE: {_esc(source)} · 截至 {_esc(as_of)} · 真实累计收益,非回测美化</div>
     """
 
     doc = f"""<!doctype html><html><head><meta charset='utf-8'>
@@ -152,8 +165,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     mountEChart('eq', function() {{
       return {{
         backgroundColor:'transparent', animationDuration:1900, animationEasing:'cubicOut',
-        grid:{{left:44,right:104,top:50,bottom:28}},
-        legend:{{top:14,right:6,data:[D.stratName,D.benchName],icon:'roundRect',
+        grid:{{left:44,right:96,top:52,bottom:28}},
+        legend:{{top:16,right:8,data:[D.stratName,D.benchName],icon:'roundRect',
           itemWidth:18,itemHeight:2,itemGap:18,textStyle:{{color:D.INK2,fontFamily:D.FONT,fontSize:11}}}},
         tooltip:{{trigger:'axis',axisPointer:{{type:'line',lineStyle:{{color:D.INK4,type:'dashed'}}}},
           backgroundColor:D.INK,borderColor:D.INK,padding:[8,12],
@@ -162,7 +175,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
             ps.forEach(p=>{{const r=(p.value-100).toFixed(1);h+='<div>'+p.marker+' '+p.seriesName+' <b>'+p.value.toFixed(1)+'</b> ('+(r>=0?'+':'')+r+'%)</div>';}});return h;}}}},
         xAxis:{{type:'category',data:D.dates,boundaryGap:false,axisTick:{{show:false}},
           axisLine:{{lineStyle:{{color:D.INK,width:1}}}},
-          axisLabel:{{color:D.INK3,fontFamily:D.MONO,fontSize:10,interval:Math.floor(D.dates.length/5)}},splitLine:{{show:false}}}},
+          axisLabel:{{color:D.INK3,fontFamily:D.MONO,fontSize:10,interval:20}},splitLine:{{show:false}}}},
         yAxis:{{type:'value',scale:true,axisLine:{{show:false}},axisTick:{{show:false}},
           axisLabel:{{color:D.INK3,fontFamily:D.MONO,fontSize:10}},splitLine:{{lineStyle:{{color:D.RULE}}}}}},
         series:[
@@ -274,43 +287,60 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
 
 
 # ─────────────────────────────────────────────────────────────────────────
-# CSS(.format() 注入 token)
+# CSS(.format() 注入 token) — wave-2 reskin 2026-07-04
+# 变更摘要: 玻璃卡(rgba .55+blur14+红顶边) / 双 radial 洗层 / mono 字族 /
+#          巨号 56px / 脚注/KPI 值 17px / KPI label 10px /
+#          左栏白纱+竖线 #e4d2bd / cmsiPulse 动画名
 # ─────────────────────────────────────────────────────────────────────────
 _CSS = """
 {FACE}
 :root {{ color-scheme: light; }}
 * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-html, body {{ background: {PAPER}; color: {INK}; font-family: {FONT};
-  -webkit-font-smoothing: antialiased; font-feature-settings: 'tnum','ss01'; }}
-.hero {{ border: 1px solid {EDGE}; background: {PAPER}; }}
+html, body {{ height: 100%; background: {PAPER}; color: {INK}; font-family: {FONT};
+  -webkit-font-smoothing: antialiased; font-feature-settings: 'tnum','ss01';
+  position: relative; overflow: hidden; }}
+.wash {{ position: absolute; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(900px 520px at 10% -8%, rgba(200,16,46,.09), transparent 60%),
+    radial-gradient(820px 520px at 94% 4%, rgba(13,118,128,.10), transparent 60%); }}
+.wrap {{ position: relative; }}
+.hero {{
+  background: rgba(255,255,255,.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,.7);
+  border-top: 3px solid {RED};
+}}
 .hero-grid {{ display: grid; grid-template-columns: 340px 1fr; }}
-.hero-left {{ padding: 24px 26px; border-right: 1px solid {RULE}; display: flex; flex-direction: column; }}
+.hero-left {{ padding: 24px 26px; background: rgba(255,255,255,.35); overflow: hidden;
+  position: relative; border-right: 1px solid {EDGE_SOFT}; display: flex; flex-direction: column; }}
 .live {{ display: flex; align-items: center; gap: 8px; }}
-.dot {{ width: 8px; height: 8px; border-radius: 50%; background: {UP}; animation: pulse 1.5s ease-in-out infinite; }}
-@keyframes pulse {{ 0%,100% {{ opacity:1; transform:scale(1); }} 50% {{ opacity:.35; transform:scale(.82); }} }}
-.live-t {{ font-family: {MONO}; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: {UP_DEEP}; font-weight: 600; }}
+.dot {{ width: 8px; height: 8px; border-radius: 50%; background: {UP}; animation: cmsiPulse 1.5s ease-in-out infinite; }}
+@keyframes cmsiPulse {{ 0%,100% {{ opacity:1; transform:scale(1); }} 50% {{ opacity:.35; transform:scale(.82); }} }}
+.live-t {{ font-family: {MONO}; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: {UP}; font-weight: 600; }}
 .strat-name {{ font-size: 20px; font-weight: 600; color: {INK}; margin-top: 14px; }}
 .strat-sub {{ font-family: {MONO}; font-size: 11px; color: {INK3}; margin-top: 4px; letter-spacing: .02em; }}
 .big-wrap {{ margin-top: auto; padding-top: 24px; }}
-.big-lbl {{ font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}
-.big-num {{ font-size: 58px; line-height: 60px; font-weight: 700; letter-spacing: -.03em;
+.big-lbl {{ font-family: {MONO}; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}
+.big-num {{ font-family: {MONO}; font-size: 56px; line-height: 60px; font-weight: 700; letter-spacing: -.03em;
   font-variant-numeric: tabular-nums lining-nums; margin-top: 6px; }}
-.big-foot {{ display: flex; gap: 18px; margin-top: 12px; }}
-.bf-lbl {{ font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: {INK3}; font-weight: 600; }}
+.big-foot {{ display: flex; gap: 18px; margin-top: 16px; }}
+.bf-lbl {{ font-family: {MONO}; font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: {INK3}; font-weight: 600; }}
 .bf-lbl.red {{ color: {RED}; }}
-.bf-v {{ font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }}
-.bf-div {{ border-left: 1px solid {RULE}; padding-left: 18px; }}
+.bf-v {{ font-family: {MONO}; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }}
+.bf-div .bf-v {{ font-weight: 700; }}
+.bf-div {{ border-left: 1px solid {EDGE_SOFT}; padding-left: 18px; }}
 .hero-right {{ padding: 16px 16px 6px; position: relative; }}
-.chart-lbl {{ position: absolute; top: 16px; left: 20px; z-index: 2; font-size: 10px;
+.chart-lbl {{ position: absolute; top: 18px; left: 22px; z-index: 2; font-family: {MONO}; font-size: 10px;
   letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}
 #eq {{ width: 100%; height: 290px; }}
 .kpi-row {{ display: grid; grid-template-columns: repeat(7,1fr); border-top: 1px solid {EDGE}; }}
-.kh-tile {{ padding: 13px 15px; border-right: 1px solid {RULE}; }}
+.kh-tile {{ padding: 14px 16px; border-right: 1px solid {RULE}; }}
 .kh-tile:last-child {{ border-right: none; }}
-.kh-lbl {{ font-size: 9px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}
+.kh-lbl {{ font-family: {MONO}; font-size: 10px; letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}
 .kh-val {{ margin-top: 8px; }}
-.kh-num {{ font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }}
-.kh-suf {{ font-size: 14px; font-weight: 600; }}
+.kh-num {{ font-family: {MONO}; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }}
+.kh-suf {{ font-family: {MONO}; font-size: 14px; font-weight: 600; }}
 .kh-sub {{ font-size: 11px; color: {INK3}; font-weight: 500; }}
 .provrow {{ font-family: {MONO}; font-size: 11px; color: {INK3}; letter-spacing: .02em; margin-top: 8px; }}
 @media (max-width: 860px) {{ .hero-grid {{ grid-template-columns: 1fr; }}

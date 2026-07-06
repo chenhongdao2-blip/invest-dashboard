@@ -1,0 +1,35 @@
+{
+  "task": "K线行情 FT-salmon glass 1:1 重实现 — Ticker Drill 整页 reskin",
+  "mode": "code",
+  "max_cycles": 4,
+  "cycles_used": 4,
+  "contract": "docs/harness/kline-reskin/CONTRACT.md",
+  "status": "ALL GREEN — 11/11 features PASS; C5 tooltip fixed & 3-way verified (R4); awaiting Codex final approve + George ship",
+  "features": [
+    {"id": "U1-fonts",         "desc": "自托管 Space Grotesk + FONT_DISPLAY 栈 + iframe @font-face 接线,零 CDN", "accept": ["P7"], "passes": true},
+    {"id": "U2-term-shell",    "desc": "candlestick_terminal iframe 壳:底色/双wash/玻璃配方/1fr-340-gap26/560px", "accept": ["T1","T2","T3","T4","T11"], "passes": true},
+    {"id": "U3-term-header",   "desc": "头排:红条5x44+名30px+chip #e4d2bd+副行+EOD状态块(D1)", "accept": ["P3","P4","P5","P6"], "passes": true},
+    {"id": "U4-term-panel",    "desc": "右面板:Last Price 46px 动态色+change chip+OHLC 行色+指标 only-available(D3)", "accept": ["T5","T6","T7","T8","T9","T10"], "passes": true},
+    {"id": "U5-chart-option",  "desc": "option 换肤:蜡烛/MA新三色/legend/墨tooltip/%双grid/右y轴/红dataZoom/量柱α.5", "accept": ["C1","C2","C3","C4","C5","C6","C7","C8","C9","C11"], "passes": true},
+    {"id": "U6-bench-removal", "desc": "基准 overlay 全通道拆除(D2)", "accept": ["C10","G5"], "passes": true},
+    {"id": "U7-page-shell",    "desc": "页级:#fff1e5+双wash+masthead 新语言(页面局部注入)", "accept": ["P1","P2","P9"], "passes": true},
+    {"id": "U8-page-sections", "desc": "整页区块玻璃语言(KPI带/consensus/多空/memo/stat strips/expanders)", "accept": ["P8a","P8b","P8c","P8d","P8e","P8f"], "passes": true},
+    {"id": "U9-i18n-guards",   "desc": "zh/en 文案 + grep 电池 + py_compile", "accept": ["P10","G1","G4"], "passes": true},
+    {"id": "U10-regression",   "desc": "AppTest/回退/弹窗/列表模式/连刷/截图对照", "accept": ["G2","G3","G6","G7","G8","G9"], "passes": true},
+    {"id": "U11-harness-init", "desc": "docs/harness/kline-reskin/init.sh", "accept": ["G3"], "passes": true}
+  ],
+  "round_1": {"verdict_doc": "docs/harness/kline-reskin/eval/round-1.md", "pass": 37, "fail": 4, "fails": ["P8c(amended R2)", "T2", "T10", "T11"]},
+  "round_2": {"verdict_doc": "docs/harness/kline-reskin/eval/round-2.md", "commit": "20cb669", "verdict": "T2/T5/T6/T10/T11 fixed; P8c amended; P8b/P8d code-verified"},
+  "round_3": {"verdict_doc": "docs/harness/kline-reskin/eval/round-3.md", "commit": "3f2c839", "verdict": "NOT clean — Codex tooltip fix regressed OHLC (开 shows dataIndex); U5→false; 量比/PE guards PASS"},
+  "round_4": {
+    "evaluator": "independent (Stage 2)",
+    "verdict_doc": "docs/harness/kline-reskin/eval/round-4.md",
+    "commit": "4d746ec",
+    "c5_tooltip": "PASS — defensive shape-normalization (5元剥索引/4元直用); 3-way verified: programmatic formatter on live 5-elem param → panel exactly (live_match=true & nominal_match=true); rendered tooltip DOM last-candle all_four_equal=true (开67.00/收66.35/低63.79/高69.21); real hover shows sane prices no index low<=high",
+    "diff_scope": "formatter-only (candlestick_terminal.py:339-352) + docs; py_compile clean; no drift",
+    "regression_clean": ["C1 #0d7680/#c8102e", "C2 MA #e0963c/#b8b1a8/#1a1a1a", "C10 5-series", "T10 footer conv", "T2 glow=P2", "#kc=560", "量比/PE guards intact"],
+    "verdict": "ALL GREEN — U5 restored to true; 11/11 features PASS"
+  },
+  "acceptance": { "note": "只有独立 Evaluator 可翻 passes;每翻挂真机证据(eval/round-N.md)" },
+  "auditor_codex": { "model": "TBD", "scope": "CONTRACT.md §6", "verdict": null }
+}

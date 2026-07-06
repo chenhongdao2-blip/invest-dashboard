@@ -423,6 +423,7 @@ STRINGS = {
     "drill.no_mults": "无估值快照——该标的可能仅为选股池标的（不在主获取池）。",
     "drill.section.price": "价格 · 美元归一",
     "drill.section.rs": "相对强弱 · vs 板块基准",
+    "drill.term.meta_line": "日K线 · MA5 / MA10 / MA20 · 成交量 · {hours}",
     "drill.rs.title": "{bbg} · 相对强弱（基准日 = 100）",
     "drill.rs.caption": (
         "{date} 归一为 100。对照基准：{benches}。个股与基准均按上市地本币（{ccy}）"

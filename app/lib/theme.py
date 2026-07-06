@@ -43,6 +43,7 @@ PAPER_DEEP = "#f9e6d4"      # sidebar / 二级 surface
 PAPER_BAND = "#f2dfce"      # 表头 band / KPI label band
 PAPER_RULE = "#ebd9c8"      # hairline · 行间分隔
 PAPER_EDGE = "#d4c4b0"      # 强 hairline · KPI 卡边
+PAPER_EDGE_SOFT = "#e4d2bd" # 软 hairline · 代码 chip 边(K线行情.dc.html 1:1)
 
 # Ink (text)
 INK = "#1a1a1a"             # primary · 数字 / H1
@@ -79,6 +80,12 @@ FONT_STACK = (
     "'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif"
 )
 FONT_MONO = "'JetBrains Mono', 'IBM Plex Mono', 'SF Mono', 'Courier New', monospace"
+# Display stack for the Ticker-Drill reskin surfaces ONLY (K线行情.dc.html 1:1).
+# Do NOT swap into FONT_STACK — the rest of the site stays Inter-first.
+FONT_DISPLAY = (
+    "'Space Grotesk', 'Inter', 'PingFang SC', 'Hiragino Sans GB', "
+    "'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif"
+)
 
 # ── Plotly layout patch ──────────────────────────────────────────────────
 PLOTLY_LAYOUT: dict = {
@@ -162,6 +169,13 @@ FONT_FACE_CSS = """
   font-family: 'JetBrains Mono';
   src: url('app/static/fonts/jetbrains-mono-var.woff2') format('woff2-variations');
   font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('app/static/fonts/space-grotesk-var.woff2') format('woff2-variations');
+  font-weight: 300 700;
   font-style: normal;
   font-display: swap;
 }
@@ -984,6 +998,48 @@ def inject_css() -> None:
     call — no session-state guard (would skip subsequent renders).
     """
     st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
+
+
+# ── Ticker-Drill reskin (K线行情.dc.html 1:1) — PAGE-SCOPED, not in _CSS ──
+# These two are injected only by 6_Ticker_Drill after ui.sidebar_search(); the
+# glass recipe / radial wash must NOT leak to other pages (harness kline-reskin
+# CONTRACT P9), which is why they live outside _CSS.
+
+GLASS_CARD_CSS = f"""
+.cmsi-memo-bar, .cmsi-stat-strip, .cmsi-ch, .cmsi-note,
+[data-testid="stExpander"] details {{
+  background: rgba(255,255,255,0.55) !important;
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.7) !important;
+  border-top: 3px solid {INK} !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}}
+"""
+
+
+def page_radial_wash(max_width_px: int = 1240) -> None:
+    """Ticker-Drill page shell (design 1:1): #fff1e5 + the two radial washes
+    (red top-left / teal top-right, exact K线行情.dc.html geometry) layered over
+    PAPER, and the design's 1240px content width. `!important` beats _CSS's own
+    `background:{{PAPER}} !important` because this <style> is injected later in
+    the same cascade origin. Page-scoped by construction — only the caller page
+    gets it.
+    """
+    st.markdown(
+        f"""<style>
+[data-testid="stAppViewContainer"], .stApp {{
+  background:
+    radial-gradient(900px 520px at 10% -8%, rgba(200,16,46,0.09), transparent 60%),
+    radial-gradient(820px 520px at 94% 4%, rgba(13,118,128,0.10), transparent 60%),
+    {PAPER} !important;
+  background-attachment: fixed;
+}}
+.block-container {{ max-width: {max_width_px}px !important; }}
+</style>""",
+        unsafe_allow_html=True,
+    )
 
 
 # ── Editorial component helpers ──────────────────────────────────────────

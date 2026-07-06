@@ -1,0 +1,295 @@
+{
+ "_meta": {
+  "root": "/private/tmp/claude-501/-Users-gcc-invest-dashboard/e4781264-d8ae-44ae-8376-1cd31b5ce7c8/scratchpad/wave3-baseline",
+  "n_pages": 20,
+  "ts": "2026-07-05 22:40:11"
+ },
+ "1_CMSI_Coverage.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.4
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.0
+  }
+ },
+ "2_Healthcare.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.8
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  }
+ },
+ "3_Sector_Heatmap.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  }
+ },
+ "3b_Sector_Rotation.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  }
+ },
+ "4_Strategy_Picks.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 12.5
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "5_Valuation_Scanner.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  }
+ },
+ "6_Ticker_Drill.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.4
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  }
+ },
+ "7_Market_Data.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  }
+ },
+ "8_SEC_Facts.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [
+    "sec.gov"
+   ],
+   "secs": 0.0
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [
+    "sec.gov"
+   ],
+   "secs": 0.0
+  }
+ },
+ "9_HC_Capital_Markets.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.2
+  }
+ },
+ "a1_ai_coverage.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "a2_ai_overview.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "a3_ai_heatmap.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "a4_ai_valuation.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "a5_ai_sec.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [
+    "sec.gov"
+   ],
+   "secs": 0.0
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [
+    "sec.gov"
+   ],
+   "secs": 0.0
+  }
+ },
+ "e1_etf_overview.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "e2_etf_heatmap.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.0
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.0
+  }
+ },
+ "e3_etf_rotation.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.0
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.0
+  }
+ },
+ "model_drill.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.1
+  }
+ },
+ "home.py": {
+  "zh": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.7
+  },
+  "en": {
+   "status": "ok",
+   "exceptions": [],
+   "raw_keys": [],
+   "secs": 0.3
+  }
+ }
+}

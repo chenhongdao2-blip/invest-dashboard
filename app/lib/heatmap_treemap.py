@@ -60,24 +60,47 @@ def _txt(r: float) -> str:
 
 
 def _payload_to_treemap(payload: dict, prefer_cn: bool) -> list[dict]:
-    """build_domain_bento payload -> ECharts treemap data(sector 父 + stock 叶)。"""
+    """build_domain_bento payload -> ECharts treemap data(sector 父 + stock 叶)。
+
+    叶节点带自定义字段(tooltip/label formatter 经 p.data 消费):
+      nm   — 公司名(≠ticker 才有,截 14 字符)
+      big  — 1 = 市值份额 ≥3.5%(域内),label 面上加第二行公司名
+      wins — {"1D":x,"5D":x,"1M":x,"YTD":x} 多窗口涨跌(缺窗口诚实缺 key)
+      fpe  — Forward PE(缺/非正 = None,tooltip 不渲染)
+      sec  — 所属子行业块名(按 prefer_cn)
+    """
+    # domain 总市值(大瓦片阈值分母;缺市值 tile 的兜底中位数不计入,量级足够)
+    total = sum(float(t["mcap"]) for blk in payload.get("sectors", [])
+                for t in blk.get("tiles", []) if t.get("mcap")) or 1.0
     out = []
     for blk in payload.get("sectors", []):
         tiles = blk.get("tiles", [])
         mcaps = [t["mcap"] for t in tiles if t.get("mcap")]
         med = sorted(mcaps)[len(mcaps) // 2] if mcaps else 1.0
+        sec_label = blk["cn"] if prefer_cn else blk["en"]
         children = []
         for t in tiles:
             ret = float(t["ret"])
             size = float(t["mcap"]) if t.get("mcap") else med   # 缺市值兜底,免 0 面积
-            children.append({
+            node = {
                 "name": t["tk"],
                 "value": [size, round(ret, 2)],
                 "itemStyle": {"color": _ramp(ret)},
                 "label": {"color": _txt(ret)},
-            })
+                "sec": sec_label,
+            }
+            nm = str(t.get("name") or "")
+            if nm and nm != t["tk"]:
+                node["nm"] = nm[:14]
+            if t.get("mcap") and size / total >= 0.035:
+                node["big"] = 1
+            if t.get("wins"):
+                node["wins"] = t["wins"]
+            if t.get("fpe") is not None:
+                node["fpe"] = t["fpe"]
+            children.append(node)
         if children:
-            out.append({"name": (blk["cn"] if prefer_cn else blk["en"]), "children": children})
+            out.append({"name": sec_label, "children": children})
     return out
 
 
@@ -108,24 +131,38 @@ def render_treemap_html(payload: dict, *, window_label: str, as_of: str | None,
     lib = f'{TAG} src="{_ECHARTS_SRC}">{ETAG}'
 
     # ── ECharts JS option ──────────────────────────────────────────────────
+    # tooltip: 名字·公司名 / 子行业 / 多窗口涨跌(1D 5D 1M YTD) / 市值+Fwd PE。
+    # wins 缺 → 回退单窗口行(诚实降级);fpe 缺 → 不渲染。teal涨/红跌 LOCKED 不动。
+    # label: 大市值瓦片(d.big)面上加第二行公司名;小瓦片保持两行防挤爆。
     js = (
         "var DATA=" + data + ";"
         "mountEChart('m',function(){return {"
         "backgroundColor:'transparent',animationDuration:900,animationEasing:'cubicOut',"
         "tooltip:{backgroundColor:'" + t.INK + "',borderColor:'" + t.INK + "',padding:[8,12],"
         "textStyle:{color:'" + t.PAPER + "',fontFamily:'JetBrains Mono',fontSize:11},"
-        "formatter:function(p){if(!p.value||!Array.isArray(p.value)){return '<b>'+p.name+'</b>';}"
-        "var r=p.value[1];"
-        "var rc=r>=0?'#9cc4c2':'#eaa9a9';"
-        "return '<div style=\"font-size:13px;font-weight:700;margin-bottom:3px\">'+p.name+'</div>'"
-        f"+'<div style=\"color:\'+rc+\';font-weight:700\">{wl} '+(r>=0?'+':'')+r.toFixed(1)+'%</div>'"
-        f"+'<div style=\"color:#b8b1a8\">{ml} $'+(p.value[0]/1e9).toFixed(1)+'B</div>'"
+        "formatter:function(p){"
+        "if(!p.value||!Array.isArray(p.value)){return '<b>'+p.name+'</b>';}"
+        "var d=p.data||{};var r=p.value[1];"
+        "var h='<div style=\"font-size:13px;font-weight:700;margin-bottom:2px\">'+p.name+(d.nm?' · '+d.nm:'')+'</div>';"
+        "if(d.sec){h+='<div style=\"color:#b8b1a8;font-size:10px;margin-bottom:4px\">'+d.sec+'</div>';}"
+        "var w='';"
+        "if(d.wins){var ks=['1D','5D','1M','YTD'],cs=[];"
+        "for(var i=0;i<ks.length;i++){var k=ks[i],v=d.wins[k];if(v==null)continue;"
+        "cs.push('<span style=\"color:#b8b1a8\">'+k+'</span> <span style=\"color:'+(v>=0?'#9cc4c2':'#eaa9a9')+';font-weight:700\">'+(v>=0?'+':'')+v.toFixed(1)+'%</span>');}"
+        "if(cs.length){w='<div style=\"margin-bottom:3px\">'+cs.join('&nbsp;&nbsp;')+'</div>';}}"
+        "if(!w){w='<div style=\"color:'+(r>=0?'#9cc4c2':'#eaa9a9')+';font-weight:700;margin-bottom:3px\">" + wl + " '+(r>=0?'+':'')+r.toFixed(1)+'%</div>';}"
+        "var f='<div style=\"color:#b8b1a8\">" + ml + " $'+(p.value[0]/1e9).toFixed(1)+'B'"
+        "+(d.fpe?' · Fwd PE '+d.fpe.toFixed(1)+'x':'')+'</div>';"
+        "return h+w+f;"
         "}},"
         "series:[{type:'treemap',roam:false,nodeClick:false,breadcrumb:{show:false},"
         "width:'100%',height:'100%',top:0,left:0,right:0,bottom:0,visualDimension:0,"
         "label:{show:true,position:'inside',fontFamily:'JetBrains Mono',fontWeight:700,fontSize:12,lineHeight:15,"
         "formatter:function(p){if(!p.value||!Array.isArray(p.value)){return '';}"
-        "var r=p.value[1];return p.name+String.fromCharCode(10)+(r>=0?'+':'')+r.toFixed(1)+'%';}},"
+        "var d=p.data||{};var r=p.value[1];var NL=String.fromCharCode(10);"
+        "var pct=(r>=0?'+':'')+r.toFixed(1)+'%';"
+        "if(d.big&&d.nm){return p.name+NL+d.nm+NL+pct;}"
+        "return p.name+NL+pct;}},"
         "upperLabel:{show:true,height:26,color:'" + t.INK + "',fontFamily:'Space Grotesk',fontWeight:700,fontSize:13,padding:[0,6]},"
         "itemStyle:{borderColor:'" + t.PAPER + "',borderWidth:0,gapWidth:2},"
         "levels:[{itemStyle:{gapWidth:3,borderWidth:0,color:'" + t.PAPER_DEEP + "'},upperLabel:{show:true}},"

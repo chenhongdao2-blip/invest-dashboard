@@ -148,6 +148,14 @@ def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool, *,
 
     ret_s = pd.to_numeric(rets[window_col], errors="coerce")
     mcap_s = pd.to_numeric(mult[mc], errors="coerce") if mc else pd.Series(dtype=float)
+    # Extra tooltip enrichments (treemap consumer; bento renderer ignores these keys):
+    # multi-window returns + forward PE. Honest-missing: NaN windows stay OUT of the dict,
+    # fpe is None when absent/non-positive — renderers degrade, never fabricate.
+    fpe_s = (pd.to_numeric(mult["forward_pe"], errors="coerce")
+             if (not mult.empty and "forward_pe" in mult.columns) else pd.Series(dtype=float))
+    win_series = {lbl: pd.to_numeric(rets[col], errors="coerce")
+                  for lbl, col in (("1D", "1d_%"), ("5D", "5d_%"), ("1M", "1m_%"), ("YTD", "ytd_%"))
+                  if col in rets.columns}
 
     # Per-ticker record (valid = has a return).
     recs: dict[str, list[dict]] = {}
@@ -157,11 +165,19 @@ def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool, *,
         if r is None or pd.isna(r):
             continue
         m = mcap_s.get(t) if not mcap_s.empty else None
+        wins = {}
+        for lbl, s in win_series.items():
+            wv = s.get(t)
+            if wv is not None and not pd.isna(wv):
+                wins[lbl] = round(float(wv), 1)
+        fpe = fpe_s.get(t) if not fpe_s.empty else None
         recs.setdefault(sec, []).append({
             "tk": t,
             "ret": float(r),
             "mcap": (None if (m is None or pd.isna(m)) else float(m)),
             "name": names.get(t, t),
+            "wins": wins,
+            "fpe": (None if (fpe is None or pd.isna(fpe) or fpe <= 0) else round(float(fpe), 1)),
         })
         all_valid_rets.append(float(r))
 

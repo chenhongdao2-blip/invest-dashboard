@@ -63,9 +63,23 @@ jobs:
           python jobs/build_hc_overview_data.py --public-only
           python jobs/update_manifest.py hc_index_comparison ok --note "US panels via yfinance; HK lines from committed iFind provenance"
 
+      # 13F filings update quarterly (+45d lag, occasional /A amendments) — full
+      # SEC pass Mondays / manual dispatch; other weekdays only refresh the baked
+      # price series (sparkline + since-quarter-end move) via yfinance. Cheap
+      # no-op commit-wise when nothing changed. US runner reaches SEC directly.
+      - name: Fetch US HC funds 13F (full Mondays, prices daily)
+        run: |
+          if [ "$(date -u +%u)" = "1" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            python jobs/fetch_13f_hc_funds.py
+          else
+            python jobs/fetch_13f_hc_funds.py --prices-only
+          fi
+          python jobs/update_manifest.py us_hc_13f ok --note "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
+
       - name: Commit data
         run: |
           ./scripts/commit_data.sh "data: public market refresh $(date -u +%Y-%m-%d) [skip ci]" \
             data/snapshots.db \
             data/refresh_manifest.json \
-            data/external/hc_index_comparison.csv
+            data/external/hc_index_comparison.csv \
+            data/external/us_hc_funds_13f.json

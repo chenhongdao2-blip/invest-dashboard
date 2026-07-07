@@ -12,6 +12,8 @@ from lib import db
 from lib import format as fmt
 from lib import hc_overview as hco
 from lib import hc_exports as hcx
+from lib import fund_13f as f13
+from lib import fund_13f_matrix as f13m
 from lib import ui
 from lib import theme
 from lib import i18n
@@ -52,7 +54,7 @@ _XLSX_MIME = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 # hand-curated annuals) can't auto-refresh on Cloud, so the badge guarantees stale data
 # never silently reads as live. See docs/healthcare-data-pipeline.md.
 from datetime import date as _date
-_STALE_DAYS = {"rs": 35, "hshci": 45, "pos": 135, "hc": 300, "jp": 7}
+_STALE_DAYS = {"rs": 35, "hshci": 45, "pos": 135, "hc": 300, "jp": 7, "f13": 140}
 
 
 def _stale_note(latest_iso, key: str) -> None:
@@ -447,6 +449,121 @@ else:
     )
     _pos_asof = _pos["data_date"].dropna().astype(str).str[:10].max() if "data_date" in _pos.columns else None
     _stale_note(_pos_asof, "pos")
+
+st.divider()
+
+# --- US HC-dedicated funds 13F: consensus holdings + QoQ moves ----------------
+# US-institutional counterpart of the China-fund OW/UW block above. SEC EDGAR
+# 13F-HR (public — real fund names, no anon), baked by jobs/fetch_13f_hc_funds.py.
+# LOCKED teal=加仓/新建 / red=减仓/清仓 convention; caption spells out it's
+# POSITIONING as of the report date (13F lags up to 45 days), not a daily move.
+theme.section_header(i18n.t("hc.f13.section"), meta=i18n.t("hc.f13.section_meta"))
+_f13 = f13.load_13f()
+_f13v = f13.verdict(_f13)
+if not _f13v:
+    st.caption(i18n.t("hc.f13.empty"))
+else:
+    st.markdown(i18n.t(
+        "hc.f13.verdict",
+        n_funds=_f13v["n_funds"], period=_f13v["period"],
+        aum=f"{_f13v['total_aum_bn']:.0f}",
+        top=_f13v["top_label"], top_n=_f13v["top_n_funds"],
+        hot=_f13v["hot_label"], hot_n=_f13v["hot_n_new"],
+    ))
+
+    c_name = i18n.t("hc.f13.col.name")
+    c_nf, c_val = i18n.t("hc.f13.col.n_funds"), i18n.t("hc.f13.col.value")
+    c_new, c_add, c_trim = i18n.t("hc.f13.col.new"), i18n.t("hc.f13.col.add"), i18n.t("hc.f13.col.trim")
+    c_funds = i18n.t("hc.f13.col.funds")
+    c_spark, c_sq = i18n.t("hc.f13.col.spark"), i18n.t("hc.f13.col.since_qend")
+
+    # Block A — FactSet-style holder × company matrix (replaces the flat consensus
+    # table): rows = funds ranked by combined value across the shown names, columns
+    # = top-15 consensus holdings with 6M mini-spark + since-Q-end in the header.
+    # Cell = that fund's position ($M), TEXT colored by its own QoQ move (teal
+    # NEW/ADD, red TRIM, ink UNCH) — house 染字不染底, one dimension over FactSet.
+    st.markdown(i18n.t("hc.f13.consensus_h"))
+    f13m.render_matrix(
+        _f13, top_n=15, prefer_cn=(i18n.get_lang() == "zh"),
+        labels={
+            "holder": i18n.t("hc.f13.mx.holder"), "total": i18n.t("hc.f13.mx.total"),
+            "legend_new": i18n.t("hc.f13.qoq.NEW"), "legend_add": i18n.t("hc.f13.qoq.ADD"),
+            "legend_trim": i18n.t("hc.f13.qoq.TRIM"), "legend_unch": i18n.t("hc.f13.mx.unch"),
+        },
+    )
+    st.caption(i18n.t("hc.f13.consensus_note"))
+
+    # Block B — QoQ highlights: hottest new buys / most-crowded exits.
+    _buys, _exits = f13.top_new_buys(_f13), f13.top_exits(_f13)
+    _bcol, _ecol = st.columns(2)
+    with _bcol:
+        st.markdown(i18n.t("hc.f13.newbuys_h"))
+        if _buys.empty:
+            st.caption(i18n.t("hc.f13.none"))
+        else:
+            _buys = f13.attach_prices(_buys, _f13)
+            _buys["total_value"] = _buys["total_value"] / 1e9   # → USD billions
+            _b = _buys.head(10).rename(columns={
+                "label": c_name, "n_new": c_new, "n_funds": c_nf,
+                "total_value": c_val, "funds": c_funds,
+                "spark": c_spark, "since_qend_pct": c_sq,
+            })[[c_name, c_new, c_nf, c_val, c_spark, c_sq]]
+            ui.render_html_table(
+                _b, text_cols=[c_name],
+                int_cols=[c_new, c_nf], money_b_cols=[c_val],
+                spark_cols=[c_spark], pct_decimal_cols=[c_sq],
+                hide_index=True, height=420)
+    with _ecol:
+        st.markdown(i18n.t("hc.f13.exits_h"))
+        if _exits.empty:
+            st.caption(i18n.t("hc.f13.none"))
+        else:
+            c_ex = i18n.t("hc.f13.col.n_exits")
+            _exits = f13.attach_prices(_exits, _f13)
+            _e = _exits.head(10).rename(columns={
+                "label": c_name, "n_exits": c_ex, "funds": c_funds,
+                "spark": c_spark, "since_qend_pct": c_sq,
+            })[[c_name, c_ex, c_spark, c_sq]]
+            ui.render_html_table(
+                _e, text_cols=[c_name],
+                int_cols=[c_ex], spark_cols=[c_spark], pct_decimal_cols=[c_sq],
+                hide_index=True, height=420)
+    st.caption(i18n.t("hc.f13.legend"))
+    _pas = f13.prices_as_of(_f13)
+    if _pas:
+        st.caption(i18n.t("hc.f13.prices_note", asof=_pas, period=_f13v["period"]))
+
+    # Block C — per-fund top holdings + that fund's QoQ tags.
+    st.markdown(i18n.t("hc.f13.perfund_h"))
+    _qoq_key = {"NEW": "hc.f13.qoq.NEW", "ADD": "hc.f13.qoq.ADD",
+                "TRIM": "hc.f13.qoq.TRIM", "UNCH": "hc.f13.qoq.UNCH"}
+    c_w, c_qoq, c_chg = i18n.t("hc.f13.col.weight"), i18n.t("hc.f13.col.qoq"), i18n.t("hc.f13.col.chg")
+    for _f in f13.funds_ok(_f13):
+        _stale = " ⚠️" if _f.get("status") == "stale" else ""
+        _hdr = f"{_f['name']} · ${(_f.get('total_value') or 0)/1e9:.1f}bn · " \
+               f"{_f.get('n_positions', 0)} {i18n.t('hc.f13.positions')} · {_f.get('period', '—')}{_stale}"
+        with st.expander(_hdr):
+            _snap = f13.fund_snapshot(_f)
+            if _snap.empty:
+                st.caption(i18n.t("hc.f13.none"))
+                continue
+            _snap["qoq"] = _snap["qoq"].map(lambda s: i18n.t(_qoq_key.get(str(s), "hc.f13.qoq.UNCH")))
+            _snap["value"] = _snap["value"] / 1e9   # → USD billions
+            _sdisp = _snap.rename(columns={
+                "label": c_name, "weight": c_w, "value": c_val,
+                "qoq": c_qoq, "shares_chg_pct": c_chg})[[c_name, c_w, c_val, c_qoq, c_chg]]
+            ui.render_html_table(
+                _sdisp, text_cols=[c_name], status_cols={
+                    c_qoq: {i18n.t("hc.f13.qoq.NEW"): "up", i18n.t("hc.f13.qoq.ADD"): "up",
+                            i18n.t("hc.f13.qoq.TRIM"): "down", i18n.t("hc.f13.qoq.UNCH"): ""}},
+                pct_decimal_cols=[c_w, c_chg], money_b_cols=[c_val],
+                hide_index=True, height=min(560, 60 + 36 * len(_sdisp)))
+
+    theme.eyebrow(i18n.t("hc.read.eyebrow"))
+    st.markdown(i18n.t("hc.f13.read"))
+    st.caption(i18n.t("hc.f13.source"))
+    _f13_asof = _f13.get("latest_period")
+    _stale_note(_f13_asof, "f13")
 
 st.divider()
 

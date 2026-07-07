@@ -34,6 +34,7 @@ V4_CSV = DATA_EXT / "v4_picks.csv"
 V5_CSV = DATA_EXT / "v5_picks.csv"
 HD_CSV = DATA_EXT / "hd_picks.csv"
 HD_V2_CSV = DATA_EXT / "hd_picks_v2.csv"
+HD_V3_CSV = DATA_EXT / "hd_picks_v3.csv"
 IPO_CSV = DATA_EXT / "ipo_picks.csv"
 IPO_INTRADAY_CSV = DATA_EXT / "ipo_day1_intraday.csv"
 # Acquired / delisted picks: yfinance purges their history, so a live fetch returns
@@ -110,6 +111,18 @@ def load_hd_v2() -> pd.DataFrame:
 
 
 @st.cache_data(ttl=900)
+def load_hd_v3() -> pd.DataFrame:
+    """HD v3 Wind single-source build (2026-07-06 data date, effective 2026-07-07
+    after George sign-off). Public fields only — same schema as v2. weight_pct =
+    absolute book weight, Σ≈88; the other ~12% is idle cash by design. bucket:
+    rate=利率溢价桶 / nonrate=非利率桶. A NEW book from 2026-07-07, not a restatement
+    of v2 — v1/v2 histories stay frozen and comparable (三代演进)."""
+    if not HD_V3_CSV.exists():
+        return pd.DataFrame()
+    return pd.read_csv(HD_V3_CSV)
+
+
+@st.cache_data(ttl=900)
 def load_ipo() -> pd.DataFrame:
     """HK IPO 打新 backtest — STATIC cross-section snapshot.
 
@@ -183,6 +196,23 @@ STRATEGIES = {
         "cash_pct": 12.0,
         # page renders this INSIDE the hk_hd tab (version toggle), not as its
         # own tab — see HD_VERSION_GROUP filter in 4_Strategy_Picks.py.
+        "version_of": "hk_hd",
+    },
+    "hk_hd_v3": {
+        "name": "HK 高股息 v3",
+        "emoji": "💰",
+        "loader": load_hd_v3,
+        # effective = George sign-off date (2026-07-07), not the 2026-07-06 data
+        # date — the book goes live on approval, forward NAV anchored here.
+        "pick_date": "2026-07-07",
+        "benchmark": "3466.HK",
+        "benchmark_name": "恒生高股息30",
+        "benchmark2": "^HSI",
+        "benchmark2_name": "恒生指数",
+        # score-weighted book (Wind single-source): weight_pct = absolute %, + idle cash.
+        "weight_col": "weight_pct",
+        "cash_pct": 12.0,
+        # renders inside the hk_hd tab as the current (default) version toggle.
         "version_of": "hk_hd",
     },
 }

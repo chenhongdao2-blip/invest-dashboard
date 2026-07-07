@@ -91,27 +91,31 @@ STRINGS = {
     "strategy.hd.bucket.rate": "Rate premium",
     "strategy.hd.bucket.nonrate": "Non-rate",
 
-    # ── HD version group (v1 frozen history / v2 current / compare) ──
+    # ── HD version group (v1/v2 frozen history / v3 current / 3-gen compare) ──
     "strategy.hd.version.toggle": "Portfolio version",
-    "strategy.hd.version.v2": "v2 · 2026-06-11 (current)",
+    "strategy.hd.version.v3": "v3 · 2026-07-07 (current)",
+    "strategy.hd.version.v2": "v2 · 2026-06-11 (history)",
     "strategy.hd.version.v1": "v1 · 2026-03-20 (history)",
-    "strategy.hd.version.compare": "v1 vs v2 compare",
+    "strategy.hd.version.compare": "3-gen compare (v1 / v2 / v3)",
     "strategy.hd.version.v1_note": (
         "Historical version: v1 is the official portfolio published 2026-03-20 "
         "(34-name scored universe · top 20 equal-weight). Its curve keeps running "
         "and constituents are frozen; the new book from 2026-06-11 is v2."
     ),
-    "strategy.hd.compare.title": "High-dividend v1 vs v2 · NAV compare (each inception = 100)",
+    "strategy.hd.compare.title": "High-dividend v1 / v2 / v3 · NAV compare (each inception = 100)",
     "strategy.hd.compare.v1_line": "v1 (equal-weight, from 2026-03-20)",
     "strategy.hd.compare.v2_line": "v2 (score-weighted + cash buffer, from 2026-06-11)",
-    "strategy.hd.compare.rebal_label": "v2 build 2026-06-11",
+    "strategy.hd.compare.v3_line": "v3 (Wind single-source score-weighted + cash buffer, from 2026-07-07)",
+    "strategy.hd.compare.rebal_label": "v3 build 2026-07-07",
     "strategy.hd.compare.note": (
-        "Basis: each curve is indexed to 100 at its own inception close — two "
+        "Basis: each curve is indexed to 100 at its own inception close — three "
         "independent books, not one chained NAV. Benchmark anchored at the v1 "
-        "inception. v1 history is fully preserved, never truncated or restated."
+        "inception. v1 / v2 history is fully preserved, never truncated or restated "
+        "(3-generation evolution)."
     ),
     "strategy.hd.compare.metric.v1": "v1 since inception",
     "strategy.hd.compare.metric.v2": "v2 since inception",
+    "strategy.hd.compare.metric.v3": "v3 since inception",
     "strategy.hd.diff.title": "Rebalance detail (v1 top-20 book → v2)",
     "strategy.hd.diff.kept": "Kept ({n})",
     "strategy.hd.diff.added": "Added ({n})",
@@ -444,5 +448,35 @@ STRINGS = {
         "2026-06-11).\n\n"
         "**Benchmark** — 3466.HK (Hang Seng High Dividend 30 ETF), with the Hang Seng "
         "Index shown as a broad-market reference; same as v1."
+    ),
+    "strategy.hd.v3.method": (
+        "**This build** — v3 is the official rebalance effective 2026-07-07 (20 names, "
+        "non-equal weights), data date 2026-07-06; run as a separate book from v1 "
+        "(2026-03-20) and v2 (2026-06-11); all three curves are preserved (3-gen "
+        "evolution).\n\n"
+        "**Data-source upgrade** — from v3, financials / quotes / valuation are sourced "
+        "from **Wind as the single source** (prior iFind / Juyuan pipelines retired), "
+        "with HKEX results announcements as the exception source (pure-HK cash-flow "
+        "statements + payout-ratio boundary final check).\n\n"
+        "**How it is built** — quantitative six-gate screening, qualitative scoring by "
+        "vertical analyst Agents, and portfolio construction are all produced by an "
+        "AI-native research engine, with separation-of-powers contract validation, "
+        "cross-model independent audit and full audit trails; the list goes live after "
+        "a manual name-by-name review.\n\n"
+        "**Four portfolio rules** —\n"
+        "1. **High deployment for income**: ~88% invested + ~12% cash buffer (NAV treats "
+        "cash at zero return, conservative).\n"
+        "2. **Quality score sets weights**: the *willing / able / durable to pay* quality "
+        "framework carries over; higher score → higher weight.\n"
+        "3. **Return-source structure anchored**: rate-premium and non-rate buckets "
+        "diversified. First principles — high-dividend return is fundamentally a **rate "
+        "risk premium**: banks earn the credit spread, utilities (power) earn duration "
+        "discounting; the non-rate bucket (consumer / industrials / energy) pays out of "
+        "its own cash flow, hedging the book's rate sensitivity.\n"
+        "4. **Concentration limit**: single name ≤10%, sectors reasonably diversified.\n\n"
+        "**Yield basis** — yields shown are the clean annualized run-rate at build (as of "
+        "2026-07-06).\n\n"
+        "**Benchmark** — 3466.HK (Hang Seng High Dividend 30 ETF), with the Hang Seng "
+        "Index shown as a broad-market reference; same as v1 / v2."
     ),
 }

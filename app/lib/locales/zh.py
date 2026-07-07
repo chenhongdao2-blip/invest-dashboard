@@ -86,26 +86,29 @@ STRINGS = {
     "strategy.hd.bucket.rate": "利率溢价",
     "strategy.hd.bucket.nonrate": "非利率",
 
-    # ── HD version group (v1 frozen history / v2 current / compare) ──
+    # ── HD version group (v1/v2 frozen history / v3 current / 三代 compare) ──
     "strategy.hd.version.toggle": "组合版本",
-    "strategy.hd.version.v2": "v2 · 2026-06-11（当前）",
+    "strategy.hd.version.v3": "v3 · 2026-07-07（当前）",
+    "strategy.hd.version.v2": "v2 · 2026-06-11（历史）",
     "strategy.hd.version.v1": "v1 · 2026-03-20（历史）",
-    "strategy.hd.version.compare": "v1 vs v2 对比",
+    "strategy.hd.version.compare": "三代对比（v1 / v2 / v3）",
     "strategy.hd.version.v1_note": (
         "历史版本：v1 为 2026-03-20 发布的正式组合（34 只评分池 · Top 20 等权），"
         "曲线持续跟踪、成分不再调整；2026-06-11 起的新建仓见 v2。"
     ),
-    "strategy.hd.compare.title": "高股息 v1 vs v2 · 净值对比（各自建仓日 = 100）",
+    "strategy.hd.compare.title": "高股息 v1 / v2 / v3 · 净值对比（各自建仓日 = 100）",
     "strategy.hd.compare.v1_line": "v1 组合（等权，2026-03-20 起）",
     "strategy.hd.compare.v2_line": "v2 组合（评分定权 + 现金缓冲，2026-06-11 起）",
-    "strategy.hd.compare.rebal_label": "v2 建仓 2026-06-11",
+    "strategy.hd.compare.v3_line": "v3 组合（Wind 单一源评分定权 + 现金缓冲，2026-07-07 起）",
+    "strategy.hd.compare.rebal_label": "v3 建仓 2026-07-07",
     "strategy.hd.compare.note": (
-        "口径：两条曲线各自以建仓日收盘 = 100 独立计算（两个独立组合，"
-        "非同一净值的接续）；基准锚定 v1 建仓日。v1 历史完整保留，"
-        "不因 v2 上线而截断或重述。"
+        "口径：三条曲线各自以建仓日收盘 = 100 独立计算（三个独立组合，"
+        "非同一净值的接续）；基准锚定 v1 建仓日。v1 / v2 历史完整保留，"
+        "不因 v3 上线而截断或重述（三代演进）。"
     ),
     "strategy.hd.compare.metric.v1": "v1 建仓至今",
     "strategy.hd.compare.metric.v2": "v2 建仓至今",
+    "strategy.hd.compare.metric.v3": "v3 建仓至今",
     "strategy.hd.diff.title": "换仓明细（v1 Top-20 组合 → v2）",
     "strategy.hd.diff.kept": "留任 {n} 只",
     "strategy.hd.diff.added": "新进 {n} 只",
@@ -385,5 +388,23 @@ STRINGS = {
         "4. **集中度约束**：单一标的权重 ≤10%，行业适度分散。\n\n"
         "**股息率口径** — 表中股息率为建仓时点的年化 run-rate（截至 2026-06-11）。\n\n"
         "**基准** — 3466.HK（恒生高股息30 ETF），另列恒生指数作大盘参照；与 v1 一致。"
+    ),
+    "strategy.hd.v3.method": (
+        "**版本定位** — v3 为 2026-07-07 生效的正式换仓组合（20 只，非等权），"
+        "数据日 2026-07-06；与 v1（2026-03-20）、v2（2026-06-11）独立核算，"
+        "三代曲线完整保留（三代演进）。\n\n"
+        "**数据源升级** — v3 起财务 / 行情 / 估值取数切换为 **Wind 单一源**（此前 iFind / 聚源 产线停用），"
+        "例外补源为港交所业绩公告（纯港股现金流量表 + 派息率边界终核）。\n\n"
+        "**构建方式** — 定量六闸筛选、垂直分析师 Agent 定性评分、组合构建全流程由 AI 原生投研引擎产出，"
+        "三权分立契约校验、异模型独立审核、全程留痕；名单经人工逐票复核后生效。\n\n"
+        "**四条组合规则** —\n"
+        "1. **高仓位收息**：约 88% 建仓 + 约 12% 现金缓冲（净值按现金 0 收益的保守口径计算）。\n"
+        "2. **质量评分定权重**：沿用「愿意分 / 分得出 / 分得久」质量评分框架，评分越高权重越高。\n"
+        "3. **收益来源结构锚定**：利率溢价桶与非利率桶分散。第一性原理——高股息"
+        "收益的本质是**利率风险溢价**：银行吃信用利差、公用事业（电力）吃久期折现；"
+        "非利率桶（消费 / 工业 / 能源）的分红由自身现金流驱动，对冲组合的利率敏感度。\n"
+        "4. **集中度约束**：单一标的权重 ≤10%，行业适度分散。\n\n"
+        "**股息率口径** — 表中股息率为建仓时点的清洁年化 run-rate（截至 2026-07-06）。\n\n"
+        "**基准** — 3466.HK（恒生高股息30 ETF），另列恒生指数作大盘参照；与 v1 / v2 一致。"
     ),
 }

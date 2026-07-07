@@ -171,6 +171,7 @@ def render_strategy(strat_id: str) -> None:
         "v5_biotech": "strategy.v5.method",
         "hk_hd": "strategy.hd.method",
         "hk_hd_v2": "strategy.hd.v2.method",
+        "hk_hd_v3": "strategy.hd.v3.method",
     }.get(strat_id, "strategy.hd.method")
     with st.expander(i18n.t("strategy.method_expander")):
         st.markdown(i18n.t(method_key))
@@ -362,10 +363,11 @@ def render_strategy(strat_id: str) -> None:
 
 
 def render_hd_versions() -> None:
-    """HK 高股息 tab = version group: v2 (current, default) / v1 (history,
-    frozen curve keeps running) / v1-vs-v2 compare. One tab, three views —
-    v1 history is never truncated; v2 is a NEW book from 2026-06-11."""
+    """HK 高股息 tab = version group: v3 (current, default) / v2 (history) / v1
+    (history, frozen curve keeps running) / 3-gen compare. One tab, four views —
+    v1/v2 histories are never truncated; v3 is a NEW book from 2026-07-07 (三代演进)."""
     opts = [
+        i18n.t("strategy.hd.version.v3"),
         i18n.t("strategy.hd.version.v2"),
         i18n.t("strategy.hd.version.v1"),
         i18n.t("strategy.hd.version.compare"),
@@ -375,12 +377,14 @@ def render_hd_versions() -> None:
         key="hd_version",
     ) or opts[0]
     if choice == opts[1]:
+        render_strategy("hk_hd_v2")
+    elif choice == opts[2]:
         st.caption(i18n.t("strategy.hd.version.v1_note"))
         render_strategy("hk_hd")
-    elif choice == opts[2]:
+    elif choice == opts[3]:
         render_hd_compare()
     else:
-        render_strategy("hk_hd_v2")
+        render_strategy("hk_hd_v3")
 
 
 def render_hd_compare() -> None:
@@ -394,22 +398,26 @@ def render_hd_compare() -> None:
     """
     v1 = strat.load_hd()
     v2 = strat.load_hd_v2()
-    if v1.empty or v2.empty:
-        st.warning("Need both hd_picks.csv and hd_picks_v2.csv — check data/external/")
+    v3 = strat.load_hd_v3()
+    if v1.empty or v2.empty or v3.empty:
+        st.warning("Need hd_picks.csv + hd_picks_v2.csv + hd_picks_v3.csv — check data/external/")
         return
     cfg1 = strat.STRATEGIES["hk_hd"]
     cfg2 = strat.STRATEGIES["hk_hd_v2"]
+    cfg3 = strat.STRATEGIES["hk_hd_v3"]
     bench_sym = cfg1["benchmark"]
     bench2_sym = cfg1.get("benchmark2")
 
     v1_book = v1.sort_values("rank").head(20)
     v2_book = v2.sort_values("rank")
+    v3_book = v3.sort_values("rank")
     v1_syms = v1_book["yf_sym"].dropna().tolist()
     v2_syms = v2_book["yf_sym"].dropna().tolist()
+    v3_syms = v3_book["yf_sym"].dropna().tolist()
 
-    # --- Prices: one fetch covering both books + benchmarks, from v1 inception ---
+    # --- Prices: one fetch covering all three books + benchmarks, from v1 inception ---
     all_syms = tuple(dict.fromkeys(
-        v1_syms + v2_syms + [s for s in (bench_sym, bench2_sym) if s]))
+        v1_syms + v2_syms + v3_syms + [s for s in (bench_sym, bench2_sym) if s]))
     earliest = (pd.Timestamp(cfg1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
     closes = strat.fetch_picks_closes(all_syms, start=earliest,
                                       _ovr_mtime=strat._delisted_mtime())
@@ -429,6 +437,13 @@ def render_hd_compare() -> None:
         cfg2["pick_date"], portfolio_syms=v2_syms,
         weights=w2, cash_pct=cfg2["cash_pct"],
     )
+    # v3 curve: published weights + 12% cash from 2026-07-07 (current book)
+    w3 = v3_book.set_index("yf_sym")[cfg3["weight_col"]].astype(float) / 100.0
+    _, port_v3, _, _ = strat.compute_strategy_returns(
+        closes[[c for c in v3_syms if c in closes.columns]],
+        cfg3["pick_date"], portfolio_syms=v3_syms,
+        weights=w3, cash_pct=cfg3["cash_pct"],
+    )
     def _cmp_norm(sym: str | None) -> pd.Series:
         if not sym or sym not in closes.columns:
             return pd.Series(dtype=float)
@@ -439,8 +454,8 @@ def render_hd_compare() -> None:
     bench_norm = _cmp_norm(bench_sym)
     bench2_norm = _cmp_norm(bench2_sym)
 
-    # --- Summary metrics (as-of latest close) ---
-    mc = st.columns(4 if not bench2_norm.empty else 3)
+    # --- Summary metrics (as-of latest close): v1 / v2 / v3 / bench [/ bench2] ---
+    mc = st.columns(5 if not bench2_norm.empty else 4)
     if not port_v1.empty:
         mc[0].metric(i18n.t("strategy.hd.compare.metric.v1"),
                      f"{port_v1.iloc[-1] - 100:+.2f}%",
@@ -449,12 +464,16 @@ def render_hd_compare() -> None:
         mc[1].metric(i18n.t("strategy.hd.compare.metric.v2"),
                      f"{port_v2.iloc[-1] - 100:+.2f}%",
                      help=f"inception {cfg2['pick_date']}")
+    if not port_v3.empty:
+        mc[2].metric(i18n.t("strategy.hd.compare.metric.v3"),
+                     f"{port_v3.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg3['pick_date']}")
     if not bench_norm.empty:
-        mc[2].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
+        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
                      f"{bench_norm.iloc[-1] - 100:+.2f}%",
                      help=f"anchor {cfg1['pick_date']}")
     if not bench2_norm.empty:
-        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
+        mc[4].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
                      f"{bench2_norm.iloc[-1] - 100:+.2f}%",
                      help=f"anchor {cfg1['pick_date']}")
 
@@ -463,7 +482,7 @@ def render_hd_compare() -> None:
     # exactly at its inception via None gaps). v2 = CMSI red (the "current" book,
     # prominent like the Hero strategy line); v1 = teal; benchmarks muted dash/dot.
     _all_idx = pd.DatetimeIndex([])
-    for _s in (bench_norm, bench2_norm, port_v1, port_v2):
+    for _s in (bench_norm, bench2_norm, port_v1, port_v2, port_v3):
         if not _s.empty:
             _all_idx = _all_idx.union(_s.index)
     _all_idx = _all_idx.sort_values()
@@ -487,15 +506,21 @@ def render_hd_compare() -> None:
         _lines.append({"name": i18n.t("strategy.hd.compare.v1_line"),
                        "values": _aligned(port_v1), "color": theme.UP,
                        "dash": "solid", "width": 1.8})
+    # v2 is now a HISTORY book (v3 is current) — amber, thinner than the current line.
     if not port_v2.empty:
         _lines.append({"name": i18n.t("strategy.hd.compare.v2_line"),
-                       "values": _aligned(port_v2), "color": theme.CMSI_RED,
+                       "values": _aligned(port_v2), "color": "#E0A458",
+                       "dash": "solid", "width": 1.8})
+    # v3 = current book → CMSI red, most prominent (like the Hero strategy line).
+    if not port_v3.empty:
+        _lines.append({"name": i18n.t("strategy.hd.compare.v3_line"),
+                       "values": _aligned(port_v3), "color": theme.CMSI_RED,
                        "dash": "solid", "width": 2.4})
 
     if _lines and len(_all_idx):
-        # marker = v2's actual first trading day (guarantees it matches a real x
+        # marker = v3's actual first trading day (guarantees it matches a real x
         # category even if the nominal pick_date is a weekend/holiday).
-        _marker = port_v2.index[0].date().isoformat() if not port_v2.empty else None
+        _marker = port_v3.index[0].date().isoformat() if not port_v3.empty else None
         strategy_hero.render_compare_chart(
             dates=[d.date().isoformat() for d in _all_idx], lines=_lines,
             marker_date=_marker, marker_label=i18n.t("strategy.hd.compare.rebal_label"),

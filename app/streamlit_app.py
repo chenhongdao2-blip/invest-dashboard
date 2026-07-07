@@ -35,118 +35,128 @@ from lib import i18n
 # shares one st.session_state["lang"] — avoids half-translated pages (cccg gate #3).
 i18n.init_lang()
 
+# Nav labels follow the language toggle: EN mode → English-only, 中 mode → the
+# original bilingual "EN 中文" labels. This file re-executes on every rerun, so
+# toggling lang (which reruns) rebuilds st.navigation with the right titles.
+# url_path stays constant either way — deep-links unaffected.
+_EN = i18n.get_lang() == "en"
+
+
+def _t(en: str, zh: str) -> str:
+    return en if _EN else zh
+
+
 # --- Top-level pages ---
-# Nav labels are bilingual (EN 中文) by user request — shown verbatim regardless
-# of the in-page language toggle. url_path kept stable so deep-links still work.
+# Nav labels are lang-aware (see _t above). url_path kept stable so deep-links still work.
 home = st.Page(
     "home.py",
-    title="Market Hub 行情中枢",
+    title=_t("Market Hub", "Market Hub 行情中枢"),
     url_path="",
     default=True,
 )
 ticker_drill = st.Page(
     "pages/6_Ticker_Drill.py",
-    title="Market & Stocks 行情 / 个股",   # 合并: 列表(全市场行情表)+详情(个股下钻) 同页
+    title=_t("Market & Stocks", "Market & Stocks 行情 / 个股"),   # 合并: 列表(全市场行情表)+详情(个股下钻) 同页
     url_path="Ticker_Drill",               # url 不变 → ?ticker= 深链照常进详情模式
 )
 # (Market Data 已并入 Ticker Drill 的列表模式; 表逻辑搬到 lib/quote_table.py)
 model_drill = st.Page(
     "pages/model_drill.py",
-    title="Model Drill 分析师模型",
+    title=_t("Model Drill", "Model Drill 分析师模型"),
     url_path="Model_Drill",
 )
 sector_rotation = st.Page(
     "pages/3b_Sector_Rotation.py",
-    title="Sector Rotation 板块轮动",
+    title=_t("Sector Rotation", "Sector Rotation 板块轮动"),
     url_path="Sector_Rotation_RRG",
 )
 
 # --- Healthcare children ---
 cmsi_coverage = st.Page(
     "pages/1_CMSI_Coverage.py",
-    title="CMSI Coverage 覆盖名单",
+    title=_t("CMSI Coverage", "CMSI Coverage 覆盖名单"),
     url_path="CMSI_Coverage",
 )
 healthcare_overview = st.Page(
     "pages/2_Healthcare.py",
-    title="HC Overview 总览",
+    title=_t("HC Overview", "HC Overview 总览"),
     url_path="Healthcare",
 )
 sector_heatmap = st.Page(
     "pages/3_Sector_Heatmap.py",
-    title="HC Heatmap 板块热力图",
+    title=_t("HC Heatmap", "HC Heatmap 板块热力图"),
     url_path="Sector_Heatmap",
 )
 strategy_picks = st.Page(
     "pages/4_Strategy_Picks.py",
-    title="Strategy Picks 策略表现",
+    title=_t("Strategy Picks", "Strategy Picks 策略表现"),
     url_path="Strategy_Picks",
 )
 valuation_scanner = st.Page(
     "pages/5_Valuation_Scanner.py",
-    title="HC Valuation 估值扫描器",
+    title=_t("HC Valuation", "HC Valuation 估值扫描器"),
     url_path="Valuation_Scanner",
 )
 sec_facts = st.Page(
     "pages/8_SEC_Facts.py",
-    title="HC SEC Facts 财报数据",
+    title=_t("HC SEC Facts", "HC SEC Facts 财报数据"),
     url_path="SEC_Facts",
 )
 hc_capital = st.Page(
     "pages/9_HC_Capital_Markets.py",
-    title="HC Capital Markets 投融资",
+    title=_t("HC Capital Markets", "HC Capital Markets 投融资"),
     url_path="HC_Capital_Markets",
 )
 # --- ETF 专栏 (own top-level section; ETFs are first-class instruments like stocks) ---
 etf_overview = st.Page(
     "pages/e1_etf_overview.py",
-    title="ETF Overview 总览/表现",
+    title=_t("ETF Overview", "ETF Overview 总览/表现"),
     url_path="ETF_Overview",
 )
 etf_heatmap = st.Page(
     "pages/e2_etf_heatmap.py",
-    title="ETF Heatmap 热力图",
+    title=_t("ETF Heatmap", "ETF Heatmap 热力图"),
     url_path="ETF_Heatmap",
 )
 etf_rotation = st.Page(
     "pages/e3_etf_rotation.py",
-    title="ETF Rotation 动能轮动",
+    title=_t("ETF Rotation", "ETF Rotation 动能轮动"),
     url_path="ETF_Rotation",
 )
 
 # --- AI children ---
 ai_coverage = st.Page(
     "pages/a1_ai_coverage.py",
-    title="Universe 全景标的",
+    title=_t("Universe", "Universe 全景标的"),
     url_path="AI_Coverage",
 )
 ai_overview = st.Page(
     "pages/a2_ai_overview.py",
-    title="AI Overview 算力总览",
+    title=_t("AI Overview", "AI Overview 算力总览"),
     url_path="AI_Overview",
 )
 ai_heatmap = st.Page(
     "pages/a3_ai_heatmap.py",
-    title="AI Heatmap 算力热力图",
+    title=_t("AI Heatmap", "AI Heatmap 算力热力图"),
     url_path="AI_Sector_Heatmap",
 )
 ai_valuation = st.Page(
     "pages/a4_ai_valuation.py",
-    title="AI Valuation 算力估值",
+    title=_t("AI Valuation", "AI Valuation 算力估值"),
     url_path="AI_Valuation_Scanner",
 )
 ai_sec = st.Page(
     "pages/a5_ai_sec.py",
-    title="AI SEC Facts 算力财报",
+    title=_t("AI SEC Facts", "AI SEC Facts 算力财报"),
     url_path="AI_SEC_Facts",
 )
 
 pg = st.navigation(
     {
         # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
-        "⭐ 核心策略": [strategy_picks],
-        "Global 全局": [home, ticker_drill, model_drill, sector_rotation],
-        "Healthcare 医疗健康": [
+        _t("⭐ Core Strategy", "⭐ 核心策略"): [strategy_picks],
+        _t("Global", "Global 全局"): [home, ticker_drill, model_drill, sector_rotation],
+        _t("Healthcare", "Healthcare 医疗健康"): [
             cmsi_coverage,
             healthcare_overview,
             sector_heatmap,
@@ -154,14 +164,14 @@ pg = st.navigation(
             sec_facts,
             hc_capital,
         ],
-        "AI 人工智能": [
+        _t("AI", "AI 人工智能"): [
             ai_coverage,
             ai_overview,
             ai_heatmap,
             ai_valuation,
             ai_sec,
         ],
-        "ETF 专栏": [
+        _t("ETF", "ETF 专栏"): [
             etf_overview,
             etf_heatmap,
             etf_rotation,

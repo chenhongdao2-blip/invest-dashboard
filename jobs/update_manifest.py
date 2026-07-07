@@ -44,6 +44,7 @@ DATASETS: dict[str, dict] = {
     "hk_ipo_tracker":     {"label": "港股 IPO 散点/破发",      "source": "Wind+Futu(本地)", "max_age_days": 9},
     "mnc_ma_deals":       {"label": "MNC M&A / BD 交易",       "source": "PharmCube",        "max_age_days": 4},
     "hshci_monthly":      {"label": "HSHCI 月线/长周期",       "source": "iFind(本地)",     "max_age_days": 40},
+    "us_hc_13f":          {"label": "美国医疗基金 13F 持仓",   "source": "SEC EDGAR",        "max_age_days": 140},
 }
 
 
@@ -87,6 +88,13 @@ def resolve_source_date(key: str) -> str | None:
         return _csv_max_date(EXT / "mnc_ma_deals.csv")
     if key == "hshci_monthly":
         return _csv_max_date(EXT / "hshci_history_monthly.csv")
+    if key == "us_hc_13f":
+        # latest_period = 13F report quarter-end (data date, NOT the fetch date)
+        try:
+            j = json.loads((EXT / "us_hc_funds_13f.json").read_text())
+            return str(j.get("latest_period", ""))[:10] or None
+        except Exception:  # noqa: BLE001
+            return None
     if key == "sec_facts":
         return _db_max_date("prices_daily")  # proxy; SEC facts have no own date col
     return None

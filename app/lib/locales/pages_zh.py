@@ -274,6 +274,54 @@ STRINGS = {
     "hc.pos.source": "来源：",
     "hc.pos.note_ai": "解读由金融策略 / 医药研究 Agent 基于上表数据生成；不含也不采信任何评级 / 目标价。",
     "hc.pos.empty": "暂无基金持仓数据——请运行 jobs/build_hc_overview_data.py 回补。",
+    # ── 美国医疗专业基金 13F · 共识持仓 + 季度变动 ──
+    "hc.f13.section": "美国医疗专业基金 13F · 共识持仓与季度调仓",
+    "hc.f13.section_meta": "12 家美国 HC 专业基金 · SEC EDGAR 13F-HR · 仅美股多头",
+    "hc.f13.verdict": (
+        "**结论**：{n_funds} 家基金（合计 13F 市值 ~${aum}bn，报告期 {period}）"
+        "共识度最高的持仓是 **{top}**（{top_n} 家共同持有）；"
+        "本季最热新建仓 **{hot}**（{hot_n} 家同季新买入）。"
+    ),
+    "hc.f13.consensus_h": "**共识持仓矩阵**（Top 15 共识标的 × 持有基金，格子＝该基金持仓市值 $M）",
+    "hc.f13.consensus_note": "列头走势为 6 个月收盘 + 季末以来涨跌；格子颜色＝该基金对该标的的季度动向；13F 不含空头与非美股持仓。",
+    "hc.f13.mx.holder": "机构",
+    "hc.f13.mx.total": "合计",
+    "hc.f13.mx.unch": "无标记＝持平",
+    "hc.f13.newbuys_h": "**本季最热新建仓**（多家同季首次买入）",
+    "hc.f13.exits_h": "**本季集体清仓**（多家同季全数卖出）",
+    "hc.f13.perfund_h": "**分基金明细**（Top 15 持仓 + 该基金季度动向）",
+    "hc.f13.legend": "🟢 青＝新建/加仓　🔴 红＝减仓/清仓　·　此处颜色表**季度调仓方向**，非当日涨跌",
+    "hc.f13.read": (
+        "13F 反映的是**报告期时点的美股多头仓位**（滞后最多 45 天），alpha 主要看两点："
+        "①「多家同季新建仓」= smart money 共振信号，值得逐一过管线与催化剂；"
+        "②「集体清仓」多为数据读出失败 / 被收购退市 / 拥挤度出清，需逐票分辨性质。"
+        "共识持仓本身即高拥挤——更适合作专业投资者关注度的地图，而非直接买入清单。"
+    ),
+    "hc.f13.source": "来源：SEC EDGAR 13F-HR（公开申报，滞后季末最多 45 天）· jobs/fetch_13f_hc_funds.py 自动抓取",
+    "hc.f13.empty": "暂无 13F 数据——请运行 jobs/fetch_13f_hc_funds.py 回补。",
+    "hc.f13.none": "本季无记录。",
+    "hc.f13.positions": "只持仓",
+    "hc.f13.col.name": "标的",
+    "hc.f13.col.n_funds": "持有家数",
+    "hc.f13.col.value": "合计市值",
+    "hc.f13.col.new": "新建",
+    "hc.f13.col.add": "加仓",
+    "hc.f13.col.trim": "减仓",
+    "hc.f13.col.n_exits": "清仓家数",
+    "hc.f13.col.funds": "基金",
+    "hc.f13.col.spark": "6个月走势",
+    "hc.f13.col.since_qend": "季末以来",
+    "hc.f13.col.weight": "组合权重",
+    "hc.f13.col.qoq": "季度动向",
+    "hc.f13.col.chg": "持股数 Δ%",
+    "hc.f13.qoq.NEW": "新建",
+    "hc.f13.qoq.ADD": "加仓",
+    "hc.f13.qoq.TRIM": "减仓",
+    "hc.f13.qoq.UNCH": "持平",
+    "hc.f13.prices_note": (
+        "走势与「季末以来」涨跌以 {asof} 收盘计（yfinance），锚定 13F 报告期 {period}——"
+        "即基金持仓快照**之后**的市场表现，用于判断信号是否已被 price in。"
+    ),
     # --- 员工人数变化（扩招 vs 收缩）---
     "hc.hc.section": "员工人数变化 · 中国创新药企扩招 vs 收缩",
     "hc.hc.section_meta": "12 家中国创新药 / biotech · FY2024 → FY2025 · 集团合并在职员工",

@@ -55,5 +55,14 @@
     "status": "ok",
     "refreshed_at": "2026-06-24T23:44:24+00:00",
     "source_date": "2026-06-01"
+  },
+  "us_hc_13f": {
+    "label": "美国医疗基金 13F 持仓",
+    "source": "SEC EDGAR",
+    "max_age_days": 140,
+    "status": "ok",
+    "refreshed_at": "2026-07-06T15:16:49+00:00",
+    "source_date": "2026-03-31",
+    "note": "SEC EDGAR 13F-HR, 12 HC-dedicated funds"
   }
 }

@@ -57,7 +57,8 @@ def _kpi_tile(label: str, value_attr: str, suffix: str = "", color: str = None,
 def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
            cum_ret, bench_ret, alpha_pp, pick_date, n_hold, pool, days,
            wins, n_total, mdd, sharpe, bench_code, bench_sub,
-           as_of, source) -> None:
+           as_of, source, currency=None, initial_capital=None,
+           cap_label="初始资金", nav_label="当前净值", gain_label="累计盈亏") -> None:
     import streamlit as st
 
     t = theme
@@ -104,6 +105,35 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
         FONT=t.FONT_DISPLAY, MONO=t.FONT_MONO, FACE=t.FONT_FACE_CSS,
     )
 
+    # --- Absolute-amount NAV block (初始资金 → 当前净值 + 累计盈亏) ---------------
+    # Renders only when the caller supplies currency + initial_capital. The curve
+    # stays normalized to 100 (chart axis unchanged); this block translates the
+    # since-inception cum_ret into real money so the card carries the true book size,
+    # not just "123.4% of base 100". current_nav = capital × (1 + cum_ret/100).
+    nav_html = ""
+    if currency and initial_capital:
+        _cap = float(initial_capital)
+        _nav = _cap * (1.0 + cum_ret / 100.0)
+        _gain = _nav - _cap
+        _gain_col = t.UP if _gain >= 0 else t.CMSI_RED
+        # sign OUTSIDE the currency so a loss reads "-HKD 50,000", not "HKD -50,000".
+        _gain_str = f"{'+' if _gain >= 0 else '-'}{_esc(currency)} {abs(_gain):,.0f}"
+        nav_html = f"""
+            <div class="nav-blk">
+              <div class="nav-row">
+                <span class="nav-lbl">{_esc(cap_label)}</span>
+                <span class="nav-cap">{_esc(currency)} {_cap:,.0f}</span>
+              </div>
+              <div class="nav-row">
+                <span class="nav-lbl">{_esc(nav_label)}</span>
+                <span class="nav-now" style="color:{_cum_col}">{_esc(currency)} {_nav:,.0f}</span>
+              </div>
+              <div class="nav-row">
+                <span class="nav-lbl">{_esc(gain_label)}</span>
+                <span class="nav-gain" style="color:{_gain_col}">{_gain_str}</span>
+              </div>
+            </div>"""
+
     body = f"""
     <div class="wash"></div>
     <div class="wrap">
@@ -126,6 +156,7 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
                      <div class="bf-v" data-count="alpha" data-sign="1" data-suf="pp" style="color:{_alpha_col}">+0.0pp</div></div>
               </div>
             </div>
+            {nav_html}
           </div>
           <div class="hero-right">
             <div class="chart-lbl">净值曲线 · rebased 起点 = 100</div>
@@ -196,8 +227,8 @@ def render(*, strat_name, strat_dates, strat_curve, bench_name, bench_curve,
     st.iframe(doc, height=470)
 
 
-def render_compare_chart(*, dates, lines, marker_date, marker_label,
-                         title, source, height=460) -> None:
+def render_compare_chart(*, dates, lines, marker_date=None, marker_label="",
+                         title, source, height=460, markers=None) -> None:
     """Multi-line overlay (v1/v2 + benchmarks) as a self-contained ECharts iframe —
     Hero-aligned look (cream, FT grid, NO Plotly modebar, draw-in animation, value
     endLabels). Replaces the old go.Figure compare chart.
@@ -205,16 +236,23 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
     dates  : common ISO date axis (union of every line's dates, sorted).
     lines  : [{name, values (list; None = gap so a late-start line begins at its
              inception), color, dash ∈ solid/dashed/dotted, width}] in back→front order.
-    marker_date / marker_label : ISO date + caption for a dotted vertical markLine
-             (e.g. v2 inception); pass marker_date=None to omit.
+    marker_date / marker_label : ISO date + caption for a SINGLE dotted vertical
+             markLine (back-compat); pass marker_date=None to omit.
+    markers : [{date, label}] for MULTIPLE dotted vertical markLines (e.g. every
+             rebalance handover in a chained-account chart). Takes precedence over
+             marker_date when given; each dict → one dotted line + label.
     """
     import streamlit as st
 
     t = theme
+    # Normalize the marker inputs into one list (multi `markers` wins; else wrap the
+    # single marker_date for back-compat; else empty).
+    _markers = list(markers) if markers else (
+        [{"date": marker_date, "label": marker_label or ""}] if marker_date else [])
     payload = {
         "dates": list(dates),
         "lines": lines,
-        "marker": marker_date, "markerLabel": marker_label or "",
+        "markers": _markers,
         "FONT": t.FONT_STACK, "MONO": t.FONT_MONO,
         "INK": t.INK, "INK2": t.INK_2, "INK3": t.INK_3, "INK4": t.INK_4,
         "PAPER": t.PAPER, "RULE": t.PAPER_RULE,
@@ -251,11 +289,12 @@ def render_compare_chart(*, dates, lines, marker_date, marker_label,
           formatter: function(p) {{ return p.value == null ? '' : (+p.value).toFixed(1); }},
           color: s.color, fontFamily: D.MONO, fontSize: 10, fontWeight: 700 }}
       }}));
-      if (D.marker) series[series.length - 1].markLine = {{ silent: true, symbol: 'none',
+      if (D.markers && D.markers.length) series[series.length - 1].markLine = {{
+        silent: true, symbol: 'none',
         lineStyle: {{ color: D.INK3, type: 'dotted', width: 1 }},
-        label: {{ formatter: D.markerLabel, color: D.INK3, fontFamily: D.MONO,
-                 fontSize: 10, position: 'insideEndTop' }},
-        data: [{{ xAxis: D.marker }}] }};
+        label: {{ color: D.INK3, fontFamily: D.MONO, fontSize: 10,
+                 position: 'insideEndTop' }},
+        data: D.markers.map(function(m) {{ return {{ xAxis: m.date, label: {{ formatter: m.label }} }}; }}) }};
       return {{
         backgroundColor: 'transparent', animationDuration: 1500, animationEasing: 'cubicOut',
         grid: {{ left: 50, right: 66, top: 44, bottom: 30 }},
@@ -330,6 +369,17 @@ html, body {{ height: 100%; background: {PAPER}; color: {INK}; font-family: {FON
 .bf-v {{ font-family: {MONO}; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums; margin-top: 2px; }}
 .bf-div .bf-v {{ font-weight: 700; }}
 .bf-div {{ border-left: 1px solid {EDGE_SOFT}; padding-left: 18px; }}
+.nav-blk {{ margin-top: 16px; padding-top: 14px; border-top: 1px solid {EDGE_SOFT};
+  display: flex; flex-direction: column; gap: 6px; }}
+.nav-row {{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }}
+.nav-lbl {{ font-family: {MONO}; font-size: 10px; letter-spacing: .1em; text-transform: uppercase;
+  color: {INK3}; font-weight: 600; }}
+.nav-cap {{ font-family: {MONO}; font-size: 13px; font-weight: 600; color: {INK2};
+  font-variant-numeric: tabular-nums; }}
+.nav-now {{ font-family: {MONO}; font-size: 18px; font-weight: 700; letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums; }}
+.nav-gain {{ font-family: {MONO}; font-size: 13px; font-weight: 600;
+  font-variant-numeric: tabular-nums; }}
 .hero-right {{ padding: 16px 16px 6px; position: relative; }}
 .chart-lbl {{ position: absolute; top: 18px; left: 22px; z-index: 2; font-family: {MONO}; font-size: 10px;
   letter-spacing: .12em; text-transform: uppercase; font-weight: 600; color: {INK3}; }}

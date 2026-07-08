@@ -169,6 +169,7 @@ def render_strategy(strat_id: str) -> None:
     method_key = {
         "v4_biotech": "strategy.v4.method",
         "v5_biotech": "strategy.v5.method",
+        "v6_biotech": "strategy.v5.method",
         "hk_hd": "strategy.hd.method",
         "hk_hd_v2": "strategy.hd.v2.method",
         "hk_hd_v3": "strategy.hd.v3.method",
@@ -257,6 +258,11 @@ def render_strategy(strat_id: str) -> None:
                 bench_code=bench_sym, bench_sub=bench_name,
                 as_of=portfolio.index[-1].date().isoformat(),
                 source=f"yfinance · 含息复权 total return · 基准 {bench_sym}",
+                currency=cfg.get("currency"),
+                initial_capital=cfg.get("initial_capital"),
+                cap_label=i18n.t("strategy.hero.initial_capital"),
+                nav_label=i18n.t("strategy.hero.current_nav"),
+                gain_label=i18n.t("strategy.hero.nav_gain"),
             )
 
     # --- Summary metrics (KPI cards — house style, replaces st.metric) ---
@@ -387,6 +393,135 @@ def render_hd_versions() -> None:
         render_strategy("hk_hd_v3")
 
 
+def _chain_nav(
+    curves: list[pd.Series], capital: float = 1_000_000.0
+) -> tuple[pd.Series, list[str]]:
+    """Chain per-version normalized curves (each rebased to 100 at its OWN inception)
+    into ONE real account NAV that follows the rebalances.
+
+    Semantics: capital is invested in the FIRST version at its inception; at each
+    later version's first trading day the whole book is rolled into that version —
+    the prior segment's terminal account value becomes the next segment's starting
+    capital. So the account value on day t inside version k's holding window is:
+
+        acct(t) = running_capital_k × (curve_k(t) / curve_k(start_k))
+
+    Each version's segment runs [its inception, next version's inception) except the
+    last, which runs to its final observation. Empty curves are skipped (biotech v6
+    before its data lands), so the chain degrades to whatever versions exist.
+
+    Returns (account_nav_series, boundary_iso_dates) where boundary dates are the
+    handover days (each later version's first trading day) for rebalance markers.
+    """
+    live = [c for c in curves if c is not None and not c.empty]
+    if not live:
+        return pd.Series(dtype=float), []
+    # order by first trading day (chronological); each already starts at 100.
+    live = sorted(live, key=lambda s: s.index[0])
+    starts = [s.index[0] for s in live]
+    segments: list[pd.Series] = []
+    boundaries: list[str] = []
+    running = float(capital)
+    for i, cur in enumerate(live):
+        # this segment ends the day before the next version starts (exclusive), or
+        # runs to the end for the last version.
+        end = starts[i + 1] if i + 1 < len(live) else None
+        seg = cur if end is None else cur[cur.index < end]
+        if seg.empty:
+            # a version fully superseded before it logged a trading day — skip but
+            # still advance running capital using its (single) first point ratio.
+            continue
+        base = float(seg.iloc[0])           # = 100 by construction, but read it live
+        acct = running * (seg / base)       # scale this version's shape onto the book
+        segments.append(acct)
+        running = float(acct.iloc[-1])       # terminal value → next segment's capital
+        if i > 0:
+            boundaries.append(starts[i].date().isoformat())
+    if not segments:
+        return pd.Series(dtype=float), []
+    account = pd.concat(segments)
+    account = account[~account.index.duplicated(keep="last")].sort_index()
+    return account, boundaries
+
+
+def _render_chain_section(
+    *, curves: list[pd.Series], bench_norm: pd.Series, bench_sym: str,
+    bench_name: str, currency: str, capital: float = 1_000_000.0,
+    rebal_label: str = "换仓",
+) -> None:
+    """Render the '接续账户净值' section for a compare tab: KPI strip (初始资金 /
+    当前净值 / 累计收益 / 超额α) + a rebased-100 chart of the chained account vs the
+    benchmark buy&hold, with a dotted marker at each rebalance handover.
+
+    curves     : per-version normalized-100 curves (chronological or not — _chain_nav
+                 sorts by inception). Empty ones are skipped (biotech v6 pre-data).
+    bench_norm : benchmark rebased to 100 at the EARLIEST inception (same anchor as the
+                 account's start) — the buy&hold reference, held without rebalancing.
+    """
+    account, boundaries = _chain_nav(curves, capital)
+    if account.empty:
+        return
+    cur_nav = float(account.iloc[-1])
+    cum = (cur_nav / capital - 1.0) * 100.0
+    # benchmark cum over the same window (buy&hold from earliest inception)
+    bret = float(bench_norm.iloc[-1] - 100.0) if not bench_norm.empty else None
+    alpha = (cum - bret) if bret is not None else None
+
+    theme.section_header(i18n.t("strategy.chain.section_title"))
+
+    def _sign(v):  # teal up / red down
+        d = "up" if v >= 0 else "down"
+        return f"<span class='cmsi-ch-{d}'>{'+' if v >= 0 else ''}{v:,.2f}</span>"
+
+    cards = [
+        theme.kpi_metric(i18n.t("strategy.chain.kpi.initial"),
+                         f"{currency} {capital:,.0f}"),
+        theme.kpi_metric(i18n.t("strategy.chain.kpi.current"),
+                         f"{currency} {cur_nav:,.0f}",
+                         direction=("up" if cum >= 0 else "down")),
+        theme.kpi_metric(i18n.t("strategy.chain.kpi.cumulative"),
+                         f"{'+' if cum >= 0 else ''}{cum:.2f}%",
+                         delta_abs=f"{'+' if (cur_nav - capital) >= 0 else '-'}{currency} {abs(cur_nav - capital):,.0f}",
+                         direction=("up" if cum >= 0 else "down")),
+    ]
+    if alpha is not None:
+        cards.append(theme.kpi_metric(
+            i18n.t("strategy.chain.kpi.alpha"),
+            f"{'+' if alpha >= 0 else ''}{alpha:.2f}pp",
+            foot=i18n.t("strategy.metric.benchmark_ret", sym=bench_sym) + f" {bret:+.2f}%",
+            direction=("up" if alpha >= 0 else "down")))
+    theme.kpi_strip(cards)
+
+    # chart: chained account (rebased 100) + benchmark buy&hold, dotted rebal markers.
+    acct_norm = account / float(account.iloc[0]) * 100.0
+    _idx = pd.DatetimeIndex([])
+    for _s in (acct_norm, bench_norm):
+        if not _s.empty:
+            _idx = _idx.union(_s.index)
+    _idx = _idx.sort_values()
+
+    def _al(s):
+        r = s.reindex(_idx)
+        return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
+
+    _lines = []
+    if not bench_norm.empty:
+        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                      sym=bench_sym, name=bench_name),
+                       "values": _al(bench_norm), "color": theme.INK_3,
+                       "dash": "dashed", "width": 1.5})
+    _lines.append({"name": i18n.t("strategy.chain.acct_line"),
+                   "values": _al(acct_norm), "color": theme.CMSI_RED,
+                   "dash": "solid", "width": 2.4})
+    _markers = [{"date": d, "label": rebal_label} for d in boundaries]
+    strategy_hero.render_compare_chart(
+        dates=[d.date().isoformat() for d in _idx], lines=_lines,
+        markers=_markers, title=i18n.t("strategy.chain.section_title"),
+        source=f"yfinance · 含息复权 · 截至 {_idx[-1].date().isoformat()}" if len(_idx) else "yfinance",
+    )
+    st.caption(i18n.t("strategy.chain.note", cur=currency, cap=f"{capital:,.0f}"))
+
+
 def render_hd_compare() -> None:
     """v1 vs v2 overlay + rebalance diff.
 
@@ -477,7 +612,17 @@ def render_hd_compare() -> None:
                      f"{bench2_norm.iloc[-1] - 100:+.2f}%",
                      help=f"anchor {cfg1['pick_date']}")
 
+    # --- Chained account (real book following v1→v2→v3 rebalances) ---
+    _render_chain_section(
+        curves=[port_v1, port_v2, port_v3], bench_norm=bench_norm,
+        bench_sym=bench_sym, bench_name=cfg1["benchmark_name"],
+        currency=cfg1.get("currency", "HKD"),
+        capital=float(cfg1.get("initial_capital", 1_000_000)),
+        rebal_label=i18n.t("strategy.chain.rebal_marker"),
+    )
+
     # --- Overlay chart: v1 + v2 + benchmarks (ECharts, Hero-aligned) ---
+    theme.section_header(i18n.t("strategy.chain.independent_section_title"))
     # Common date axis = union of all four series (so v2's later-start line begins
     # exactly at its inception via None gaps). v2 = CMSI red (the "current" book,
     # prominent like the Hero strategy line); v1 = teal; benchmarks muted dash/dot.
@@ -585,6 +730,164 @@ def render_hd_compare() -> None:
     st.caption(i18n.t("strategy.hd.diff.note"))
 
 
+def render_biotech_versions() -> None:
+    """US biotech tab = version group: v6 (current, default) / v5 (history) / v4
+    (history, frozen curve keeps running) / 3-gen compare. One tab, four views —
+    mirrors render_hd_versions. v4/v5 are equal-weight books (no weight_col); v6 is
+    a NEW book from 2026-07-08 whose picks data is added separately (graceful
+    placeholder until v6_picks.csv lands)."""
+    opts = [
+        i18n.t("strategy.biotech.version.v6"),
+        i18n.t("strategy.biotech.version.v5"),
+        i18n.t("strategy.biotech.version.v4"),
+        i18n.t("strategy.biotech.version.compare"),
+    ]
+    choice = st.segmented_control(
+        i18n.t("strategy.biotech.version.toggle"), opts, default=opts[0],
+        key="biotech_version",
+    ) or opts[0]
+    if choice == opts[1]:
+        render_strategy("v5_biotech")
+    elif choice == opts[2]:
+        st.caption(i18n.t("strategy.biotech.version.v4_note"))
+        render_strategy("v4_biotech")
+    elif choice == opts[3]:
+        render_biotech_compare()
+    else:
+        # v6 current — graceful placeholder until its picks data is inserted.
+        if strat.load_v6().empty:
+            st.info(i18n.t("strategy.biotech.version.v6_pending"))
+        else:
+            render_strategy("v6_biotech")
+
+
+def render_biotech_compare() -> None:
+    """v4 / v5 / v6 overlay — each curve indexed to 100 at its OWN inception
+    (independent books, NOT a chained NAV); benchmark (XBI) anchored at v4
+    inception. Mirrors render_hd_compare but equal-weight + single benchmark, and
+    tolerates v6 being empty (drops that line until its data lands)."""
+    v4 = strat.load_v4()
+    v5 = strat.load_v5()
+    v6 = strat.load_v6()
+    if v4.empty or v5.empty:
+        st.warning("Need v4_picks.csv + v5_picks.csv — check data/external/")
+        return
+    cfg4 = strat.STRATEGIES["v4_biotech"]
+    cfg5 = strat.STRATEGIES["v5_biotech"]
+    cfg6 = strat.STRATEGIES["v6_biotech"]
+    bench_sym = cfg4["benchmark"]
+
+    def _book_syms(df: pd.DataFrame) -> list[str]:
+        d = df.sort_values("rank") if "rank" in df.columns else df
+        return d.head(20)["yf_sym"].dropna().tolist()
+
+    v4_syms = _book_syms(v4)
+    v5_syms = _book_syms(v5)
+    v6_syms = _book_syms(v6) if not v6.empty else []
+
+    all_syms = tuple(dict.fromkeys(v4_syms + v5_syms + v6_syms + [bench_sym]))
+    earliest = (pd.Timestamp(cfg4["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
+    closes = strat.fetch_picks_closes(all_syms, start=earliest,
+                                      _ovr_mtime=strat._delisted_mtime())
+    if closes.empty:
+        st.error("Live price fetch failed. Check network/yfinance.")
+        return
+
+    def _curve(syms: list[str], pick_date: str) -> pd.Series:
+        cols = [c for c in syms if c in closes.columns]
+        if not cols:
+            return pd.Series(dtype=float)
+        _, port, _, _ = strat.compute_strategy_returns(
+            closes[cols], pick_date, portfolio_syms=syms)
+        return port
+
+    port_v4 = _curve(v4_syms, cfg4["pick_date"])
+    port_v5 = _curve(v5_syms, cfg5["pick_date"])
+    port_v6 = _curve(v6_syms, cfg6["pick_date"]) if v6_syms else pd.Series(dtype=float)
+
+    def _cmp_norm(sym: str | None) -> pd.Series:
+        if not sym or sym not in closes.columns:
+            return pd.Series(dtype=float)
+        b = closes[sym].dropna()
+        b = b[b.index >= pd.Timestamp(cfg4["pick_date"])]
+        return (b / b.iloc[0]) * 100 if not b.empty else pd.Series(dtype=float)
+
+    bench_norm = _cmp_norm(bench_sym)
+
+    # --- Summary metrics: v4 / v5 / v6 / bench ---
+    mc = st.columns(4)
+    if not port_v4.empty:
+        mc[0].metric(i18n.t("strategy.biotech.compare.metric.v4"),
+                     f"{port_v4.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg4['pick_date']}")
+    if not port_v5.empty:
+        mc[1].metric(i18n.t("strategy.biotech.compare.metric.v5"),
+                     f"{port_v5.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg5['pick_date']}")
+    if not port_v6.empty:
+        mc[2].metric(i18n.t("strategy.biotech.compare.metric.v6"),
+                     f"{port_v6.iloc[-1] - 100:+.2f}%",
+                     help=f"inception {cfg6['pick_date']}")
+    else:
+        mc[2].metric(i18n.t("strategy.biotech.compare.metric.v6"), "—",
+                     help="待数据录入 / pending data")
+    if not bench_norm.empty:
+        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
+                     f"{bench_norm.iloc[-1] - 100:+.2f}%",
+                     help=f"anchor {cfg4['pick_date']}")
+
+    # --- Chained account (real book following v4→v5→v6 rebalances; v6 auto-joins) ---
+    _render_chain_section(
+        curves=[port_v4, port_v5, port_v6], bench_norm=bench_norm,
+        bench_sym=bench_sym, bench_name=cfg4["benchmark_name"],
+        currency=cfg4.get("currency", "USD"),
+        capital=float(cfg4.get("initial_capital", 1_000_000)),
+        rebal_label=i18n.t("strategy.chain.rebal_marker"),
+    )
+
+    # --- Overlay chart: v4 + v5 (+ v6 when present) + benchmark ---
+    theme.section_header(i18n.t("strategy.chain.independent_section_title"))
+    _all_idx = pd.DatetimeIndex([])
+    for _s in (bench_norm, port_v4, port_v5, port_v6):
+        if not _s.empty:
+            _all_idx = _all_idx.union(_s.index)
+    _all_idx = _all_idx.sort_values()
+
+    def _aligned(s):
+        r = s.reindex(_all_idx)
+        return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
+
+    _lines = []
+    if not bench_norm.empty:
+        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                      sym=bench_sym, name=cfg4["benchmark_name"]),
+                       "values": _aligned(bench_norm), "color": theme.INK_3,
+                       "dash": "dashed", "width": 1.5})
+    # v4 = earliest history (teal), v5 = mid history (amber), v6 = current (CMSI red).
+    if not port_v4.empty:
+        _lines.append({"name": i18n.t("strategy.biotech.compare.v4_line"),
+                       "values": _aligned(port_v4), "color": theme.UP,
+                       "dash": "solid", "width": 1.8})
+    if not port_v5.empty:
+        _lines.append({"name": i18n.t("strategy.biotech.compare.v5_line"),
+                       "values": _aligned(port_v5), "color": "#E0A458",
+                       "dash": "solid", "width": 1.8 if not port_v6.empty else 2.4})
+    if not port_v6.empty:
+        _lines.append({"name": i18n.t("strategy.biotech.compare.v6_line"),
+                       "values": _aligned(port_v6), "color": theme.CMSI_RED,
+                       "dash": "solid", "width": 2.4})
+
+    if _lines and len(_all_idx):
+        _marker = port_v6.index[0].date().isoformat() if not port_v6.empty else None
+        strategy_hero.render_compare_chart(
+            dates=[d.date().isoformat() for d in _all_idx], lines=_lines,
+            marker_date=_marker, marker_label=i18n.t("strategy.biotech.compare.rebal_label"),
+            title=i18n.t("strategy.biotech.compare.title"),
+            source=f"yfinance · 含息复权 · 截至 {_all_idx[-1].date().isoformat()}",
+        )
+    st.caption(i18n.t("strategy.biotech.compare.note"))
+
+
 def _spearman_rho(x: pd.Series, y: pd.Series) -> float:
     """Spearman rank correlation = Pearson on ranks (no scipy dependency)."""
     rx, ry = x.rank(), y.rank()
@@ -646,6 +949,8 @@ for tab, sid in zip(strategy_tabs[:-1], _ts_ids):
     with tab:
         if sid == "hk_hd":
             render_hd_versions()
+        elif sid == "v4_biotech":
+            render_biotech_versions()
         else:
             render_strategy(sid)
 with strategy_tabs[-1]:

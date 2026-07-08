@@ -125,6 +125,56 @@ STRINGS = {
         "组合含约 {cash:.0f}% 现金缓冲（策略设计，非误差）；净值按现金 0 收益的"
         "保守口径计算，不计利息收入。"
     ),
+
+    # ── Biotech version group (v4/v5 frozen history / v6 current / 三代 compare) ──
+    "strategy.biotech.version.toggle": "组合版本",
+    "strategy.biotech.version.v6": "7月调仓 · 2026-07-08（当前）",
+    "strategy.biotech.version.v5": "夏季调仓 · 2026-05-15（历史）",
+    "strategy.biotech.version.v4": "春季建仓 · 2026-04-22（历史）",
+    "strategy.biotech.version.compare": "三代对比（v4 / v5 / v6）",
+    "strategy.biotech.version.v4_note": (
+        "历史版本：v4 为 2026-04-22 的春季建仓（回看验证版），曲线持续跟踪、"
+        "成分不再调整；后续调仓见「夏季调仓」（v5）与「7月调仓」（v6）。"
+    ),
+    "strategy.biotech.version.v6_pending": (
+        "**7月调仓（v6）即将上线** — 选股结果与建仓权重正在最终确认，数据录入后"
+        "本页将自建仓日（2026-07-08）起跟踪真实净值 vs XBI。当前可查看「春季建仓」"
+        "（v4）与「夏季调仓」（v5）两版历史表现。"
+    ),
+    "strategy.biotech.compare.title": "生物科技 v4 / v5 / v6 · 净值对比（各自建仓日 = 100）",
+    "strategy.biotech.compare.v4_line": "v4 组合（春季建仓，2026-04-22 起）",
+    "strategy.biotech.compare.v5_line": "v5 组合（夏季调仓，2026-05-15 起）",
+    "strategy.biotech.compare.v6_line": "v6 组合（7月调仓，2026-07-08 起）",
+    "strategy.biotech.compare.rebal_label": "v6 建仓 2026-07-08",
+    "strategy.biotech.compare.note": (
+        "口径：各条曲线以建仓日收盘 = 100 独立计算（独立组合，非同一净值的接续）；"
+        "基准锚定 v4 建仓日。v4 / v5 历史完整保留，不因 v6 上线而截断或重述（三代演进）。"
+        "v6 数据录入后自动加入对比。"
+    ),
+    "strategy.biotech.compare.metric.v4": "v4 建仓至今",
+    "strategy.biotech.compare.metric.v5": "v5 建仓至今",
+    "strategy.biotech.compare.metric.v6": "v6 建仓至今",
+
+    # ── absolute-amount hero block (初始资金 → 当前净值) ──
+    "strategy.hero.initial_capital": "初始资金",
+    "strategy.hero.current_nav": "当前净值",
+    "strategy.hero.nav_gain": "累计盈亏",
+
+    # ── chained-account (跟随换仓的真实账户净值,只在对比 tab) ──
+    "strategy.chain.section_title": "接续账户净值 · 跟随换仓（同一笔本金一路持有）",
+    "strategy.chain.independent_section_title": "各版独立净值 · 各自建仓日 = 100（评判单版选股）",
+    "strategy.chain.kpi.initial": "初始资金",
+    "strategy.chain.kpi.current": "当前净值",
+    "strategy.chain.kpi.cumulative": "累计收益",
+    "strategy.chain.kpi.alpha": "超额 α",
+    "strategy.chain.acct_line": "接续账户（跟随换仓）",
+    "strategy.chain.rebal_marker": "换仓",
+    "strategy.chain.note": (
+        "口径:假设建仓日投入 {cur} {cap} 于最早版本,每逢新版建仓日整体换仓——"
+        "前一版终值滚入下一版作起始本金,链成一条真实账户净值(虚线标注为换仓日)。"
+        "回答「我从头一路跟到今天剩多少」;与下方「各版独立=100」口径互补,后者回答"
+        "「每一版选股本身好不好」。基准为同一基准自最早建仓日买入持有(不换仓)作同期对照。"
+    ),
     "strategy.col.ticker": "代码",
     "strategy.metric.delta_vs_bh": "{bp:+.0f} bp vs 买入持有",
     "strategy.onboarding.title": "如何阅读本页",
@@ -317,8 +367,9 @@ STRINGS = {
 
     # ── strategy methodology (sourced) ──
     "strategy.method_expander": "策略方法论",
-    "strategy.name.v4_biotech": "美国生物科技选股 4.0",
-    "strategy.name.v5_biotech": "美国生物科技选股 5.0",
+    "strategy.name.v4_biotech": "美国生物科技选股",
+    "strategy.name.v5_biotech": "美国生物科技选股 · 夏季调仓",
+    "strategy.name.v6_biotech": "美国生物科技选股 · 7月调仓",
     "strategy.name.hk_hd": "港股高股息选股",
     "strategy.name.hk_hd_v2": "港股高股息 v2 · 标准建仓",
     "strategy.v4.tag": "回看版",

@@ -24,6 +24,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 UNIVERSE_CSV = REPO_ROOT / "data" / "external" / "hk_hc_ipo_universe.csv"
 TRACKER_CSV = REPO_ROOT / "data" / "external" / "hk_hc_ipo_tracker.csv"
 META_JSON = REPO_ROOT / "data" / "external" / "hk_hc_ipo_meta.json"
+PHARMA_DETAIL_JSON = REPO_ROOT / "data" / "external" / "hk_ipo_pharma_detail.json"
 
 # NB: market-cap / liquidity tier thresholds + FX live in jobs/build_hk_ipo_tracker.py — the job
 # bakes all tiers/flags into the tracker CSV; this loader only refreshes price/return via overlay.
@@ -74,6 +75,21 @@ def hk_ipo_meta() -> dict:
     if not META_JSON.exists():
         return {}
     return json.loads(META_JSON.read_text())
+
+
+@st.cache_data(ttl=600)
+def load_ipo_pharma_detail() -> dict:
+    """Prebuilt PharmCube pipeline + BD detail keyed by IPO code. Empty dict if absent (graceful).
+
+    Built offline by a Claude session (PharmCube MCP) + jobs/build_ipo_pharma_detail.py — the app
+    never queries PharmCube at runtime (no MCP in the Streamlit process).
+    """
+    if not PHARMA_DETAIL_JSON.exists():
+        return {}
+    try:
+        return json.loads(PHARMA_DETAIL_JSON.read_text())
+    except Exception:  # noqa: BLE001 — detail is a nice-to-have; base tracker stands on any error
+        return {}
 
 
 def clean_view(df: pd.DataFrame) -> pd.DataFrame:

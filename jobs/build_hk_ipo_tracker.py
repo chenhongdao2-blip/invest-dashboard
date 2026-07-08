@@ -124,8 +124,8 @@ def main() -> None:
     codes = hc["code"].tolist()
     print(f"[wind] HK healthcare IPOs since {WINDOW_START}: {len(codes)}")
 
-    # 2) snapshot + static fields (Wind primary)
-    f = "sec_name,sec_englishname,ipo_date,ipo_price,close,mkt_cap_ard,total_shares,trade_status,industry_gics"
+    # 2) snapshot + static fields (Wind primary) — add found_date for founding year
+    f = "sec_name,sec_englishname,ipo_date,ipo_price,close,mkt_cap_ard,total_shares,trade_status,industry_gics,found_date"
     rs = w.wss(codes, f, f"tradeDate={today_c};unit=1;industryType=3")
     snap = pd.DataFrame({fld: c for fld, c in zip(rs.Fields, rs.Data)})
     snap.insert(0, "code", codes)
@@ -179,6 +179,14 @@ def main() -> None:
         tdays_n = r["trading_days"]
         no_offer = offer is None
         is_18a = name_cn.endswith("-B") or name_cn.endswith("-P")
+        # founding year from Wind FOUND_DATE
+        found_date = r.get("FOUND_DATE")
+        founding_year = None
+        if pd.notna(found_date):
+            try:
+                founding_year = int(pd.to_datetime(found_date).year)
+            except Exception:  # noqa: BLE001
+                pass
         # suspension: Wind 停牌 OR zero 20d turnover (frozen last trade)
         suspended = ("停牌" in status) or (avg_amt_hkd is not None and avg_amt_hkd == 0)
         # market cap (Wind), in 亿 HKD
@@ -221,6 +229,7 @@ def main() -> None:
             is_ai_pharma=code in AI_PHARMA_CODES,
             is_18a=is_18a,
             no_offer=no_offer,
+            founding_year=founding_year,
             total_shares=shares,
             close=close,
             ret_pct=ret,
@@ -240,11 +249,11 @@ def main() -> None:
 
     # 6) split universe (static) vs tracker (dynamic) and write
     uni_cols = ["code", "ticker_yf", "futu_code", "name_cn", "name_en", "ipo_date",
-                "offer_price_hkd", "total_shares", "sub_sector", "is_ai_pharma", "is_18a", "no_offer"]
+                "offer_price_hkd", "total_shares", "sub_sector", "is_ai_pharma", "is_18a", "no_offer", "founding_year"]
     trk_cols = ["code", "name_cn", "ipo_date", "offer_price_hkd", "close", "ret_pct", "ret_base",
                 "broke", "cur_mktcap_yi", "listing_mktcap_yi", "mktcap_tier", "avg_turnover_usdm",
                 "liquidity_tier", "trading_days", "suspended", "trade_status", "is_18a",
-                "no_offer", "is_ai_pharma", "sub_sector", "clean"]
+                "no_offer", "is_ai_pharma", "sub_sector", "founding_year", "clean"]
     for p in (UNIVERSE_CSV, TRACKER_CSV, META_JSON):
         backup(p)
     res[uni_cols].to_csv(UNIVERSE_CSV, index=False)

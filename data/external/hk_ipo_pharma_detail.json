@@ -1,0 +1,1803 @@
+{
+  "9606.HK": {
+    "name_cleaned": "映恩生物",
+    "pipeline_total": 36,
+    "pipeline": [
+      {
+        "name": "帕康曲妥珠单抗",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "HER2",
+        "disease": "乳腺癌,HER2阳性乳腺癌,子宫内膜癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "elfetabart drozuntecan",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "B7-H3",
+        "disease": "小细胞肺癌,宫颈癌,肺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "sacituzumab drozuntecan",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "TROP2",
+        "disease": "三阴性乳腺癌,非小细胞肺癌,卵巢癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "DB-1202",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "not available",
+        "disease": "实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "DB-1310",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "HER3",
+        "disease": "HER2阳性乳腺癌,非鳞状非小细胞肺癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "DB-1324",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "CDH17",
+        "disease": "实体瘤,消化道癌症",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 11,
+    "bd": [
+      {
+        "date": "2025-08-01",
+        "partner": "Fatiabgen",
+        "asset": "MSLN 靶向 ADC(临床前)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "韩国"
+      },
+      {
+        "date": "2025-01-13",
+        "partner": "三生制药",
+        "asset": "DB-1303(III期临床)",
+        "value_usd_m": 67.0,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2025-01-07",
+        "partner": "Avenzo Therapeutics",
+        "asset": "DB-1418(临床前)",
+        "value_usd_m": 1200.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2024-12-31",
+        "partner": "百济神州",
+        "asset": "BG-C9074(I期临床)",
+        "value_usd_m": 1300.0,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2024-12-04",
+        "partner": "GSK",
+        "asset": "DB-1324(临床前)",
+        "value_usd_m": 1005.0,
+        "type": "许可,期权",
+        "region": "英国"
+      },
+      {
+        "date": "2024-11-25",
+        "partner": "Adcendo",
+        "asset": "ADC product candidates(临床前)",
+        "value_usd_m": null,
+        "type": "许可",
+        "region": "丹麦"
+      },
+      {
+        "date": "2023-08-07",
+        "partner": "BioNTech",
+        "asset": "DB-1305(I/II期临床)",
+        "value_usd_m": null,
+        "type": "合作,许可",
+        "region": "德国"
+      },
+      {
+        "date": "2023-04-03",
+        "partner": "BioNTech",
+        "asset": "DB-1311(临床前),DB-1303(I/II期临床)",
+        "value_usd_m": 1670.0,
+        "type": "许可",
+        "region": "德国"
+      }
+    ]
+  },
+  "1276.HK": {
+    "name_cleaned": "恒瑞医药",
+    "pipeline_total": 532,
+    "pipeline": [
+      {
+        "name": "CyclASol",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "CaN,NTCP,Cyp",
+        "disease": "神经营养性角膜炎,干眼病",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "HR0171401",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "α2-adrenergic receptor",
+        "disease": "麻醉镇痛,全身麻醉,局部麻醉",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "HR070803",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "Top I",
+        "disease": "小细胞肺癌,食管癌,胰腺癌,实体瘤",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "HR091506",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "XO",
+        "disease": "痛风,高尿酸血症",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "HRG2010",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "DDC,dopamine",
+        "disease": "帕金森病",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "FH-006",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "B7-H3,EGFR",
+        "disease": "实体瘤,非小细胞肺癌",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 19,
+    "bd": [
+      {
+        "date": "2026-05-12",
+        "partner": "Bristol-Myers Squibb",
+        "asset": "5项创新项目(临床前),4项肿瘤学及血液学项目(临床前)",
+        "value_usd_m": 15200.0,
+        "type": "合作,许可",
+        "region": "美国"
+      },
+      {
+        "date": "2025-09-24",
+        "partner": "Glenmark Specialty",
+        "asset": "瑞康曲妥珠单抗(批准上市)",
+        "value_usd_m": 1111.0,
+        "type": "许可",
+        "region": "瑞士"
+      },
+      {
+        "date": "2025-09-05",
+        "partner": "Braveheart",
+        "asset": "HRS-1893(III期临床)",
+        "value_usd_m": 1088.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2025-07-28",
+        "partner": "GSK",
+        "asset": "HRS-9821(I期临床),其他11个项目(临床前)",
+        "value_usd_m": 12500.0,
+        "type": "许可,期权",
+        "region": "英国"
+      },
+      {
+        "date": "2025-03-25",
+        "partner": "Merck & Co.",
+        "asset": "HRS-5346(II期临床)",
+        "value_usd_m": 1970.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2024-12-29",
+        "partner": "IDEAYA Biosciences",
+        "asset": "SHR-4849(I期临床)",
+        "value_usd_m": 1045.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2024-05-16",
+        "partner": "Kailera",
+        "asset": "HRS9531(III期临床),HRS-7535(II期临床)",
+        "value_usd_m": 6035.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2023-08-14",
+        "partner": "Aiolos Bio",
+        "asset": "SHR-1905(II期临床)",
+        "value_usd_m": 1050.0,
+        "type": "许可",
+        "region": "美国"
+      }
+    ]
+  },
+  "3696.HK": {
+    "name_cleaned": "英矽智能",
+    "pipeline_total": 71,
+    "pipeline": [
+      {
+        "name": "ISM001-055 (rentosertib)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "TNIK",
+        "disease": "特发性肺纤维化",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "ISM3312",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "3CL",
+        "disease": "COVID-19",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "CDK7抑制剂",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "CDK7",
+        "disease": "癌症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "CDK8/19 program",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "CDK8,CDK19",
+        "disease": "实体瘤,急性髓系白血病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2493.HK": {
+    "name_cleaned": "迈威生物",
+    "pipeline_total": 74,
+    "pipeline": [
+      {
+        "name": "9MW0211",
+        "phase": "III期临床",
+        "phase_cn": "II/III期临床",
+        "target": "VEGF-A",
+        "disease": "湿性年龄相关性黄斑变性",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "9MW1911",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "IL-33R",
+        "disease": "慢性阻塞性肺病,哮喘,特应性皮炎",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "9MW3811",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "IL-11",
+        "disease": "特发性肺纤维化,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "6MW3511",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "TGF-β,PDL1",
+        "disease": "实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "7MW3711",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "B7-H3",
+        "disease": "小细胞肺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "7MW4911",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "CDH17",
+        "disease": "消化道癌症,结直肠癌",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 23,
+    "bd": [
+      {
+        "date": "2026-01-07",
+        "partner": "Sentonix",
+        "asset": "下一代创新药物(临床前)",
+        "value_usd_m": null,
+        "type": "合作,许可",
+        "region": "美国"
+      },
+      {
+        "date": "2025-09-18",
+        "partner": "Kalexo Bio",
+        "asset": "2MW7141(临床前)",
+        "value_usd_m": 1000.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2025-06-27",
+        "partner": "齐鲁制药",
+        "asset": "阿格司亭α(批准上市)",
+        "value_usd_m": 69.5,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2025-06-26",
+        "partner": "Calico Life Sciences",
+        "asset": "9MW3811(I期临床)",
+        "value_usd_m": 596.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2023-01-20",
+        "partner": "Disc Medicine",
+        "asset": "9MW3011(申报临床)",
+        "value_usd_m": 412.5,
+        "type": "合作,许可",
+        "region": "美国"
+      }
+    ]
+  },
+  "2565.HK": {
+    "name_cleaned": "派格生物",
+    "pipeline_total": 12,
+    "pipeline": [
+      {
+        "name": "维培那肽 (PB-119)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "GLP-1R",
+        "disease": "2型糖尿病,肥胖,超重",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "nerigliatin (PB-201)",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "glucokinase",
+        "disease": "2型糖尿病,1型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "PB-718",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "GLP-1R,GCGR",
+        "disease": "肥胖,代谢相关脂肪性肝炎,2型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "CR059",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "GLP-1R",
+        "disease": "2型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "PB-1902",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "μ opioid receptor",
+        "disease": "阿片类药物引起的便秘",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "PB-2301",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "GLP-1R,GIPR",
+        "disease": "2型糖尿病,肥胖",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 3,
+    "bd": [
+      {
+        "date": "2026-03-16",
+        "partner": "腾瑞制药",
+        "asset": "维培那肽(批准上市)",
+        "value_usd_m": 17.96,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2025-10-10",
+        "partner": "PDC",
+        "asset": "维派那肽(申请上市)",
+        "value_usd_m": null,
+        "type": "许可",
+        "region": "阿拉伯联合酋长国"
+      },
+      {
+        "date": "2024-09-13",
+        "partner": "—",
+        "asset": "维派那肽(申请上市)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "全球"
+      }
+    ]
+  },
+  "2617.HK": {
+    "name_cleaned": "药捷安康",
+    "pipeline_total": 19,
+    "pipeline": [
+      {
+        "name": "替恩戈替尼 (tinengotinib)",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "FGFR,VEGFR,Aurora A/B,JAK1/2",
+        "disease": "胆管癌,前列腺癌,乳腺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "zectivimod (TT-01688)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "S1PR1",
+        "disease": "溃疡性结肠炎,特应性皮炎",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "TT-00434",
+        "phase": "I期临床",
+        "phase_cn": "申报临床",
+        "target": "FGFR1/2/3",
+        "disease": "实体瘤,膀胱癌,胆管癌,胃癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "TT-00920",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "PDE9",
+        "disease": "心力衰竭,镰状细胞病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "TT-00973",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "Flt3,Axl",
+        "disease": "急性髓系白血病,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "TT-01488",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "BTK",
+        "disease": "B细胞淋巴瘤,套细胞淋巴瘤",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 2,
+    "bd": [
+      {
+        "date": "2025-11-03",
+        "partner": "Neurocrine Biosciences",
+        "asset": "NLRP3抑制剂(临床前)",
+        "value_usd_m": 881.5,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2020-08-17",
+        "partner": "LG Chem",
+        "asset": "TT-01025(临床前)",
+        "value_usd_m": 350.0,
+        "type": "许可",
+        "region": "韩国"
+      }
+    ]
+  },
+  "9887.HK": {
+    "name_cleaned": "维立志博",
+    "pipeline_total": 46,
+    "pipeline": [
+      {
+        "name": "LBL-034",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "GPRC5D,CD3",
+        "disease": "多发性骨髓瘤,浆细胞肿瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LBL-015",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "TGF-β,PD1",
+        "disease": "淋巴瘤,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LBL-019",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "TNFR2",
+        "disease": "实体瘤,癌症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LBL-033",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "Muc16,CD3",
+        "disease": "卵巢癌,宫颈癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LBL-003",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "TIM3",
+        "disease": "癌症,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LBL-047",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "BDCA2,TACI",
+        "disease": "系统性红斑狼疮,干燥综合征,皮肌炎",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 4,
+    "bd": [
+      {
+        "date": "2025-10-16",
+        "partner": "Dianthus Therapeutics",
+        "asset": "LBL-047(申报临床)",
+        "value_usd_m": 1038.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2024-11-07",
+        "partner": "Oblenio Bio",
+        "asset": "LBL-051(临床前)",
+        "value_usd_m": 614.0,
+        "type": "许可,期权",
+        "region": "美国"
+      },
+      {
+        "date": "2021-12-14",
+        "partner": "百济神州",
+        "asset": "LBL-007(I/II期临床)",
+        "value_usd_m": 772.0,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2021-02-07",
+        "partner": "西湖生物医药",
+        "asset": "工程化红细胞(临床前)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "2629.HK": {
+    "name_cleaned": "MIRXES",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2627.HK": {
+    "name_cleaned": "中慧生物",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2591.HK": {
+    "name_cleaned": "银诺医药",
+    "pipeline_total": 16,
+    "pipeline": [
+      {
+        "name": "依苏帕格鲁肽α (supaglutide)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "GLP-1R",
+        "disease": "2型糖尿病,肥胖,超重",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "YN108",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "SPX",
+        "disease": "1型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "YN202",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "ghrelin",
+        "disease": "肥胖",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "YN203",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "glucagon",
+        "disease": "2型糖尿病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2595.HK": {
+    "name_cleaned": "劲方医药",
+    "pipeline_total": 37,
+    "pipeline": [
+      {
+        "name": "GFH375 (VS-7375)",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "KRAS G12D",
+        "disease": "胰腺癌,结直肠癌,非小细胞肺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GFH018",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "ALK5",
+        "disease": "肝癌,尿路上皮癌,胆管癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GFH312",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "RIPK1",
+        "disease": "原发性胆汁性胆管炎,外周动脉疾病,类风湿性关节炎",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GF-109",
+        "phase": "I/II期临床",
+        "phase_cn": "申报临床",
+        "target": "not available",
+        "disease": "实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GFH276",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "Ras,PPIA",
+        "disease": "非小细胞肺癌,胰腺癌,结直肠癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GFH220",
+        "phase": "申报临床",
+        "phase_cn": "申报临床",
+        "target": "not available",
+        "disease": "非霍奇金淋巴瘤,实体瘤",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 4,
+    "bd": [
+      {
+        "date": "2025-01-14",
+        "partner": "Verastem",
+        "asset": "GFH375(I/II期临床)",
+        "value_usd_m": null,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2023-08-28",
+        "partner": "Verastem",
+        "asset": "GFH375+两款RAS药(临床前)",
+        "value_usd_m": 636.5,
+        "type": "合作,期权",
+        "region": "美国"
+      },
+      {
+        "date": "2022-04-01",
+        "partner": "SELLAS Life Sciences",
+        "asset": "GFH009(I期临床)",
+        "value_usd_m": 150.0,
+        "type": "许可,合作",
+        "region": "美国"
+      },
+      {
+        "date": "2021-09-02",
+        "partner": "信达生物",
+        "asset": "GFH925(I/II期临床)",
+        "value_usd_m": 312.0,
+        "type": "许可,期权",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "2575.HK": {
+    "name_cleaned": "轩竹生物",
+    "pipeline_total": 46,
+    "pipeline": [
+      {
+        "name": "SLC-391",
+        "phase": "I/II期临床",
+        "phase_cn": "I期临床",
+        "target": "Axl",
+        "disease": "非小细胞肺癌,急性髓系白血病,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "NG-350A",
+        "phase": "I期临床",
+        "phase_cn": "临床前",
+        "target": "CD40",
+        "disease": "直肠癌,胰腺导管癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "CN115707708A (WEE1)",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "WEE1",
+        "disease": "癌症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "menin抑制剂",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "menin",
+        "disease": "癌症",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 4,
+    "bd": [
+      {
+        "date": "2026-04-09",
+        "partner": "Boston Oncology",
+        "asset": "吡洛西利(批准上市),地罗阿克(批准上市)",
+        "value_usd_m": 100.0,
+        "type": "许可,合作",
+        "region": "美国"
+      },
+      {
+        "date": "2024-06-13",
+        "partner": "丽珠医药",
+        "asset": "复达那非(II期临床)",
+        "value_usd_m": null,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2023-09-27",
+        "partner": "惠升生物",
+        "asset": "加格列净(III期临床)",
+        "value_usd_m": 24.05,
+        "type": "资产收购",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2022-06-16",
+        "partner": "上海医药",
+        "asset": "Plazomicin(批准上市),百纳培南(II/III期临床)",
+        "value_usd_m": 65.16,
+        "type": "许可,合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "2630.HK": {
+    "name_cleaned": "旺山旺水",
+    "pipeline_total": 18,
+    "pipeline": [
+      {
+        "name": "司美那非 (TPN171H)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "PDE5",
+        "disease": "肺动脉高压,勃起功能障碍",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "氘瑞米德韦 (VV116)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "RdRp",
+        "disease": "新型冠状病毒感染,RSV感染",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LV232",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "5-HT3,SERT",
+        "disease": "重度抑郁症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "VV119",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "SERT,D2/D3",
+        "disease": "精神分裂症,抑郁症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "VV261",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "RdRp",
+        "disease": "发热伴血小板减少综合征",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 3,
+    "bd": [
+      {
+        "date": "2025-12-03",
+        "partner": "江苏先声医药集团",
+        "asset": "氘瑞米德韦(批准上市)",
+        "value_usd_m": null,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2022-03-01",
+        "partner": "新疆理化技术研究所",
+        "asset": "氘瑞米德韦(批准上市)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2021-10-04",
+        "partner": "君实生物",
+        "asset": "VV116(申报临床)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "2659.HK": {
+    "name_cleaned": "宝济药业",
+    "pipeline_total": 17,
+    "pipeline": [
+      {
+        "name": "KJ017",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "HAase",
+        "disease": "组织渗透增强剂,美容",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "绒促卵泡素α (SJ02)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "FSH",
+        "disease": "辅助生殖技术,体外受精",
+        "drug_type": "生物仿制"
+      },
+      {
+        "name": "Ricefidase (KJ103)",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "IgG",
+        "disease": "吉兰巴雷综合征,器官移植排斥",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "SJ01",
+        "phase": "III期临床",
+        "phase_cn": "I期临床",
+        "target": "EPO",
+        "disease": "慢性肾病贫血",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "KJ101",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "chymotrypsin",
+        "disease": "烧伤,伤口愈合",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "KJ015",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "HER2",
+        "disease": "胆管癌,胃癌,实体瘤",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 3,
+    "bd": [
+      {
+        "date": "2026-01-16",
+        "partner": "上海莱士",
+        "asset": "免疫球蛋白等血液制品(临床前)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2024-08-01",
+        "partner": "荃信生物",
+        "asset": "",
+        "value_usd_m": 1.11,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2022-03-01",
+        "partner": "尚健生物",
+        "asset": "",
+        "value_usd_m": 1.48,
+        "type": "合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "6938.HK": {
+    "name_cleaned": "瑞博生物",
+    "pipeline_total": 71,
+    "pipeline": [
+      {
+        "name": "AZD5312",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "AR",
+        "disease": "去势抵抗前列腺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IONIS-GCGRRx",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "GCGR",
+        "disease": "2型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "RBD1016",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "HBV",
+        "disease": "慢性乙肝,丁型肝炎",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "RBD0066",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "痛风",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "RBD1055",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "血脂异常",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 3,
+    "bd": [
+      {
+        "date": "2026-02-11",
+        "partner": "Madrigal Pharmaceuticals",
+        "asset": "若干siRNA资产(临床前)",
+        "value_usd_m": 4460.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2024-01-03",
+        "partner": "Boehringer Ingelheim",
+        "asset": "SR111(临床前),SR112(临床前)",
+        "value_usd_m": 2579.38,
+        "type": "合作",
+        "region": "德国"
+      },
+      {
+        "date": "2023-12-25",
+        "partner": "齐鲁制药",
+        "asset": "SR043(I期临床)",
+        "value_usd_m": 109.93,
+        "type": "许可",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "2592.HK": {
+    "name_cleaned": "拨康视云",
+    "pipeline_total": 12,
+    "pipeline": [
+      {
+        "name": "adrabetadex",
+        "phase": "申请上市",
+        "phase_cn": "I期临床",
+        "target": "—",
+        "disease": "C型尼曼匹克氏病,阿尔茨海默病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "CBT-001",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "PDGFR,VEGFR,FGFR",
+        "disease": "翼状胬肉,结膜充血",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "CBT-004",
+        "phase": "II期临床",
+        "phase_cn": "未知",
+        "target": "PDGFR,VEGFR",
+        "disease": "睑裂斑,眼科疾病",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "CBT-009",
+        "phase": "I/II期临床",
+        "phase_cn": "申报临床",
+        "target": "mAChR",
+        "disease": "近视",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "CBT-358",
+        "phase": "申报临床",
+        "phase_cn": "未知",
+        "target": "TRPM8",
+        "disease": "干眼病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 2,
+    "bd": [
+      {
+        "date": "2024-08-06",
+        "partner": "Santen Pharmaceutical",
+        "asset": "CBT-001(III期临床),CBT-004(临床前)",
+        "value_usd_m": 91.0,
+        "type": "许可",
+        "region": "日本"
+      },
+      {
+        "date": "2020-04-13",
+        "partner": "远大医药",
+        "asset": "CBT-001(II期临床)",
+        "value_usd_m": 10.49,
+        "type": "许可,投资",
+        "region": "中国(港澳台)"
+      }
+    ]
+  },
+  "7630.HK": {
+    "name_cleaned": "英派药业",
+    "pipeline_total": 22,
+    "pipeline": [
+      {
+        "name": "senaparib",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "PARP1,PARP2",
+        "disease": "卵巢癌,小细胞肺癌,前列腺癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IMP1707",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "PARP1",
+        "disease": "卵巢癌,乳腺癌,去势抵抗前列腺癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IMP1734 (EIK1003)",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "PARP1",
+        "disease": "去势抵抗前列腺癌,乳腺癌,卵巢癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IMP9064",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "ATR",
+        "disease": "卵巢癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IMP7068",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "WEE1",
+        "disease": "实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "IMP5471",
+        "phase": "申报临床",
+        "phase_cn": "申报临床",
+        "target": "Hedgehog",
+        "disease": "血液系统肿瘤",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 3,
+    "bd": [
+      {
+        "date": "2023-12-20",
+        "partner": "华东医药",
+        "asset": "senaparib(申请上市)",
+        "value_usd_m": 40.98,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2023-06-01",
+        "partner": "Eikon Therapeutics",
+        "asset": "IMP1734(临床前)",
+        "value_usd_m": 996.5,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2020-08-20",
+        "partner": "君实生物",
+        "asset": "senaparib(III期临床)",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "6872.HK": {
+    "name_cleaned": "丹诺医药",
+    "pipeline_total": 8,
+    "pipeline": [
+      {
+        "name": "利福特尼唑 (TNP-2198)",
+        "phase": "申请上市",
+        "phase_cn": "申请上市",
+        "target": "bacterial RNAP",
+        "disease": "艰难梭菌感染,幽门螺杆菌感染,细菌性阴道病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "利福喹酮 (TNP-2092)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "bacterial DNA gyrase/Top IV/RNAP",
+        "disease": "人工关节感染,幽门螺杆菌感染,肝性脑病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 2,
+    "bd": [
+      {
+        "date": "2024-11-28",
+        "partner": "远大生命科学",
+        "asset": "TNP-2198(III期临床)",
+        "value_usd_m": 107.42,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2021-01-18",
+        "partner": "Johnson & Johnson",
+        "asset": "NTM-PD program",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "美国"
+      }
+    ]
+  },
+  "1779.HK": {
+    "name_cleaned": "天辰生物",
+    "pipeline_total": 12,
+    "pipeline": [
+      {
+        "name": "LP-003",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "IgE",
+        "disease": "慢性自发性荨麻疹,哮喘,特应性皮炎",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LP-005 (RX-001)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "C3b,C5",
+        "disease": "IgA肾病,重症肌无力,阵发性睡眠性血红蛋白尿症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "LP-001",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "EPO",
+        "disease": "骨髓增生异常综合征,贫血",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 1,
+    "bd": [
+      {
+        "date": "2021-04-25",
+        "partner": "艾尔健康",
+        "asset": "LP-005(临床前)",
+        "value_usd_m": 154.69,
+        "type": "许可",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "6887.HK": {
+    "name_cleaned": "东阳光药",
+    "pipeline_total": 146,
+    "pipeline": [
+      {
+        "name": "CT365 (HEC68498)",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "mTOR,PI3K",
+        "disease": "实体瘤,特发性肺纤维化",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "GLP-1R激动剂",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "GLP-1R",
+        "disease": "糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "PI3Kβ抑制剂",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "PI3Kβ",
+        "disease": "癌症,自身免疫性疾病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "6132.HK": {
+    "name_cleaned": "华健未来",
+    "pipeline_total": 20,
+    "pipeline": [
+      {
+        "name": "HJ178",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "GLP-1,GIP",
+        "disease": "肥胖,2型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HJ787",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "TYK2",
+        "disease": "特应性皮炎,银屑病,痤疮",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HJ891",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "KRAS G12C",
+        "disease": "非小细胞肺癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HJ197",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "FGFR4",
+        "disease": "肝细胞癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "JS116 (HJ191)",
+        "phase": "申报临床",
+        "phase_cn": "申报临床",
+        "target": "KRAS G12C",
+        "disease": "实体瘤,非小细胞肺癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HJ217",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "FGFR4",
+        "disease": "肝细胞癌",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "3378.HK": {
+    "name_cleaned": "翰思艾泰",
+    "pipeline_total": 21,
+    "pipeline": [
+      {
+        "name": "普特利单抗 (pucotenlimab)",
+        "phase": "批准上市",
+        "phase_cn": "批准上市",
+        "target": "PD1",
+        "disease": "黑色素瘤,MSI-H实体瘤,宫颈癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HX009",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "PD1,CD47",
+        "disease": "淋巴瘤,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "narazaciclib (HX301)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "CDK4/6,Flt3",
+        "disease": "多发性骨髓瘤,急性髓系白血病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HX044",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "CD47,CTLA4",
+        "disease": "黑色素瘤,头颈部鳞状细胞癌,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HX111",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "OX40",
+        "disease": "淋巴瘤,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HX011",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "OX40",
+        "disease": "实体瘤,癌症",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2637.HK": {
+    "name_cleaned": "海西新药",
+    "pipeline_total": 7,
+    "pipeline": [
+      {
+        "name": "C019199",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "CSF-1R,DDR1,VEGFR2",
+        "disease": "腱鞘巨细胞瘤,实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HX9428 (HXP056)",
+        "phase": "I/II期临床",
+        "phase_cn": "I/II期临床",
+        "target": "VEGFR2",
+        "disease": "湿性年龄相关性黄斑变性,糖尿病黄斑水肿",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "HXP089",
+        "phase": "申报临床",
+        "phase_cn": "申报临床",
+        "target": "—",
+        "disease": "胶质母细胞瘤",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "3880.HK": {
+    "name_cleaned": "泰德医药",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2652.HK": {
+    "name_cleaned": "长风药业",
+    "pipeline_total": 5,
+    "pipeline": [
+      {
+        "name": "ICF004",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "—",
+        "disease": "特发性肺纤维化,间质性肺病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "ICF001",
+        "phase": "申报临床",
+        "phase_cn": "申报临床",
+        "target": "—",
+        "disease": "肺动脉高压",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "CP029",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "哮喘",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "9637.HK": {
+    "name_cleaned": "礼邦医药",
+    "pipeline_total": 11,
+    "pipeline": [
+      {
+        "name": "AP301 (VS-505)",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "磷结合剂",
+        "disease": "慢性肾病高磷血症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "AP306 (EOS789)",
+        "phase": "II期临床",
+        "phase_cn": "II期临床",
+        "target": "NaPi-2b,SLC20A1/2",
+        "disease": "高磷血症",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "AP303",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "PPAR",
+        "disease": "IgA肾病,糖尿病肾病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "TST004 (AP302)",
+        "phase": "I期临床",
+        "phase_cn": "临床前",
+        "target": "MASP2",
+        "disease": "IgA肾病,血栓性微血管病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2335.HK": {
+    "name_cleaned": "麦科医药",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2396.HK": {
+    "name_cleaned": "华芢生物",
+    "pipeline_total": 5,
+    "pipeline": [
+      {
+        "name": "重组人血小板源生长因子 (Pro-101)",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "PDGF",
+        "disease": "糖尿病足,烧伤,皮肤溃疡,伤口愈合",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "Mes-201",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "实体瘤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "Oli-201",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "三阴性乳腺癌",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "7666.HK": {
+    "name_cleaned": "剂泰医药",
+    "pipeline_total": 17,
+    "pipeline": [
+      {
+        "name": "MTS004",
+        "phase": "III期临床",
+        "phase_cn": "III期临床",
+        "target": "NMDA,SERT等",
+        "disease": "卒中,假性延髓情绪,口咽性吞咽困难",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "MTS-201",
+        "phase": "I期临床",
+        "phase_cn": "临床前",
+        "target": "TGR5",
+        "disease": "肥胖,代谢相关脂肪性肝炎,2型糖尿病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "MTS008",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "AKR1B1",
+        "disease": "糖尿病神经病变",
+        "drug_type": "微创新"
+      },
+      {
+        "name": "MTS105",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "CD3,GPC3",
+        "disease": "肝细胞癌",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "MTS109",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "CD19,CD3,BCMA",
+        "disease": "系统性红斑狼疮,自身免疫性疾病",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "MTS-128",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "BCMA,CD19",
+        "disease": "自身免疫性疾病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 5,
+    "bd": [
+      {
+        "date": "2026-06-30",
+        "partner": "Boulevard Bio (Deerfield)",
+        "asset": "MTS-128(临床前)",
+        "value_usd_m": 1620.0,
+        "type": "许可",
+        "region": "美国"
+      },
+      {
+        "date": "2026-05-28",
+        "partner": "Deerfield",
+        "asset": "TCE项目(I期临床)+体内蛋白药",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "美国"
+      },
+      {
+        "date": "2026-05-18",
+        "partner": "沙砾生物",
+        "asset": "NanoForge/OpenCGT平台合作",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2025-09-12",
+        "partner": "浙江引安",
+        "asset": "MTS004(III期临床)",
+        "value_usd_m": 13.9,
+        "type": "许可",
+        "region": "中国(内地)"
+      },
+      {
+        "date": "2021-08-27",
+        "partner": "西湖生物医药",
+        "asset": "AI红细胞递药合作",
+        "value_usd_m": null,
+        "type": "合作",
+        "region": "中国(内地)"
+      }
+    ]
+  },
+  "6915.HK": {
+    "name_cleaned": "江西生物",
+    "pipeline_total": 4,
+    "pipeline": [
+      {
+        "name": "抗五步蛇毒血清",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "—",
+        "disease": "五步蛇咬伤",
+        "drug_type": "生物制品"
+      },
+      {
+        "name": "抗蝮蛇毒血清",
+        "phase": "I期临床",
+        "phase_cn": "I期临床",
+        "target": "—",
+        "disease": "蝮蛇咬伤",
+        "drug_type": "生物制品"
+      },
+      {
+        "name": "多价抗蛇毒血清",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "—",
+        "disease": "毒蛇咬伤",
+        "drug_type": "创新药"
+      },
+      {
+        "name": "马抗狂犬病免疫球蛋白",
+        "phase": "临床前",
+        "phase_cn": "临床前",
+        "target": "rabies virus",
+        "disease": "狂犬病",
+        "drug_type": "创新药"
+      }
+    ],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2526.HK": {
+    "name_cleaned": "德适",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2609.HK": {
+    "name_cleaned": "佰泽医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2651.HK": {
+    "name_cleaned": "大众口腔",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2656.HK": {
+    "name_cleaned": "健康160",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2581.HK": {
+    "name_cleaned": "明基医院",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2661.HK": {
+    "name_cleaned": "轻松健康",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2675.HK": {
+    "name_cleaned": "精锋医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2677.HK": {
+    "name_cleaned": "卓正医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "1609.HK": {
+    "name_cleaned": "天星医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "1187.HK": {
+    "name_cleaned": "可孚医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  },
+  "2697.HK": {
+    "name_cleaned": "真健康医疗",
+    "pipeline_total": 0,
+    "pipeline": [],
+    "bd_total": 0,
+    "bd": []
+  }
+}

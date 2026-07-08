@@ -21,6 +21,7 @@ import streamlit as st
 from lib import charts
 from lib import funding
 from lib import i18n
+from lib import ipo_detail
 from lib import ipo_tracker
 from lib import theme
 from lib import ui
@@ -445,8 +446,13 @@ with tab_ipo:
             color=theme.INK_3, value_fmt="%.0f%%"), width="stretch", theme=None)
         st.caption(i18n.t("capital.ipo.note.byliq"))
 
-        # Full roster — filterable
-        theme.section_header(i18n.t("capital.ipo.section.table"))
+        # Full roster — company-detail accordion (filterable). The flat sortable
+        # table was removed 2026-07-08 (George): its columns are subsumed by the
+        # accordion (collapsed row = 名称/涨幅/破发·停牌 chips; expanded = 上市日/
+        # 发行价→现价/估值→市值/日均成交/业务分类 + pipeline ladder + BD). The 3
+        # filters below still drive which companies render in the accordion.
+        theme.section_header(i18n.t("capital.ipo.detail.section_title"),
+                             meta=i18n.t("capital.ipo.detail.section_meta"))
         _iall = i18n.t("capital.ipo.filter.all")
         _above, _below = i18n.t("capital.ipo.filter.above"), i18n.t("capital.ipo.filter.below")
         _ai = i18n.t("capital.ipo.filter.ai")
@@ -470,39 +476,11 @@ with tab_ipo:
         elif _pick_tag == _ai:
             _isub = _isub[_isub["is_ai_pharma"] == True]  # noqa: E712
 
-        ic = {k: i18n.t(f"capital.ipo.col.{k}") for k in
-              ("name", "date", "offer", "close", "ret", "mktcap", "mkttier", "turnover", "liqtier", "broke", "flag")}
-
-        def _flag(r) -> str:
-            if r["suspended"]:
-                return "停牌"
-            if r["no_offer"]:
-                return "介绍上市"
-            if r["is_ai_pharma"]:
-                return "AI"
-            return "18A" if r["is_18a"] else ""
-
-        disp = pd.DataFrame({
-            ic["date"]: _isub["ipo_date"].astype(str),
-            ic["offer"]: _isub["offer_price_hkd"],
-            ic["close"]: _isub["close"],
-            ic["ret"]: _isub["ret_pct"],
-            ic["mktcap"]: _isub["cur_mktcap_yi"],
-            ic["mkttier"]: _isub["mktcap_tier"].fillna("—"),
-            ic["turnover"]: _isub["avg_turnover_usdm"],
-            ic["liqtier"]: _isub["liquidity_tier"].fillna("—"),
-            ic["broke"]: _isub["broke"].map({True: "破发", False: "水上"}).fillna("—"),
-            ic["flag"]: [_flag(r) for _, r in _isub.iterrows()],
-        })
-        disp.index = _isub["name_cn"].astype(str)
-        disp.index.name = ic["name"]
-        ui.render_html_table(
-            disp, price_cols=[ic["offer"], ic["close"]],
-            extra_formats={ic["ret"]: "%+.0f%%", ic["mktcap"]: "%.0f", ic["turnover"]: "%.1f"},
-            text_cols=[ic["mkttier"], ic["liqtier"], ic["flag"]],
-            status_cols={ic["broke"]: {"水上": "up", "破发": "down"}},
-            right_text_cols=[ic["date"]], index_label=ic["name"],
-            height=min(1100, 80 + 30 * len(disp)))
+        # Per-name detail accordion (native <details>/<summary>, inline styles). Detail is prebuilt
+        # on disk (lib.ipo_tracker.load_ipo_pharma_detail) — no runtime PharmCube query.
+        _detail = ipo_tracker.load_ipo_pharma_detail()
+        for _, _r in _isub.iterrows():
+            ipo_detail.render_ipo_detail(_r.to_dict(), _detail.get(str(_r["code"])))
 
 
 # ══ MNC dry-powder (SEC XBRL — who can fund the next wave, M&A or BD) ═══════

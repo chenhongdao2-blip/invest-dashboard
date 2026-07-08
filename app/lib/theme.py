@@ -988,6 +988,17 @@ pre code {{
 .cmsi-subsection::before {{
   content: ''; width: 3px; height: 15px; background: {CMSI_RED}; display: inline-block;
 }}
+
+/* ── IPO 公司详情 <details>/<summary> 状态类(lib/ipo_detail.py) ────────────
+   内联样式覆盖不到的状态规则:marker 隐藏 / caret 旋转 / hover / open 态。
+   open = PAPER_DEEP 底 + border-left 3px CMSI_RED;常态即带 3px 透明左边框防展开跳动。
+   无 box-shadow;border-radius ≤2px(见内联)。 */
+summary.ipo-acc-sum {{ list-style: none; cursor: pointer; border-left: 3px solid transparent; }}
+summary.ipo-acc-sum::-webkit-details-marker {{ display: none; }}
+summary.ipo-acc-sum:hover {{ background: {PAPER_DEEP}; }}
+details[open] > summary.ipo-acc-sum {{ background: {PAPER_DEEP}; border-left-color: {CMSI_RED}; }}
+.ipo-acc-caret {{ transition: transform .16s ease; display: inline-flex; align-items: center; }}
+details[open] > summary .ipo-acc-caret {{ transform: rotate(90deg); }}
 """
 
 

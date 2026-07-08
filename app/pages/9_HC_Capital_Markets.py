@@ -453,32 +453,54 @@ with tab_ipo:
         # filters below still drive which companies render in the accordion.
         theme.section_header(i18n.t("capital.ipo.detail.section_title"),
                              meta=i18n.t("capital.ipo.detail.section_meta"))
-        _iall = i18n.t("capital.ipo.filter.all")
-        _above, _below = i18n.t("capital.ipo.filter.above"), i18n.t("capital.ipo.filter.below")
-        _ai = i18n.t("capital.ipo.filter.ai")
-        _g1, _g2, _g3 = st.columns(3)
-        with _g1:
-            _pick_mkt = st.selectbox(i18n.t("capital.ipo.filter.mkt"),
-                                     [_iall, "大市值", "中市值", "小市值"], key="ipo_flt_mkt")
-        with _g2:
-            _pick_w = st.selectbox(i18n.t("capital.ipo.filter.water"), [_iall, _above, _below], key="ipo_flt_w")
-        with _g3:
-            _pick_tag = st.selectbox(i18n.t("capital.ipo.filter.tag"), [_iall, "18A", _ai], key="ipo_flt_tag")
+        # Detail dossier (pipeline + BD) — loaded up front so the sort control can
+        # rank by 管线数 / 已披露 BD (fields that live in the JSON, not the CSV).
+        _detail = ipo_tracker.load_ipo_pharma_detail()
+
+        # ── Sort control (top, full-width) — reorders the accordion ──
+        _sort_opts = {
+            "ret_desc": i18n.t("capital.ipo.sort.ret_desc"),
+            "ret_asc": i18n.t("capital.ipo.sort.ret_asc"),
+            "mktcap_desc": i18n.t("capital.ipo.sort.mktcap_desc"),
+            "date_desc": i18n.t("capital.ipo.sort.date_desc"),
+            "pipeline_desc": i18n.t("capital.ipo.sort.pipeline_desc"),
+            "bd_desc": i18n.t("capital.ipo.sort.bd_desc"),
+        }
+        _sort_pick = st.selectbox(
+            i18n.t("capital.ipo.sort.label"), list(_sort_opts.values()),
+            key="ipo_sort")
+        _sort_key = next((k for k, v in _sort_opts.items() if v == _sort_pick), "ret_desc")
+
+        # Filters removed 2026-07-08 (George) — the sort control above covers the
+        # need; the whole roster renders, reordered.
         _isub = ipo.copy()
-        if _pick_mkt != _iall:
-            _isub = _isub[_isub["mktcap_tier"] == _pick_mkt]
-        if _pick_w == _above:
-            _isub = _isub[_isub["broke"] == False]   # noqa: E712
-        elif _pick_w == _below:
-            _isub = _isub[_isub["broke"] == True]     # noqa: E712
-        if _pick_tag == "18A":
-            _isub = _isub[_isub["is_18a"] == True]    # noqa: E712
-        elif _pick_tag == _ai:
-            _isub = _isub[_isub["is_ai_pharma"] == True]  # noqa: E712
+
+        # ── Apply sort. Pipeline/BD keys come from _detail; ret/mktcap/date from CSV. ──
+        def _pipeline_n(code: str) -> int:
+            return int((_detail.get(str(code)) or {}).get("pipeline_total", 0) or 0)
+
+        def _bd_disclosed(code: str) -> float:
+            bd = (_detail.get(str(code)) or {}).get("bd", []) or []
+            return float(sum(float(d["value_usd_m"]) for d in bd
+                             if d.get("value_usd_m") not in (None, "")))
+
+        if _sort_key == "ret_desc":
+            _isub = _isub.sort_values("ret_pct", ascending=False, na_position="last")
+        elif _sort_key == "ret_asc":
+            _isub = _isub.sort_values("ret_pct", ascending=True, na_position="last")
+        elif _sort_key == "mktcap_desc":
+            _isub = _isub.sort_values("cur_mktcap_yi", ascending=False, na_position="last")
+        elif _sort_key == "date_desc":
+            _isub = _isub.sort_values("ipo_date", ascending=False, na_position="last")
+        elif _sort_key == "pipeline_desc":
+            _isub = _isub.assign(_pn=_isub["code"].map(_pipeline_n)).sort_values(
+                "_pn", ascending=False, kind="stable").drop(columns="_pn")
+        elif _sort_key == "bd_desc":
+            _isub = _isub.assign(_bd=_isub["code"].map(_bd_disclosed)).sort_values(
+                "_bd", ascending=False, kind="stable").drop(columns="_bd")
 
         # Per-name detail accordion (native <details>/<summary>, inline styles). Detail is prebuilt
         # on disk (lib.ipo_tracker.load_ipo_pharma_detail) — no runtime PharmCube query.
-        _detail = ipo_tracker.load_ipo_pharma_detail()
         for _, _r in _isub.iterrows():
             ipo_detail.render_ipo_detail(_r.to_dict(), _detail.get(str(_r["code"])))
 

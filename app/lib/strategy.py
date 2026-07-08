@@ -32,6 +32,7 @@ DATA_EXT = REPO_ROOT / "data" / "external"
 
 V4_CSV = DATA_EXT / "v4_picks.csv"
 V5_CSV = DATA_EXT / "v5_picks.csv"
+V6_CSV = DATA_EXT / "v6_picks.csv"
 HD_CSV = DATA_EXT / "hd_picks.csv"
 HD_V2_CSV = DATA_EXT / "hd_picks_v2.csv"
 HD_V3_CSV = DATA_EXT / "hd_picks_v3.csv"
@@ -90,6 +91,17 @@ def load_v5() -> pd.DataFrame:
     if not V5_CSV.exists():
         return pd.DataFrame()
     return pd.read_csv(V5_CSV)
+
+
+@st.cache_data(ttl=900)
+def load_v6() -> pd.DataFrame:
+    """v6 biotech (7月调仓, effective 2026-07-08). Same schema as v4/v5
+    (rank/ticker/name/score/pick_date/benchmark/yf_sym). Data is added separately
+    via an insert script; until v6_picks.csv lands this returns an empty frame so
+    the page renders a "即将上线" placeholder instead of crashing (三代演进)."""
+    if not V6_CSV.exists():
+        return pd.DataFrame()
+    return pd.read_csv(V6_CSV)
 
 
 @st.cache_data(ttl=900)
@@ -160,6 +172,8 @@ STRATEGIES = {
         "pick_date": "2026-04-22",
         "benchmark": "XBI",
         "benchmark_name": "SPDR S&P Biotech",
+        "currency": "USD",
+        "initial_capital": 1_000_000,
     },
     "v5_biotech": {
         "name": "v5 biotech",
@@ -168,6 +182,23 @@ STRATEGIES = {
         "pick_date": "2026-05-15",
         "benchmark": "XBI",
         "benchmark_name": "SPDR S&P Biotech",
+        "currency": "USD",
+        "initial_capital": 1_000_000,
+        # renders INSIDE the v4_biotech group tab (version toggle), not its own tab.
+        "version_of": "v4_biotech",
+    },
+    "v6_biotech": {
+        "name": "v6 biotech",
+        "emoji": "🧬",
+        "loader": load_v6,
+        # effective = 7月调仓 date; forward NAV anchored here (data added later).
+        "pick_date": "2026-07-08",
+        "benchmark": "XBI",
+        "benchmark_name": "SPDR S&P Biotech",
+        "currency": "USD",
+        "initial_capital": 1_000_000,
+        # current (default) version toggle inside the v4_biotech group tab.
+        "version_of": "v4_biotech",
     },
     # HD benchmarks (George 2026-06-12): primary 3466.HK Hang Seng High
     # Dividend 30 ETF (was 3110.HK), plus ^HSI as a broad-market reference
@@ -181,6 +212,8 @@ STRATEGIES = {
         "benchmark_name": "恒生高股息30",
         "benchmark2": "^HSI",
         "benchmark2_name": "恒生指数",
+        "currency": "HKD",
+        "initial_capital": 1_000_000,
     },
     "hk_hd_v2": {
         "name": "HK 高股息 v2",
@@ -191,6 +224,8 @@ STRATEGIES = {
         "benchmark_name": "恒生高股息30",
         "benchmark2": "^HSI",
         "benchmark2_name": "恒生指数",
+        "currency": "HKD",
+        "initial_capital": 1_000_000,
         # score-weighted book: weight_pct column = absolute %, plus idle cash.
         "weight_col": "weight_pct",
         "cash_pct": 12.0,
@@ -209,6 +244,8 @@ STRATEGIES = {
         "benchmark_name": "恒生高股息30",
         "benchmark2": "^HSI",
         "benchmark2_name": "恒生指数",
+        "currency": "HKD",
+        "initial_capital": 1_000_000,
         # score-weighted book (Wind single-source): weight_pct = absolute %, + idle cash.
         "weight_col": "weight_pct",
         "cash_pct": 12.0,

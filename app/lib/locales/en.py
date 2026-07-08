@@ -134,6 +134,62 @@ STRINGS = {
         "NAV treats cash at zero return — a conservative basis with no interest "
         "income credited."
     ),
+
+    # ── Biotech version group (v4/v5 frozen history / v6 current / 3-gen compare) ──
+    "strategy.biotech.version.toggle": "Portfolio version",
+    "strategy.biotech.version.v6": "Jul rebalance · 2026-07-08 (current)",
+    "strategy.biotech.version.v5": "Summer rebalance · 2026-05-15 (history)",
+    "strategy.biotech.version.v4": "Spring build · 2026-04-22 (history)",
+    "strategy.biotech.version.compare": "3-gen compare (v4 / v5 / v6)",
+    "strategy.biotech.version.v4_note": (
+        "History build: v4 is the 2026-04-22 spring build (look-back validation); "
+        "its curve keeps tracking and holdings are not adjusted. Later rebalances "
+        "are the Summer build (v5) and the July build (v6)."
+    ),
+    "strategy.biotech.version.v6_pending": (
+        "**July rebalance (v6) is coming soon** — the pick set and build weights are "
+        "being finalised. Once the data lands, this view will track live NAV vs XBI "
+        "from inception (2026-07-08). For now, see the Spring build (v4) and Summer "
+        "build (v5) histories."
+    ),
+    "strategy.biotech.compare.title": "Biotech v4 / v5 / v6 · NAV compare (each inception = 100)",
+    "strategy.biotech.compare.v4_line": "v4 (spring build, from 2026-04-22)",
+    "strategy.biotech.compare.v5_line": "v5 (summer rebalance, from 2026-05-15)",
+    "strategy.biotech.compare.v6_line": "v6 (July rebalance, from 2026-07-08)",
+    "strategy.biotech.compare.rebal_label": "v6 build 2026-07-08",
+    "strategy.biotech.compare.note": (
+        "Basis: each curve is indexed to 100 at its own inception close (independent "
+        "books, NOT a chained NAV); the benchmark is anchored at v4 inception. v4 / v5 "
+        "histories are kept intact — not truncated or restated when v6 ships. v6 joins "
+        "the compare automatically once its data lands."
+    ),
+    "strategy.biotech.compare.metric.v4": "v4 since inception",
+    "strategy.biotech.compare.metric.v5": "v5 since inception",
+    "strategy.biotech.compare.metric.v6": "v6 since inception",
+
+    # ── absolute-amount hero block (initial capital → current NAV) ──
+    "strategy.hero.initial_capital": "Initial capital",
+    "strategy.hero.current_nav": "Current NAV",
+    "strategy.hero.nav_gain": "Cumulative P&L",
+
+    # ── chained-account (real account NAV that follows the rebalances; compare tab) ──
+    "strategy.chain.section_title": "Chained account NAV · follows the rebalances (one book held throughout)",
+    "strategy.chain.independent_section_title": "Independent NAV per version · each inception = 100 (judges a single build)",
+    "strategy.chain.kpi.initial": "Initial capital",
+    "strategy.chain.kpi.current": "Current NAV",
+    "strategy.chain.kpi.cumulative": "Cumulative return",
+    "strategy.chain.kpi.alpha": "Alpha",
+    "strategy.chain.acct_line": "Chained account (follows rebalances)",
+    "strategy.chain.rebal_marker": "rebalance",
+    "strategy.chain.note": (
+        "Basis: {cur} {cap} is invested in the earliest version at inception and rolled "
+        "wholesale into each new version at its build date — the prior version's terminal "
+        "value becomes the next version's starting capital, chained into one real account "
+        "NAV (dotted lines mark the rebalances). Answers “how much is left if I followed "
+        "every rebalance from the start”; complements the “each inception = 100” view "
+        "below, which answers “how good is each build on its own”. The benchmark is the "
+        "same index bought and held from the earliest inception (no rebalancing)."
+    ),
     "strategy.col.ticker": "Ticker",
     "strategy.metric.delta_vs_bh": "{bp:+.0f} bp vs buy & hold",
     "strategy.onboarding.title": "How to read this page",
@@ -356,8 +412,9 @@ STRINGS = {
 
     # ── strategy methodology (sourced) ──
     "strategy.method_expander": "How this strategy works",
-    "strategy.name.v4_biotech": "US Biotech AI Picks 4.0",
-    "strategy.name.v5_biotech": "US Biotech AI Picks 5.0",
+    "strategy.name.v4_biotech": "US Biotech AI Picks",
+    "strategy.name.v5_biotech": "US Biotech AI Picks · Summer Rebalance",
+    "strategy.name.v6_biotech": "US Biotech AI Picks · July Rebalance",
     "strategy.name.hk_hd": "HK High-Dividend Picks",
     "strategy.name.hk_hd_v2": "HK High-Dividend v2 · Standard Build",
     "strategy.v4.tag": "Lookback build",

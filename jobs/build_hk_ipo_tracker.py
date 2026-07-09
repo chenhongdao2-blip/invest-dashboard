@@ -124,8 +124,10 @@ def main() -> None:
     codes = hc["code"].tolist()
     print(f"[wind] HK healthcare IPOs since {WINDOW_START}: {len(codes)}")
 
-    # 2) snapshot + static fields (Wind primary) — add found_date for founding year
-    f = "sec_name,sec_englishname,ipo_date,ipo_price,close,mkt_cap_ard,total_shares,trade_status,industry_gics,found_date"
+    # 2) snapshot + static fields (Wind primary) — add founddate for founding year
+    # NOTE: field must be `founddate` (returns FOUNDDATE); `found_date` = invalid indicator
+    # on Wind 26.1.7+ (-40522006, kills the whole batch wss). Verified 2026-07-09.
+    f = "sec_name,sec_englishname,ipo_date,ipo_price,close,mkt_cap_ard,total_shares,trade_status,industry_gics,founddate"
     rs = w.wss(codes, f, f"tradeDate={today_c};unit=1;industryType=3")
     snap = pd.DataFrame({fld: c for fld, c in zip(rs.Fields, rs.Data)})
     snap.insert(0, "code", codes)
@@ -179,8 +181,8 @@ def main() -> None:
         tdays_n = r["trading_days"]
         no_offer = offer is None
         is_18a = name_cn.endswith("-B") or name_cn.endswith("-P")
-        # founding year from Wind FOUND_DATE
-        found_date = r.get("FOUND_DATE")
+        # founding year from Wind FOUNDDATE
+        found_date = r.get("FOUNDDATE")
         founding_year = None
         if pd.notna(found_date):
             try:

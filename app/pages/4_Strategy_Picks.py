@@ -444,84 +444,6 @@ def _chain_nav(
     return account, boundaries
 
 
-def _render_chain_section(
-    *, curves: list[pd.Series], bench_norm: pd.Series, bench_sym: str,
-    bench_name: str, currency: str, capital: float = 1_000_000.0,
-    rebal_label: str = "换仓",
-) -> None:
-    """Render the '接续账户净值' section for a compare tab: KPI strip (初始资金 /
-    当前净值 / 累计收益 / 超额α) + a rebased-100 chart of the chained account vs the
-    benchmark buy&hold, with a dotted marker at each rebalance handover.
-
-    curves     : per-version normalized-100 curves (chronological or not — _chain_nav
-                 sorts by inception). Empty ones are skipped (biotech v6 pre-data).
-    bench_norm : benchmark rebased to 100 at the EARLIEST inception (same anchor as the
-                 account's start) — the buy&hold reference, held without rebalancing.
-    """
-    account, boundaries = _chain_nav(curves, capital)
-    if account.empty:
-        return
-    cur_nav = float(account.iloc[-1])
-    cum = (cur_nav / capital - 1.0) * 100.0
-    # benchmark cum over the same window (buy&hold from earliest inception)
-    bret = float(bench_norm.iloc[-1] - 100.0) if not bench_norm.empty else None
-    alpha = (cum - bret) if bret is not None else None
-
-    theme.section_header(i18n.t("strategy.chain.section_title"))
-
-    def _sign(v):  # teal up / red down
-        d = "up" if v >= 0 else "down"
-        return f"<span class='cmsi-ch-{d}'>{'+' if v >= 0 else ''}{v:,.2f}</span>"
-
-    cards = [
-        theme.kpi_metric(i18n.t("strategy.chain.kpi.initial"),
-                         f"{currency} {capital:,.0f}"),
-        theme.kpi_metric(i18n.t("strategy.chain.kpi.current"),
-                         f"{currency} {cur_nav:,.0f}",
-                         direction=("up" if cum >= 0 else "down")),
-        theme.kpi_metric(i18n.t("strategy.chain.kpi.cumulative"),
-                         f"{'+' if cum >= 0 else ''}{cum:.2f}%",
-                         delta_abs=f"{'+' if (cur_nav - capital) >= 0 else '-'}{currency} {abs(cur_nav - capital):,.0f}",
-                         direction=("up" if cum >= 0 else "down")),
-    ]
-    if alpha is not None:
-        cards.append(theme.kpi_metric(
-            i18n.t("strategy.chain.kpi.alpha"),
-            f"{'+' if alpha >= 0 else ''}{alpha:.2f}pp",
-            foot=i18n.t("strategy.metric.benchmark_ret", sym=bench_sym) + f" {bret:+.2f}%",
-            direction=("up" if alpha >= 0 else "down")))
-    theme.kpi_strip(cards)
-
-    # chart: chained account (rebased 100) + benchmark buy&hold, dotted rebal markers.
-    acct_norm = account / float(account.iloc[0]) * 100.0
-    _idx = pd.DatetimeIndex([])
-    for _s in (acct_norm, bench_norm):
-        if not _s.empty:
-            _idx = _idx.union(_s.index)
-    _idx = _idx.sort_values()
-
-    def _al(s):
-        r = s.reindex(_idx)
-        return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
-
-    _lines = []
-    if not bench_norm.empty:
-        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
-                                      sym=bench_sym, name=bench_name),
-                       "values": _al(bench_norm), "color": theme.INK_3,
-                       "dash": "dashed", "width": 1.5})
-    _lines.append({"name": i18n.t("strategy.chain.acct_line"),
-                   "values": _al(acct_norm), "color": theme.CMSI_RED,
-                   "dash": "solid", "width": 2.4})
-    _markers = [{"date": d, "label": rebal_label} for d in boundaries]
-    strategy_hero.render_compare_chart(
-        dates=[d.date().isoformat() for d in _idx], lines=_lines,
-        markers=_markers, title=i18n.t("strategy.chain.section_title"),
-        source=f"yfinance · 含息复权 · 截至 {_idx[-1].date().isoformat()}" if len(_idx) else "yfinance",
-    )
-    st.caption(i18n.t("strategy.chain.note", cur=currency, cap=f"{capital:,.0f}"))
-
-
 def render_hd_compare() -> None:
     """v1 vs v2 overlay + rebalance diff.
 
@@ -589,90 +511,112 @@ def render_hd_compare() -> None:
     bench_norm = _cmp_norm(bench_sym)
     bench2_norm = _cmp_norm(bench2_sym)
 
-    # --- Summary metrics (as-of latest close): v1 / v2 / v3 / bench [/ bench2] ---
-    mc = st.columns(5 if not bench2_norm.empty else 4)
-    if not port_v1.empty:
-        mc[0].metric(i18n.t("strategy.hd.compare.metric.v1"),
-                     f"{port_v1.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg1['pick_date']}")
-    if not port_v2.empty:
-        mc[1].metric(i18n.t("strategy.hd.compare.metric.v2"),
-                     f"{port_v2.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg2['pick_date']}")
-    if not port_v3.empty:
-        mc[2].metric(i18n.t("strategy.hd.compare.metric.v3"),
-                     f"{port_v3.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg3['pick_date']}")
-    if not bench_norm.empty:
-        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
-                     f"{bench_norm.iloc[-1] - 100:+.2f}%",
-                     help=f"anchor {cfg1['pick_date']}")
-    if not bench2_norm.empty:
-        mc[4].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench2_sym),
-                     f"{bench2_norm.iloc[-1] - 100:+.2f}%",
-                     help=f"anchor {cfg1['pick_date']}")
+    # ── Assemble the FT-cream 三代对比 tearsheet (single self-contained iframe) ──
+    ccy = cfg1.get("currency", "HKD")
+    capital = float(cfg1.get("initial_capital", 1_000_000))
 
-    # --- Chained account (real book following v1→v2→v3 rebalances) ---
-    _render_chain_section(
-        curves=[port_v1, port_v2, port_v3], bench_norm=bench_norm,
-        bench_sym=bench_sym, bench_name=cfg1["benchmark_name"],
-        currency=cfg1.get("currency", "HKD"),
-        capital=float(cfg1.get("initial_capital", 1_000_000)),
-        rebal_label=i18n.t("strategy.chain.rebal_marker"),
-    )
+    def _pct(series) -> str:
+        return f"{series.iloc[-1] - 100:+.2f}%" if not series.empty else "—"
 
-    # --- Overlay chart: v1 + v2 + benchmarks (ECharts, Hero-aligned) ---
-    theme.section_header(i18n.t("strategy.chain.independent_section_title"))
-    # Common date axis = union of all four series (so v2's later-start line begins
-    # exactly at its inception via None gaps). v2 = CMSI red (the "current" book,
-    # prominent like the Hero strategy line); v1 = teal; benchmarks muted dash/dot.
-    _all_idx = pd.DatetimeIndex([])
-    for _s in (bench_norm, bench2_norm, port_v1, port_v2, port_v3):
+    # 4 KPI cards — v1 teal, v2 amber, v3 red (current), primary bench ink.
+    cards = [
+        {"label": i18n.t("strategy.hd.compare.metric.v1"),
+         "sub": f"等权建仓 · {cfg1['pick_date']}", "value": _pct(port_v1), "color": theme.UP},
+        {"label": i18n.t("strategy.hd.compare.metric.v2"),
+         "sub": f"评分定权 · {cfg2['pick_date']}", "value": _pct(port_v2), "color": "#E0A458"},
+        {"label": i18n.t("strategy.hd.compare.metric.v3"),
+         "sub": f"Wind 单源 · {cfg3['pick_date']}", "value": _pct(port_v3), "color": theme.CMSI_RED},
+        {"label": i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
+         "sub": f"买入持有 · 锚定 {cfg1['pick_date']}", "value": _pct(bench_norm), "color": theme.INK},
+    ]
+
+    # Chained account (v1→v2→v3 rebalances) — real book, prior terminal seeds next.
+    account, boundaries = _chain_nav([port_v1, port_v2, port_v3], capital)
+    cur_nav = float(account.iloc[-1]) if not account.empty else capital
+    cum = (cur_nav / capital - 1.0) * 100.0
+    bench_cum = float(bench_norm.iloc[-1] - 100.0) if not bench_norm.empty else 0.0
+    alpha = cum - bench_cum
+    gain = cur_nav - capital
+
+    _idx = pd.DatetimeIndex([])
+    for _s in (bench_norm, bench2_norm, port_v1, port_v2, port_v3, account):
         if not _s.empty:
-            _all_idx = _all_idx.union(_s.index)
-    _all_idx = _all_idx.sort_values()
+            _idx = _idx.union(_s.index)
+    _idx = _idx.sort_values()
+    dates = [d.date().isoformat() for d in _idx]
 
-    def _aligned(s):
-        r = s.reindex(_all_idx)
+    def _al(s):
+        if s is None or s.empty:
+            return [None] * len(_idx)
+        r = s.reindex(_idx)
         return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
 
-    _lines = []
-    if not bench_norm.empty:
-        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
-                                      sym=bench_sym, name=cfg1["benchmark_name"]),
-                       "values": _aligned(bench_norm), "color": theme.INK_3,
-                       "dash": "dashed", "width": 1.5})
-    if not bench2_norm.empty:
-        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
-                                      sym=bench2_sym, name=cfg1.get("benchmark2_name", "")),
-                       "values": _aligned(bench2_norm), "color": "#4a6fa5",
-                       "dash": "dotted", "width": 1.5})
-    if not port_v1.empty:
-        _lines.append({"name": i18n.t("strategy.hd.compare.v1_line"),
-                       "values": _aligned(port_v1), "color": theme.UP,
-                       "dash": "solid", "width": 1.8})
-    # v2 is now a HISTORY book (v3 is current) — amber, thinner than the current line.
-    if not port_v2.empty:
-        _lines.append({"name": i18n.t("strategy.hd.compare.v2_line"),
-                       "values": _aligned(port_v2), "color": "#E0A458",
-                       "dash": "solid", "width": 1.8})
-    # v3 = current book → CMSI red, most prominent (like the Hero strategy line).
-    if not port_v3.empty:
-        _lines.append({"name": i18n.t("strategy.hd.compare.v3_line"),
-                       "values": _aligned(port_v3), "color": theme.CMSI_RED,
-                       "dash": "solid", "width": 2.4})
+    acct_norm = account / float(account.iloc[0]) * 100.0 if not account.empty else account
 
-    if _lines and len(_all_idx):
-        # marker = v3's actual first trading day (guarantees it matches a real x
-        # category even if the nominal pick_date is a weekend/holiday).
-        _marker = port_v3.index[0].date().isoformat() if not port_v3.empty else None
-        strategy_hero.render_compare_chart(
-            dates=[d.date().isoformat() for d in _all_idx], lines=_lines,
-            marker_date=_marker, marker_label=i18n.t("strategy.hd.compare.rebal_label"),
-            title=i18n.t("strategy.hd.compare.title"),
-            source=f"yfinance · 含息复权 · 截至 {_all_idx[-1].date().isoformat()}",
-        )
-    st.caption(i18n.t("strategy.hd.compare.note"))
+    # independent overlay lines (v1 teal / v2 amber / v3 red / benchmarks muted)
+    cmp_lines = []
+    if not bench_norm.empty:
+        cmp_lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                         sym=bench_sym, name=cfg1["benchmark_name"]),
+                          "values": _al(bench_norm), "color": theme.INK_3,
+                          "dash": "dashed", "width": 1.5})
+    if not bench2_norm.empty:
+        cmp_lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                         sym=bench2_sym, name=cfg1.get("benchmark2_name", "")),
+                          "values": _al(bench2_norm), "color": "#4a6fa5",
+                          "dash": "dotted", "width": 1.5})
+    if not port_v1.empty:
+        cmp_lines.append({"name": i18n.t("strategy.hd.compare.v1_line"),
+                          "values": _al(port_v1), "color": theme.UP,
+                          "dash": "solid", "width": 1.8})
+    if not port_v2.empty:
+        cmp_lines.append({"name": i18n.t("strategy.hd.compare.v2_line"),
+                          "values": _al(port_v2), "color": "#E0A458",
+                          "dash": "solid", "width": 1.8})
+    if not port_v3.empty:
+        cmp_lines.append({"name": i18n.t("strategy.hd.compare.v3_line"),
+                          "values": _al(port_v3), "color": theme.CMSI_RED,
+                          "dash": "solid", "width": 2.4})
+
+    _reb_lab = i18n.t("strategy.chain.rebal_marker")
+    chain_markers = [{"date": b, "label": f"{_reb_lab} → v{2 + i}"}
+                     for i, b in enumerate(boundaries)]
+
+    n_v1, n_v2, n_v3 = len(v1_book), len(v2_book), len(v3_book)
+    days_held = (_idx[-1] - _idx[0]).days if len(_idx) else 0
+    kpi_tiles = [
+        {"label": "建仓日", "value": cfg1["pick_date"], "sub": "等权建仓 v1"},
+        {"label": "已执行换仓", "value": f"{len(boundaries)} 次",
+         "sub": (f"{boundaries[-1]} → v3" if boundaries else "—")},
+        {"label": "当前版本", "value": "v3 · 07-07",
+         "sub": "Wind 单源评分定权", "color": theme.CMSI_RED},
+        {"label": "持仓数", "value": f"{n_v1} → {n_v2} → {n_v3}", "sub": "v1→v2→v3"},
+        {"label": "持有天数", "value": f"{days_held} 天",
+         "sub": f"{cfg1['pick_date']} → {(_idx[-1].date().isoformat() if len(_idx) else '')}"},
+        {"label": "基准", "value": bench_sym, "sub": cfg1["benchmark_name"]},
+    ]
+
+    as_of = _idx[-1].date().isoformat() if len(_idx) else cfg1["pick_date"]
+    strategy_hero.render_gen_compare(
+        dates=dates, chain_curve=_al(acct_norm), bench_curve=_al(bench_norm),
+        cmp_lines=cmp_lines, chain_markers=chain_markers,
+        nav_str=f"{ccy} {cur_nav:,.0f}",
+        cum_str=f"{'+' if cum >= 0 else ''}{cum:.2f}%",
+        alpha_str=f"{'+' if alpha >= 0 else ''}{alpha:.2f}pp",
+        gain_str=f"{'+' if gain >= 0 else '-'}{ccy} {abs(gain):,.0f}",
+        bench_cum_str=f"{bench_cum:+.2f}%",
+        cards=cards, kpi_tiles=kpi_tiles,
+        chain_start=cfg1["pick_date"], currency=ccy, capital_str=f"{capital:,.0f}",
+        v6_pending="",
+        method_note=i18n.t("strategy.chain.note", cur=ccy, cap=f"{capital:,.0f}"),
+        indep_title=i18n.t("strategy.chain.independent_section_title"),
+        indep_badge="",
+        indep_note=i18n.t("strategy.hd.compare.note"),
+        chain_bench_name=i18n.t("strategy.chart.line.benchmark",
+                                sym=bench_sym, name=cfg1["benchmark_name"]),
+        chain_acct_name=i18n.t("strategy.chain.acct_line"),
+        source=f"yfinance · 含息复权 · 截至 {as_of} · 真实累计收益,非回测美化",
+    )
 
     # --- Rebalance diff: kept / added / removed, computed from the two CSVs ---
     theme.section_header(i18n.t("strategy.hd.diff.title"))
@@ -814,78 +758,116 @@ def render_biotech_compare() -> None:
 
     bench_norm = _cmp_norm(bench_sym)
 
-    # --- Summary metrics: v4 / v5 / v6 / bench ---
-    mc = st.columns(4)
-    if not port_v4.empty:
-        mc[0].metric(i18n.t("strategy.biotech.compare.metric.v4"),
-                     f"{port_v4.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg4['pick_date']}")
-    if not port_v5.empty:
-        mc[1].metric(i18n.t("strategy.biotech.compare.metric.v5"),
-                     f"{port_v5.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg5['pick_date']}")
-    if not port_v6.empty:
-        mc[2].metric(i18n.t("strategy.biotech.compare.metric.v6"),
-                     f"{port_v6.iloc[-1] - 100:+.2f}%",
-                     help=f"inception {cfg6['pick_date']}")
-    else:
-        mc[2].metric(i18n.t("strategy.biotech.compare.metric.v6"), "—",
-                     help="待数据录入 / pending data")
-    if not bench_norm.empty:
-        mc[3].metric(i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
-                     f"{bench_norm.iloc[-1] - 100:+.2f}%",
-                     help=f"anchor {cfg4['pick_date']}")
+    # ── Assemble the FT-cream 三代对比 tearsheet (single self-contained iframe) ──
+    ccy = cfg4.get("currency", "USD")
+    capital = float(cfg4.get("initial_capital", 1_000_000))
 
-    # --- Chained account (real book following v4→v5→v6 rebalances; v6 auto-joins) ---
-    _render_chain_section(
-        curves=[port_v4, port_v5, port_v6], bench_norm=bench_norm,
-        bench_sym=bench_sym, bench_name=cfg4["benchmark_name"],
-        currency=cfg4.get("currency", "USD"),
-        capital=float(cfg4.get("initial_capital", 1_000_000)),
-        rebal_label=i18n.t("strategy.chain.rebal_marker"),
-    )
+    def _pct(series) -> str:
+        return f"{series.iloc[-1] - 100:+.2f}%" if not series.empty else "—"
 
-    # --- Overlay chart: v4 + v5 (+ v6 when present) + benchmark ---
-    theme.section_header(i18n.t("strategy.chain.independent_section_title"))
-    _all_idx = pd.DatetimeIndex([])
-    for _s in (bench_norm, port_v4, port_v5, port_v6):
+    # 4 KPI cards — v4/v5 teal, v6 red (待录入 until data lands), XBI ink.
+    cards = [
+        {"label": i18n.t("strategy.biotech.compare.metric.v4"),
+         "sub": "春季建仓 · 2026-04-22", "value": _pct(port_v4), "color": theme.UP},
+        {"label": i18n.t("strategy.biotech.compare.metric.v5"),
+         "sub": "夏季调仓 · 2026-05-15", "value": _pct(port_v5), "color": "#E0A458"},
+        {"label": i18n.t("strategy.biotech.compare.metric.v6"),
+         "sub": "7月调仓 · 2026-07-08",
+         "value": _pct(port_v6), "color": theme.CMSI_RED,
+         "pending": port_v6.empty},
+        {"label": i18n.t("strategy.metric.benchmark_ret", sym=bench_sym),
+         "sub": "买入持有 · 锚定 v4 建仓日", "value": _pct(bench_norm), "color": theme.INK},
+    ]
+
+    # Chained account (v4→v5→v6 rebalances) — real book, prior terminal seeds next.
+    account, boundaries = _chain_nav([port_v4, port_v5, port_v6], capital)
+    cur_nav = float(account.iloc[-1]) if not account.empty else capital
+    cum = (cur_nav / capital - 1.0) * 100.0
+    bench_cum = float(bench_norm.iloc[-1] - 100.0) if not bench_norm.empty else 0.0
+    alpha = cum - bench_cum
+    gain = cur_nav - capital
+
+    # Common x-axis across chained + all independent curves (so a late-start line
+    # begins exactly at its inception via None gaps).
+    _idx = pd.DatetimeIndex([])
+    for _s in (bench_norm, port_v4, port_v5, port_v6, account):
         if not _s.empty:
-            _all_idx = _all_idx.union(_s.index)
-    _all_idx = _all_idx.sort_values()
+            _idx = _idx.union(_s.index)
+    _idx = _idx.sort_values()
+    dates = [d.date().isoformat() for d in _idx]
 
-    def _aligned(s):
-        r = s.reindex(_all_idx)
+    def _al(s):
+        if s is None or s.empty:
+            return [None] * len(_idx)
+        r = s.reindex(_idx)
         return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
 
-    _lines = []
-    if not bench_norm.empty:
-        _lines.append({"name": i18n.t("strategy.chart.line.benchmark",
-                                      sym=bench_sym, name=cfg4["benchmark_name"]),
-                       "values": _aligned(bench_norm), "color": theme.INK_3,
-                       "dash": "dashed", "width": 1.5})
-    # v4 = earliest history (teal), v5 = mid history (amber), v6 = current (CMSI red).
-    if not port_v4.empty:
-        _lines.append({"name": i18n.t("strategy.biotech.compare.v4_line"),
-                       "values": _aligned(port_v4), "color": theme.UP,
-                       "dash": "solid", "width": 1.8})
-    if not port_v5.empty:
-        _lines.append({"name": i18n.t("strategy.biotech.compare.v5_line"),
-                       "values": _aligned(port_v5), "color": "#E0A458",
-                       "dash": "solid", "width": 1.8 if not port_v6.empty else 2.4})
-    if not port_v6.empty:
-        _lines.append({"name": i18n.t("strategy.biotech.compare.v6_line"),
-                       "values": _aligned(port_v6), "color": theme.CMSI_RED,
-                       "dash": "solid", "width": 2.4})
+    acct_norm = account / float(account.iloc[0]) * 100.0 if not account.empty else account
 
-    if _lines and len(_all_idx):
-        _marker = port_v6.index[0].date().isoformat() if not port_v6.empty else None
-        strategy_hero.render_compare_chart(
-            dates=[d.date().isoformat() for d in _all_idx], lines=_lines,
-            marker_date=_marker, marker_label=i18n.t("strategy.biotech.compare.rebal_label"),
-            title=i18n.t("strategy.biotech.compare.title"),
-            source=f"yfinance · 含息复权 · 截至 {_all_idx[-1].date().isoformat()}",
-        )
-    st.caption(i18n.t("strategy.biotech.compare.note"))
+    # independent overlay lines (v4 teal / v5 amber / v6 red / XBI grey-dash)
+    cmp_lines = []
+    if not bench_norm.empty:
+        cmp_lines.append({"name": i18n.t("strategy.chart.line.benchmark",
+                                         sym=bench_sym, name=cfg4["benchmark_name"]),
+                          "values": _al(bench_norm), "color": theme.INK_3,
+                          "dash": "dashed", "width": 1.5})
+    if not port_v4.empty:
+        cmp_lines.append({"name": i18n.t("strategy.biotech.compare.v4_line"),
+                          "values": _al(port_v4), "color": theme.UP,
+                          "dash": "solid", "width": 1.8})
+    if not port_v5.empty:
+        cmp_lines.append({"name": i18n.t("strategy.biotech.compare.v5_line"),
+                          "values": _al(port_v5), "color": "#E0A458",
+                          "dash": "solid", "width": 2.0})
+    if not port_v6.empty:
+        cmp_lines.append({"name": i18n.t("strategy.biotech.compare.v6_line"),
+                          "values": _al(port_v6), "color": theme.CMSI_RED,
+                          "dash": "solid", "width": 2.4})
+
+    # rebalance markers on the chained chart (label each handover with its version)
+    _reb_lab = i18n.t("strategy.chain.rebal_marker")
+    chain_markers = [{"date": b, "label": f"{_reb_lab} → v{5 + i}"}
+                     for i, b in enumerate(boundaries)]
+
+    # 6 bottom KPI tiles
+    n_v4 = len(strat.load_v4()) if not v4.empty else 0
+    n_v5 = len(strat.load_v5()) if not v5.empty else 0
+    days_held = (_idx[-1] - _idx[0]).days if len(_idx) else 0
+    reb_done = len(boundaries)
+    kpi_tiles = [
+        {"label": "建仓日", "value": cfg4["pick_date"], "sub": "春季建仓 v4"},
+        {"label": "已执行换仓", "value": f"{reb_done} 次",
+         "sub": (f"{boundaries[-1]} → v5" if boundaries else "—")},
+        {"label": "待执行", "value": ("v6 · 07-08" if port_v6.empty else "—"),
+         "sub": ("选股确认中 · 待录入" if port_v6.empty else "已建仓"),
+         "color": (theme.CMSI_RED if port_v6.empty else theme.INK)},
+        {"label": "持仓数", "value": f"{n_v4} → {n_v5}", "sub": "v4 → v5 · 等权"},
+        {"label": "持有天数", "value": f"{days_held} 天",
+         "sub": f"{cfg4['pick_date']} → {(_idx[-1].date().isoformat() if len(_idx) else '')}"},
+        {"label": "基准", "value": bench_sym, "sub": cfg4["benchmark_name"]},
+    ]
+
+    as_of = _idx[-1].date().isoformat() if len(_idx) else cfg4["pick_date"]
+    strategy_hero.render_gen_compare(
+        dates=dates, chain_curve=_al(acct_norm), bench_curve=_al(bench_norm),
+        cmp_lines=cmp_lines, chain_markers=chain_markers,
+        nav_str=f"{ccy} {cur_nav:,.0f}",
+        cum_str=f"{'+' if cum >= 0 else ''}{cum:.2f}%",
+        alpha_str=f"{'+' if alpha >= 0 else ''}{alpha:.2f}pp",
+        gain_str=f"{'+' if gain >= 0 else '-'}{ccy} {abs(gain):,.0f}",
+        bench_cum_str=f"{bench_cum:+.2f}%",
+        cards=cards, kpi_tiles=kpi_tiles,
+        chain_start=cfg4["pick_date"], currency=ccy, capital_str=f"{capital:,.0f}",
+        v6_pending=(i18n.t("strategy.biotech.version.v6_pending") if port_v6.empty else ""),
+        method_note=i18n.t("strategy.chain.note", cur=ccy, cap=f"{capital:,.0f}"),
+        indep_title=i18n.t("strategy.chain.independent_section_title"),
+        indep_badge=("v6 · 7月调仓 · 待录入" if port_v6.empty else ""),
+        indep_note=i18n.t("strategy.biotech.compare.note"),
+        chain_bench_name=i18n.t("strategy.chart.line.benchmark",
+                                sym=bench_sym, name=cfg4["benchmark_name"]),
+        chain_acct_name=i18n.t("strategy.chain.acct_line"),
+        source=f"yfinance · 含息复权 · 截至 {as_of} · 真实累计收益,非回测美化",
+    )
 
 
 def _spearman_rho(x: pd.Series, y: pd.Series) -> float:

@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 京东健康 (06618.HK)
 
@@ -45,3 +45,19 @@
 
 - [[00241-alibaba-health]] — 主要对比 comp
 - [[healthcare-ai]] — 行业框架
+
+---
+
+## 最新报告期数据（FY2025 年报 + 2026Q1 现金, as_of 2026-07-10）
+
+> gangtise 港股 Q1 报表仅填资产负债表、不填 P&L,故损益用 **FY2025 年报**（公告 2026-03-05）、现金用 **2026Q1**（公告 2026-05-12）· 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 | 期间 |
+|---|---|---|
+| 营业总收入 | **742.11亿** | FY2025 |
+| 研发费用 | 16.34亿 | FY2025 |
+| 归母净利 | 53.75亿 | FY2025 |
+| 期末现金 | 464.79亿 | 2026Q1 |
+| 基本 EPS | 1.7 | FY2025 |
+
+**来源**：gangtise fundamental income-statement-hk（06618.HK, FY2025 年报, 公告 2026-03-05）+ balance-sheet-hk（2026一季报, 公告 2026-05-12）· 截至 2026-07-10

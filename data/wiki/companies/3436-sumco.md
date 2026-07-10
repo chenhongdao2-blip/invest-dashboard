@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-06-01 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # SUMCO (3436.T)
 
@@ -30,7 +30,7 @@
 ## 风险点
 - 硅片纯周期标的，需求与逻辑/存储资本开支高度绑定
 - 200mm 退出过渡期产能/营收波动
-- UBS 目标价从 JPY 1,050 急升至 3,100，估值预期切换幅度大
+- UBS，估值预期切换幅度大
 
 ## Related pages
 - [[4063-shin-etsu]]

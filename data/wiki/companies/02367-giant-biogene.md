@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 巨子生物 Giant Biogene (02367 HK)
 
@@ -9,7 +9,7 @@
 
 **Sectors**: [[biopharma]]（细分：医美 + 功效护肤）
 
-**Last updated**: 2026-05-14
+**Last updated**: 2026-07-10
 
 ---
 
@@ -86,3 +86,19 @@
 
 - [[biopharma]] — 大制药行业框架（含医美/护肤细分）
 - [[hansi-hantai]] — 杭泰生物（潜在重组胶原蛋白同业对比，待验证 ticker）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-19）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **57.18亿** |
+| 研发费用 | 0.89亿 |
+| 归母净利 | 19.15亿 |
+| 期末现金 | 63.06亿 |
+| 基本 EPS | 1.83 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 02367.HK · 2025年度报告（公告 2026-03-19）· 截至 2026-07-10

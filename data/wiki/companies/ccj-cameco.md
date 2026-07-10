@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-06-01 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # Cameco (CCJ)
 
@@ -34,3 +34,13 @@
 - [[leu-centrus-energy]]
 - [[ceg-constellation-energy]]
 - [[ai-compute-capex]]
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+> **外国私人发行人(FPI)**:SEC 无季度 10-Q(按 20-F/6-K 报),季度财务以电话会/公告为准。
+
+**来源**:SEC CIK 1009001 · minodata · 截至 2026-07-10

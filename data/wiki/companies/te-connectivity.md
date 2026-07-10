@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-06-01 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 泰科电子 / TE Connectivity (TEL)
 
@@ -32,3 +32,24 @@
 - [[aph-amphenol]]
 - [[glw-corning]]
 - [[us-ai-infrastructure]]
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+**财务(SEC 10-Q, CIK 1992243, 截至 2026-03-31)**
+
+| 指标 | 值 |
+|---|---|
+| 现金+投资 | **$46.4M** (现金 $46.4M + 短投 —) |
+| 季度 R&D | $8.6M |
+| 季度收入 | $177.6M |
+| 季度净利 | $-27.5M |
+| 季度 OCF | $-72.9M |
+| Runway | ~2 个月 |
+
+**会议指针(minodata,未提炼)**:最新业绩会 **2026-05-12**(ipid 360370415)
+
+**来源**:SEC CIK 1992243 · minodata · 截至 2026-07-10

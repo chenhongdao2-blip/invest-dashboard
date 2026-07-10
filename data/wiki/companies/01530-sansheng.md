@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 三生制药 3SBio (01530 HK)
 
@@ -20,10 +20,6 @@
 | 收入（RMB mn） | 7,816 | 9,108 | 17,906 |
 | 收入增速 | +14% | +17% | +97%（含 BD milestone 收入）|
 | 净利润（RMB mn） | — | — | — |
-
-**市场数据（2025-05-20）**：
-- 股价：HKD19.2
-- 市值：HKD23,682mn（约 USD3.0bn）
 
 ---
 
@@ -76,3 +72,19 @@
 - [[bispecific-antibody]] — 双特异性抗体平台（待建）
 - [[03692-hansoh]] — 翰森制药（BD 出海同类标的）
 - [[02256-abbisko]] — 和誉生物（Merck ADC 合作对比）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-30）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **181.85亿** |
+| 研发费用 | 15.20亿 |
+| 归母净利 | 84.82亿 |
+| 期末现金 | 158.61亿 |
+| 基本 EPS | 3.51 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 01530.HK · 2025年度报告（公告 2026-03-30）· 截至 2026-07-10

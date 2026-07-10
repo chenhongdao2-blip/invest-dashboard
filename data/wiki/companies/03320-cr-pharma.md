@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 华润医药控股 CR Pharmaceutical Holdings (03320 HK)
 
@@ -9,7 +9,7 @@
 
 **Sectors**: [[china-medtech]], [[digital-health]]
 
-**Last updated**: 2026-04-15
+**Last updated**: 2026-05-29
 
 ---
 
@@ -23,12 +23,6 @@
 | 净利润增速 | — | — | +20.7% | — | — |
 | 毛利率（整体） | — | — | 16.5%（+70bps） | — | — |
 | 制造段毛利率 | — | — | **60.5%** | — | — |
-
-**市场数据（2026-03-26）**：
-- 股价：~HKD4.9
-- Ticker：**3320 HK**
-- 控股股东：华润集团（China Resources Group）53.4%；北京医药投资 17.4%
-- 净债务率：60.2% → 50.7%（FY25 明显改善，来源：report.pdf）
 
 ---
 
@@ -99,3 +93,19 @@
 - [[digital-health]] — 数字健康行业（DTP/线上药房参考）
 - [[00241-alibaba-health]] — 阿里健康（DTP 竞争）
 - [[06618-jd-health]] — 京东健康（DTP 竞争）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-25）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **2,714.44亿** |
+| 研发费用 | — |
+| 归母净利 | 40.45亿 |
+| 期末现金 | 274.79亿 |
+| 基本 EPS | 0.64 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 03320.HK · 2025年度报告（公告 2026-03-25）· 截至 2026-07-10

@@ -1,9 +1,9 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 基石药业 CStone Pharmaceuticals (02616 HK)
 
-**Summary**: 中国创新药公司，专注肿瘤免疫，核心资产为 CS2009（PD-1×CTLA-4×VEGF 三特异性抗体，全球 FIC）；凭借 Phase I 1L NSCLC ORR 90%（PD-L1 TPS≥50%）数据，CMS HK 将 TP 从 HKD7.3 大幅上调至 HKD16.9（+84%），MRCT Ph3 设计已规划，2026 ASCO/ESMO 数据读出为关键催化剂。
+**Summary**: 中国创新药公司，专注肿瘤免疫，核心资产为 CS2009（PD-1×CTLA-4×VEGF 三特异性抗体，全球 FIC）；凭借 Phase I 1L NSCLC ORR 90%（PD-L1 TPS≥50%）数据，MRCT Ph3 设计已规划，2026 ASCO/ESMO 数据读出为关键催化剂。
 
 **Thesis**: CS2009 三特异性抗体是中国下一代 IO 平台的潜力最大候选之一：① PD-1×CTLA-4×VEGF 同靶三特异，理论上集合三大 IO 机制协同效应；② 1L PD-L1 TPS≥50% NSCLC ORR 90%（9/10），数据炸裂但样本量小；③ MRCT Ph3 设计含多适应症（NSCLC/ccRCC/TNBC/MSS CRC），扩大商业化天花板；④ Pfizer 7.85% 持股提供战略背书；⑤ TP HKD16.9（vs 当时股价 HKD9.2）+84% 上行空间。
 
@@ -19,11 +19,6 @@
 |------|-------|-------|-------|-------|
 | 收入（RMB mn） | 407 | 269（-34%）| 425（+58%）| 510 |
 | 归母净利润 | 亏损 | 亏损 | 亏损 | 亏损（至 2028E）|
-
-**市场数据（2026-04-01）**：
-- 股价：~HKD9.2 | 市值：~HKD12.9bn
-- Ticker：**2616 HK**
-- 主要股东：无锡医疗创投基金 II 11.75%、Pfizer 7.85%、GIC 5.45%.pdf）
 
 > ⚠️ 2025E 收入 -34%（RMB269mn vs 2024A RMB407mn），反映产品线调整期；2026E 预计随 CS2009 里程碑款回升 +58%.pdf）。
 
@@ -44,7 +39,7 @@
 | STS（软组织肉瘤）| ORR 33.3% | IO 传统"难治"适应症 |
 | TRAE（治疗相关不良事件）| 23% | 安全性信号良好 |.pdf 2026-04-02）
 
-> ⚠️ 关键风险：1L NSCLC ORR 90% 来自 9/10 患者，样本量极小，大样本 Ph3 结果仍存在显著不确定性。CMS HK 已在 TP 中充分反映这一风险，但投资者需警惕数据"过度乐观"。
+> ⚠️ 关键风险：1L NSCLC ORR 90% 来自 9/10 患者，样本量极小，大样本 Ph3 结果仍存在显著不确定性。，但投资者需警惕数据"过度乐观"。
 
 ### 2. MRCT Ph3 设计（多适应症全球试验）
 
@@ -87,3 +82,19 @@
 - [[03692-hansoh]] — 翰森制药（IO 联合方案竞争对手）
 - [[02162-keymed]] — 康诺亚（中国创新药 BUY 评级参比）
 - [[hcm-hutchmed]] — 和黄医药（HMPL-A251 FIC ADC，同期中国 FIC 资产）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-26）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **2.95亿** |
+| 研发费用 | 3.12亿 |
+| 归母净利 | -4.37亿 |
+| 期末现金 | 9.19亿 |
+| 基本 EPS | -0.31 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 02616.HK · 2025年度报告（公告 2026-03-26）· 截至 2026-07-10

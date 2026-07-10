@@ -1,11 +1,11 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 波士顿科学 Boston Scientific (BSX N)
 
 **Summary**: 全球心血管 medtech 龙头之一，三大核心业务线：① **心血管**（电生理 EP/左心耳封堵 LAAC/介入心脏 IC&VT/心率管理 CRM）；② **MedSurg**（内镜/泌尿/神经调控）。FaraPulse 是全球 PFA（脉冲电场消融）市占率最高产品之一，Watchman 是全球 LAAC 黄金标准。
 
-**Thesis**: 估值五年低位 + 短期负面预期已 price in 的反弹机会：① 股价 -40% 后 17x 2027E P/E 处于五年低位；② 1Q26 业绩符合预期，全年指引主动下调（org rev +6.5-8.0%、EPS USD3.34-3.41）为业绩底部信号；③ CHAMPION-AF 阳性数据 + Penumbra 神经介入收购 + Farwell Ultra/Seismic IVL 新产品上市，2027 年后回归 8-10% 中长期增长；④ 管理层股票回购明确表态低估。TP 从 USD88 下调至 USD78（+20% 上行空间）但维持 BUY。
+**Thesis**: 估值五年低位 + 短期负面预期已 price in 的反弹机会：① 股价 -40% 后 17x 2027E P/E 处于五年低位；② 1Q26 业绩符合预期，全年指引主动下调（org rev +6.5-8.0%、EPS USD3.34-3.41）为业绩底部信号；③ CHAMPION-AF 阳性数据 + Penumbra 神经介入收购 + Farwell Ultra/Seismic IVL 新产品上市，2027 年后回归 8-10% 中长期增长；④ 管理层股票回购明确表态低估。
 
 **Sectors**: [[electrophysiology]], [[medtech]]
 
@@ -25,12 +25,6 @@
 | Adj EPS（USD） | 2.50 | 3.06 | **3.40**（↓ 3.76）| **3.73**（↓ 4.05）| **4.08**（↓ 4.56）|
 | Adj OPM | — | — | 27.7% | 27.1% | 26.6% |
 | P/E（x，@ USD65） | 26 | 21 | 19 | 17 | 16 |
-
-**市场数据（2026-04-22）**：
-- 股价：USD65 | 市值：USD88.5bn
-- 52 周区间：USD59.4-109.5
-- P/E 2027E：17x（五年低位，vs 历史均值）
-- 主要股东：Vanguard 9.40%、Blackrock 9.16%、FMR 6.55%、State Street 4.43%
 
 **FY26 指引（管理层下调后）**：
 - Organic revenue growth：**+6.5-8.0%**（vs 此前 +8.5-10%）
@@ -83,7 +77,7 @@
   - 主要终点 5.7% vs NOAC 4.8%，HR=1.20（CI 0.87-1.66）→ **达成非劣**
   - 出血：器械组 10.9% vs NOAC 19.0%，HR=0.55 → **达成优效**
 - **CLOSURE-AF**（同期 NEJM 阴性研究）：高风险人群 N=912，未达非劣
-  - CMS HK 解读：阴性结果来自高风险患者基线（CHA₂DS₂-VASc 5.2 + HAS-BLED 3.0），与 CHAMPION-AF 不矛盾，反映**患者分层重要性**
+  -，与 CHAMPION-AF 不矛盾，反映**患者分层重要性**
 - 影响：Watchman 长期增长由"晚期高风险人群"扩展至"中低风险 + 抗凝可耐受"主流人群
 
 ### 3. 估值五年低位 + 回购信号
@@ -102,7 +96,7 @@
 
 ## 与 Visible Alpha 共识对比
 
-| 指标 | CMS HK 2026E | VA 2026E Consensus | Diff |
+| 指标 |
 |------|---------------|-----------------|------|
 | 总收入（USD mn）| 21,908 | 22,224 | -1.4% |
 | 心血管 | 14,637 | 14,813 | -1.2% |
@@ -111,7 +105,7 @@
 | MedSurg | 7,271 | 7,368 | -1.3% |
 | Adj EPS（USD） | 3.40 | 3.44 | -1.2% |
 
-> CMS HK 略低于 VA 共识，主因 EP + LAAC 短期承压
+>，主因 EP + LAAC 短期承压
 
 ---
 
@@ -131,14 +125,13 @@
 3. **Urology -1% 增长**：中国 VBP 影响 + supply gaps + sacral neuromodulation 商业模式变更
 4. **关税 + 政策风险**：1Q26 GPM -100bps（部分因 tariff + product discontinuations）
 5. **EPS 下调幅度（-9.2% 2026E）**：是否会再次下调需观察 2Q26 业绩
-6. **CLOSURE-AF 阴性结果舆论压力**：尽管 CMS HK 解读为不矛盾，但短期市场担忧仍在
+6. **CLOSURE-AF 阴性结果舆论压力**：尽管，但短期市场担忧仍在
 
 ## 行业坐标
 
 - 全球 EP 市场 USD13bn（2025E）→ USD20bn（2028E），15% CAGR
 - PFA 占 AF 消融市场份额 2028E ~70%
 - BSX 在 PFA 享首发优势（FaraPulse），但 2H25 起 J&J/Medtronic/Abbott 多产品并跑
-- CMS HK 国产 EP 互补推荐：APT Medical（4Q25 国内 PFA 装机最快）+ MicroPort EP（3D mapping 系统）
 
 ## Related pages
 
@@ -146,3 +139,24 @@
 - [[medtech]] — 医疗器械行业框架
 - [[isrg-intuitive-surgical]] — 全球 medtech 平台对比（手术机器人 vs 心血管介入）
 - [[300760-mindray]] — 中国国产 medtech 平台（含 MicroPort EP 业务，对应 PFA + 3D mapping）
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+**财务(SEC 10-Q, CIK 885725, 截至 2026-03-31)**
+
+| 指标 | 值 |
+|---|---|
+| 现金+投资 | **$1,453.0M** (现金 $1,453.0M + 短投 —) |
+| 季度 R&D | — |
+| 季度收入 | $5,203.0M |
+| 季度净利 | $190.0M |
+| 季度 OCF | $348.0M |
+| Runway | —(现金流为正/NA) |
+
+**会议指针(minodata,未提炼)**:最新业绩会 **2026-04-22**(ipid 360362684) · 最新大会 2026-05-27(ipid 360374824)
+
+**来源**:SEC CIK 885725 · minodata · 截至 2026-07-10

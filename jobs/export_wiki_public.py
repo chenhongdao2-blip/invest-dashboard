@@ -36,9 +36,16 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-INTERNAL_WIKI_DIR = Path.home() / "Documents" / "LLM Wiki" / "Wiki" / "companies"
+# HC company pages were reorganized from Wiki/companies/ (flat, now gone) into
+# Wiki/Healthcare/<subsector>/<code>-<name>.md (2026-07 restructure). The main
+# company page lives at the subsector level; deeper per-company subdirs hold call
+# transcripts/summaries + an index.md (NOT thesis pages) — excluded below.
+INTERNAL_WIKI_DIR = Path.home() / "Documents" / "LLM Wiki" / "Wiki" / "Healthcare"
 INTERNAL_AI_WIKI_DIR = Path.home() / "Documents" / "LLM Wiki" / "Wiki" / "AI" / "companies"
 PUBLIC_WIKI_DIR = REPO_ROOT / "data" / "wiki" / "companies"
+
+# Filenames that are directory indexes / call notes, never company thesis pages.
+_SKIP_NAMES = {"index.md"}
 
 # Section headers to STRIP entirely (heading + content until next ## or EOF).
 STRIP_SECTIONS = {
@@ -58,8 +65,18 @@ INLINE_STRIPS = [
     # Sources segment appended to Last updated line: " | **Sources**: ..."
     # Keeps the Last updated date, drops the Sources part.
     re.compile(r"\s*\|\s*\*\*Sources\*\*[^\n]*"),
-    # 市场数据 callout headers with internal TP (whole line)
-    re.compile(r"^.*\*\*市场数据\*\*[^\n]*$", re.MULTILINE),
+    # 市场数据 / CMS Outlook / 估值参考 callout BLOCK — bold header line + its
+    # following bullet body (which carries the internal TP/估值). The old rule only
+    # dropped the header line and orphaned the "- TP：…" bullet below it (leak).
+    re.compile(
+        r"^[ \t]*\*\*[^\n]*(?:市场数据|CMS[^\n]*Outlook|Outlook[^\n]*估值|估值参考|"
+        r"市场估值参考)[^\n]*\*\*[：:]?[ \t]*(?:\n[ \t]*[-*][^\n]*)+",
+        re.MULTILINE,
+    ),
+    # 光秃 TP / 目标价 bullet = CMS 自己的目标价(无 broker 归属)。公开的卖方一致
+    # 预期 TP 都在表格行(| 目标价 | … | 卖方一致预期 (broker) |),不以 "- TP：" 起头,
+    # 不受此规则影响。
+    re.compile(r"^[ \t]*[-*]\s*\*{0,2}(?:TP|目标价)\*{0,2}[：:][^\n]*$", re.MULTILINE),
     # Inline TP price quotes that appear outside Rating line — e.g.
     # "股价：HKD19.2 | TP：HKD25 (+30%)" — strip from "TP：" through end of line
     # but keep the price context if it leads
@@ -80,6 +97,21 @@ INLINE_STRIPS = [
     # Bare analyst-name list (e.g. "Jonah Chen / George Chen / 2025-08-11")
     re.compile(r"Jonah Chen(?:\s*/\s*[\w ]+)*"),
     re.compile(r"George Chen(?:\s*/\s*[\w ]+)*"),
+    re.compile(r"Zhen Tan(?:\s*/\s*[\w ]+)*"),
+    # Analyst-call parens carrying an internal rating + TP, e.g.
+    # "（Zhen Tan/, 2026-04-22, BUY/TP USD613 维持）" or "（… TP HKD102 …）".
+    re.compile(r"[（(][^）)]*(?:BUY|SELL|HOLD|Neutral)[^）)]*TP[^）)]*[）)]", re.IGNORECASE),
+    re.compile(r"[（(][^）)]*TP\s*(?:USD|HKD|JPY|RMB|CNY)[^）)]*[）)]", re.IGNORECASE),
+    # Bare "BUY/TP USD613 维持"-style rating+TP action (e.g. in a changelog line).
+    re.compile(
+        r"(?:BUY|SELL|HOLD|Neutral)\s*/\s*TP\s*(?:USD|HKD|JPY|RMB|CNY)?\s*[\d,]+"
+        r"[^，。；\n]*", re.IGNORECASE),
+    # CMS HK / CMSI internal-view CLAUSE strip — surgical (keeps the rest of the
+    # sentence). Eats "，CMS HK 将 TP 从 HKD7.3 上调至 HKD16.9（+84%）" out of a Summary
+    # while leaving the public thesis around it. Public consensus TPs never carry a
+    # "CMS HK" / "CMSI" marker, so they survive.
+    re.compile(r"[，,、；;：:]?\s*CMS\s?HK[^，。；\n]*"),
+    re.compile(r"[，,、；;：:]?\s*CMSI[^，。；\n]*"),
     # Dated internal report references — broad match for any of:
     #   "20260130 研报", "20260105 Outlook", "20250521 CMS report",
     #   "20260130 CSPC Flash Comment", "20250521 CMS HK"
@@ -112,12 +144,36 @@ PUBLIC_BANNER = """> 📋 **Public sanitized view** — CMSI 内部 Rating / TP 
 
 """
 
+# A page that carries this reliability disclaimer sources its rating/TP from
+# SELL-SIDE research (public, intentionally shown) — do NOT strip its inline TP
+# mentions. Absent it, a CMS-covered page's inline TP is the internal call → strip.
+_SELLSIDE_DISCLAIMER_RE = re.compile(r"评级\s*/\s*目标价为卖方观点|基于卖方研报")
+
+# NDR = CMS non-deal-roadshow internal notes — the source ref (and any analyst
+# name / date riding in the same paren) is internal. Safe to strip everywhere.
+_NDR_STRIPS = [
+    re.compile(r"[（(][^）)]*NDR[^）)]*[）)]"),                        # （2026-04-13 NDR 更新）
+    re.compile(r"[，,、；;]?\s*来源[：:][^，。；\n]*NDR[^，。；\n]*"),   # 来源：… NDR …
+    re.compile(r"[，,、；;]?\s*[^，。；\n]*\bNDR\b[^，。；\n]*"),        # any residual NDR clause
+]
+# Internal target-price action in PROSE (only stripped on non-sell-side pages via
+# the page-level gate). Eats "TP 从 HKD82 上调至 HKD102.6" / "目标价从 … 上调至 …".
+_INTERNAL_TP_PROSE = re.compile(
+    r"[，,、；;。]?\s*(?:TP|目标价)\s*从\s*[A-Za-z$]{0,4}\s?[\d,.]+"
+    r"[^，。；\n]*?(?:上调|下调|升|降)至[^，。；\n]*"
+)
+
 _SECTION_HEAD_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
+# Any H2 whose heading names the internal desk / analysis is stripped whole —
+# e.g. "CMS HK view vs 外部 broker", "2025-11-27 CMSI NDR takeaway",
+# "外部 broker baseline … 与 CMS HK view 的分歧". Over-strips the external-broker
+# framing too, but that's the safe direction for a public deployment.
+_CMS_HEADING_RE = re.compile(r"CMS\s?HK|CMSI|招商证券国际", re.IGNORECASE)
 
 
 def strip_sections(text: str) -> str:
-    """Remove '## SectionName' blocks listed in STRIP_SECTIONS."""
-    # Find all H2 headings with their positions.
+    """Remove '## SectionName' blocks in STRIP_SECTIONS or whose heading names the
+    internal desk (CMS HK / CMSI). Strips heading + body until the next H2/EOF."""
     matches = list(_SECTION_HEAD_RE.finditer(text))
     if not matches:
         return text
@@ -127,21 +183,47 @@ def strip_sections(text: str) -> str:
         section_name = m.group(1).strip()
         section_start = m.start()
         section_end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
-        if section_name in STRIP_SECTIONS:
-            # Emit content up to this section, skip the section itself.
+        if section_name in STRIP_SECTIONS or _CMS_HEADING_RE.search(section_name):
             out.append(text[last_end:section_start])
             last_end = section_end
     out.append(text[last_end:])
     return "".join(out)
 
 
+def _cleanup_orphans(text: str) -> str:
+    """After clause/line strips, tidy orphans that would otherwise read oddly:
+    empty bullets ('- ' / '* '), table rows gone all-empty, and 3+ blank lines."""
+    lines = []
+    for ln in text.splitlines():
+        s = ln.strip()
+        if s in ("-", "*", "•"):                       # bullet emptied by a clause strip
+            continue
+        if s.startswith("|") and s.replace("|", "").replace("-", "").replace(":", "").strip() == "":
+            # keep genuine markdown separator rows (---|---); drop all-blank data rows
+            if "-" not in s:
+                continue
+        lines.append(ln)
+    return "\n".join(lines)
+
+
 def sanitize(content: str) -> str:
     """Apply all strip rules to a wiki page's text."""
+    # Page-level gate: sell-side-disclaimered pages keep their (public) broker TPs;
+    # CMS-covered pages get inline internal-TP prose stripped too.
+    is_sellside = bool(_SELLSIDE_DISCLAIMER_RE.search(content))
     # 1. Section-level strips.
     content = strip_sections(content)
     # 2. Inline regex strips.
     for pat in INLINE_STRIPS:
         content = pat.sub("", content)
+    # 2a. NDR internal-source refs (safe everywhere).
+    for pat in _NDR_STRIPS:
+        content = pat.sub("", content)
+    # 2a'. Inline internal TP action — only on CMS-covered (non-sell-side) pages.
+    if not is_sellside:
+        content = _INTERNAL_TP_PROSE.sub("", content)
+    # 2b. Tidy orphans left by clause/line strips (empty bullets / blank table rows).
+    content = _cleanup_orphans(content)
     # 3. Collapse 3+ consecutive blank lines to 2.
     content = re.sub(r"\n{3,}", "\n\n", content)
     # 4. Strip trailing whitespace on each line.
@@ -180,19 +262,25 @@ def main() -> int:
         # and we still export the AI pages so cloud gets them.
         print(f"⚠️  HC wiki dir absent (sync drive offline?) — exporting AI only: {INTERNAL_WIKI_DIR}")
 
-    # Collect HC files (flat) + AI files (nested, recursive).
-    # Use stem (filename without suffix) as dedup key; AI files won't collide with
-    # HC files since the code namespaces are disjoint (NVDA vs 01093-, etc.).
+    # Collect HC files + AI files. Use stem (filename without suffix) as dedup key;
+    # AI files won't collide with HC files (code namespaces disjoint: NVDA vs 01093-).
     seen_stems: set[str] = set()
     all_files: list[Path] = []
 
-    for src in sorted(INTERNAL_WIKI_DIR.glob("*.md")):
+    # HC: subsector-level company pages only — Healthcare/<subsector>/<code>-<name>.md.
+    # `*/*.md` matches exactly that depth: it skips Healthcare/index.md (too shallow)
+    # AND the deeper per-company transcript subdirs (Healthcare/<sub>/<co>/date.md).
+    for src in sorted(INTERNAL_WIKI_DIR.glob("*/*.md")):
+        if src.name in _SKIP_NAMES:
+            continue
         if src.stem not in seen_stems:
             seen_stems.add(src.stem)
             all_files.append(src)
 
     if INTERNAL_AI_WIKI_DIR.exists():
         for src in sorted(INTERNAL_AI_WIKI_DIR.rglob("*.md")):
+            if src.name in _SKIP_NAMES:
+                continue
             if src.stem not in seen_stems:
                 seen_stems.add(src.stem)
                 all_files.append(src)
@@ -210,7 +298,8 @@ def main() -> int:
         # Search HC dir first, then AI dir recursively.
         target = INTERNAL_WIKI_DIR / args.show
         if not target.exists():
-            matches = list(INTERNAL_WIKI_DIR.glob(f"*{args.show}*"))
+            matches = [p for p in INTERNAL_WIKI_DIR.rglob(f"*{args.show}*")
+                       if p.is_file() and p.name not in _SKIP_NAMES]
             if not matches and INTERNAL_AI_WIKI_DIR.exists():
                 matches = list(INTERNAL_AI_WIKI_DIR.rglob(f"*{args.show}*"))
             if not matches:

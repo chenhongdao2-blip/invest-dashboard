@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 翰森制药 Hansoh Pharmaceutical (03692 HK)
 
@@ -9,7 +9,7 @@
 
 **Sectors**: [[biopharma]], [[china-innovative-drugs]]
 
-**Last updated**: 2026-05-14
+**Last updated**: 2026-05-28
 
 ---
 
@@ -22,10 +22,6 @@
 | 净利润（RMB mn） | ~3,285 | 4,370 | — | — | — |
 | 净利润增速 | — | +33.4% | — | — | — |
 | 创新药收入占比 | — | 77.3% | 82.7%（1H25）| — | — |
-
-**市场数据（2025-08-19）**：
-- 股价：HKD38.82
-- 净现金：RMB22bn
 
 **1H25 业绩速览**：
 - 1H25 收入 RMB7.8bn（+14.3% YoY）
@@ -73,38 +69,102 @@
 - BD 收入结构：里程碑收入高度依赖合作方临床决策，不确定性强
 - 创新药销售费用率上升风险
 
-## FY25 实际业绩与 FY26 指引
+## 1H25 详细业绩 walk & FY25 指引上修
 
-**FY25 实际数据**（业绩超 CMS 预期 3%）：
+**1H25 实际**：
+- 收入 RMB7.4bn（+14.3% YoY），beat 管理层 low-double-digit guidance
+- 净利润 RMB3.1bn（+15.0% YoY）
+- 创新药占比升至 **82.7%**（vs FY24 77.3%）
+- BD/合作收入贡献 RMB1.66bn — CMS 估算约一半来自 GSK B7-H3/H4 ADC milestone，另一半来自 MSD 口服 GLP-1 HS-10535 upfront
+- 肿瘤产品销售 +21.3% YoY（CMS 估算约 RMB3.7bn，大部分来自阿美乐）
+- R&D 投入 RMB1.4bn（占收入 19.4%）
 
-| 指标 | CMS 旧预期 | FY25 实际 | Variance |
-|------|---------|--------|--------|
-| 营收（RMB mn） | 14,570 | **15,028** | +3% |
-| 毛利率 | — | 90.0%+ | — |
-| EBITDA | 5,014 | **5,940** | +18% |
-| 归母净利润 | 4,597 | **5,555**（+27.1% YoY） | +21% |
-| 创新药销售占比 | — | **82.2%** | — |
-| 创新药销售（RMB bn）| — | 6.0 | +28% |
+**FY25 上调指引（管理层 2025-08）**：
+- 阿美乐 FY25 销售 reiterate RMB6bn，guided peak sales RMB8bn
+- 2030 目标 **20+ 创新药 covering 40+ 适应症**（即 FY25 业绩会后又升级到 20-30 个分子覆盖近 50 个适应症）
+- 阿美乐年末医保续约预计 mild 降幅（参考 AZ Tagrisso 路径，实际确认 -7.4%）
 
-**FY26 指引（管理层）**：
-- 收入 + BD 收入均**双位数增长**
-- 预计 collaboration revenue RMB2.4bn（vs FY25 RMB2.116bn）
-- 4 项 NDA 计划：HS-20093 SCLC + HS-20093 骨肉瘤 + HS-20094 减重 + HS-10374 银屑病 + HS-10568 dialysis SHPT
-- 9+ Phase III 启动：next-gen BCL-2、KRAS G12C 等
-- 11 项 Ph3 ongoing、6 项 Ph3 readouts、20+ 临床数据发表
+**TP 上修逻辑**：CMS 从 HKD26.5（2025-03）上调至 HKD47.5（2025-08，+79%）
+- 驱动 1：Regeneron deal（2025-06，HS-20094 GLP-1/GIP，upfront USD80mn + royalties，开发权外授全球）
+- 驱动 2：earnings visibility 明确 + pipeline milestone 触发节奏 reflect 在估值
+- BD 累计 11 项合作（9 临床 + 2 已上市），balanced license-out & license-in
 
-**核心管线进度**：
-- **Olatoperatide（HS-20094, GLP-1/GIP 周制剂）**：Ph3 顶线 19.3% 减重 at Wk48（85% achieved ≥10% loss），与 tirzepatide 相比有竞争力且 AE 更低；NDA 计划 mid-2026，潜在中国上市 2H27
-- **TYK2 抑制剂（HS-10374）**：银屑病 Ph3 readout + NDA filing 2026
-- **B7-H3 ADC（HS-20093，GSK 出授）**：Ph3 SCLC + 骨肉瘤 + 非鳞 NSCLC 三项 NDA 2026 准备
-- **B7-H4 ADC（HS-20089，GSK 出授）**：GSK 已启动晚期 endometrial + ovarian cancer Ph3
-- **IL-23p19 抗体（HS-20137）**：免疫科 Ph3 推进中
-- **EGFR-cMET 双特异 + Ameile 联用**：1L EGFR-mut NSCLC Ph3 推进中
+---
 
-**估值**：
-- 净现金 >RMB30bn 支持持续 R&D + BD
-- TP HKD47.5 维持，对应 30.5x 26E P/E（vs 同业 mid-20s 偏高 reflect BD 溢价）
-- 2026E 营收 RMB16.61bn（+11%）、归母净利 RMB5.94bn（+7%）
+## 代谢 / 免疫 R&D 新增长引擎
+
+**核心 thesis**：阿美乐 + 抗感染恒沐的国内创新药一代引擎进入成熟期，公司主动孵化第二增长曲线——代谢（GLP-1 矩阵）与免疫（TYK2/IL-23/CD19）。这是 2026-29 年估值再定价的核心非共识点。
+
+**代谢矩阵（覆盖减重 + 糖尿病 + 长期慢病管理）**：
+| 资产 | 机制 | 阶段 | 关键里程碑 |
+|------|------|------|----------|
+| HS-20094 (Olatorepatide) | GLP-1/GIP 双靶周制剂 | Ph3 obesity 顶线已读出 | 48 周减重 19.3%，97% 受试者 ≥5% 减重；恶心 <10%、呕吐 <5%；2026 mid NDA，2027 2H 上市；外授 Regeneron 全球 |
+| HS-10535 | 口服 GLP-1 小分子 | MSD 全球独家 | MSD 2H25 推进临床；upfront USD112mn 已 1H25 入账 |
+| HS-10501 | 口服 GLP-1 | Ph2 | 内部储备 |
+| HS-10503 | 口服 GLP-1R | 临床 | 内部储备 |
+
+**免疫矩阵（银屑病 + 自免）**：
+- HS-10374（口服 TYK2 抑制剂）：mid-to-severe 银屑病 Ph3，2026 读出 + NDA
+- HS-20137（IL-23p19 注射剂）：Ph2 完成进入 Ph3
+- Inebilizumab（CD19 单抗）：IgG4-RD + MG 重症肌无力，2026 NDA 中
+- 银屑病联合方案 + 多机制覆盖 unmet need
+
+> 💡 分析师笔记：代谢 + 免疫两个 vertical 的潜在市场 CMS 测算各自 RMB100 亿+，远超阿美乐 RMB80 亿 2030 目标。当前估值仅 partially price-in Olatorepatide 的减重叙事，TYK2 + IL-23 几乎 zero-credit。这是 2026-27 数据读出窗口潜在 re-rating 的核心点。
+
+---
+
+## FY25 业绩会 Q&A 要点（2026-03-30 AI 速记）
+
+**财务速览（管理层口径）**：
+- FY25 收入 RMB15.03bn（+22.6% YoY），净利 RMB5.56bn（+27.1% YoY）
+- 创新及合作收入 RMB12.35bn（+30.4%），占比 **82.2%**
+- BD 合作收入 RMB2.12bn，其中 MSD 口服 GLP-1 首付款 RMB910mn + 历史合作项目里程碑
+- 分业务：肿瘤 RMB9.97bn（占近 2/3）；抗感染 RMB1.59bn（+8.3%，恒沐 +30%）；CNS RMB1.31bn（昕越 +近 40%）；代谢及其他 RMB2.16bn（+67%）
+- R&D 费用 RMB3.36bn（+24.3%，占收入 22%）
+- 毛利略降（BD 海外供药占比上升）；销售费率下降，营销效率提升
+- **2025 分红 43%（约 RMB2.4bn），上半年 40% + 下半年 45%**（首次明确双段式高分红节奏）
+
+**Q&A 关键判断**：
+
+1. **FY26 指引（Q1）**：总收入 double-digit growth，产品收入 + 合作收入均 double-digit（合作收入**不含**预期潜在新交易）。这是较保守、可达成的口径。
+
+2. **B7-H3 ADC (HS-20093)（Q2/Q5）**：
+   - 三项注册临床：二线 SCLC + 二线非鳞非小驱动基因阴性 NSCLC + 骨肉瘤
+   - 6 个二期适应症探索：消化道、泌尿生殖系统、ESCC、头颈鳞癌、CRC、前列腺
+   - GSK 海外二线 SCLC Ph3 入组中（全球进度排第二），2026 启动更多 Ph3
+   - **2025 已收到 GSK 里程碑付款并确认收入**
+
+3. **B7-H4 ADC (HS-20089)（Q5）**：
+   - 国内 Ph3 铂耐药卵巢癌
+   - **GSK 已启动海外晚期子宫内膜癌 + 卵巢癌 Ph3**，2026 将披露海外 Ph1/2 数据
+
+4. **2026 已批 NDA**：阿美乐联靶化一线 NSCLC（2026-01）+ 阿美乐欧洲单药一线/二线 + 昕越（CD19）全身 MG
+
+5. **2026 NDA 递交计划（4 项）**：B7H3 ADC 前两个适应症（SCLC + 骨肉瘤）+ HS-20094 减重 + HS-10374 TYK2 银屑病 + HS-10568 透析 SHPT
+
+6. **2026 Ph3 启动（9 项）**：含 Terns 合作的次世代 BCL-2、KRAS G12C 一线 NSCLC、arrestin 2 受体拮抗剂等
+
+7. **20094 减重商业化定位（Q4）**：
+   - 肥胖管理"3.0 阶段" — 长期慢病管理而非短期减重工具
+   - 商业化双轨：医疗端依托内分泌/代谢学术推广 + 零售端复用慢病院外渠道（药房、电商、数字患者管理）
+   - 与口服 GLP-1 形成产品矩阵，向长期健康管理延伸（不仅肥胖人群）
+   - **2027 2H 上市**
+
+8. **阿美乐峰值（Q8）**：
+   - 2030 前 RMB80 亿目标
+   - 2030 后通过联合应用（CMET 双抗、靶化联合）有望 **超 RMB100 亿**
+   - 一线靶化联合中位 PFS 28.9 个月（HR=0.58），L858R/脑转移/TP53 共突变亚组显著获益，研究发表在 CA 杂志
+   - 辅助治疗预计贡献 1/3+ 收入
+
+9. **海外 Ameile（Q7）**：积极寻求海外商业化合作，FY26 指引**未含**海外销售；签约后会更新指引。
+
+10. **2026 R&D 强度（Q9）**：研发费用增幅 **超 30%**（即 RMB4.4bn+），新增 10+ 临床阶段分子（含小核酸）；毛利和销售费率 vs 2025 基本一致。
+
+11. **2026 数据读出（Q6）**：20+ 项目新临床数据；亮点包括 B7H3/B7H4 ADC 三期、四代 EGFR TKI、CMA EGFR 双抗 ADC FIH、HS-20094 减重 Ph3 完整数据、口服 TYK2 数据、口服 IL-23 多肽、口服 GLP-1 FIH。
+
+12. **长期管线节奏（Q11）**：第二批创新药 2027 起陆续上市，2028-29 逐步贡献业绩。肿瘤（B7H3 + B7H4 ADC）与非肿瘤（GLP-1 矩阵 + TYK2 + IL-23）两个 vertical 各 RMB100 亿+ 潜在市场。
+
+---
 
 ## Related pages
 
@@ -112,3 +172,19 @@
 - [[china-innovative-drugs]] — 中国创新药行业（待建）
 - [[01093-cspc-pharma]] — 石药集团（同为中国大型制药公司）
 - [[01530-sansheng]] — 三生制药（同为 BD 出海标的）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-29）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **162.37亿** |
+| 研发费用 | 33.58亿 |
+| 归母净利 | 55.55亿 |
+| 期末现金 | 315.49亿 |
+| 基本 EPS | 0.93 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 03692.HK · 2025年度报告（公告 2026-03-29）· 截至 2026-07-10

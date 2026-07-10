@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 阿里健康 (00241.HK)
 
@@ -46,3 +46,19 @@
 - [[06618-jd-health]] — 主要对比 comp
 - [[healthcare-ai]] — 行业框架
 - [[identity-core]] — 分析师偏差校准
+
+---
+
+## 最新报告期数据（2026年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2026年度报告**（公告 2026-05-14）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **352.16亿** |
+| 研发费用 | 7.88亿 |
+| 归母净利 | 19.36亿 |
+| 期末现金 | 101.84亿 |
+| 基本 EPS | 0.12 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 00241.HK · 2026年度报告（公告 2026-05-14）· 截至 2026-07-10

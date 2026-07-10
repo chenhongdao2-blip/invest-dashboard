@@ -1,11 +1,11 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 康诺亚生物医药 Keymed Biosciences (02162 HK)
 
 **Summary**: 中国免疫学领域龙头（CMS 定位），聚焦 Th2 驱动型疾病（特应性皮炎 AD/CRSwNP/SAR/COPD）；核心资产 CM310（Stapokibart，IL-4Rα 单靶抗体）在中国已获批 3 项适应症，EASI-75 临床数据为全球同类最优；CM512（TSLP×IL-13 bispecific）为全球首个 IgG-like FIC，半衰期 70 天 vs 竞品 Lunsekimig 10 天，差异化显著；T-Cell Engager 新平台（NewCo）布局肿瘤+自免下一成长曲线。
 
-**Thesis**: Stapokibart（CM310）是中国版 Dupixent 替代逻辑的最强候选：① EASI-75 66.9% vs Dupixent 49.5%，临床数据优越；② CRSwNP + SAR 双适应症在中国均为唯一疗法，蓝海市场；③ CM310 峰值销售额 ~RMB5bn+；④ CM512 半衰期优势（70d vs 10d）+ 全球授权（Belenos 30%）提供独立估值 HKD10.4/sh；⑤ Ouro/Gilead 交易贡献 HKD7.0/sh。TP 从 HKD82 上调至 HKD102.6（2026-04-13 NDR 更新）。
+**Thesis**: Stapokibart（CM310）是中国版 Dupixent 替代逻辑的最强候选：① EASI-75 66.9% vs Dupixent 49.5%，临床数据优越；② CRSwNP + SAR 双适应症在中国均为唯一疗法，蓝海市场；③ CM310 峰值销售额 ~RMB5bn+；④ CM512 半衰期优势（70d vs 10d）+ 全球授权（Belenos 30%）提供独立估值 HKD10.4/sh；⑤ Ouro/Gilead 交易贡献 HKD7.0/sh。
 
 **Sectors**: [[immunology-inflammation]], [[china-innovative-drugs]]
 
@@ -22,11 +22,7 @@
 | 毛利率 | 89.6% | 97.2% | 85.0% | — | — |
 | 归母净利润（RMB mn） | -356 | -515 | -523 | — | — |
 
-> 注：2026E 收入 RMB2,550mn 由 BD 里程碑主导（含 Ouro/Belenos 交易），2027E 随里程碑正常化回落至 RMB1,691mn；盈利预计从 2028E 实现。启动报告（2025-07-16）原 2026E 为 RMB1,076mn，已被 NDR 更新版本取代。
-
-**市场数据（2026-04-13 NDR）**：
-- TP：**HKD102.6**（↑ 来自 HKD82，+25%）
-- 2026E CM310 产品收入：RMB875mn
+> 注：2026E 收入 RMB2,550mn 由 BD 里程碑主导（含 Ouro/Belenos 交易），2027E 随里程碑正常化回落至 RMB1,691mn；盈利预计从 2028E 实现。启动报告（2025-07-16）原 2026E 为 RMB1,076mn。
 
 ---
 
@@ -140,3 +136,19 @@
 - [[neuro-immunology]] — 神经免疫行业（MS/MG，相邻领域）
 - [[03692-hansoh]] — 翰森制药（IL-4Rα 竞争格局，TYK2 AD 适应症交叉）
 - [[lly-eli-lilly]] — 礼来制药（Ebglyss IL-13 AD 竞争对手）
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-26）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **8.76亿** |
+| 研发费用 | 7.24亿 |
+| 归母净利 | -5.23亿 |
+| 期末现金 | 16.43亿 |
+| 基本 EPS | -1.91 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 02162.HK · 2025年度报告（公告 2026-03-26）· 截至 2026-07-10

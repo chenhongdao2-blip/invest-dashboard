@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 石药集团 CSPC Pharma (1093 HK)
 
@@ -9,7 +9,7 @@
 
 **Sectors**: [[china-biopharma]], [[glp1-obesity]]
 
-**Last updated**: 2026-04-15
+**Last updated**: 2026-05-29
 
 ---
 
@@ -68,3 +68,19 @@
 - [[glp1-obesity]] — GLP-1 行业综述
 - [[lly-eli-lilly]] — 全球 GLP-1 龙头对比
 - [[nvs-novartis]] — 同行对比（GLP-1 生态中的大药企角色）
+
+---
+
+## 最新报告期数据（2026一季报, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2026一季报**（公告 2026-05-27）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **64.65亿** |
+| 研发费用 | 14.03亿 |
+| 归母净利 | 8.60亿 |
+| 期末现金 | 88.65亿 |
+| 基本 EPS | 0.08 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 01093.HK · 2026一季报（公告 2026-05-27）· 截至 2026-07-10

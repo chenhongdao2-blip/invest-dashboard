@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-06-01 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 闪迪 (SNDK)
 
@@ -49,3 +49,24 @@
 - [[285a-kioxia]]
 - [[mu-micron]]
 - [[000660-sk-hynix]]
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+**财务(SEC 10-Q, CIK 2023554, 截至 2026-04-03)**
+
+| 指标 | 值 |
+|---|---|
+| 现金+投资 | **$3,735.0M** (现金 $3,735.0M + 短投 —) |
+| 季度 R&D | $337.0M |
+| 季度收入 | $5,950.0M |
+| 季度净利 | $3,615.0M |
+| 季度 OCF | $488.0M |
+| Runway | —(现金流为正/NA) |
+
+**会议指针(minodata,未提炼)**:最新业绩会 **2026-01-29** ⚠(<Q1'26)(ipid 360348221) · 最新大会 2026-06-09(ipid 360376012)
+
+**来源**:SEC CIK 2023554 · minodata · 截至 2026-07-10

@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # Doximity (DOCS)
 
@@ -51,3 +51,24 @@
 - [[veev-veeva-systems]] — 平台型 SaaS 对比
 - [[way-waystar]] — Revenue cycle SaaS comps
 - [[healthtech-saas]] — 行业框架
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+**财务(SEC 10-Q, CIK 1516513, 截至 2026-03-31)**
+
+| 指标 | 值 |
+|---|---|
+| 现金+投资 | **$219.2M** (现金 $219.2M + 短投 —) |
+| 季度 R&D | $34.6M |
+| 季度收入 | $185.1M |
+| 季度净利 | $61.6M |
+| 季度 OCF | $62.1M |
+| Runway | —(现金流为正/NA) |
+
+**会议指针(minodata,未提炼)**:最新业绩会 **2026-05-19**(ipid 360370933)
+
+**来源**:SEC CIK 1516513 · minodata · 截至 2026-07-10

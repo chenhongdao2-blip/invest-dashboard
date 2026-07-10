@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-06-01 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 希捷 / Seagate (STX)
 
@@ -31,3 +31,24 @@
 ## Related pages
 - [[wdc-western-digital]]
 - [[us-ai-infrastructure]]
+
+---
+
+## 最新季度数据 (as_of 2026-07-10)
+
+> 轻档(财务快照 + 会议指针,未做深提炼)· SEC EDGAR + minodata · 研究用途,非投资建议
+
+**财务(SEC 10-Q, CIK 1137789, 截至 2026-04-03)**
+
+| 指标 | 值 |
+|---|---|
+| 现金+投资 | **$1,146.0M** (现金 $1,146.0M + 短投 —) |
+| 季度 R&D | $194.0M |
+| 季度收入 | $3,112.0M |
+| 季度净利 | $748.0M |
+| 季度 OCF | $532.0M |
+| Runway | —(现金流为正/NA) |
+
+**会议指针(minodata,未提炼)**:最新业绩会 **2026-05-05**(ipid 360368909) · 最新大会 2026-06-02(ipid 360371633)
+
+**来源**:SEC CIK 1137789 · minodata · 截至 2026-07-10

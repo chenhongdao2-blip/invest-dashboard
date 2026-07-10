@@ -1,5 +1,5 @@
 > 📋 **Public sanitized view** — CMSI 内部 Rating / TP / 研报源文件引用 / 分析师姓名已删除。完整内部 view 需在本地 ~/Documents/LLM Wiki/Wiki/ 下访问。
-> Sanitized at: 2026-05-28 via jobs/export_wiki_public.py.
+> Sanitized at: 2026-07-10 via jobs/export_wiki_public.py.
 
 # 和誉生物 Abbisko (2256 HK)
 
@@ -9,7 +9,7 @@
 
 **Sectors**: [[china-biopharma]], [[oncology]]
 
-**Last updated**: 2026-05-14
+**Last updated**: 2026-05-29
 
 ---
 
@@ -19,11 +19,6 @@
 |------|-------|-------|-------|-------|-------|
 | 收入（RMB mn） | 19 | 504 | 675 | 522 | 625 |
 | 净利润 Adj（RMB mn） | -400 | 51 | 185 | 39 | 100 |
-
-**市场数据（2025-10-02）**：
-- 股价：HKD18
-- 市值：HKD12.1bn（约 USD1.6bn）
-- 12 个月涨幅：+353.9%（vs HSI +21.4%，截至 2025-10-02）
 
 > **注**：2024A 收入 $504mn vs 2023A $19mn 的跃升主要来自 Merck KGaA BD 里程碑付款（$70mn upfront + $85mn option exercise）
 
@@ -37,6 +32,8 @@
 | ABSK043 | Oral PD-L1 抑制剂 | NSCLC（1L combo）、胃癌 | 2026: Ph2 NSCLC/胃癌数据 | >$3bn |
 | ABSK121 | FGFR1/3 选择性抑制剂 | — | 2025Q4: Ph1 数据 | 早期 |
 | ABSK141 | KRAS G12D 抑制剂 | NSCLC | 2026H1: IND 提交 | 早期 |
+| Pan-KRAS | 泛 KRAS 抑制剂 | 实体瘤 | **2026H1: 中美 IND 递交**，积极开展临床入组 | 早期 |
+| ABSK131 | PRMT5-MTA 抑制剂 | MTAP 缺失肿瘤 | **2026H2: 初步数据读出**；对标美股 Tango（mcap >$38 亿），临床进展有机会弯道超车 | 早期 |
 
 ## 核心投资逻辑
 
@@ -60,29 +57,25 @@
 - 商业化风险：Merck KGaA 的执行力、定价 & 医保覆盖（中国 TGCT VBP 不确定）
 - 估值：高涨幅（YTD +353.9%）后安全边际压缩
 
-## 2026 进展速览
-
-**Pimicotinib（ABSK021）**：
-- 全球 MANEUVER Ph3 已成功，中国 2024 年 12 月底获 NDA 批准 + 商业化上市
-- 美国 NDA 2026 年 1 月获受理（FDA）
-- Merck KGaA 将启动美国 + 德国商业化（3 月）
-- FY25 业绩公告 2026-03-05 — 留意 Pimi 商业化轨迹更多指引
-
-**Irpagratinib（ABSK011）**：
-- 2L+ HCC 注册研究 LPI 预计 2026H2 完成，**topline 数据 2027H1 左右公布**（ORR 关键终点）
-- 提交 NDA 至中国 CDE → 预计 **2H27 或 2028 上市**
-- MRCT 全球 Ph3 计划：已与 FDA 讨论；可能是 Tecentriq+Avastin 一线 add-on 联合方案
-
-**FY26 早期管线扩张**：
-- 新增 Ph1 启动：pan-KRAS、CDK4/2 selective、**CDK4（CNS-penetrant，重要分化点）**、GIPR 小分子、STAT6 等
-- 加大 AI 在 R&D 引擎的应用
-- 早期平台聚焦：高选择性 CNS-penetrant 小分子、口服代谢/心血管/免疫炎症小分子
-
-**Maintain BUY** — TP 不变；管理层预期短期估值仍被市场低估
-
 ## Related pages
 
 - [[china-biopharma]] — 中国创新药框架（待建）
 - [[oncology]] — 肿瘤学赛道（待建）
 - [[01093-cspc-pharma]] — 中国 BD 出海对比
 - [[cardiovascular-drugs]] — 小分子赛道参考
+
+---
+
+## 最新报告期数据（2025年度报告, as_of 2026-07-10）
+
+> 港股半年报制,最新披露=**2025年度报告**（公告 2026-03-02）· 数据源 gangtise · 币种 人民币 · 研究用途,非投资建议
+
+| 指标 | 值 |
+|---|---|
+| 营业总收入 | **7.22亿** |
+| 研发费用 | 5.08亿 |
+| 归母净利 | 0.55亿 |
+| 期末现金 | 20.27亿 |
+| 基本 EPS | 0.09 |
+
+**来源**：gangtise fundamental income-statement-hk / balance-sheet-hk · 02256.HK · 2025年度报告（公告 2026-03-02）· 截至 2026-07-10

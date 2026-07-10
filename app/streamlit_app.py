@@ -92,11 +92,6 @@ strategy_picks = st.Page(
     title=_t("Strategy Picks", "Strategy Picks 策略表现"),
     url_path="Strategy_Picks",
 )
-rebalance_rules = st.Page(
-    "pages/4b_Rebalance_Rules.py",
-    title=_t("Rebalance Rules", "Rebalance 调仓规则/记录"),
-    url_path="Rebalance_Rules",
-)
 valuation_scanner = st.Page(
     "pages/5_Valuation_Scanner.py",
     title=_t("HC Valuation", "HC Valuation 估值扫描器"),
@@ -159,7 +154,7 @@ ai_sec = st.Page(
 pg = st.navigation(
     {
         # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
-        _t("⭐ Core Strategy", "⭐ 核心策略"): [strategy_picks, rebalance_rules],
+        _t("⭐ Core Strategy", "⭐ 核心策略"): [strategy_picks],
         _t("Global", "Global 全局"): [home, ticker_drill, model_drill, sector_rotation],
         _t("Healthcare", "Healthcare 医疗健康"): [
             cmsi_coverage,

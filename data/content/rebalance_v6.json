@@ -1,0 +1,106 @@
+{
+  "_meta": {
+    "note": "结构化调仓/收益数据源 — 供 lib/rebalance_panel.py 渲染 Strategy Picks 生科页的『调仓纪律 & 换仓记录』区。held/sold/new 三组由 v5/v6 picks CSV 实时求差得出(非手填),本文件只存: 收益链冻结事实 + 卖出理由映射 + transcript triage 说明 + 精简 rulebook。长文完整版仍在 data/content/rebalance_rulebook.md / rebalance_ledger.md 作 provenance。",
+    "as_of": "2026-07-09",
+    "book": "v6",
+    "not_advice": "研究工具,不构成投资建议"
+  },
+
+  "chain": {
+    "capital_start": 1000000,
+    "capital_now": 1296511,
+    "currency": "USD",
+    "cum_pct": 29.65,
+    "bench_cum_pct": 19.76,
+    "alpha_pp": 9.89,
+    "bench": "XBI",
+    "segments": [
+      {
+        "ver": "v4", "label": "春季建仓", "label_en": "Spring build",
+        "from": "2026-04-22", "to": "2026-05-15", "days": 23, "n": 20,
+        "ret_pct": 0.60, "bench_pct": -4.82, "alpha_pp": 5.42,
+        "tag": "防御型 alpha", "tag_en": "Defensive alpha",
+        "note": "下跌市扛住 + 反超", "note_en": "Held up in a down tape and beat it",
+        "best": "CORT +21% · CYTK +14% · JAZZ +13%",
+        "worst": "TNGX −24% · GPCR −17%"
+      },
+      {
+        "ver": "v5", "label": "夏季调仓", "label_en": "Summer rebalance",
+        "from": "2026-05-15", "to": "2026-07-09", "days": 55, "n": 20,
+        "ret_pct": 28.88, "bench_pct": 25.83, "alpha_pp": 3.05,
+        "tag": "吃到反弹", "tag_en": "Rode the rally",
+        "note": "生科板块反弹兑现", "note_en": "Captured the biotech bounce",
+        "best": "CRNX +127% · APGE +65%(并购) · MRNA +56%",
+        "worst": "NAMS +1% · JAZZ +8%"
+      },
+      {
+        "ver": "v6", "label": "7月调仓", "label_en": "July rebalance",
+        "from": "2026-07-09", "to": null, "days": null, "n": 22,
+        "ret_pct": null, "bench_pct": null, "alpha_pp": null,
+        "tag": "进行中", "tag_en": "In progress", "current": true,
+        "note": "实时净值见上方走势图", "note_en": "Live NAV tracked in the chart above",
+        "best": null, "worst": null
+      }
+    ]
+  },
+
+  "rebalance": {
+    "prev_book": "v5", "prev_pick_date": "2026-05-15",
+    "pick_date": "2026-07-09", "turnover_pct": 70,
+    "trigger": "距上次 run 2 个月 + 首次用 v5.2 probe harness fresh run(6 源 union 167 → 过三闸 50 → biotech-researcher ×10 批评分 → Top20)。",
+    "trigger_en": "Two months since the prior run + first v5.2 probe-harness fresh run (167 union → 3 gates → 50 → biotech-researcher scoring → Top20).",
+    "logic": "卖点 = 驱动本轮上涨的催化剂已兑现(掉出 fresh-run Top20 = 无 30–120 天临床催化窗口),非裸涨幅;CRNX 为 PM 主观利润落袋,引擎仍认 Elite。",
+    "logic_en": "Sell = the catalyst that drove the run has played out (dropped out of the fresh-run Top20 = no 30–120d clinical window left), not raw price gain. CRNX was a discretionary profit-take; the engine still rates it Elite.",
+    "composition": "22 支等权(~4.55%/支)= 6 继续持有 + 16 新建仓(14 引擎 + 2 人工主观加入 ALNY/GPCR),换掉 v5 的 14 支。",
+    "sold_reasons": {
+      "CRNX": {"type": "落袋", "type_en": "Profit-take", "note": "+118% 人工清仓落袋(引擎仍认 Elite #7)"},
+      "APGE": {"type": "并购了结", "type_en": "M&A exit", "note": "+65% 被并购,溢价了结"},
+      "MRNA": {"type": "落袋", "type_en": "Profit-take", "note": "+56% 兑现"},
+      "AGIO": {"type": "落袋", "type_en": "Profit-take", "note": "+49% 兑现"},
+      "RARE": {"type": "走弱", "type_en": "Weakened", "note": "评分走弱"},
+      "ROIV": {"type": "走弱", "type_en": "Weakened", "note": "评分走弱"},
+      "INCY": {"type": "走弱", "type_en": "Weakened", "note": "评分走弱"},
+      "ARWR": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "COGT": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "JAZZ": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "GERN": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "MLTX": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "BMRN": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"},
+      "TLX": {"type": "催化兑现", "type_en": "Catalyst spent", "note": "掉出 fresh-run Top20"}
+    },
+    "manual": ["ALNY", "GPCR"],
+    "triage": {
+      "in": ["DNLI", "MLYS"], "out": ["WVE", "CORT"],
+      "note": "催化剂闸(CT.gov PCD)有结构盲区,看不见 PDUFA / 管理层 guided 时点。用管理层电话会 transcript 对『过 Gate0 但被催化剂闸刷掉』的新面孔 triage:8 支 → 4 支确认近期催化 → 2 支补跑评分够格进榜(DNLI 8.28 / MLYS 7.90),换掉最弱两只 WVE / CORT。",
+      "note_en": "The catalyst gate (CT.gov PCD) is structurally blind to PDUFA / management-guided dates. Management-call transcripts triaged fresh faces that passed Gate 0 but were cut by the gate: 8 → 4 confirmed near-term catalysts → 2 re-scored back into the book (DNLI 8.28 / MLYS 7.90), swapping out the two weakest, WVE / CORT."
+    },
+    "risk": "2026-08 催化剂拥挤(XENE 抑郁 / MIRM 丁肝);新池多 FIC 早期单资产票(QURE / RAPP),建仓前做 kill-criteria 复核。",
+    "risk_en": "Aug-2026 catalyst crowding (XENE MDD / MIRM HDV); the new sleeve is heavy on early single-asset FIC names (QURE / RAPP) — kill-criteria review before sizing."
+  },
+
+  "rulebook": {
+    "version": "v0.1",
+    "as_of": "2026-07-10",
+    "positioning": "设计起点:数字是『先验合理值』非回测最优值,须走前瞻账本 vs 死等权影子对照验证后才升级『已验证』。",
+    "positioning_en": "Design baseline: numbers are prior-reasonable, not backtest-optimal — promoted to 'validated' only after a forward ledger vs dead-equal-weight shadow control.",
+    "core": "biotech 收益 = 催化剂之间的价格漂移 + 读出时刻的二元跳空。唯一确定有 edge 的动作 = 围绕 readout 日历做事(读出前削已 run-up 的赢家、锁负 skew 尾部);唯一确定该禁的 = 任何价格止损 / 止盈。等权先行,攒够样本再谈分层。",
+    "core_en": "Biotech return = price drift between catalysts + the binary gap at readout. The only sure edge = act around the readout calendar (trim run-up winners pre-readout, cap the negative-skew tail); the only sure prohibition = any price stop-loss / take-profit. Equal-weight first; tier only after enough samples.",
+    "rules": [
+      {"id": "R1", "title": "单票集中度上限", "title_en": "Single-name cap", "desc": "权重漂到 ≥7% → 削回 5.5%;读出前硬顶 ≤5.5%", "desc_en": "Drift to ≥7% → trim to 5.5%; hard cap ≤5.5% into a readout"},
+      {"id": "R2", "title": "靶点 / 赛道集中度", "title_en": "Target / theme cap", "desc": "同靶点或机制合计 ≤15%,同适应症 ≤20%", "desc_en": "≤15% per target/mechanism, ≤20% per indication"},
+      {"id": "R3", "title": "读出前削 run-up", "title_en": "Trim run-up pre-readout", "desc": "读出前 2–4 周 run-up ≥+30% → 削回 4.55%;平台重估型例外不削", "desc_en": "Run-up ≥+30% in the 2–4 wks before readout → trim to 4.55%; platform-rerate winners exempt"},
+      {"id": "R4", "title": "清仓红旗(越级)", "title_en": "Exit red flag (overrides all)", "desc": "临床失败 / 安全信号 / 现金 runway<12月 / 内部人异常减持 / 被并购 → 无条件清", "desc_en": "Trial fail / safety signal / cash runway <12m / abnormal insider selling / acquired → unconditional exit"},
+      {"id": "R5", "title": "评分掉档 → 人工 review", "title_en": "Score drop → human review", "desc": "基本面坏才动,价格噪音不机械砍,只触发人来看一眼", "desc_en": "Act only if fundamentals worsened; price noise triggers a look, not an auto-cut"},
+      {"id": "R6", "title": "密集期现金 buffer", "title_en": "Cash buffer in dense windows", "desc": "已知密集读出窗口前 30 天留 5–8% 现金,接读出后错杀标的", "desc_en": "Hold 5–8% cash for 30d ahead of known dense readout windows"},
+      {"id": "R7", "title": "流动性执行约束", "title_en": "Liquidity execution", "desc": "单票调仓 ≤20 日 ADV 的 10–15%,建 / 清仓分 3–5 日 VWAP", "desc_en": "≤10–15% of 20-day ADV per name; build/exit over 3–5 days VWAP"},
+      {"id": "R8", "title": "记账 + 死等权影子对照", "title_en": "Ledger + dead-EW shadow", "desc": "每次动仓记 6 字段,并行记『死等权不调仓』影子组分辨规则真 edge", "desc_en": "Log 6 fields per move; run a dead-equal-weight shadow book to isolate the rules' real edge"}
+    ],
+    "avoid": [
+      {"t": "价格止损 / 止盈", "t_en": "Price stop-loss / take-profit", "why": "日波动 4–6%,止损线天天被打穿;真利空 gap 一夜到位,两头挨打", "why_en": "4–6% daily swings punch through stops daily; real bad news gaps overnight — you lose both ways"},
+      {"t": "现在就分层加权", "t_en": "Tier the weights now", "why": "评分未经 OOS 验证前,分层 = 把未验证信号当真下注", "why_en": "Before OOS validation, tiering bets on an unproven signal"},
+      {"t": "日频调仓", "t_en": "Daily rebalancing", "why": "小盘单笔冲击成本达 45bps,频繁调仓 = 纯漏损;月频查 band", "why_en": "Small-cap impact cost hits 45bps; frequent turns are pure leakage — check the band monthly"}
+    ],
+    "phase_note": "Phase 1(现在):8 条风控硬约束,不需数据积累、抗过拟合。Phase 2(攒 ≥30 次 readout 样本后):前瞻账本证明『削 run-up』组 vs 死等权为正 → 再升级等权→两档→三档分层。",
+    "phase_note_en": "Phase 1 (now): 8 hard risk constraints, no data needed, overfit-resistant. Phase 2 (after ≥30 readout samples): if the forward ledger shows 'trim run-up' beats dead-EW → then upgrade equal-weight → two tiers → three tiers."
+  }
+}

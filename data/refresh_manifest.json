@@ -64,5 +64,14 @@
     "refreshed_at": "2026-07-08T23:46:29+00:00",
     "source_date": "2026-03-31",
     "note": "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
+  },
+  "biotech_catalysts": {
+    "label": "生科组合 催化剂时点",
+    "source": "手工维护(引擎 + transcript 核对)",
+    "max_age_days": 30,
+    "status": "ok",
+    "refreshed_at": "2026-07-09T18:00:00+00:00",
+    "source_date": "2026-07-09",
+    "note": "data/content/biotech_catalysts.csv;每次成分股 earnings/readout 后手动更新,>30 天转黄提示复核。刷新后同步 bump source_date。"
   }
 }

@@ -384,7 +384,7 @@ def render_strategy(strat_id: str) -> None:
     if "bucket" in perf.columns:
         perf["bucket"] = perf["bucket"].map(
             lambda b: i18n.t(f"strategy.hd.bucket.{b}") if isinstance(b, str) else b)
-    # 30-trading-day sparkline closes per ticker (fetch window is 55 calendar
+    # 20-trading-day sparkline closes per ticker (fetch window is 55 calendar
     # days, so even a fresh book has a full pre-inception window).
     perf["spark"] = [
         picks_closes[t].dropna().tail(20).tolist()
@@ -486,9 +486,9 @@ def render_strategy(strat_id: str) -> None:
             "col_m1":    "1月",
             "col_ytd":   "年初至今",
             "col_since": "建仓来",
-            "col_spark": "走势",
+            "col_spark": "20日走势",
             "nm_label":  "NM",
-            "footnote":  "含息复权总回报（yfinance auto_adjust=True）· 建仓来=入选日至今 · 年初至今=当年首个交易日至今",
+            "footnote":  "含息复权总回报（yfinance auto_adjust=True）· 建仓来=入选日至今 · 年初至今=当年首个交易日至今 · 走势=近 20 个交易日收盘",
             "brand":     "CMSI",
         }
     else:
@@ -504,9 +504,9 @@ def render_strategy(strat_id: str) -> None:
             "col_m1":    "1M",
             "col_ytd":   "YTD",
             "col_since": "Since",
-            "col_spark": "Trend",
+            "col_spark": "20D trend",
             "nm_label":  "NM",
-            "footnote":  "Total return incl. dividends (yfinance auto_adjust=True) · Since = pick date to today · YTD = first trading day of current year to today",
+            "footnote":  "Total return incl. dividends (yfinance auto_adjust=True) · Since = pick date to today · YTD = first trading day of current year to today · Trend = last 20 trading-day closes",
             "brand":     "CMSI",
         }
 

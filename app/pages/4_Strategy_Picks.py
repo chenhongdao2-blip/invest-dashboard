@@ -28,6 +28,7 @@ from lib import strategy_hero
 from lib import strategy_banner as sb
 from lib import ipo_stage
 from lib import picks_table
+from lib import rebalance_panel
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -821,10 +822,19 @@ def render_biotech_versions() -> None:
         render_biotech_compare()
     else:
         # v6 current — graceful placeholder until its picks data is inserted.
-        if strat.load_v6().empty:
+        v6 = strat.load_v6()
+        if v6.empty:
             st.info(i18n.t("strategy.biotech.version.v6_pending"))
         else:
             render_strategy("v6_biotech")
+            # Fused-in rebalance discipline + ledger (replaces the old standalone
+            # 4b_Rebalance_Rules page). House glass design (lib/rebalance_panel):
+            # performance chain → July rebalance detail (w/ catalysts) → rulebook.
+            rebalance_panel.render(
+                v6, strat.load_v5(), strat.load_catalysts(),
+                strat.load_rebalance_meta(),
+                prefer_cn=(i18n.get_lang() == "zh"),
+            )
 
 
 def render_biotech_compare() -> None:

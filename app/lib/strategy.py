@@ -29,6 +29,7 @@ from lib import portfolio_math as pm
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_EXT = REPO_ROOT / "data" / "external"
+DATA_CONTENT = REPO_ROOT / "data" / "content"
 
 V4_CSV = DATA_EXT / "v4_picks.csv"
 V5_CSV = DATA_EXT / "v5_picks.csv"
@@ -102,6 +103,36 @@ def load_v6() -> pd.DataFrame:
     if not V6_CSV.exists():
         return pd.DataFrame()
     return pd.read_csv(V6_CSV)
+
+
+@st.cache_data(ttl=900)
+def load_catalysts() -> pd.DataFrame:
+    """Near-term catalysts for the biotech book — ticker/catalyst/timing/type/source.
+
+    Feeds the July-rebalance board (lib/rebalance_panel) with a per-name catalyst +
+    timing + source badge. `source` encodes provenance (引擎 / transcript验证★ /
+    transcript纠正⚠️ / 人工 / 追高) which the panel parses into chips. Missing file →
+    empty frame so the panel degrades to plain move cards (no catalyst line)."""
+    p = DATA_CONTENT / "biotech_catalysts.csv"
+    if not p.exists():
+        return pd.DataFrame()
+    return pd.read_csv(p)
+
+
+@st.cache_data(ttl=900)
+def load_rebalance_meta() -> dict:
+    """Structured rebalance/ledger data (data/content/rebalance_v6.json): frozen
+    performance-chain facts + sell-reason map + transcript-triage note + condensed
+    rulebook. held/sold/new sets are derived live from v5/v6 picks by the panel;
+    this file only carries what isn't in the CSVs. Missing/invalid → {} (panel skips)."""
+    import json
+    p = DATA_CONTENT / "rebalance_v6.json"
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return {}
 
 
 @st.cache_data(ttl=900)

@@ -105,6 +105,104 @@ def load_v6() -> pd.DataFrame:
     return pd.read_csv(V6_CSV)
 
 
+SCORECARD_MD = DATA_EXT / "v4_v5_full_scorecard.md"
+# 未建仓票段收益回补（一次性离线算好：yfinance auto_adjust 复权价按段区间
+# v4=04-22→05-15 / v5=05-15→07-09；口径已用已建仓票 vs md 跟踪值 cross-check，
+# 20+20 支全部 |diff|≤1pp。FOLD 按 delisted_overrides 现金锁定口径钉 0.0）。
+SCORECARD_UNHELD_CSV = DATA_EXT / "v4_v5_unheld_segret.csv"
+
+
+@st.cache_data(ttl=900)
+def load_scorecard(version: str) -> pd.DataFrame:
+    """v4/v5 全量评分明细（过闸后打分池，按 Final 降序）— 解析 L6 归因附表
+    data/external/v4_v5_full_scorecard.md 中对应版本的 markdown 表。
+
+    version: "v4" | "v5"（对应 "### v4 评分池全 27 支" 等 section 标题）。
+    列: num/held/tick/name/ta/p/e/f/m/r/final/seg_ret/seg_bf/driver。
+    seg_ret / driver 建仓票来自 md 跟踪值；未建仓票 seg_ret 由
+    SCORECARD_UNHELD_CSV 事后回补并标 seg_bf=True（渲染层降色 + † 标注）。
+    文件或 section 缺失 → 空 frame（页面回退旧 picks_table 全池表）。"""
+    if not SCORECARD_MD.exists():
+        return pd.DataFrame()
+    text = SCORECARD_MD.read_text(encoding="utf-8")
+    idx = text.find(f"### {version} ")
+    if idx < 0:
+        return pd.DataFrame()
+    seg = text[idx:]
+    nxt = seg.find("### ", 4)
+    if nxt > 0:
+        seg = seg[:nxt]
+
+    def _num(s: str) -> float | None:
+        try:
+            return float(s.replace("+", ""))
+        except ValueError:
+            return None
+
+    rows: list[dict] = []
+    for line in seg.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        # skip header / separator rows
+        if len(cells) < 13 or not cells[0].isdigit():
+            continue
+        rows.append({
+            "num":     int(cells[0]),
+            "held":    cells[1] == "●",
+            "tick":    cells[2],
+            "name":    cells[3],
+            "ta":      "" if cells[4] == "—" else cells[4],
+            "p":       _num(cells[5]),
+            "e":       _num(cells[6]),
+            "f":       _num(cells[7]),
+            "m":       _num(cells[8]),
+            "r":       _num(cells[9]),
+            "final":   _num(cells[10]),
+            "seg_ret": _num(cells[11]),
+            "seg_bf":  False,
+            "driver":  cells[12],
+        })
+    df = pd.DataFrame(rows)
+
+    # 未建仓票段收益回补（缺文件 → 保持 None，渲染成 "—"）
+    if not df.empty and SCORECARD_UNHELD_CSV.exists():
+        bf = pd.read_csv(SCORECARD_UNHELD_CSV)
+        bf = bf[bf["version"] == version]
+        bf_map = {str(r["tick"]): float(r["seg_ret"])
+                  for _, r in bf.iterrows() if pd.notna(r["seg_ret"])}
+        for i in df.index:
+            if pd.isna(df.at[i, "seg_ret"]) and df.at[i, "tick"] in bf_map:
+                df.at[i, "seg_ret"] = bf_map[df.at[i, "tick"]]
+                df.at[i, "seg_bf"] = True
+    return df
+
+
+HD_SCORECARD_CSV = DATA_EXT / "hd_v1_v2_full_scorecard.csv"
+
+
+@st.cache_data(ttl=900)
+def load_hd_scorecard(version: str) -> pd.DataFrame:
+    """高股息 v1(34支)/v2(54支) 全量评分明细 — jobs/build_hd_scorecard.py 一次性产物
+    （源: 2026-03-19 Agent增强版评分 xlsx / 2026-06-10 Part2 定性评分底稿，总分已与
+    hd_picks / hd_picks_v2 逐支对账一致）。
+
+    version: "hd_v1" | "hd_v2"。列: num/held/tick/name/sector/gov/fin/moat/final/
+    status/seg_ret/seg_bf。段收益全部为 yfinance 含息复权计算（等权口径已与 L6 归因
+    Wind TR 对账: v1 全池 −0.57% / 3466 −1.69% 一致）；未建仓票 seg_bf=True（渲染层
+    灰色 + † 标注为事后对照）。缺文件 → 空 frame（页面回退旧全池表）。"""
+    if not HD_SCORECARD_CSV.exists():
+        return pd.DataFrame()
+    df = pd.read_csv(HD_SCORECARD_CSV)
+    df = df[df["version"] == version].reset_index(drop=True)
+    if df.empty:
+        return pd.DataFrame()
+    df["held"] = df["held"].astype(bool)
+    df["seg_bf"] = ~df["held"]
+    return df
+
+
 @st.cache_data(ttl=900)
 def load_catalysts() -> pd.DataFrame:
     """Near-term catalysts for the biotech book — ticker/catalyst/timing/type/source.

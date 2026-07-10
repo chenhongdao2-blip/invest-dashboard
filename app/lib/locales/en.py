@@ -79,6 +79,8 @@ STRINGS = {
     "strategy.col.rank": "Rank",
     "strategy.holdings.title": "Top 20 holdings (by score rank · equal-weight)",
     "strategy.holdings.all": "All {n} scored (by score rank; top 20 = portfolio)",
+    "strategy.scorecard.all": "All {n} scored · full scorecard × price drivers (● = top-20 book)",
+    "strategy.scorecard.all_hd": "All {n} scored · full scorecard × segment returns (● = top-20 book)",
     "strategy.metric.holdings_help": "Portfolio = top 20 by score, equal-weight; scored universe = {n}.",
     "strategy.metric.holdings_help_weighted": (
         "Portfolio = 20 names, quality-score-set weights, plus ~{cash:.0f}% cash buffer; "

@@ -74,6 +74,8 @@ STRINGS = {
     "strategy.col.rank": "排名",
     "strategy.holdings.title": "Top 20 持仓（按评分排名 · 等权）",
     "strategy.holdings.all": "全部 {n} 只评分股票池（按评分排名；前 20 为组合持仓）",
+    "strategy.scorecard.all": "全部 {n} 只评分池 · 全量打分明细 × 股价驱动（● = 前 20 建仓）",
+    "strategy.scorecard.all_hd": "全部 {n} 只评分池 · 全量打分明细 × 段收益（● = 前 20 建仓）",
     "strategy.metric.holdings_help": "本组合由评分前 20 名等权建仓；当期评分股票池共 {n} 只。",
     "strategy.metric.holdings_help_weighted": (
         "本组合 = 20 只按质量评分定权建仓 + 约 {cash:.0f}% 现金缓冲；"

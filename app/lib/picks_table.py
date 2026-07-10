@@ -34,6 +34,7 @@
     "tick": str,           # 代码（格式化后展示）
     "name": str,
     "score": float | None,
+    "weight": float | None,  # 建仓权重 %（加权 book 如 HD v2/v3；任一行有值即显示该列）
     "price": float,
     "ccy": str,            # 货币前缀，如"$"或"HK$"
     "spark": [float, ...], # ~20 真实收盘价
@@ -64,7 +65,9 @@ _SEP   = theme.PAPER_EDGE_SOFT # "#e4d2bd"
 _ROW   = theme.PAPER_RULE      # "#ebd9c8"
 
 # 11 列 grid（与设计稿吻合）：名次/代码/名称/评分/价格/1日/5日/1月/年初/建仓来/sparkline
+# 加权 book（HD v2/v3）在 评分 后插一列 权重（64px）→ 12 列
 _GRID = "50px 72px minmax(168px,1fr) 108px 84px 90px 70px 72px 72px 78px 84px"
+_GRID_W = "50px 72px minmax(168px,1fr) 108px 64px 84px 90px 70px 72px 72px 78px 84px"
 
 _MONO = "'JetBrains Mono',monospace"
 _SANS = ("'Inter','Space Grotesk','PingFang SC','Hiragino Sans GB',"
@@ -227,6 +230,7 @@ def render_holdings(
             "tick":  str(r.get("tick", "")),
             "name":  str(r.get("name", "")),
             "score": _clean(r.get("score")),
+            "weight": _clean(r.get("weight")),
             "price": _clean(r.get("price")),
             "ccy":   str(r.get("ccy", "$")),
             "spark": [_clean(v) for v in (r.get("spark") or [])],
@@ -240,8 +244,13 @@ def render_holdings(
         cr["spark"] = [v for v in cr["spark"] if v is not None]
         clean_rows.append(cr)
 
+    # 任一行有权重 → 加权 book，显示权重列（12 列 grid，min-width 放宽）
+    has_weight = any(cr["weight"] is not None for cr in clean_rows)
+    grid = _GRID_W if has_weight else _GRID
+    min_w = 960 if has_weight else 900
+
     payload_json = json.dumps(
-        {"rows": clean_rows, "labels": labels},
+        {"rows": clean_rows, "labels": labels, "hasWeight": has_weight},
         ensure_ascii=False, separators=(",", ":"),
     ).replace("</", "<\\/")
 
@@ -359,14 +368,15 @@ function render(){
 
   /* header */
   var hdr='';
-  /* fixed left cols */
+  /* fixed left cols (weight col only for score-weighted books, e.g. HD v2/v3) */
   var fixedCols=[
     {k:'rank', label:L.col_rank, align:'center'},
     {k:'tick', label:L.col_tick, align:'left'},
     {k:'name', label:L.col_name, align:'left'},
-    {k:'score', label:L.col_score, align:'right'},
-    {k:'price', label:L.col_price, align:'right'}
+    {k:'score', label:L.col_score, align:'right'}
   ];
+  if(P.hasWeight) fixedCols.push({k:'weight', label:L.col_weight||'权重', align:'right'});
+  fixedCols.push({k:'price', label:L.col_price, align:'right'});
   var allCols=fixedCols.concat(RET_COLS.map(function(c){return {k:c.k,label:c.label,align:'right'};}));
   allCols.push({k:'spark', label:L.col_spark, align:'center', nosort:true});
 
@@ -417,6 +427,16 @@ function render(){
     var scoreCell='<div style="padding:10px 8px;display:flex;flex-direction:column;justify-content:center;'
       +'align-items:stretch;font-family:'+mono+';font-variant-numeric:tabular-nums;">'+scoreInner+'</div>';
 
+    /* weight (score-weighted books only) */
+    var weightCell='';
+    if(P.hasWeight){
+      var wv=r.weight;
+      weightCell='<div style="padding:10px 8px;font-family:'+mono+';font-size:12px;font-weight:600;color:'+INK2+';'
+        +'text-align:right;font-variant-numeric:tabular-nums;display:flex;align-items:center;justify-content:flex-end;">'
+        +((wv===null||wv===undefined)?'<span style="color:'+DIM+';">'+(L.nm_label||'NM')+'</span>':wv.toFixed(1)+'%')
+        +'</div>';
+    }
+
     /* price */
     var priceCell='<div style="padding:10px 8px;font-family:'+mono+';font-size:12px;font-weight:600;color:'+INK+';'
       +'text-align:right;font-variant-numeric:tabular-nums;">'+fmtPrice(r.price,r.ccy)+'</div>';
@@ -436,7 +456,7 @@ function render(){
 
     body+='<div class="hrow" style="display:grid;grid-template-columns:'+GRID+';'
       +'border-bottom:1px solid '+ROW+';align-items:stretch;">'
-      +rankCell+tickCell+nameCell+scoreCell+priceCell+retCells+sparkCell
+      +rankCell+tickCell+nameCell+scoreCell+weightCell+priceCell+retCells+sparkCell
       +'</div>';
   });
   document.getElementById('tbody').innerHTML=body;
@@ -466,7 +486,7 @@ render();
           .replace("__ROW__", _ROW)
           .replace("__MONO__", json.dumps(_MONO))
           .replace("__SANS__", json.dumps(_SANS))
-          .replace("__GRID__", _GRID))
+          .replace("__GRID__", grid))
 
     nm = labels.get("nm_label", "NM")
     footnote = labels.get("footnote", "")
@@ -487,12 +507,12 @@ render();
         f'<div style="border:1px solid {_EDGE};border-radius:2px;'
         f'background:rgba(255,255,255,.45);-webkit-backdrop-filter:blur(8px);'
         f'backdrop-filter:blur(8px);overflow-x:auto;">'
-        '<div style="min-width:900px;">'
+        f'<div style="min-width:{min_w}px;">'
         f'<div id="scroller">'
 
         # sticky 列头（ink top-bar）
         f'<div id="thead" style="position:sticky;top:0;z-index:3;display:grid;'
-        f'grid-template-columns:{_GRID};'
+        f'grid-template-columns:{grid};'
         f'background:{_PAPER};border-bottom:2px solid {_INK};"></div>'
 
         # 表体

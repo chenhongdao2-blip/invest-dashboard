@@ -28,6 +28,7 @@ from lib import strategy_hero
 from lib import strategy_banner as sb
 from lib import ipo_stage
 from lib import picks_table
+from lib import scorecard_table
 from lib import rebalance_panel
 from lib import hd_rebalance_panel
 
@@ -206,6 +207,31 @@ def _build_method_cfg(strat_id: str, prefer_cn: bool) -> dict:
         "dims":         dims,
         "summary_html": summary_html,
     }
+
+
+# 选中效果快照（Top20 等权 vs 全池等权 vs 仅未建仓 vs 基准，段收益 %，冻结快照）。
+# biotech: L6 归因 2026-07-10（George 核定），段区间 v4=04-22→05-15 / v5=05-15→07-09。
+# 高股息: jobs/build_hd_scorecard.py 用 yfinance 含息复权算出（等权口径已与 L6 归因
+# Wind TR 对账: v1 全池 −0.57% / 3466 −1.69% 一致），段区间 v1=03-20→06-11 /
+# v2=06-11→07-07。注意 hd_v2 选中效果为负（Top20 跑输全池 −0.68pp）= 归因结论 4
+# 「剔掉的反而更抗跌」，如实展示。v2 实盘为评分定权+12%现金，此条为等权对照口径。
+_SCORECARD_SUMMARY: dict[str, dict] = {
+    "v4": {"top20": 0.60, "pool": -0.67, "unheld": -4.29, "unheld_n": 7,
+           "bench": -4.82, "bench_label": "XBI", "diff_pp": 1.27},
+    "v5": {"top20": 28.88, "pool": 25.26, "unheld": 23.58, "unheld_n": 46,
+           "bench": 25.83, "bench_label": "XBI", "diff_pp": 3.62},
+    "hd_v1": {"top20": 0.50, "pool": -0.57, "unheld": -2.11, "unheld_n": 14,
+              "bench": -1.69, "bench_label": "3466", "diff_pp": 1.07},
+    "hd_v2": {"top20": -7.47, "pool": -6.79, "unheld": -6.39, "unheld_n": 34,
+              "bench": -7.63, "bench_label": "3466", "diff_pp": -0.68},
+}
+
+# strategy id → 全量 scorecard 版本 key（biotech 走 load_scorecard(md)，hd 走
+# load_hd_scorecard(csv)）。不在表内的策略（v6/hd_v3/ipo）保留旧 picks_table 全池表。
+_SCORECARD_VERSION: dict[str, str] = {
+    "v4_biotech": "v4", "v5_biotech": "v5",
+    "hk_hd": "hd_v1", "hk_hd_v2": "hd_v2",
+}
 
 
 def render_strategy(strat_id: str) -> None:
@@ -420,11 +446,18 @@ def render_strategy(strat_id: str) -> None:
         # YTD: use compute_returns result keyed by yf_sym (picks_closes columns)
         _ytd = _ytd_map.get(_orig_yf)
 
+        # 建仓权重（加权 book 如 HD v2/v3；等权 book weights=None → 列自动隐藏）
+        _wt = None
+        if weights is not None and _orig_yf in weights.index:
+            _w = weights.get(_orig_yf)
+            _wt = float(_w) * 100 if pd.notna(_w) else None
+
         _payload_rows.append({
             "rank":  int(_row["rank"]) if "rank" in _row and pd.notna(_row["rank"]) else 0,
             "tick":  _bbg_sym,
             "name":  _name,
             "score": _score,
+            "weight": _wt,
             "price": _price,
             "ccy":   _ccy,
             "spark": _spark,
@@ -446,6 +479,7 @@ def render_strategy(strat_id: str) -> None:
             "col_tick":  "代码",
             "col_name":  "名称",
             "col_score": "评分",
+            "col_weight": "权重",
             "col_price": "现价",
             "col_d1":    "1日",
             "col_d5":    "5日",
@@ -463,6 +497,7 @@ def render_strategy(strat_id: str) -> None:
             "col_tick":  "Ticker",
             "col_name":  "Name",
             "col_score": "Score",
+            "col_weight": "Weight",
             "col_price": "Price",
             "col_d1":    "1D",
             "col_d5":    "5D",
@@ -486,7 +521,113 @@ def render_strategy(strat_id: str) -> None:
     _render_picks_table(_payload_rows[:top_n], height=560)
     if asof:
         theme.provenance(i18n.t("common.provenance", src="yfinance", asof=asof))
-    if len(_payload_rows) > top_n:
+    # 全量 scorecard（biotech v4/v5 = L6 归因附表 md；高股息 v1/v2 = 评分底稿 CSV）：
+    # 底部全池表改用建仓时点全量打分明细（建仓标记 + 分项评分 + Final + 段收益 +
+    # 驱动/状态）+「选中效果」stat 条 — 行情列（1日/5日/1月）对全池无意义。
+    # 数据缺失回退旧 picks_table 全池表；其余策略（v6 / hd_v3 / ipo）不受影响。
+    _sc_ver = _SCORECARD_VERSION.get(strat_id)
+    if _sc_ver in ("v4", "v5"):
+        _sc = strat.load_scorecard(_sc_ver)
+    elif _sc_ver:
+        _sc = strat.load_hd_scorecard(_sc_ver)
+    else:
+        _sc = pd.DataFrame()
+    if not _sc.empty:
+        _is_hd_sc = _sc_ver.startswith("hd_")
+        if _is_hd_sc:
+            # HD: sector 占行业列（ta 槽）、status 占驱动列；治理/财务/护城河 整数分
+            _sc_rows = [{**r, "ta": r.get("sector", ""), "driver": r.get("status", "")}
+                        for r in _sc.to_dict("records")]
+            _sc_kw = dict(
+                sub_cols=([("gov", "治理55"), ("fin", "财务25"), ("moat", "护城河20")]
+                          if _prefer_cn2 else
+                          [("gov", "Gov55"), ("fin", "Fin25"), ("moat", "Moat20")]),
+                sub_dp=0, final_dp=0, tag_w=92, min_width=980)
+            if _prefer_cn2:
+                _sc_labels = {
+                    "col_num": "#", "col_held": "建", "col_tick": "代码",
+                    "col_name": "名称", "col_ta": "行业", "col_final": "总分",
+                    "col_seg": "段收益", "col_driver": "评级 / 状态",
+                    "nm_label": "—",
+                    "sum_top20": "Top20 等权", "sum_pool": "全池等权",
+                    "sum_unheld": "仅未建仓", "sum_diff": "Top20 − 全池",
+                    "sum_diff_note": "选中效果", "sum_n_suffix": "支",
+                    "footnote": ("总分 = 治理55 + 财务25 + 护城河20（愿意分 / 分得出 / "
+                                 "分得久）· ● = 进入建仓组合（前 20）· 评分为建仓时点快照"
+                                 "（v1 2026-03-19 / v2 2026-06-10 评分底稿）· 段区间 "
+                                 "v1=03-20→06-11 / v2=06-11→07-07 · 段收益 = yfinance "
+                                 "含息复权（归因正式口径 Wind TR，等权对账一致）· "
+                                 "† = 未建仓票为事后对照 · 选中效果条为等权口径"
+                                 "（v2 实盘为评分定权 + 12% 现金）"),
+                    "brand": "CMSI",
+                }
+            else:
+                _sc_labels = {
+                    "col_num": "#", "col_held": "Held", "col_tick": "Ticker",
+                    "col_name": "Name", "col_ta": "Sector", "col_final": "Total",
+                    "col_seg": "Seg Ret", "col_driver": "Grade / status",
+                    "nm_label": "—",
+                    "sum_top20": "Top20 EW", "sum_pool": "Full pool EW",
+                    "sum_unheld": "Unheld only", "sum_diff": "Top20 − pool",
+                    "sum_diff_note": "selection effect", "sum_n_suffix": "",
+                    "footnote": ("Total = Gov 55 + Fin 25 + Moat 20 · ● = in the "
+                                 "top-20 book · scores frozen at inception (v1 "
+                                 "2026-03-19 / v2 2026-06-10 scoring worksheets) · "
+                                 "segments v1 = 03-20→06-11 / v2 = 06-11→07-07 · "
+                                 "segment returns = yfinance total return (reconciled "
+                                 "with Wind TR attribution on equal-weight legs) · "
+                                 "† = unheld names shown ex-post for reference · "
+                                 "selection-effect strip is equal-weight (live v2 book "
+                                 "is score-weighted + 12% cash)"),
+                    "brand": "CMSI",
+                }
+        else:
+            _sc_rows = _sc.to_dict("records")
+            _sc_kw = {}
+            if _prefer_cn2:
+                _sc_labels = {
+                    "col_num": "#", "col_held": "建", "col_tick": "代码",
+                    "col_name": "公司", "col_ta": "TA", "col_final": "Final",
+                    "col_seg": "段收益", "col_driver": "股价驱动 / 状态",
+                    "nm_label": "—",
+                    "sum_top20": "Top20 等权", "sum_pool": "全池等权",
+                    "sum_unheld": "仅未建仓", "sum_diff": "Top20 − 全池",
+                    "sum_diff_note": "选中效果", "sum_n_suffix": "支",
+                    "footnote": ("Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) "
+                                 "+ 0.025MSO · ● = 进入建仓组合（前 20）· 评分为建仓时点"
+                                 "快照（v4 04-22 / v5 05-15）· 段区间 v4=04-22→05-15 / "
+                                 "v5=05-15→07-09 · † = 未建仓票段收益为事后回补"
+                                 "（yfinance 复权价；FOLD 按收购现金价 ≈0%），非当时跟踪值，"
+                                 "仅作对照 · 来源: L6 归因附表 2026-07-10"),
+                    "brand": "CMSI",
+                }
+            else:
+                _sc_labels = {
+                    "col_num": "#", "col_held": "Held", "col_tick": "Ticker",
+                    "col_name": "Company", "col_ta": "TA", "col_final": "Final",
+                    "col_seg": "Seg Ret", "col_driver": "Price driver / status",
+                    "nm_label": "—",
+                    "sum_top20": "Top20 EW", "sum_pool": "Full pool EW",
+                    "sum_unheld": "Unheld only", "sum_diff": "Top20 − pool",
+                    "sum_diff_note": "selection effect", "sum_n_suffix": "",
+                    "footnote": ("Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) "
+                                 "+ 0.025MSO · ● = in the top-20 book · scores frozen "
+                                 "at inception (v4 Apr-22 / v5 May-15) · segments "
+                                 "v4 = 04-22→05-15 / v5 = 05-15→07-09 · † = unheld "
+                                 "segment returns backfilled ex-post (yfinance adjusted "
+                                 "close; FOLD pinned ≈0% at cash deal price), not live-"
+                                 "tracked, for reference only · source: L6 attribution "
+                                 "appendix 2026-07-10"),
+                    "brand": "CMSI",
+                }
+        _sc_title_key = ("strategy.scorecard.all_hd" if _is_hd_sc
+                         else "strategy.scorecard.all")
+        with st.expander(i18n.t(_sc_title_key, n=len(_sc_rows)), expanded=True):
+            _doc, _h = scorecard_table.render(
+                _sc_rows, _sc_labels, height=620,
+                summary=_SCORECARD_SUMMARY.get(_sc_ver), **_sc_kw)
+            st.iframe(_doc, height=_h)
+    elif len(_payload_rows) > top_n:
         with st.expander(i18n.t("strategy.holdings.all", n=len(_payload_rows)),
                          expanded=True):
             _render_picks_table(_payload_rows, height=620)

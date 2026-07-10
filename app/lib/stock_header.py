@@ -43,19 +43,23 @@ def _c(key) -> str:
     return _COL.get(key or "ink", theme.INK)
 
 
-# Height budget (px):
-#   masthead left col: name row ~44 + sub-line ~20 + bottom-gap ~16
-#   masthead right col: eod label ~18 + clock line ~18 + asof line ~18 + padding
-#   kpi grid: 5 cards ~90px ea with 13px gaps ≈ 104
-#   consensus line ~24 + wrap padding ~20
-#   Total comfortable budget ≈ 330 (+10 vs v1 for clock line)
-_DEFAULT_HEIGHT = 330
-
-
 def render(*, name: str, ticker: str, exchange: str, sector_sub: str | None = None,
            as_of: str | None, kpis: list[dict], consensus: str | None,
-           prefer_cn: bool, sub: str | None = None, height: int = _DEFAULT_HEIGHT) -> None:
+           prefer_cn: bool, sub: str | None = None, height: int | None = None,
+           hero_price: str | None = None, hero_ccy: str = "",
+           chg_abs: str | None = None, chg_pct: str | None = None,
+           chg_dir: str = "flat") -> None:
     import streamlit as st
+
+    # Adaptive height (George 紧凑化): hug the real content instead of a fixed 330
+    # budget that left ~110px dead space. The one variable that changes the grid
+    # height is whether a KPI VALUE wraps to 2 lines — long prices like
+    # "USD 1,216.95" / "KRW 2,650,000" (>11 chars) don't fit one line in a ~196px
+    # card, so they add ~32px. Consensus line adds ~22px. Callers can still pass an
+    # explicit height to override.
+    if height is None:
+        _maxlen = max((len(str(k.get("value") or "")) for k in kpis), default=0)
+        height = 226 + (32 if _maxlen > 11 else 0) - (0 if consensus else 22)
 
     t = theme
     # KPI 卡:值色 = color(信号染色;价/市值/PE 中性墨)。
@@ -126,15 +130,55 @@ def render(*, name: str, ticker: str, exchange: str, sector_sub: str | None = No
     @media (max-width:820px){{.kgrid{{grid-template-columns:repeat(2,1fr)!important}}}}
     """
 
-    # Wall-clock update — the ONE GR④-whitelisted timer in this file.
-    # IIFE runs u() immediately (no --:--:-- flash) then keeps updating every 1s.
-    _clk_js = (
-        '<script>!function(){function u(){var d=new Date();'
-        'document.getElementById("hclk").textContent='
-        '[d.getHours(),d.getMinutes(),d.getSeconds()]'
-        '.map(function(n){return n<10?"0"+n:n}).join(":")}'
-        'u();setInterval(u,1000)}();</script>'
-    )
+    # ── Masthead right block ──────────────────────────────────────────────
+    # Design (zip8「个股详情 礼来 美化」): hero PRICE + change chip + EOD dot on the
+    # right. When hero_price is given, render that; else fall back to the legacy
+    # EOD-label + live-clock + asof block (the clock is the ONE GR④-whitelisted timer).
+    _clk_js = ""
+    if hero_price is not None:
+        _pc = _c(chg_dir if chg_dir in ("up", "down") else "flat")
+        _pcol = t.UP if chg_dir == "up" else (t.CMSI_RED if chg_dir == "down" else t.INK)
+        _abg = ("rgba(13,118,128,.12)" if chg_dir == "up"
+                else "rgba(200,16,46,.10)" if chg_dir == "down" else "rgba(26,26,26,.06)")
+        _chg_row = ""
+        if chg_abs:
+            _chg_row += (f'<span style="font-family:{t.FONT_MONO};font-size:13px;'
+                         f'font-weight:700;color:{_pc}">{_esc(chg_abs)}</span>')
+        if chg_pct:
+            _chg_row += (f'<span style="font-family:{t.FONT_MONO};font-size:12px;'
+                         f'font-weight:700;color:{_pc};background:{_abg};padding:2px 8px;'
+                         f'border-radius:2px">{_esc(chg_pct)}</span>')
+        _eod_dot = (f'<span style="display:inline-flex;align-items:center;gap:6px;'
+                    f'margin-left:4px"><span class="dot"></span>'
+                    f'<span style="font-family:{t.FONT_MONO};font-size:10px;letter-spacing:.12em;'
+                    f'text-transform:uppercase;color:{t.UP};font-weight:600">{eod_lbl}</span></span>')
+        right_block = (
+            '<div class="right">'
+            '<div style="display:flex;align-items:baseline;gap:9px;justify-content:flex-end">'
+            f'<span style="font-family:{t.FONT_MONO};font-size:13px;font-weight:600;'
+            f'color:{t.INK_3}">{_esc(hero_ccy)}</span>'
+            f'<span style="font-family:{t.FONT_MONO};font-size:34px;line-height:1;'
+            f'font-weight:700;color:{_pcol};font-variant-numeric:tabular-nums;'
+            f'letter-spacing:-.02em">{_esc(hero_price)}</span></div>'
+            f'<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;'
+            f'margin-top:9px">{_chg_row}{_eod_dot}</div>'
+            f'<div class="asof">{_esc(asof)}</div></div>'
+        )
+    else:
+        # Wall-clock update — the ONE GR④-whitelisted timer in this file.
+        # IIFE runs u() immediately (no --:--:-- flash) then keeps updating every 1s.
+        _clk_js = (
+            '<script>!function(){function u(){var d=new Date();'
+            'document.getElementById("hclk").textContent='
+            '[d.getHours(),d.getMinutes(),d.getSeconds()]'
+            '.map(function(n){return n<10?"0"+n:n}).join(":")}'
+            'u();setInterval(u,1000)}();</script>'
+        )
+        right_block = (
+            f'<div class="right"><div class="eod"><span class="dot"></span>{eod_lbl}</div>'
+            f'<div class="clk"><span id="hclk">--:--:--</span></div>'
+            f'<div class="asof">{_esc(asof)}</div></div>'
+        )
 
     doc = (
         '<!doctype html><html><head><meta charset="utf-8">'
@@ -142,9 +186,7 @@ def render(*, name: str, ticker: str, exchange: str, sector_sub: str | None = No
         '<div class="mast"><div class="mid"><span class="tick"></span><div>'
         f'<div class="nmrow"><span class="nm">{_esc(name)}</span>{chip}</div>{sub_html}'
         '</div></div>'
-        f'<div class="right"><div class="eod"><span class="dot"></span>{eod_lbl}</div>'
-        f'<div class="clk"><span id="hclk">--:--:--</span></div>'
-        f'<div class="asof">{_esc(asof)}</div></div></div>'
+        f'{right_block}</div>'
         f'{kpi_grid}{cons}'
         f'</div>{_clk_js}</body></html>'
     )

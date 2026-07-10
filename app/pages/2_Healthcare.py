@@ -337,33 +337,29 @@ else:
     # merge keeps the yml row order (subsector blocks, mcap-desc within block)
     _jpm = _jp.merge(_jp_rets, left_on="ticker", right_index=True, how="inner")
 
-    # ① subsector summary (equal-weight averages, USD)
+    # ① subsector summary — zip7「日本医药 子板块明细 美化」design card (lib/japan_panel):
+    # 等权平均 4 窗口(列内幅度 tint)+ YTD 分布条(零轴居中)。替换旧 styled table。
+    from lib import japan_panel as jpanel
     _sub_rows = []
     for _s in hco.JP_SUBSECTOR_ORDER:
         _grp = _jpm[_jpm["subsector"] == _s]
         if _grp.empty:
             continue
         _sub_rows.append({
-            "Subsector": i18n.t(f"hc.jp.sub.{_s}"),
-            "Tickers": len(_grp),
-            "1D % avg": _grp["1d_%"].mean(),
-            "5D % avg": _grp["5d_%"].mean(),
-            "1M % avg": _grp["1m_%"].mean(),
-            "YTD % avg": _grp["ytd_%"].mean(),
+            "sub_id": _s, "name": i18n.t(f"hc.jp.sub.{_s}"), "n": len(_grp),
+            "d1": _grp["1d_%"].mean(), "d5": _grp["5d_%"].mean(),
+            "m1": _grp["1m_%"].mean(), "ytd": _grp["ytd_%"].mean(),
         })
     if _sub_rows:
-        _render_pct_table(
-            pd.DataFrame(_sub_rows).set_index("Subsector"),
-            pct_cols=["1D % avg", "5D % avg", "1M % avg", "YTD % avg"],
-            column_labels={
-                "Subsector": i18n.t("hc.jp.col.subsector"),
-                "Tickers": i18n.t("hc.col.tickers"),
-                "1D % avg": i18n.t("hc.col.1d_avg"),
-                "5D % avg": i18n.t("hc.col.5d_avg"),
-                "1M % avg": i18n.t("hc.col.1m_avg"),
-                "YTD % avg": i18n.t("hc.col.ytd_avg"),
-            },
-        )
+        _sdoc, _sh = jpanel.render_summary(_sub_rows, {
+            "col_sub": i18n.t("hc.jp.col.subsector"),
+            "col_n": i18n.t("hc.col.tickers"),
+            "col_1d": "1日" if _cn else "1D", "col_5d": "5日" if _cn else "5D",
+            "col_1m": "1月" if _cn else "1M",
+            "col_ytd": "年初至今" if _cn else "YTD",
+            "col_dist": "YTD 分布" if _cn else "YTD DIST",
+        })
+        st.iframe(_sdoc, height=_sh)
 
     # ② composite vs TOPIX vs Nikkei — same FT framing as the rs panels above
     _comp = hco.jp_composite(
@@ -399,30 +395,72 @@ else:
         st.iframe(_docjp, height=_hjp)
         st.caption(i18n.t("hc.jp.caption", asof=_jp_asof))
 
-    # ③ full 40-name detail (expander keeps the section weight equal to its peers)
-    with st.expander(i18n.t("hc.jp.detail"), expanded=True):   # George: section 不折叠
-        _name_col = "name_cn" if _cn else "name_en"
-        _dispjp = pd.DataFrame({
-            "Name": _jpm[_name_col],
-            "Subsector": _jpm["subsector"].map(lambda s: i18n.t(f"hc.jp.sub.{s}")),
-            "Last": _jpm["last"],
-            "1D %": _jpm["1d_%"],
-            "5D %": _jpm["5d_%"],
-            "1M %": _jpm["1m_%"],
-            "YTD %": _jpm["ytd_%"],
-        })
-        _dispjp.index = [fmt.fmt_ticker_bbg(t) for t in _jpm["ticker"]]
-        _render_pct_table(
-            _dispjp,
-            pct_cols=["1D %", "5D %", "1M %", "YTD %"],
-            num_cols=["Last"],
-            column_labels={**i18n.common_cols(),
-                           "Subsector": i18n.t("hc.jp.col.subsector")},
-        )
+    # ③ 标的明细 — design card: 子板块 chips 筛选(tone 色)+ 可排序列头 + 回报 tint
+    # + 底部「研判 · 速览」卡(领跌/领涨 chip 从真数据算,口径段 = hc.jp.read)。
+    _name_col = "name_cn" if _cn else "name_en"
+    _det_rows = [{
+        "tick": fmt.fmt_ticker_bbg(str(_r["ticker"])),
+        "name": str(_r[_name_col]),
+        "sub_id": str(_r["subsector"]),
+        "sub": i18n.t(f"hc.jp.sub.{_r['subsector']}"),
+        "price": _r["last"], "d1": _r["1d_%"], "d5": _r["5d_%"],
+        "m1": _r["1m_%"], "ytd": _r["ytd_%"],
+    } for _, _r in _jpm.iterrows()]
 
-    theme.eyebrow(i18n.t("hc.read.eyebrow"))   # pricing-currency layering read
-    st.markdown(i18n.t("hc.jp.read"))
-    st.caption(i18n.t("hc.jp.note_delisted"))
+    # 研判 chip 内容:领跌/领涨子板块 + 最大拖累两名 — 全部由本页数据计算,非手填。
+    _verdict = None
+    if _sub_rows:
+        _worst = min(_sub_rows, key=lambda r: r["ytd"])
+        _best = max(_sub_rows, key=lambda r: r["ytd"])
+        _wgrp = _jpm[_jpm["subsector"] == _worst["sub_id"]].nsmallest(2, "ytd_%")
+        _drag = "、".join(
+            f'{_r[_name_col]} <b style="color:{theme.CMSI_RED};">{_r["ytd_%"]:+.1f}%</b>'
+            for _, _r in _wgrp.iterrows())
+        _lag_body = ((f'{_worst["n"]} 支,YTD 均值 <b style="color:{theme.CMSI_RED};">'
+                      f'{_worst["ytd"]:+.1f}%</b>;{_drag} 拖累最重。') if _cn else
+                     (f'{_worst["n"]} names, YTD avg <b style="color:{theme.CMSI_RED};">'
+                      f'{_worst["ytd"]:+.1f}%</b>; biggest drags: {_drag}.'))
+        _lead_body = ((f'YTD 均值 <b style="color:{theme.UP};">{_best["ytd"]:+.1f}%</b>'
+                       f'({_best["n"]} 支),四窗口中最强子板块。') if _cn else
+                      (f'YTD avg <b style="color:{theme.UP};">{_best["ytd"]:+.1f}%</b> '
+                       f'({_best["n"]} names) — strongest subsector across windows.'))
+        _verdict = {
+            "lag": {"title": ("领跌 · " if _cn else "LAGGARD · ") + _worst["name"],
+                    "body": _lag_body},
+            "lead": {"title": ("领涨 · " if _cn else "LEADER · ") + _best["name"],
+                     "body": _lead_body},
+        }
+        # hc.jp.read(**bold** markdown)→ 研判卡口径段 HTML
+        _vnote = _re.sub(r"\*\*(.+?)\*\*",
+                          rf'<b style="color:{theme.INK};">\1</b>',
+                          i18n.t("hc.jp.read")).replace("\n", "<br>")
+    else:
+        _vnote = ""
+
+    theme.subsection(i18n.t("hc.jp.detail"))
+    _ddoc, _dh = jpanel.render_detail(_det_rows, {
+        "chips_all": "全部" if _cn else "All",
+        "col_tick": "TICKER", "col_name": "名称" if _cn else "Name",
+        "col_sub": i18n.t("hc.jp.col.subsector"),
+        "col_price": "最新价" if _cn else "Last",
+        "col_1d": "1日" if _cn else "1D", "col_5d": "5日" if _cn else "5D",
+        "col_1m": "1月" if _cn else "1M", "col_ytd": "年初至今" if _cn else "YTD",
+        "grp_ret": "回报 RETURNS %(USD)" if _cn else "RETURNS % (USD)",
+        "shown_of": "支" if _cn else "shown",
+        "verdict_title": "研判 · 速览" if _cn else "Read · At a glance",
+        "verdict_meta": ("数据要点 · 由本页数据归纳" if _cn
+                         else "computed from this page's data"),
+        "verdict_note": _vnote,
+        "source_line": i18n.t("hc.jp.note_delisted"),
+        "footnote": ("回报列按列内幅度加深(青涨 / 红跌);子板块汇总为等权平均,"
+                     "YTD 分布条零轴居中、以列内最大幅度为满刻度。点击列头排序、"
+                     "chips 筛选子板块。" if _cn else
+                     "Return cells tint by in-column magnitude (teal up / red down); "
+                     "subsector summary is equal-weight, YTD bar zero-centered. "
+                     "Click headers to sort, chips to filter."),
+        "brand": f"USD 口径 · {_jp_asof}" if _cn else f"USD basis · {_jp_asof}",
+    }, verdict=_verdict, height=880)
+    st.iframe(_ddoc, height=_dh)
     st.download_button(
         i18n.t("hc.dl.xlsx"), data=hcx.japan_bytes(),
         file_name="HC_日本医药_japan_healthcare.xlsx",
@@ -585,31 +623,41 @@ else:
     if _pas:
         st.caption(i18n.t("hc.f13.prices_note", asof=_pas, period=_f13v["period"]))
 
-    # Block C — per-fund top holdings + that fund's QoQ tags.
+    # Block C — 分基金明细 design cards (zip7「13F 分基金持仓 美化」1:1 移植,
+    # lib/fund_13f_cards):12 家基金玻璃卡(客户端折叠,第一家默认展开),集中度条 +
+    # 权重条 + 季度动向 chip + 持股数 Δ%。替换旧的 st.expander + 裸表。
     st.markdown(i18n.t("hc.f13.perfund_h"))
-    _qoq_key = {"NEW": "hc.f13.qoq.NEW", "ADD": "hc.f13.qoq.ADD",
-                "TRIM": "hc.f13.qoq.TRIM", "UNCH": "hc.f13.qoq.UNCH"}
-    c_w, c_qoq, c_chg = i18n.t("hc.f13.col.weight"), i18n.t("hc.f13.col.qoq"), i18n.t("hc.f13.col.chg")
-    for _f in f13.funds_ok(_f13):
-        _stale = " ⚠️" if _f.get("status") == "stale" else ""
-        _hdr = f"{_f['name']} · ${(_f.get('total_value') or 0)/1e9:.1f}bn · " \
-               f"{_f.get('n_positions', 0)} {i18n.t('hc.f13.positions')} · {_f.get('period', '—')}{_stale}"
-        with st.expander(_hdr):
-            _snap = f13.fund_snapshot(_f)
-            if _snap.empty:
-                st.caption(i18n.t("hc.f13.none"))
-                continue
-            _snap["qoq"] = _snap["qoq"].map(lambda s: i18n.t(_qoq_key.get(str(s), "hc.f13.qoq.UNCH")))
-            _snap["value"] = _snap["value"] / 1e9   # → USD billions
-            _sdisp = _snap.rename(columns={
-                "label": c_name, "weight": c_w, "value": c_val,
-                "qoq": c_qoq, "shares_chg_pct": c_chg})[[c_name, c_w, c_val, c_qoq, c_chg]]
-            ui.render_html_table(
-                _sdisp, text_cols=[c_name], status_cols={
-                    c_qoq: {i18n.t("hc.f13.qoq.NEW"): "up", i18n.t("hc.f13.qoq.ADD"): "up",
-                            i18n.t("hc.f13.qoq.TRIM"): "down", i18n.t("hc.f13.qoq.UNCH"): ""}},
-                pct_decimal_cols=[c_w, c_chg], money_b_cols=[c_val],
-                hide_index=True, height=min(560, 60 + 36 * len(_sdisp)))
+    _zh13 = i18n.get_lang() == "zh"
+    from lib import fund_13f_cards as f13c
+    _c_labels = {
+        "qoq_new": i18n.t("hc.f13.qoq.NEW"), "qoq_add": i18n.t("hc.f13.qoq.ADD"),
+        "qoq_trim": i18n.t("hc.f13.qoq.TRIM"), "qoq_flat": i18n.t("hc.f13.qoq.UNCH"),
+        "legend_add": "加" if _zh13 else "Add", "legend_trim": "减" if _zh13 else "Trim",
+        "legend_flat": "平" if _zh13 else "Flat",
+        "holdings_meta": ("{count} 只持仓 · 申报 {date} · 显示前 {n} 大" if _zh13
+                          else "{count} positions · filed {date} · top {n} shown"),
+        "top_hold": "第一大重仓" if _zh13 else "TOP HOLDING",
+        "q_moves": "本季动向(前 {n})".replace("{n}", "15") if _zh13 else "Q MOVES (TOP 15)",
+        "conc": ("前 {n} 集中度" if _zh13 else "TOP {n} CONCENTRATION"),
+        "col_name": "标的" if _zh13 else "NAME",
+        "col_weight": "组合权重" if _zh13 else "WEIGHT",
+        "col_value": "合计市值" if _zh13 else "VALUE",
+        "col_move": "季度动向" if _zh13 else "Q MOVE",
+        "col_delta": "持股数 Δ%" if _zh13 else "SHARES Δ%",
+        "stale": "(旧档)" if _zh13 else "(stale)",
+        "footnote": ("组合权重条以该基金前 15 大中的最大权重为满刻度;季度动向按持股数环比"
+                     "变动定性(新进/加仓 teal · 减仓 红 · 持平),持股数 Δ% 为环比精确变动。"
+                     "集中度条为前 15 大权重叠加。点击基金标题折叠。来源 13F 申报"
+                     "(SEC EDGAR),申报季 " + str(_f13v["period"]) + "。" if _zh13 else
+                     "Weight bars scale to the fund's largest top-15 weight; Q move is the "
+                     "QoQ share-count change (new/add teal · trim red · flat); shares Δ% is "
+                     "the exact QoQ change. Concentration bar stacks top-15 weights. Click a "
+                     "fund header to collapse. Source: 13F filings (SEC EDGAR), period "
+                     + str(_f13v["period"]) + "."),
+        "brand": "CMSI · 13F HOLDINGS",
+    }
+    _cdoc, _ch = f13c.render_fund_cards(f13.funds_ok(_f13), _c_labels, top_n=15, height=760)
+    st.iframe(_cdoc, height=_ch)
 
     theme.eyebrow(i18n.t("hc.read.eyebrow"))
     st.markdown(i18n.t("hc.f13.read"))

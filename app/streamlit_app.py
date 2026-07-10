@@ -27,9 +27,17 @@ continue to work after the redeploy.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import streamlit as st
 
 from lib import i18n
+
+# 品牌 lockup(「Sidebar 导航 美化」设计):红 C 方块 + CMSI / AI 投研平台,
+# 渲染在 sidebar 顶部(st.logo)。SVG 自托管,不走外链。
+_BRAND_SVG = Path(__file__).resolve().parent / "static" / "cmsi_brand.svg"
+if _BRAND_SVG.exists():
+    st.logo(str(_BRAND_SVG), size="large")
 
 # Seed language once at the app entry so every page (deep-linked or via nav)
 # shares one st.session_state["lang"] — avoids half-translated pages (cccg gate #3).
@@ -154,7 +162,8 @@ ai_sec = st.Page(
 pg = st.navigation(
     {
         # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
-        _t("⭐ Core Strategy", "⭐ 核心策略"): [strategy_picks],
+        # 组名不带 emoji —— 设计的彩色图标 chip(theme.py nth-of-type CSS)承担分组识别。
+        _t("Core Strategy", "核心策略"): [strategy_picks],
         _t("Global", "Global 全局"): [home, ticker_drill, model_drill, sector_rotation],
         _t("Healthcare", "Healthcare 医疗健康"): [
             cmsi_coverage,

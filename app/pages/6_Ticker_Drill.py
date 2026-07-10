@@ -31,6 +31,7 @@ from lib import ui
 from lib import wiki
 from lib import theme
 from lib import i18n
+from lib import thesis_cards
 
 
 def _reco_label(mean) -> str:
@@ -199,6 +200,41 @@ with st.sidebar:
     ui.sidebar_search(key_prefix="drill")
 theme.page_radial_wash()
 st.markdown(f"<style>{theme.GLASS_CARD_CSS}</style>", unsafe_allow_html=True)
+
+# ── Ticker Drill 紧凑化 + 补齐旧模块设计(page-scoped,只在本页注入)──────────────
+# George: 「很多空的 space 紧凑一点 + 有的模块没有设计是之前的」。
+#  1) 收敛纵向节奏:元素 gap / divider / eyebrow-顶距 全部收紧(旧默认 ~1rem 太散)。
+#  2) 研究备忘等 raw markdown 表格 / [[wiki 链接]] 列表 → 编辑部 hairline + mono 数值,
+#     和上半页玻璃卡同语言(不再是「之前的」裸 markdown 样式)。
+st.markdown(
+    f"""<style>
+/* 1) 纵向节奏收敛:主内容区元素间距、分隔线、section 眼眉 */
+[data-testid="stMainBlockContainer"] [data-testid="stVerticalBlock"] {{ gap: .55rem !important; }}
+[data-testid="stMainBlockContainer"] hr {{ margin: .35rem 0 !important; border-color: {theme.PAPER_EDGE} !important; opacity: .55; }}
+.cmsi-eyebrow-sec {{ margin: .85rem 0 .5rem !important; }}
+.cmsi-subsection {{ margin: .7rem 0 .4rem !important; }}
+/* iframe 组件(masthead / 终端 / 多空)外壳零多余外距,靠玻璃卡自身留白 */
+[data-testid="stMainBlockContainer"] iframe {{ display: block; }}
+/* 2) 研究备忘 markdown 表格 → hairline 编辑部样式(补旧模块设计) */
+[data-testid="stMarkdown"] table {{
+  border-collapse: collapse; width: 100%; margin: .3rem 0 .5rem;
+  background: rgba(255,255,255,.4); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  border: 1px solid {theme.PAPER_EDGE}; border-top: 2px solid {theme.INK}; font-size: 12.5px;
+}}
+[data-testid="stMarkdown"] thead th {{
+  background: {theme.PAPER_BAND}; color: {theme.INK}; font-weight: 600; text-align: left;
+  border-bottom: 1px solid {theme.PAPER_EDGE}; padding: 7px 13px; font-size: 11px;
+  letter-spacing: .04em; font-family: {theme.FONT_MONO}; text-transform: uppercase;
+}}
+[data-testid="stMarkdown"] tbody td {{
+  border-bottom: 1px solid {theme.PAPER_RULE}; padding: 7px 13px; color: {theme.INK_2};
+  font-variant-numeric: tabular-nums;
+}}
+[data-testid="stMarkdown"] tbody tr:last-child td {{ border-bottom: none; }}
+[data-testid="stMarkdown"] tbody td:first-child {{ color: {theme.INK}; font-weight: 500; }}
+</style>""",
+    unsafe_allow_html=True,
+)
 
 # ---------- Ticker resolution ----------
 all_tickers = sorted(db.all_tickers())
@@ -421,10 +457,29 @@ if mults_row is not None:
         _cons_str = i18n.t("drill.consensus_line", tp=f"{tp:,.2f}",
                            upside=f"{upside_pct:+.1f}%",
                            n=(f"{int(n_analysts)}" if pd.notna(n_analysts) else "—"))
+
+    # Masthead hero price + 1D change (zip8「个股详情 礼来 美化」): big price on the
+    # right. 1D abs change derived from last_px and 1D% (prev = last/(1+r)); local ccy.
+    _hero_price = _hero_ccy = _chg_abs = _chg_pct = None
+    _chg_dir = "flat"
+    if pd.notna(last_px):
+        _hero_price, _hero_ccy = f"{last_px:,.2f}", ccy
+        _r1 = _rets.loc[ticker, "1d_%"] if (not _rets.empty and ticker in _rets.index
+                                            and "1d_%" in _rets.columns) else None
+        if _r1 is not None and pd.notna(_r1):
+            _chg_dir = "up" if _r1 > 0 else "down" if _r1 < 0 else "flat"
+            _chg_pct = f"{_r1:+.2f}%"
+            _rr = _r1 / 100.0
+            if _rr > -1:
+                _abs = last_px - last_px / (1 + _rr)
+                _chg_abs = f"{_abs:+,.2f}"
+
     stock_header.render(name=display_name, ticker=bbg, exchange="",
                         sector_sub=None, as_of=db.latest_snapshot_date(),
                         kpis=_kpis, consensus=_cons_str, prefer_cn=_zh,
-                        sub=_market_hours(ticker, _zh))
+                        sub=_market_hours(ticker, _zh),
+                        hero_price=_hero_price, hero_ccy=_hero_ccy,
+                        chg_abs=_chg_abs, chg_pct=_chg_pct, chg_dir=_chg_dir)
 else:
     # 无 multiples 的票:回退普通 section_header(玻璃头需要 KPI 值)。
     theme.section_header(display_name, meta=bbg)
@@ -485,7 +540,8 @@ if _has_house and _has_consensus:
                           house_label=i18n.t("drill.variant.house"))
     st.caption(i18n.t("drill.variant.disclaimer"))
 
-st.divider()
+# (divider dropped — the masthead's own bottom rule + the terminal's eyebrow already
+#  separate the header from the terminal; an extra hr just added dead space.)
 
 # Close series (DB) — used by the RS fallback below AND the return-windows panel.
 closes = db.get_close_series((ticker,))
@@ -571,6 +627,23 @@ if wiki_page is not None:
             contradiction=wiki_page.sections.get("矛盾与待验证"))
         st.divider()
 
+# ---------- 核心逻辑 · 四主线编号卡 (zip8「个股详情 礼来 美化」1:1) ----------
+# 把 wiki `核心投资逻辑` 那面中文文字墙拆成编号玻璃卡(摘要条 + N 条主线,每卡要点
+# + 靶点/药物 chips)。解析出 ≥2 张卡才走这套,否则回退下方 expander 原始 markdown。
+_thesis_shown = False
+if wiki_page is not None:
+    _pillars = thesis_cards.parse_pillars(wiki_page.sections.get("核心投资逻辑"))
+    if len(_pillars) >= 2:
+        theme.section_eyebrow(
+            "核心逻辑 · Research Memo" if _zh else "Research Memo · Key Pillars",
+            meta=(f"{len(_pillars)} 条主线 · 研究备忘归纳" if _zh
+                  else f"{len(_pillars)} pillars · from memo"))
+        _thesis_shown = thesis_cards.render(
+            wiki_page.sections.get("核心投资逻辑"),
+            summary=wiki_page.summary, prefer_cn=_zh)
+        if _thesis_shown:
+            st.divider()
+
 # ---------- 研究备忘 (memo prose — below the decision surface) ----------
 if wiki_page is None:
     st.caption(i18n.t("drill.wiki.none"))
@@ -592,7 +665,8 @@ else:
     if wiki_page.sectors:
         theme.chips(wiki_page.sectors)
 
-    if wiki_page.summary:
+    # Summary 已进上方「核心逻辑」摘要条 → 不重复;Thesis 仍保留(补充一句话主张)。
+    if wiki_page.summary and not _thesis_shown:
         theme.eyebrow(i18n.t("drill.wiki.summary"))
         st.markdown(wiki_page.summary)
     if wiki_page.thesis:
@@ -602,8 +676,10 @@ else:
         st.caption(f"{i18n.t('drill.wiki.sources')}: {wiki_page.sources}")
 
     # Pull the high-value sections to the top, leave the rest in expanders.
-    # 催化剂/风险点/矛盾 已进多空看板则不再 expander 重复。
+    # 催化剂/风险点/矛盾 已进多空看板则不再 expander 重复;核心投资逻辑 已成主线卡则同理。
     _board = {"催化剂", "风险点", "矛盾与待验证"} if _board_done else set()
+    if _thesis_shown:
+        _board = _board | {"核心投资逻辑"}
     priority_keys = [k for k in ["核心投资逻辑", "催化剂", "风险点", "财务快照"] if k not in _board]
     rendered: set[str] = set(_board)
     for key in priority_keys:

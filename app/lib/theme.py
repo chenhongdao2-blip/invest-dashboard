@@ -271,12 +271,26 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   border-color: {CMSI_RED} !important;
 }}
 
-/* sidebar — Claude Design §4.4 (CSS-mapped onto Streamlit's native sidebar) */
+/* sidebar — 「Sidebar 导航 美化.dc.html」 port (zip7, 2026-07-10; CSS-mapped onto
+   Streamlit's native st.navigation DOM). Design: PAPER (#fff1e5) sidebar + 3px red
+   left edge + brand lockup (st.logo, app/static/cmsi_brand.svg) + per-group icon
+   chips + left rail + red-gradient active row w/ dot. */
 [data-testid="stSidebar"] {{
-  background: {PAPER_DEEP} !important;
-  border-right: 1px solid {PAPER_EDGE} !important;
-  min-width: 240px !important;
+  background: {PAPER} !important;
+  border-right: 1px solid #d9c9b5 !important;
+  min-width: 250px !important;
+  position: relative;
 }}
+[data-testid="stSidebar"]::before {{
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: {CMSI_RED}; z-index: 10;
+}}
+/* brand lockup (st.logo) — give it breathing room like the design 品牌块 */
+[data-testid="stSidebarHeader"] {{
+  padding: 14px 16px 10px !important;
+  border-bottom: 1px solid {PAPER_RULE};
+}}
+[data-testid="stSidebarHeader"] img {{ height: 40px !important; max-width: 100%; }}
 [data-testid="stSidebar"] > div:first-child {{
   padding-top: 1rem;
 }}
@@ -298,16 +312,35 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   padding: 0 !important;
   margin: 0 0 6px 0 !important;
 }}
+/* 组内条目:左导轨(设计 border-left 1.5px rail,条目再叠 2px active bar) */
+[data-testid="stSidebarNavItems"] > div > li {{
+  border-left: 1.5px solid {PAPER_RULE};
+  margin-left: 30px !important;
+  padding-left: 0 !important;
+}}
 [data-testid="stSidebarNav"] ul li a,
 [data-testid="stSidebarNav"] a {{
-  border-left: 4px solid transparent;
-  padding-left: 16px !important;
+  border-left: 2px solid transparent;
+  margin-left: -1.5px;
+  padding-left: 12px !important;
+  position: relative;
+  border-radius: 0 !important;
 }}
+[data-testid="stSidebarNav"] a:hover {{ background: rgba(26,26,26,.035) !important; }}
 [data-testid="stSidebarNav"] a[aria-current="page"] {{
   border-left-color: {CMSI_RED} !important;
-  background: {PAPER_BAND} !important;
-  color: {INK} !important;
-  font-weight: 600 !important;
+  background: linear-gradient(90deg, rgba(200,16,46,.07), rgba(200,16,46,0)) !important;
+  font-weight: 700 !important;
+}}
+[data-testid="stSidebarNav"] a[aria-current="page"],
+[data-testid="stSidebarNav"] a[aria-current="page"] span {{
+  color: {CMSI_RED} !important;
+}}
+/* active 红点(设计右侧 5px dot) */
+[data-testid="stSidebarNav"] a[aria-current="page"]::after {{
+  content: ''; position: absolute; right: 12px; top: 50%;
+  transform: translateY(-50%); width: 5px; height: 5px; border-radius: 50%;
+  background: {CMSI_RED};
 }}
 [data-testid="stSidebarNav"] a,
 [data-testid="stSidebarNav"] a span,
@@ -315,16 +348,42 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
   font-family: {FONT_STACK} !important;
   letter-spacing: 0 !important;
 }}
-/* Red vertical rib (纵肋) on sidebar CATEGORY headers — st.navigation section
-   labels (Global / Healthcare / AI). Makes each domain read as an editorial
-   category, echoing the main-content section_header ▎red bar. */
+/* 分组头 = 彩色图标 chip + 加粗组名(设计 22px 圆角方 chip,每组一色一 glyph)。
+   组序固定由 streamlit_app.py st.navigation 决定:1 核心策略(红星) 2 Global(墨球)
+   3 Healthcare(青十字) 4 AI(金火花) 5 ETF(蓝柱)。加页时若组序变动需同步这里。 */
 [data-testid="stNavSectionHeader"] {{
-  border-left: 3px solid {CMSI_RED} !important;
-  padding-left: 13px !important;
+  display: flex !important; align-items: center !important;
+  padding-left: 16px !important;
   margin-left: 0 !important;
   color: {INK} !important;
-  font-weight: 600 !important;
-  letter-spacing: 0 !important;
+  font-weight: 700 !important;
+  font-size: 12.5px !important;
+  letter-spacing: .01em !important;
+}}
+[data-testid="stNavSectionHeader"]::before {{
+  content: ''; width: 22px; height: 22px; border-radius: 5px; flex: none;
+  margin-right: 9px; background-color: {CMSI_RED};
+  background-repeat: no-repeat; background-position: center; background-size: 14px 14px;
+}}
+[data-testid="stSidebarNavItems"] > div:nth-of-type(1) [data-testid="stNavSectionHeader"]::before {{
+  background-color: {CMSI_RED};
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M12 3l2.6 5.9 6.4.6-4.8 4.3 1.4 6.3L12 17.8 6 20.4l1.4-6.3L2.6 9.8l6.4-.6z' fill='%23fff1e5'/%3E%3C/svg%3E");
+}}
+[data-testid="stSidebarNavItems"] > div:nth-of-type(2) [data-testid="stNavSectionHeader"]::before {{
+  background-color: {INK};
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23fff1e5' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M3 12h18M12 3c2.5 2.5 3.8 5.7 3.8 9s-1.3 6.5-3.8 9c-2.5-2.5-3.8-5.7-3.8-9s1.3-6.5 3.8-9z'/%3E%3C/svg%3E");
+}}
+[data-testid="stSidebarNavItems"] > div:nth-of-type(3) [data-testid="stNavSectionHeader"]::before {{
+  background-color: {UP};
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M9.5 3h5v6h6v5h-6v6h-5v-6h-6V9h6z' fill='%23fff1e5'/%3E%3C/svg%3E");
+}}
+[data-testid="stSidebarNavItems"] > div:nth-of-type(4) [data-testid="stNavSectionHeader"]::before {{
+  background-color: #E0A458;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Cpath d='M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z' fill='%231a1a1a'/%3E%3C/svg%3E");
+}}
+[data-testid="stSidebarNavItems"] > div:nth-of-type(5) [data-testid="stNavSectionHeader"]::before {{
+  background-color: #4a6fa5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24'%3E%3Crect x='4' y='12' width='4' height='8' fill='%23fff1e5'/%3E%3Crect x='10' y='8' width='4' height='12' fill='%23fff1e5'/%3E%3Crect x='16' y='4' width='4' height='16' fill='%23fff1e5'/%3E%3C/svg%3E");
 }}
 /* Hide Streamlit's nav "View more/less" toggle. All our pages fit (3 grouped
    sections), so the collapser is unnecessary. */
@@ -348,7 +407,13 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
    :has() detects the collapsed state in pure CSS — editorial 1440 cap stays
    when the sidebar is open, content goes fluid when it's hidden. */
 body:has([data-testid="stExpandSidebarButton"]) .block-container {{
-  max-width: 2200px !important;
+  max-width: 1760px !important;
+}}
+/* 收起时品牌头(st.logo)会浮成一张带边框的小卡片,显得孤零 —— 去边框/收紧内距,
+   只剩干净的 logo + 展开钮(George 2026-07-10:收起后左侧空间不浪费)。 */
+body:has([data-testid="stExpandSidebarButton"]) [data-testid="stSidebarHeader"] {{
+  border-bottom: none !important;
+  padding: 8px 10px !important;
 }}
 h1, h2, h3, h4 {{
   font-family: {FONT_STACK} !important;
@@ -1048,6 +1113,10 @@ def page_radial_wash(max_width_px: int = 1240) -> None:
   background-attachment: fixed;
 }}
 .block-container {{ max-width: {max_width_px}px !important; }}
+/* Sidebar 收起时:page-scoped 的 max-width 会盖掉全局 collapse 加宽规则,导致内容
+   仍卡在 {max_width_px}px 居中 → 左侧一大片浪费(George 2026-07-10)。这里补一条
+   同结构 :has() 规则,收起时把内容加宽到 1760(填满笔电、2K 仍留克制边距)。 */
+body:has([data-testid="stExpandSidebarButton"]) .block-container {{ max-width: 1760px !important; }}
 </style>""",
         unsafe_allow_html=True,
     )

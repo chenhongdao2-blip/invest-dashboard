@@ -94,7 +94,10 @@ def _col(v) -> str:
 # 1. 收益链 — v4 → v5 → v6 分段净值
 # ═══════════════════════════════════════════════════════════════════════════
 
-def render_chain(chain: dict, prefer_cn: bool = True) -> None:
+def render_chain(chain: dict, prefer_cn: bool = True,
+                 live_current: dict | None = None) -> None:
+    """live_current = {ret_pct, bench_pct, alpha_pp, days}(页面侧实时算的 v6 段)。
+    传入则「进行中」段改显真实收益 + α;不传则回退「进行中」文案。"""
     cap0 = float(chain.get("capital_start", 0))
     cap1 = float(chain.get("capital_now", 0))
     ccy = chain.get("currency", "USD")
@@ -103,6 +106,18 @@ def render_chain(chain: dict, prefer_cn: bool = True) -> None:
     alpha = chain.get("alpha_pp")
     bench = chain.get("bench", "XBI")
     gain = cap1 - cap0
+
+    # 当前段(v6)有实时收益 → 把它复利到冻结的 v5-末净值上,头部 NAV / 累计 / α / 盈亏
+    # 与下方 v6 段数字保持一致(否则段显 +X% 而总净值仍停在 07-09,前后矛盾)。
+    if live_current and live_current.get("ret_pct") is not None and cap0:
+        _r6 = float(live_current["ret_pct"]) / 100.0
+        cap1 = cap1 * (1 + _r6)                       # cap1(=v5 末 NAV)复利 v6 段
+        cum = (cap1 / cap0 - 1) * 100.0
+        gain = cap1 - cap0
+        _b6 = live_current.get("bench_pct")
+        if _b6 is not None and bcum is not None:
+            _bcum_live = ((1 + bcum / 100.0) * (1 + float(_b6) / 100.0) - 1) * 100.0
+            alpha = cum - _bcum_live
 
     # ── 头部:起始资金 → 当前净值 + 累计 / α ───────────────────────────────
     head_cells = [
@@ -135,12 +150,19 @@ def render_chain(chain: dict, prefer_cn: bool = True) -> None:
         tag = _tt(prefer_cn, s.get("tag", ""), s.get("tag_en", s.get("tag", "")))
         note = _tt(prefer_cn, s.get("note", ""), s.get("note_en", s.get("note", "")))
         rng = f'{s.get("from","")} → {s.get("to") or _tt(prefer_cn, "至今", "now")}'
-        days = s.get("days")
-        days_s = f" · {days}{_tt(prefer_cn,'天','d')}" if days else ""
         n = s.get("n")
         ret = s.get("ret_pct")
         seg_alpha = s.get("alpha_pp")
         bp = s.get("bench_pct")
+        days = s.get("days")
+        # 当前段(v6):有实时收益就显真实数字 + α,而非静态「进行中」(George 2026-07-10)。
+        if is_cur and live_current and live_current.get("ret_pct") is not None:
+            ret = live_current.get("ret_pct")
+            seg_alpha = live_current.get("alpha_pp")
+            bp = live_current.get("bench_pct")
+            if live_current.get("days") is not None:
+                days = live_current.get("days")
+        days_s = f" · {days}{_tt(prefer_cn,'天','d')}" if days else ""
 
         if is_cur and ret is None:
             big = _tt(prefer_cn, "进行中", "In progress")
@@ -592,9 +614,10 @@ def render_rulebook(rk: dict, prefer_cn: bool = True) -> None:
 
 def render(v6_df: pd.DataFrame, v5_df: pd.DataFrame,
            catalysts_df: pd.DataFrame, meta: dict,
-           prefer_cn: bool = True) -> None:
+           prefer_cn: bool = True, live_current: dict | None = None) -> None:
     """渲染整块『调仓纪律 & 换仓记录』区(收益链 → 7 月调仓 → Rulebook)。
-    meta = rebalance_v6.json 解析后的 dict。缺 meta 则静默跳过(不崩)。"""
+    meta = rebalance_v6.json 解析后的 dict。缺 meta 则静默跳过(不崩)。
+    live_current = 页面实时算的当前(v6)段收益,传入则收益链末段显真实数字而非「进行中」。"""
     if not meta:
         return
     from lib import theme as _t
@@ -610,7 +633,7 @@ def render(v6_df: pd.DataFrame, v5_df: pd.DataFrame,
     )
     chain = meta.get("chain")
     if chain:
-        render_chain(chain, prefer_cn)
+        render_chain(chain, prefer_cn, live_current=live_current)
     rb = meta.get("rebalance")
     if rb:
         render_rebalance(v6_df, v5_df, catalysts_df, rb, prefer_cn)

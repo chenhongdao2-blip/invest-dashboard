@@ -136,6 +136,21 @@ def load_rebalance_meta() -> dict:
 
 
 @st.cache_data(ttl=900)
+def load_hd_rebalance_meta() -> dict:
+    """Structured HK high-div rebalance/ledger data (data/content/hd_rebalance_v3.json):
+    chain segment metadata (labels/dates, returns computed live) + rebalance logic +
+    condensed HD rulebook (愿意分/分得出/分得久). Missing/invalid → {} (panel skips)."""
+    import json
+    p = DATA_CONTENT / "hd_rebalance_v3.json"
+    if not p.exists():
+        return {}
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except (ValueError, OSError):
+        return {}
+
+
+@st.cache_data(ttl=900)
 def load_hd() -> pd.DataFrame:
     if not HD_CSV.exists():
         return pd.DataFrame()

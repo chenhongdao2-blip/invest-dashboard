@@ -29,6 +29,7 @@ from lib import strategy_banner as sb
 from lib import ipo_stage
 from lib import picks_table
 from lib import rebalance_panel
+from lib import hd_rebalance_panel
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -514,6 +515,105 @@ def render_hd_versions() -> None:
         render_hd_compare()
     else:
         render_strategy("hk_hd_v3")
+        # Fused-in HD rebalance discipline + ledger (mirror of the biotech panel, HD
+        # 口径: 桶 + 权重, not catalysts). Chain computed live below.
+        _hdmeta = strat.load_hd_rebalance_meta()
+        if _hdmeta:
+            _hdchain = _hd_chain_dict(_hdmeta.get("chain", {}))
+            hd_rebalance_panel.render(
+                strat.load_hd(), strat.load_hd_v2(), strat.load_hd_v3(),
+                _hdchain, _hdmeta, prefer_cn=(i18n.get_lang() == "zh"),
+            )
+
+
+def _hd_chain_dict(meta_chain: dict) -> dict | None:
+    """Live v1→v2→v3 收益链 dict for hd_rebalance_panel — computes each version's
+    segment return (during its holding window) + the chained account NAV, then merges
+    the returns onto the JSON segment metadata. Mirrors render_hd_compare's compute
+    path (same @st.cache_data fetch, so it hits cache when compare was visited)."""
+    if not meta_chain:
+        return None
+    v1, v2, v3 = strat.load_hd(), strat.load_hd_v2(), strat.load_hd_v3()
+    if v1.empty or v2.empty or v3.empty:
+        return None
+    c1 = strat.STRATEGIES["hk_hd"]; c2 = strat.STRATEGIES["hk_hd_v2"]; c3 = strat.STRATEGIES["hk_hd_v3"]
+    bench_sym = c1["benchmark"]
+    v1b = v1.sort_values("rank").head(20); v2b = v2.sort_values("rank"); v3b = v3.sort_values("rank")
+    v1s = v1b["yf_sym"].dropna().tolist()
+    v2s = v2b["yf_sym"].dropna().tolist()
+    v3s = v3b["yf_sym"].dropna().tolist()
+    all_syms = tuple(dict.fromkeys(v1s + v2s + v3s + [bench_sym]))
+    earliest = (pd.Timestamp(c1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
+    closes = strat.fetch_picks_closes(all_syms, start=earliest, _ovr_mtime=strat._delisted_mtime())
+    if closes.empty or bench_sym not in closes.columns:
+        return None
+
+    def _port(syms: list[str], book: pd.DataFrame, cfg: dict) -> pd.Series:
+        cols = [c for c in syms if c in closes.columns]
+        if not cols:
+            return pd.Series(dtype=float)
+        w = None
+        wc = cfg.get("weight_col")
+        if wc and wc in book.columns:
+            w = book.set_index("yf_sym")[wc].astype(float) / 100.0
+        _, port, _, _ = strat.compute_strategy_returns(
+            closes[cols], cfg["pick_date"], portfolio_syms=syms,
+            weights=w, cash_pct=float(cfg.get("cash_pct", 0.0)))
+        return port
+
+    port_v1 = _port(v1s, v1b, c1)
+    port_v2 = _port(v2s, v2b, c2)
+    port_v3 = _port(v3s, v3b, c3)
+    bench_close = closes[bench_sym].dropna()
+
+    def _seg_ret(port: pd.Series, up_to: str | None) -> float | None:
+        if port is None or port.empty:
+            return None
+        sub = port[port.index < pd.Timestamp(up_to)] if up_to else port
+        return float(sub.iloc[-1] - 100) if not sub.empty else None
+
+    def _bench_seg(start: str, end: str | None) -> float | None:
+        s = bench_close[bench_close.index >= pd.Timestamp(start)]
+        if s.empty:
+            return None
+        base = s.iloc[0]
+        s = s[s.index < pd.Timestamp(end)] if end else s
+        return float(s.iloc[-1] / base - 1) * 100 if (not s.empty and base) else None
+
+    account, _bnd = _chain_nav([port_v1, port_v2, port_v3], 1_000_000.0)
+    cap_now = float(account.iloc[-1]) if not account.empty else 1_000_000.0
+    cum = (cap_now / 1_000_000.0 - 1) * 100.0
+    bench_cum = _bench_seg(c1["pick_date"], None) or 0.0
+
+    _ports = {"v1": (port_v1, c2["pick_date"]), "v2": (port_v2, c3["pick_date"]),
+              "v3": (port_v3, None)}
+    _now_iso = (account.index[-1].date().isoformat() if not account.empty
+                else pd.Timestamp.now().date().isoformat())
+    segs = []
+    for s in meta_chain.get("segments", []):
+        ver = s.get("ver")
+        port, up_to = _ports.get(ver, (pd.Series(dtype=float), None))
+        r = _seg_ret(port, up_to)
+        b = _bench_seg(s.get("from"), s.get("to"))
+        end_iso = s.get("to") or _now_iso
+        try:
+            days = (pd.Timestamp(end_iso) - pd.Timestamp(s.get("from"))).days
+        except Exception:
+            days = s.get("days")
+        seg = dict(s)
+        seg["ret_pct"] = r
+        seg["bench_pct"] = b
+        seg["alpha_pp"] = (r - b) if (r is not None and b is not None) else None
+        if days:
+            seg["days"] = days
+        segs.append(seg)
+
+    return {
+        "capital_start": 1_000_000, "capital_now": cap_now,
+        "currency": meta_chain.get("currency", "HKD"),
+        "bench": bench_sym, "cum_pct": cum, "bench_cum_pct": bench_cum,
+        "alpha_pp": cum - bench_cum, "segments": segs,
+    }
 
 
 def _chain_nav(
@@ -827,6 +927,13 @@ def render_biotech_versions() -> None:
             st.info(i18n.t("strategy.biotech.version.v6_pending"))
         else:
             render_strategy("v6_biotech")
+            # v6 段已建仓(2026-07-09)→ 实时算它的真实收益 vs XBI,喂给收益链末段,
+            # 让它显真实数字而非静态「进行中」(George 2026-07-10)。_overview_curve_card
+            # 走的是与 hero 同一条 compute 路径(@st.cache_data,命中缓存,不重复取价)。
+            _v6c = _overview_curve_card("v6_biotech")
+            _live_v6 = ({"ret_pct": _v6c["cum_ret"], "bench_pct": _v6c["bench_ret"],
+                         "alpha_pp": _v6c["alpha"], "days": _v6c["hold_days"]}
+                        if _v6c else None)
             # Fused-in rebalance discipline + ledger (replaces the old standalone
             # 4b_Rebalance_Rules page). House glass design (lib/rebalance_panel):
             # performance chain → July rebalance detail (w/ catalysts) → rulebook.
@@ -834,6 +941,7 @@ def render_biotech_versions() -> None:
                 v6, strat.load_v5(), strat.load_catalysts(),
                 strat.load_rebalance_meta(),
                 prefer_cn=(i18n.get_lang() == "zh"),
+                live_current=_live_v6,
             )
 
 

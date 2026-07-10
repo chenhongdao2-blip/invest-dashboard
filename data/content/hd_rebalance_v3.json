@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "note": "港股高股息组合 调仓/收益 结构化数据源 — 供 lib/hd_rebalance_panel.py 渲染 Strategy Picks 高股息页(v3 当前版)的『调仓纪律 & 换仓记录』区。held/sold/new 三组由 v2/v3 picks CSV 实时求差;收益链 v1→v2→v3 分段净值由页面实时算(_chain_nav 同路径)。本文件只存: 收益链分段元信息(标签/日期/n,不含收益) + 换仓逻辑 + 精简 Rulebook(愿意分/分得出/分得久)。",
+    "as_of": "2026-07-07",
+    "book": "v3",
+    "not_advice": "研究工具,不构成投资建议"
+  },
+
+  "chain": {
+    "capital_start": 1000000,
+    "currency": "HKD",
+    "bench": "3466.HK",
+    "segments": [
+      {
+        "ver": "v1", "label": "等权建仓", "label_en": "Equal-weight build",
+        "from": "2026-03-20", "to": "2026-06-11", "n": 20,
+        "tag": "等权起步", "tag_en": "EW start",
+        "note": "34 支评分池取 Top20 等权", "note_en": "top-20 equal-weight of the 34-name scored pool"
+      },
+      {
+        "ver": "v2", "label": "评分定权", "label_en": "Score-weighted",
+        "from": "2026-06-11", "to": "2026-07-07", "n": 20,
+        "tag": "加 12% 现金", "tag_en": "+12% cash",
+        "note": "综合分定权 + 12% 现金缓冲", "note_en": "score-set weights + 12% cash buffer"
+      },
+      {
+        "ver": "v3", "label": "Wind 单源", "label_en": "Wind single-source",
+        "from": "2026-07-07", "to": null, "n": 20,
+        "tag": "进行中", "tag_en": "In progress", "current": true,
+        "note": "实时净值见上方走势图", "note_en": "live NAV tracked in the chart above"
+      }
+    ]
+  },
+
+  "rebalance": {
+    "prev_book": "v2", "prev_pick_date": "2026-06-11",
+    "pick_date": "2026-07-07", "turnover_pct": 45,
+    "logic": "换出 = 综合分排序下移 / payout 转不可持续 / 权重优化换入更高分同桶标的;非追涨杀跌。桶双轨:利率溢价桶(rate)吃利率下行重估,非利率桶(nonrate)吃盈利与治理确定性。v3 为 Wind 单源重算,派息 / ROAE 口径统一。",
+    "logic_en": "Sell = score rank slipped / payout turned unsustainable / weight optimization into a higher-scored name in the same bucket; not chase-the-move. Two buckets: rate (captures the re-rate as rates fall) + nonrate (earnings & governance certainty). v3 is a Wind single-source rebuild with unified payout/ROAE definitions.",
+    "buckets": {
+      "rate": {"label": "利率溢价桶", "label_en": "Rate-premium", "note": "利率下行重估的高股息(银行 / 公用 / 高速)", "note_en": "high-div names that re-rate as rates fall (banks / utilities / toll roads)"},
+      "nonrate": {"label": "非利率桶", "label_en": "Non-rate", "note": "盈利与治理驱动的高股息(消费 / 制造 / 能源)", "note_en": "earnings- & governance-driven high-div (consumer / manufacturing / energy)"}
+    },
+    "risk": "高股息非无风险:利率溢价桶对久期敏感(利率反弹回撤),非利率桶依赖盈利兑现;payout 卡 band 边界票须 HKEXnews 逐笔重算终核。",
+    "risk_en": "High-div isn't riskless: the rate bucket is duration-sensitive (drawdown if rates back up), the non-rate bucket depends on earnings delivery; payout-band edge cases need a HKEXnews line-by-line recompute."
+  },
+
+  "rulebook": {
+    "version": "v0.1",
+    "as_of": "2026-07-07",
+    "positioning": "设计起点:三维框架 + 55/25/20 权重为『先验合理值』,须走前瞻账本 vs 死等权影子对照验证后才升级『已验证』。",
+    "positioning_en": "Design baseline: the 3-dim framework + 55/25/20 weights are prior-reasonable, promoted to 'validated' only after a forward ledger vs dead-equal-weight shadow control.",
+    "core": "高股息超额 = 股息复利 + 估值修复(利率下行时利率溢价桶重估)。唯一确定有 edge 的动作 = 选『愿意分(治理)× 分得出(现金流)× 分得久(护城河)』三重达标、payout 可持续的公司,按综合分定权、按漂移再平衡;唯一确定该禁的 = 追高息陷阱(高 yield 往往是股价跌出来的)+ 忽视 payout 可持续性。",
+    "core_en": "High-div excess return = dividend compounding + valuation repair (the rate bucket re-rates as rates fall). The only sure edge = pick names that clear all three of willing-to-pay (governance) × able-to-pay (cash flow) × able-to-keep-paying (moat) with a sustainable payout, set weights by the composite score, rebalance on drift. The only sure prohibition = the high-yield trap (a high yield is usually a fallen price) + ignoring payout sustainability.",
+    "rules": [
+      {"id": "R1", "title": "三维达标线(愿意分 × 分得出 × 分得久)", "title_en": "3-dim gate", "desc": "公司治理 55% · 财务质量/现金流 25% · 行业护城河 20%,三重达标才入池", "desc_en": "Governance 55% · cash-flow quality 25% · moat 20% — must clear all three"},
+      {"id": "R2", "title": "payout 卡 band + 银行用加权 ROAE", "title_en": "Payout band + weighted ROAE", "desc": "payout 30/70/100% band,>100% 或举债分红=红旗;银行必用加权 ROAE(公布值)非摊薄", "desc_en": "payout 30/70/100% band; >100% or debt-funded = red flag; banks use weighted ROAE, not diluted"},
+      {"id": "R3", "title": "评分定权,非等权", "title_en": "Score-weighted, not EW", "desc": "综合分定权(v1 等权 → v2/v3 定权),单票上限 ~6% 避免单一标的主导", "desc_en": "weights set by composite score (v1 EW → v2/v3 weighted); ~6% single-name cap"},
+      {"id": "R4", "title": "现金缓冲 ~12%", "title_en": "~12% cash buffer", "desc": "常态留 ~12% 现金(策略设计非误差),留再平衡与错杀弹药", "desc_en": "hold ~12% cash by design (not an error) — dry powder for rebalancing / mispricings"},
+      {"id": "R5", "title": "权重漂移再平衡", "title_en": "Drift rebalance", "desc": "权重漂移超目标带触发 trim/add 回锚,不追涨杀跌", "desc_en": "trim/add back to target when weight drifts past the band; no chase"},
+      {"id": "R6", "title": "评分掉档 → 人工 review", "title_en": "Score drop → human review", "desc": "治理 / payout / 护城河 恶化=真信号该动;价格波动=噪音不机械砍", "desc_en": "governance/payout/moat deterioration is a real signal; price noise isn't — don't auto-cut"}
+    ],
+    "avoid": [
+      {"t": "追高息陷阱", "t_en": "High-yield trap", "why": "高 dividend yield 常是股价跌出来的(分母塌),先看 payout 可持续再看 yield", "why_en": "a high yield is often a fallen price (collapsed denominator); check payout sustainability before yield"},
+      {"t": "用摊薄 ROE 评银行", "t_en": "Diluted ROE for banks", "why": "银行优秀线按加权 ROAE 校准,摊薄会系统性少给分", "why_en": "the bank quality line is calibrated on weighted ROAE; diluted systematically under-scores"},
+      {"t": "直引 iFind 派息字段", "t_en": "Trust iFind payout fields", "why": "港股派息聚合字段跨中期+末期口径混乱,卡 band 时必用 HKEXnews 逐笔重算", "why_en": "HK payout aggregate fields blur interim+final; at a band edge, recompute line-by-line from HKEXnews"}
+    ],
+    "phase_note": "v1 等权(34→Top20,2026-03)起步 → v2 评分定权 + 12% 现金(2026-06)→ v3 Wind 单源重算、派息/ROAE 口径统一(2026-07)。攒够前瞻样本后再谈桶内分层 / 动态权重。",
+    "phase_note_en": "v1 equal-weight (34→top20, Mar-2026) → v2 score-weighted + 12% cash (Jun-2026) → v3 Wind single-source rebuild with unified payout/ROAE (Jul-2026). Intra-bucket tiering / dynamic weights only after enough forward samples."
+  }
+}

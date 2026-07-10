@@ -1,8 +1,9 @@
-"""AI Sector Heatmap — multiples + returns per supply-chain layer with color gradient.
+"""AI Sector Heatmap — cross-section multiples + returns, design-source card.
 
-Mirror of `3_🔥_Sector_Heatmap.py` with domain='ai', reading config/domains/ai.yml.
-Empty-data safe: a sector with no tickers / no rows after the min-mcap filter shows
-an info note instead of crashing.
+2026-07-10 reskin: the st.tabs + Styler table is replaced by lib/heat_table.py,
+mirroring the healthcare page (3_Sector_Heatmap.py) for the AI domain.
+Data layer unchanged: db.get_close_series_usd (M1 USD returns) +
+db.latest_multiples (yfinance static + fwd multiples snapshot).
 """
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ import pandas as pd
 import streamlit as st
 
 from lib import db
-from lib import format as fmt
+from lib import heat_table
 from lib import ui
 from lib import theme
 from lib import i18n
@@ -23,16 +24,17 @@ st.set_page_config(page_title="AI Sector Heatmap · invest-dashboard", page_icon
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "ai.yml"
 
-
 cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("ai.heat.title"))
+theme.page_header(i18n.t("ai.heat.title"), meta="AI SECTOR HEATMAP")
 st.caption(i18n.t("heat.caption"))
+theme.page_radial_wash(1300)
+prefer_cn = i18n.get_lang() == "zh"
 
-# --- Sidebar global search + filter ---
+# --- Sidebar global search + min-mcap filter (server-side; sort is in-table) ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="ai_heat")
     st.divider()
@@ -41,141 +43,83 @@ with st.sidebar:
         i18n.t("heat.filter.min_mcap"), 0.0, 50.0, 0.0, 0.5,
         help=i18n.t("heat.filter.min_mcap_help")
     )
-    sort_col = st.selectbox(
-        i18n.t("heat.filter.sort_by"),
-        ["Mcap USD", "YTD %", "1M %", "Trail P/E", "Fwd P/E"],
-        index=0,
-        help=i18n.t("heat.filter.sort_help")
-    )
 
 
-def render_sector(sec: dict) -> None:
-    uni = db.sector_tickers("ai", sec["id"])
+def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
+    """One sector's cross-section rows for heat_table (mcap $B, returns %, multiples,
+    fcf_yield fraction → %). Missing values stay None → NM in-table."""
+    uni = db.sector_tickers("ai", sec_id)
     tickers = tuple(uni["ticker"].tolist())
     if not tickers:
-        st.warning(f"No tickers in sector {sec['name']}")
-        return
-
-    closes = db.get_close_series_usd(tickers)
-    rets = db.compute_returns(closes)
+        return []
+    rets = db.compute_returns(db.get_close_series_usd(tickers))
     mults = db.latest_multiples(tickers)
-    name_map = db.ticker_to_name(prefer_cn=True)
-    region_map = uni.set_index("ticker")["region"].to_dict()
+    rows = []
+    for tk in tickers:
+        r = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)
+        m = mults.loc[tk] if (not mults.empty and tk in mults.index) else pd.Series(dtype=float)
+        mcap = m.get("market_cap_usd")
+        mcap_b = (float(mcap) / 1e9) if pd.notna(mcap) else None
+        if min_mcap_b > 0 and (mcap_b is None or mcap_b < min_mcap_b):
+            continue
+        fcf = m.get("fcf_yield")
+        rows.append({
+            "t": tk, "n": name_map.get(tk, tk), "mcap": mcap_b,
+            "ytd": r.get("ytd_%"), "m1": r.get("1m_%"),
+            "d5": r.get("5d_%"), "d1": r.get("1d_%"),
+            "peS": m.get("trailing_pe"), "peF": m.get("forward_pe"),
+            "evE": m.get("ev_ebitda"), "evS": m.get("ev_sales"),
+            "fcf": (float(fcf) * 100.0) if pd.notna(fcf) else None,
+        })
+    return rows
 
-    # --- Merge numeric DataFrame (for gradient calc) ---
-    merged = rets.copy() if not rets.empty else pd.DataFrame(index=list(tickers))
-    if not mults.empty:
-        for col in ["market_cap_usd", "mcap_tier", "trailing_pe", "forward_pe",
-                    "ev_ebitda", "ev_sales", "fcf_yield", "pb"]:
-            if col in mults.columns:
-                merged[col] = mults[col]
-    merged["Name"] = pd.Series(name_map).reindex(merged.index)
-    merged["Region"] = pd.Series(region_map).reindex(merged.index)
 
-    # filter by min_mcap (in B) — only if the column exists (empty-data safe)
-    if min_mcap_b > 0 and "market_cap_usd" in merged.columns:
-        mcap_filter = merged["market_cap_usd"] >= (min_mcap_b * 1e9)
-        merged = merged[mcap_filter]
+_name_map = db.ticker_to_name(prefer_cn=prefer_cn)
+_sectors = []
+for sec in cfg["sectors"]:
+    _rows = _sector_rows(sec["id"], _name_map)
+    if _rows:
+        _sectors.append({"id": sec["id"], "name": i18n.sector_name(sec["id"]),
+                         "bench": sec.get("benchmark", "—"), "rows": _rows})
 
-    # default sort by market cap desc
-    sort_map = {
-        "Mcap USD": "market_cap_usd",
-        "YTD %": "ytd_%",
-        "1M %": "1m_%",
-        "Trail P/E": "trailing_pe",
-        "Fwd P/E": "forward_pe",
+if not _sectors:
+    st.warning(i18n.t("heat.empty"))
+else:
+    _labels = {
+        "cover": i18n.t("heat.tbl.cover"), "mcap_total": i18n.t("heat.tbl.mcap_total"),
+        "ytd_med": i18n.t("heat.tbl.ytd_med"), "breadth": i18n.t("heat.tbl.breadth"),
+        "up": i18n.t("heat.tbl.up"), "dn": i18n.t("heat.tbl.dn"),
+        "unit_names": i18n.t("heat.tbl.unit_names"), "median": i18n.t("heat.tbl.median"),
+        "grp_ret": i18n.t("heat.tbl.grp_ret"), "grp_val": i18n.t("heat.tbl.grp_val"),
+        "grp_cf": i18n.t("heat.tbl.grp_cf"),
+        "footnote": i18n.t("heat.tbl.footnote", date=(db.latest_snapshot_date() or "—")),
+        "footnote_dyn": i18n.t("heat.tbl.footnote_dyn"),
+        "brand": "CMSI · AI SECTOR HEATMAP",
+        # 板块汇总（zip4 设计）：section 头 + 8 列表头
+        "sum_title": i18n.t("heat.tbl.sum.title"),
+        "sum_sub": i18n.t("heat.tbl.sum.sub", n=sum(len(s["rows"]) for s in _sectors)),
+        "sum_right": "EQUAL-WEIGHT AVG",
+        "heat_title": i18n.t("heat.tbl.heat.title"),
+        "heat_sub": i18n.t("heat.tbl.heat.sub"),
+        "sum_cols": {
+            "sector": i18n.t("heat.tbl.sum.col.sector"), "n": i18n.t("heat.tbl.sum.col.n"),
+            "d1": i18n.t("heat.tbl.col.d1"), "d5": i18n.t("heat.tbl.col.d5"),
+            "m1": i18n.t("heat.tbl.col.m1"), "ytd": i18n.t("heat.tbl.col.ytd"),
+            "dist": i18n.t("heat.tbl.sum.col.dist"), "bench": i18n.t("heat.tbl.sum.col.bench"),
+        },
+        "cols": {
+            "t": i18n.t("heat.tbl.col.t"), "n": i18n.t("heat.tbl.col.n"),
+            "mcap": i18n.t("heat.tbl.col.mcap"), "ytd": i18n.t("heat.tbl.col.ytd"),
+            "m1": i18n.t("heat.tbl.col.m1"), "d5": i18n.t("heat.tbl.col.d5"),
+            "d1": i18n.t("heat.tbl.col.d1"), "peS": i18n.t("heat.tbl.col.peS"),
+            "peF": i18n.t("heat.tbl.col.peF"), "evE": "EV/EBITDA", "evS": "EV/S",
+            "fcf": i18n.t("heat.tbl.col.fcf"),
+        },
     }
-    sort_field = sort_map.get(sort_col, "market_cap_usd")
-    ascending = "P/E" in sort_col   # cheaper first for P/E
-    if sort_field in merged.columns:
-        merged = merged.sort_values(sort_field, ascending=ascending, na_position="last")
-
-    if merged.empty:
-        st.caption(f"No tickers in {sec['name']} after min-mcap filter (>= ${min_mcap_b:.1f}B)")
-        return
-
-    # --- Build NUMERIC display DataFrame (sort-bug fix) ---
-    def _col(name: str) -> pd.Series:
-        """Safe column accessor: missing column (data not yet fetched) → all-NaN."""
-        if name in merged.columns:
-            return merged[name]
-        return pd.Series([pd.NA] * len(merged), index=merged.index)
-
-    disp = pd.DataFrame(index=merged.index)
-    disp["Name"] = merged["Name"].fillna(merged.index.to_series())
-    disp["Mcap USD ($B)"] = _col("market_cap_usd") / 1e9
-    disp["YTD %"] = _col("ytd_%")
-    disp["1M %"] = _col("1m_%")
-    disp["5D %"] = _col("5d_%")
-    disp["1D %"] = _col("1d_%")
-    disp["Trail P/E"] = _col("trailing_pe")
-    disp["Fwd P/E"] = _col("forward_pe")
-    disp["EV/EBITDA"] = _col("ev_ebitda")
-    disp["EV/Sales"] = _col("ev_sales")
-    disp["FCF Yld"] = _col("fcf_yield")
-    disp["P/B"] = _col("pb")
-    disp.index.name = "Ticker"
-
-    ui.render_styled_table(
-        disp,
-        pct_cols=["YTD %", "1M %", "5D %", "1D %"],
-        pct_decimal_cols=["FCF Yld"],
-        mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "EV/Sales", "P/B"],
-        money_b_cols=["Mcap USD ($B)"],
-        text_cols=["Name"],
-        column_widths={"Name": "medium"},
-        height=540,
-        column_labels=i18n.common_cols(),
-        index_label=i18n.t("common.col.ticker"),
-    )
-
-    pct_num_map = {"YTD %": "ytd_%", "1M %": "1m_%", "5D %": "5d_%", "1D %": "1d_%"}
-    mult_num_map = {"Trail P/E": "trailing_pe", "Fwd P/E": "forward_pe",
-                    "EV/EBITDA": "ev_ebitda", "EV/Sales": "ev_sales", "P/B": "pb",
-                    "FCF Yld": "fcf_yield"}
-
-    # --- Sector aggregates ---
-    with st.expander(i18n.t("heat.agg.expander", sector=i18n.sector_name(sec['id']))):
-        agg_rows: dict[str, dict] = {}
-        for label, num_col in pct_num_map.items():
-            s = merged[num_col].dropna() if num_col in merged.columns else pd.Series(dtype=float)
-            agg_rows[label] = {
-                "Mean": fmt.fmt_pct(s.mean() if not s.empty else None),
-                "Median": fmt.fmt_pct(s.median() if not s.empty else None),
-                "Min": fmt.fmt_pct(s.min() if not s.empty else None),
-                "Max": fmt.fmt_pct(s.max() if not s.empty else None),
-            }
-        for label, num_col in mult_num_map.items():
-            s = merged[num_col].dropna() if num_col in merged.columns else pd.Series(dtype=float)
-            fmt_fn = fmt.fmt_pct_decimal if label == "FCF Yld" else fmt.fmt_ratio
-            agg_rows[label] = {
-                "Mean": fmt_fn(s.mean() if not s.empty else None),
-                "Median": fmt_fn(s.median() if not s.empty else None),
-                "Min": fmt_fn(s.min() if not s.empty else None),
-                "Max": fmt_fn(s.max() if not s.empty else None),
-            }
-        _agg = pd.DataFrame.from_dict(agg_rows, orient="index")
-        ui.render_html_table(
-            _agg,
-            text_cols=list(_agg.columns),
-            column_help={},
-            index_label=i18n.t("heat.agg.metric"),
-            height=460,
-        )
-
-
-# --- render tabs for piano-key navigation ---
-sector_tabs = st.tabs([f"{i18n.sector_name(sec['id'])} ({len(db.sector_tickers('ai', sec['id']))})"
-                       for sec in cfg["sectors"]])
-
-for tab, sec in zip(sector_tabs, cfg["sectors"]):
-    with tab:
-        render_sector(sec)
-
-st.divider()
-st.caption(i18n.t("heat.caption.legend", date=(db.latest_snapshot_date() or "—")))
-st.caption(i18n.t("heat.caption.filter_note"))
+    _doc, _h = heat_table.render_heat_table(_sectors, labels=_labels, height=920)
+    st.iframe(_doc, height=_h)
+    st.caption(i18n.t("heat.tbl.filter_note"))
 
 # --- Onboarding ---
-with st.expander(i18n.t("heat.onboarding.title")):
-    st.markdown(i18n.t("heat.onboarding.body"))
+with st.expander(i18n.t("heat.onboarding.title"), expanded=True):
+    st.markdown(i18n.t("heat.tbl.onboarding.body"))

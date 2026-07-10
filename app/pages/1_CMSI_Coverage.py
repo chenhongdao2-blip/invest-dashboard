@@ -1,41 +1,29 @@
-"""CMSI Coverage — 28 ticker cover list with full multiples + cross-sector tags.
+"""CMSI Coverage — 覆盖名单玻璃卡片表（coverage_table iframe 版）.
 
-D5 implementation:
-- Region tabs (HK / US / CN-A)
-- Per region: full table with multiples + return windows + cross-sector membership
-- Defaults: name_cn first, mcap desc (M10 audit)
+设计源（1:1 移植）：claude.ai/design 「CMSI 覆盖名单 美化.dc.html」.
+data layer 与旧版完全兼容（db.sector_tickers / compute_returns / latest_multiples）.
+
+变更摘要（vs 旧 D5 实现）:
+- st.tabs + ui.render_html_table → coverage_table.render_coverage iframe
+  （客户端 JS 切换市场 tab + 列排序，无 rerun）
+- 拆除 sort selectbox（in-table sort 已覆盖）
+- 保留 onboarding expander（expanded=True）+ sidebar search
+- 新增「超额 vs 本市场基准」列（exc）：各市场股票对各自基准 YTD 做差
+- i18n labels 走 i18n.t("cov.tbl.*")（缺 key → 返 key 字符串，不崩）
 """
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import pandas as pd
 import streamlit as st
-import yaml
 
 from lib import benchmarks as bm
+from lib import coverage_table
 from lib import db
-from lib import format as fmt
-from lib import ui
-from lib import theme
 from lib import i18n
 from lib import model_view
-
-
-def _reco_label(v) -> str:
-    """yfinance recommendationMean 1.0-5.0 → label."""
-    if v is None or pd.isna(v):
-        return "—"
-    if v < 1.5:
-        return "Strong Buy"
-    if v < 2.5:
-        return "Buy"
-    if v < 3.5:
-        return "Hold"
-    if v < 4.5:
-        return "Sell"
-    return "Strong Sell"
+from lib import theme
+from lib import ui
 
 st.set_page_config(
     page_title="CMSI Coverage · invest-dashboard",
@@ -43,184 +31,183 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- Sidebar global search ---
+# --- Sidebar ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="cmsi")
 
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("cov.title"))
+theme.page_header(i18n.t("cov.title"), meta="CMSI COVERAGE")
 st.caption(i18n.t("cov.caption", date=(db.latest_snapshot_date() or "—")))
+theme.page_radial_wash(1300)
 
+prefer_cn = i18n.get_lang() == "zh"
 
-# --- Load CMSI Coverage tickers ---
+# ---------------------------------------------------------------------------
+# 1. Universe 加载
+# ---------------------------------------------------------------------------
 cmsi = db.sector_tickers("healthcare", "_coverage")
 if cmsi.empty:
     st.warning("No CMSI coverage data — check config/universes/cmsi_coverage_hc.yml")
     st.stop()
 
 tickers = tuple(cmsi["ticker"].tolist())
+cmsi_idx = cmsi.set_index("ticker")
 
-# --- Compute returns + multiples for all CMSI tickers ---
+# ---------------------------------------------------------------------------
+# 2. 数据层：回报 + 倍数 + 基准
+# ---------------------------------------------------------------------------
 closes = db.get_close_series_usd(tickers)
 rets = db.compute_returns(closes)
 mults = db.latest_multiples(tickers)
 
-# --- Find cross-sector membership ---
-# Query all sectors each ticker belongs to (excluding _coverage)
-@st.cache_data(ttl=300)
-def cross_membership(tickers: tuple[str, ...]) -> dict[str, list[str]]:
-    # param must NOT start with '_' — underscore-prefixed args are excluded from
-    # the Streamlit cache key, so different ticker tuples would collide.
-    placeholders = ",".join("?" * len(tickers))
-    df = db.query(
-        f"SELECT ticker, sector FROM universe_member "
-        f"WHERE ticker IN ({placeholders}) AND sector != '_coverage' "
-        f"ORDER BY ticker, sector",
-        tuple(tickers),
-    )
-    out: dict[str, list[str]] = {}
-    for _, row in df.iterrows():
-        out.setdefault(row["ticker"], []).append(row["sector"])
-    return out
+bench_df = bm.fetch_benchmarks()
 
-
-cross = cross_membership(tickers)
-
-# --- Merge into display DataFrame ---
-merged = rets.copy() if not rets.empty else pd.DataFrame(index=list(tickers))
-merged["name_cn"] = cmsi.set_index("ticker")["name_cn"]
-merged["name_en"] = cmsi.set_index("ticker")["name_en"]
-merged["region"] = cmsi.set_index("ticker")["region"]
-merged["BBG"] = [fmt.fmt_ticker_bbg(t) for t in merged.index]
-if not mults.empty:
-    for c in ["market_cap_usd", "mcap_tier", "trailing_pe", "forward_pe",
-              "ev_ebitda", "ev_sales", "fcf_yield", "pb",
-              # m8 audit additions
-              "last_price", "last_price_usd", "target_price_mean",
-              "recommendation_mean", "n_analysts"]:
-        if c in mults.columns:
-            merged[c] = mults[c]
-
-# m8 audit: compute TP upside % from analyst consensus
-if "target_price_mean" in merged.columns and "last_price" in merged.columns:
-    merged["tp_upside_%"] = (
-        (merged["target_price_mean"] - merged["last_price"])
-        / merged["last_price"] * 100
-    )
-else:
-    merged["tp_upside_%"] = pd.NA
-
-# m8 audit: alpha vs HSI (港股 sell-side daily 必看)
-@st.cache_data(ttl=600)
-def _hsi_ytd() -> float | None:
-    bench_df = bm.fetch_benchmarks()
-    if bench_df.empty or "^HSI" not in bench_df.index:
+def _bench_ytd(symbol: str) -> float | None:
+    if bench_df.empty or symbol not in bench_df.index:
         return None
-    v = bench_df.loc["^HSI", "ytd_%"]
+    v = bench_df.loc[symbol, "ytd_%"]
     return float(v) if pd.notna(v) else None
 
+hk_ytd  = _bench_ytd("^HSI")
+us_ytd  = _bench_ytd("^GSPC")
+cn_ytd  = _bench_ytd("000001.SS")
 
-hsi_ytd = _hsi_ytd()
-if hsi_ytd is not None:
-    merged["vs_hsi_ytd"] = merged["ytd_%"] - hsi_ytd
+# ---------------------------------------------------------------------------
+# 3. 逐 ticker 行构建（匹配 coverage_table.render_coverage 的 rows schema）
+# ---------------------------------------------------------------------------
+# region → benchmark ytd 映射
+_REGION_BENCH: dict[str, float | None] = {
+    "HK": hk_ytd,
+    "US": us_ytd,
+    "CN": cn_ytd,
+}
+
+rows_all: list[dict] = []
+for tk in tickers:
+    ri = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)
+    mi = mults.loc[tk] if (not mults.empty and tk in mults.index) else pd.Series(dtype=float)
+    region = str(cmsi_idx.loc[tk, "region"]) if tk in cmsi_idx.index else "HK"
+
+    mcap_raw = mi.get("market_cap_usd")
+    mcap_b = (float(mcap_raw) / 1e9) if (mcap_raw is not None and pd.notna(mcap_raw)) else None
+
+    ytd = ri.get("ytd_%")
+    ytd = float(ytd) if (ytd is not None and pd.notna(ytd)) else None
+
+    # 超额 = 该股 ytd − 本市场基准 ytd（换算成 pp）
+    bm_ytd = _REGION_BENCH.get(region)
+    exc: float | None = None
+    if ytd is not None and bm_ytd is not None:
+        exc = ytd - bm_ytd
+
+    def _f(col: str) -> float | None:
+        v = ri.get(col) if col in ("1m_%", "5d_%", "1d_%") else mi.get(col)
+        return float(v) if (v is not None and pd.notna(v)) else None
+
+    name = (cmsi_idx.loc[tk, "name_cn"] if prefer_cn else cmsi_idx.loc[tk, "name_en"]) \
+           if tk in cmsi_idx.index else tk
+
+    rows_all.append({
+        "t":     tk,
+        "n":     str(name) if name and str(name) not in ("nan", "None") else tk,
+        "model": model_view.has_model(tk),
+        "region": region,
+        "mcap":  mcap_b,
+        "ytd":   ytd,
+        "m1":    _f("1m_%"),
+        "d5":    _f("5d_%"),
+        "d1":    _f("1d_%"),
+        "exc":   exc,
+        "peS":   _f("trailing_pe"),
+        "peF":   _f("forward_pe"),
+        "evE":   _f("ev_ebitda"),
+    })
+
+# ---------------------------------------------------------------------------
+# 4. 组装 tabs_payload（HK / US / CN / ALL）
+# ---------------------------------------------------------------------------
+MARKET_ORDER = [
+    ("HK", i18n.t("cov.tbl.tab.hk"),  "^HSI",       "恒指" if prefer_cn else "HSI",    hk_ytd),
+    ("US", i18n.t("cov.tbl.tab.us"),  "^GSPC",      "标普" if prefer_cn else "S&P500", us_ytd),
+    ("CN", i18n.t("cov.tbl.tab.cn"),  "000001.SS",  "上证" if prefer_cn else "SSE",    cn_ytd),
+]
+
+tabs_payload: list[dict] = []
+for region, tab_lbl, _sym, bench_lbl, b_ytd in MARKET_ORDER:
+    region_rows = [r for r in rows_all if r["region"] == region]
+    if not region_rows:
+        continue
+    tabs_payload.append({
+        "id":          region,
+        "label":       tab_lbl,
+        "count":       len(region_rows),
+        "bench_label": bench_lbl,
+        "bench_ytd":   b_ytd,
+        "rows":        [{k: v for k, v in r.items() if k != "region"} for r in region_rows],
+    })
+
+# ALL tab：各股保留各自 exc（already computed per-market）；bench_ytd=None
+all_rows = [{k: v for k, v in r.items() if k != "region"} for r in rows_all]
+tabs_payload.append({
+    "id":          "ALL",
+    "label":       i18n.t("cov.tbl.tab.all"),
+    "count":       len(all_rows),
+    "bench_label": i18n.t("cov.tbl.bench.own"),   # "各自基准"
+    "bench_ytd":   None,
+    "rows":        all_rows,
+})
+
+# ---------------------------------------------------------------------------
+# 5. Labels（i18n，缺 key 退回 key 字符串）
+# ---------------------------------------------------------------------------
+labels = {
+    # 摘要条
+    "cover":       i18n.t("cov.tbl.cover"),
+    "mcap_total":  i18n.t("cov.tbl.mcap_total"),
+    "ytd_med":     i18n.t("cov.tbl.ytd_med"),
+    "bench_prefix": i18n.t("cov.tbl.bench_prefix"),
+    "beat_label":  i18n.t("cov.tbl.beat_label"),
+    "unit_names":  i18n.t("cov.tbl.unit_names"),
+    "median":      i18n.t("cov.tbl.median"),
+    # 组头带
+    "grp_ret":       i18n.t("cov.tbl.grp_ret"),
+    "grp_exc_prefix": i18n.t("cov.tbl.grp_exc_prefix"),
+    "grp_val":       i18n.t("cov.tbl.grp_val"),
+    # 列标题
+    "cols": {
+        "t":          i18n.t("cov.tbl.col.t"),
+        "n":          i18n.t("cov.tbl.col.n"),
+        "mcap":       i18n.t("cov.tbl.col.mcap"),
+        "ytd":        i18n.t("cov.tbl.col.ytd"),
+        "m1":         i18n.t("cov.tbl.col.m1"),
+        "d5":         i18n.t("cov.tbl.col.d5"),
+        "d1":         i18n.t("cov.tbl.col.d1"),
+        # exc 列：前缀 + tab bench_label + 后缀（JS 侧动态拼）
+        "exc_prefix": i18n.t("cov.tbl.col.exc_prefix"),
+        "exc":        i18n.t("cov.tbl.col.exc"),   # fallback 静态 label
+        "exc_suffix": i18n.t("cov.tbl.col.exc_suffix"),
+        "peS":        i18n.t("cov.tbl.col.peS"),
+        "peF":        i18n.t("cov.tbl.col.peF"),
+        "evE":        i18n.t("cov.tbl.col.evE"),
+    },
+    # 脚注
+    "footnote": i18n.t("cov.tbl.footnote", date=(db.latest_snapshot_date() or "—")),
+    "brand":    "CMSI · COVERAGE",
+}
+
+# ---------------------------------------------------------------------------
+# 6. 渲染 iframe
+# ---------------------------------------------------------------------------
+if not tabs_payload:
+    st.warning("No rows to display.")
 else:
-    merged["vs_hsi_ytd"] = pd.NA
+    _doc, _h = coverage_table.render_coverage(tabs_payload, labels=labels, height=780)
+    st.iframe(_doc, height=_h)
 
-# Cross-sector tags: convert to icons
-def _cross_tag(ticker: str) -> str:
-    sectors = cross.get(ticker, [])
-    if not sectors:
-        return ""
-    # 简短 emoji mapping
-    icons = {
-        "biotech": "BIO", "pharma": "PHAR", "hc_ai": "AI",
-        "medtech": "MED", "hospital_care": "HOSP",
-        "managed_care": "MC", "cxo": "CXO",
-    }
-    return " ".join(icons.get(s, f"[{s}]") for s in sectors)
-
-
-merged["Cross-Sector"] = [_cross_tag(t) for t in merged.index]
-
-# --- Default sort: mcap desc (M10 audit) ---
-merged = merged.sort_values("market_cap_usd", ascending=False, na_position="last")
-
-# --- Region tabs ---
-regions = ["HK", "US", "CN", "All"]
-tabs = st.tabs([f"{r} ({sum(merged['region']==r) if r != 'All' else len(merged)})" for r in regions])
-
-
-def render_region(df: pd.DataFrame) -> None:
-    if df.empty:
-        st.caption("No tickers in this region.")
-        return
-
-    # BUGFIX: Build NUMERIC DataFrame (not pre-formatted strings) so column sort
-    # works correctly. Streamlit column_config handles display format; Styler.apply
-    # still works for background_gradient on the numeric values.
-    # Note: BBG column dropped — duplicates the ticker index. Name column uses
-    # name_cn first, falls back to name_en, then ticker.
-    disp = pd.DataFrame(index=df.index)
-    # Click-through to the analyst-model one-pager (Model Drill). Only covered
-    # names that actually have an extracted model get the 📊 link; others blank.
-    _mdl_col = "模型" if i18n.get_lang() == "zh" else "Model"
-    disp[_mdl_col] = [f"/Model_Drill?ticker={t}" if model_view.has_model(t) else ""
-                      for t in df.index]
-    disp["Name"] = df["name_cn"].fillna(df["name_en"]).fillna(df.index.to_series())
-    disp["Mcap USD ($B)"] = df["market_cap_usd"] / 1e9              # numeric, B
-    disp["YTD %"] = df["ytd_%"]
-    disp["1M %"] = df["1m_%"]
-    disp["5D %"] = df["5d_%"]
-    disp["1D %"] = df["1d_%"]
-    disp["vs HSI YTD"] = df["vs_hsi_ytd"]
-    disp["Trail P/E"] = df["trailing_pe"]
-    disp["Fwd P/E"] = df["forward_pe"]
-    disp["EV/EBITDA"] = df["ev_ebitda"]
-    # FCF Yld stored as decimal (0.025); pre-multiply by 100 so column_config
-    # "%+.2f%%" displays "+2.50%". Streamlit's NumberColumn format string does
-    # not implement printf's %%-as-percent-multiplier shorthand.
-    disp["FCF Yld"] = df["fcf_yield"] * 100
-    disp["P/B"] = df["pb"]
-    # TP Upside % / Reco / N analysts / Cross columns removed per user request
-    # (analyst TP/Reco are LOW-reliability yfinance consensus; Cross was clutter).
-    disp.index.name = "Ticker"
-
-    # Stage 2: render as FT-editorial HTML table (iframe) instead of st.dataframe.
-    # Solves the glide-data-grid canvas dark-mode penetration (black cells), and
-    # gives click-sort + tabular-nums + <th title> tooltips with full CSS control.
-    # Column kinds map onto render_html_table; coloring is text-only (染字不染底).
-    # FCF Yld is already ×100 (pct units) above, so it goes in pct_cols.
-    ui.render_html_table(
-        disp,
-        money_b_cols=["Mcap USD ($B)"],
-        pct_cols=["YTD %", "1M %", "5D %", "1D %", "vs HSI YTD"],
-        pct2_cols=["FCF Yld"],
-        mult_cols=["Trail P/E", "Fwd P/E", "EV/EBITDA", "P/B"],
-        text_cols=["Name"],
-        nav_cols=[_mdl_col],
-        nav_label="📊",
-        height=620,
-        column_labels={
-            **i18n.common_cols(),
-            "vs HSI YTD": i18n.t("cov.col.vs_hsi"),
-        },
-        index_label=i18n.t("common.col.ticker"),
-    )
-
-
-for tab, region in zip(tabs, regions):
-    with tab:
-        if region == "All":
-            render_region(merged)
-        else:
-            render_region(merged[merged["region"] == region])
-
-# --- Onboarding ---
-with st.expander(i18n.t("cov.onboarding.title")):
+# ---------------------------------------------------------------------------
+# 7. Onboarding（不折叠，George 要求）
+# ---------------------------------------------------------------------------
+with st.expander(i18n.t("cov.onboarding.title"), expanded=True):
     st.markdown(i18n.t("cov.onboarding.body"))
-
-st.divider()
-st.caption(i18n.t("cov.caption.tags"))
-st.caption(i18n.t("cov.caption.source", n=len(merged)))

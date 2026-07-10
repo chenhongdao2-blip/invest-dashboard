@@ -108,8 +108,49 @@ STRINGS = {
     ),
 
     # ── CMSI Coverage ──
+    # hub.tbl.* — Market Hub 三块表（market_hub_tables iframe，zip5 设计）
+    "hub.tbl.sp.title": "标普 500 子行业表现",
+    "hub.tbl.sp.sub": "11 个 GICS 一级行业（SPDR Select Sector ETF 代理）· 默认按 YTD 排名 · 点击列头排序",
+    "hub.tbl.hc.title": "医疗健康 · 基准",
+    "hub.tbl.hc.sub": "医疗健康基准 ETF · 相对标普 = YTD 超额 · 点击列头排序",
+    "hub.tbl.movers.title": "涨跌榜 · 1 日",
+    "hub.tbl.movers.sub": "医疗健康覆盖池 · 按 1 日涨跌排序 · 价格为当地币种",
+
     "cov.title": "CMSI 覆盖名单",
     "cov.caption": "28 只官方覆盖名单——港股 15 / 美股 10 / A 股 3。最新数据：{date}",
+    # cov.tbl.* — Coverage 玻璃卡片表（coverage_table iframe，zip5 设计）
+    "cov.tbl.tab.hk": "HK",
+    "cov.tbl.tab.us": "US",
+    "cov.tbl.tab.cn": "CN",
+    "cov.tbl.tab.all": "ALL",
+    "cov.tbl.bench.own": "各自基准",
+    "cov.tbl.cover": "覆盖",
+    "cov.tbl.mcap_total": "总市值",
+    "cov.tbl.ytd_med": "YTD 中位",
+    "cov.tbl.bench_prefix": "",
+    "cov.tbl.beat_label": "跑赢 ",
+    "cov.tbl.unit_names": "只",
+    "cov.tbl.median": "覆盖中位数",
+    "cov.tbl.grp_ret": "回报 RETURNS %",
+    "cov.tbl.grp_exc_prefix": "相对",
+    "cov.tbl.grp_val": "估值 VALUATION ×",
+    "cov.tbl.col.t": "代码",
+    "cov.tbl.col.n": "名称",
+    "cov.tbl.col.mcap": "市值 十亿$",
+    "cov.tbl.col.ytd": "年初至今",
+    "cov.tbl.col.m1": "1月",
+    "cov.tbl.col.d5": "5日",
+    "cov.tbl.col.d1": "1日",
+    "cov.tbl.col.exc_prefix": "",
+    "cov.tbl.col.exc": "基准超额",
+    "cov.tbl.col.exc_suffix": "",
+    "cov.tbl.col.peS": "静态P/E",
+    "cov.tbl.col.peF": "动态P/E",
+    "cov.tbl.col.evE": "EV/EBITDA",
+    "cov.tbl.footnote": (
+        "市值以 USD 十亿计；回报为 USD 总收益（含汇率）；估值来自 yfinance 快照（截至 {date}）；"
+        "负/零倍数标 NM；基准超额＝个股 YTD − 本市场基准 YTD（pp）。有模型的标的名称后以 ● 标注。"
+    ),
     "cov.col.vs_hsi": "恒指超额（年初至今）",
     "cov.col.tp_upside": "目标价空间 %",
     "cov.col.reco": "评级",
@@ -154,18 +195,50 @@ STRINGS = {
     "hc.summary.empty": "暂无板块数据——需回补。",
     # ── 相对表现（Jonah：HSHCI vs 恒生/恒科 · NBI vs 纳指 · 标普医疗 vs 标普）──
     "hc.rs.section": "相对表现",
-    "hc.rs.section_meta": "去年 8 月以来 · rebased=100",
+    "hc.rs.section_meta": "五组指数对比 · 窗口内重锚定",
+    "hc.rs.win.meta": "REBASED = 100 · 共同交易日内联 · 每张卡片右上角独立切窗，切换即以窗口首日重锚定",
+    "hc.rs.kicker.hk": "01 · 港股口径 · HK LENS",
+    "hc.rs.kicker.msci": "02 · MSCI 中国口径 · ETF PROXY",
+    "hc.rs.kicker.nbi": "03 · 美股生科 · US BIOTECH",
+    "hc.rs.kicker.sphc": "04 · 美股医疗 · S&P HC",
+    "hc.rs.kicker.aibio": "05 · 跨主题 · BIOTECH VS AI HARDWARE",
+    "hc.rs.footnote": (
+        "口径：各面板内所有序列按共同交易日内联，在当前窗口首日重锚定为 100；"
+        "pp 徽章 = 红色主线相对该对照线的窗口内累计超额（主线 − 对照线，rebased 点数）。"
+        "5D = 近 5 个共同交易日；1M / 6M 按日历回溯。"
+    ),
     "hc.rs.hk.title": "恒生医疗保健 vs 恒生 vs 恒生科技",
     "hc.rs.msci.title": "MSCI 中国医疗保健 vs MSCI 中国（ETF 代理：KURE / MCHI）",
     "hc.rs.msci.src": "yfinance · ETF 代理（含息·USD）",
-    "hc.rs.hc_indices_note": (
-        "**两个医疗指数怎么区分？**　"
-        "**① 恒生医疗保健（HSHCI）**——成分为**香港上市**医疗股（创新药 / Biotech / 器械 / 医疗服务），"
-        "Biotech 权重高、波动大；纯离岸、**不含 A 股**；港元价格指数（不含息）。代表**港股医疗 beta**。　"
-        "**② MSCI 中国医疗（KURE 跟踪 MSCI China All Shares Health Care）**——覆盖**全中国**医疗"
-        "（A 股 + H 股 + ADR，含恒瑞医药、迈瑞医疗等 A 股大票），口径更宽，A 股纳入摊薄了港股 Biotech 的极端波动；"
-        "为美元 ETF、含息。代表**全中国医疗 beta**。　"
-        "→ 二者会分叉：讲**港股医疗去仓位 / Biotech** 用 HSHCI，讲**全中国医疗 beta** 用 MSCI（KURE）。"
+    # 释义 GLOSSARY 结构化卡（zip4 设计；旧 hc_indices_note 长段落已被替换）
+    "hc.rs.gl.eyebrow": "释义 · GLOSSARY",
+    "hc.rs.gl.title": "两个医疗指数怎么区分？",
+    "hc.rs.gl.sub_right": "对应上方面板 01 / 02",
+    "hc.rs.gl.comp_label": "成分",
+    "hc.rs.gl.feat_label": "特征",
+    "hc.rs.gl.how_label": "怎么用",
+    "hc.rs.gl.note_right": "二者会分叉，属口径差异而非数据错误",
+    "hc.rs.gl.badge1": "HSHCI",
+    "hc.rs.gl.name1": "恒生医疗保健",
+    "hc.rs.gl.tag1": "港股医疗 beta",
+    "hc.rs.gl.chip1a": "纯离岸 · 不含 A 股",
+    "hc.rs.gl.chip1b": "港元 · 价格指数 · 不含息",
+    "hc.rs.gl.comp1": "香港上市医疗股：创新药 / Biotech / 器械 / 医疗服务",
+    "hc.rs.gl.feat1": "Biotech 权重高、波动大",
+    "hc.rs.gl.badge2": "MSCI · KURE",
+    "hc.rs.gl.name2": "MSCI 中国医疗",
+    "hc.rs.gl.tag2": "全中国医疗 beta",
+    "hc.rs.gl.chip2a": "A 股 + H 股 + ADR",
+    "hc.rs.gl.chip2b": "美元 ETF · 含息",
+    "hc.rs.gl.comp2": "KURE 跟踪 MSCI China All Shares Health Care，含恒瑞医药、迈瑞医疗等 A 股大票",
+    "hc.rs.gl.feat2": "口径更宽，A 股纳入摊薄了港股 Biotech 的极端波动",
+    "hc.rs.gl.how1": (
+        '讲<b>港股医疗去仓位 / Biotech</b> → 用 <span style="font-family:\'JetBrains Mono\','
+        'monospace;font-size:11px;font-weight:700;color:#c8102e;">HSHCI</span>'
+    ),
+    "hc.rs.gl.how2": (
+        '讲<b>全中国医疗 beta</b> → 用 <span style="font-family:\'JetBrains Mono\','
+        'monospace;font-size:11px;font-weight:700;color:#1a1a1a;">MSCI（KURE）</span>'
     ),
     "hc.rs.nbi.title": "纳指生科 NBI · 标普生科 XBI vs 纳斯达克综合",
     "hc.rs.sphc.title": "标普 500 医疗保健 vs 标普 500",
@@ -181,7 +254,6 @@ STRINGS = {
         "三条线同口径 rebased，仅看 beta，不含个股 alpha。"
     ),
     "hc.rs.ylabel": "rebased（起点 = 100）",
-    "hc.rs.caption": "锚定 {anchor}（去年 8 月）· {detail}。来源：{src}，截至 {asof}。",
     "hc.rs.read": (
         "港股医疗独熊（较恒指 −22.4pp），主因**中国医疗特有风险**（流动性虹吸 / 集采 VBP / "
         "医保谈判），而非全球医疗 de-rating——佐证：NBI 与纳指基本持平，全球生科未同步走弱。"
@@ -192,6 +264,11 @@ STRINGS = {
     "hc.rs.flat": "{hero}与{peer} 基本持平",
     "hc.rs.empty": "暂无指数对比数据——请运行 jobs/build_hc_overview_data.py 回补。",
     # HSHCI 长周期完整轨迹（−70% → 翻倍 → 回调）
+    "hc.rs.hshci.kicker": "06 · 港股口径 · FULL CYCLE",
+    "hc.rs.hshci.chip": "月收盘 · 绝对点位",
+    "hc.rs.hshci.src": "iFind 指数月收盘（末点日频）",
+    "hc.rs.hshci.vs_peak": "较峰",
+    "hc.rs.hshci.vs_start": "较起点",
     "hc.rs.hshci.title": "恒生医疗保健指数：2021.7 以来完整轨迹（绝对点位）",
     "hc.rs.hshci.ylabel": "指数点位",
     "hc.rs.hshci.ann.start": "高位 {c:,.0f}",
@@ -216,11 +293,11 @@ STRINGS = {
     "hc.jp.hero": "日本医药专栏指数（40 支市值加权）",
     "hc.jp.bench.topix": "TOPIX（1305.T ETF 代理）",
     "hc.jp.bench.n225": "日经 225",
+    "hc.jp.kicker": "日本医药 · JAPAN HC · USD 口径",
     "hc.jp.caption": (
-        "锚定 {anchor} · {detail}。专栏指数＝40 支市值加权（权重＝2026/05 市值快照，"
-        "锚日归一）；三条序列均为 "
-        "USD 口径（含汇率，相对差值已大致互抵汇率项）；TOPIX 用 1305.T ETF 代理。"
-        "来源：yfinance EOD cron，截至 {asof}。"
+        "专栏指数＝40 支市值加权（权重＝2026/05 市值快照，于指数基期归一，与所选窗口无关）；"
+        "三条序列均为 USD 口径（含汇率，相对差值已大致互抵汇率项）；TOPIX 用 1305.T ETF 代理。"
+        "窗口重锚定与 pp 徽章口径同上方「相对表现」版块。来源：yfinance EOD cron，截至 {asof}。"
     ),
     "hc.jp.detail": "40 支明细（按子板块 · USD 口径）",
     "hc.jp.read": (
@@ -367,21 +444,69 @@ STRINGS = {
     "heat.filter.header": "筛选",
     "heat.filter.min_mcap": "市值下限（十亿美元 B）",
     "heat.filter.min_mcap_help": "过滤掉小市值标的，避免拉偏均值。",
+    # 旧 Styler 版 keys —— a3_ai_heatmap 仍在用（AI 域热力图未迁移新卡片）
     "heat.filter.sort_by": "排序依据",
     "heat.filter.sort_help": "默认按市值降序。",
     "heat.agg.expander": "{sector} 汇总（均值 / 中位数 / 加权）",
     "heat.agg.metric": "指标",
+    "heat.caption.legend": "**配色图例**：收益率绿涨红跌；估值倍数（P/E、EV/EBITDA）绿低红高（绿=便宜）；自由现金流收益率绿高红低。代码采用 **彭博格式**（2269 HK / 4587 JP / 300760 CH）。最新数据：**{date}**",
+    "heat.empty": "暂无横截面数据——请运行 jobs/fetch_eod 回补。",
+    "heat.tbl.cover": "覆盖",
+    "heat.tbl.mcap_total": "总市值",
+    "heat.tbl.ytd_med": "YTD 中位",
+    "heat.tbl.breadth": "YTD 广度",
+    "heat.tbl.up": "涨",
+    "heat.tbl.dn": "跌",
+    "heat.tbl.unit_names": "家",
+    "heat.tbl.median": "板块中位数",
+    "heat.tbl.grp_ret": "回报 RETURNS %",
+    "heat.tbl.grp_val": "估值 VALUATION ×",
+    "heat.tbl.grp_cf": "现金流",
+    "heat.tbl.col.t": "代码",
+    "heat.tbl.col.n": "名称",
+    "heat.tbl.col.mcap": "市值 十亿$",
+    "heat.tbl.col.ytd": "年初至今",
+    "heat.tbl.col.m1": "1月",
+    "heat.tbl.col.d5": "5日",
+    "heat.tbl.col.d1": "1日",
+    "heat.tbl.col.peS": "静态P/E",
+    "heat.tbl.col.peF": "动态P/E",
+    "heat.tbl.col.fcf": "FCF收益",
+    "heat.tbl.sum.title": "板块汇总",
+    "heat.tbl.sum.sub": "等权平均收益 · 共 {n} 标的 · 点击行切换下方板块",
+    "heat.tbl.heat.title": "板块热力图",
+    "heat.tbl.heat.sub": "个股横截面 · 倍数来自 yfinance（静态 + 12M 动态）· 点击列头排序",
+    "heat.tbl.sum.col.sector": "板块",
+    "heat.tbl.sum.col.n": "标的",
+    "heat.tbl.sum.col.dist": "YTD 分布",
+    "heat.tbl.sum.col.bench": "基准",
+    "heat.tbl.footnote_dyn": "板块汇总为等权平均，YTD 分布条以列内最大幅度（±{max}%）为满刻度。",
+    "heat.tbl.footnote": (
+        '配色图例：回报列按列内幅度加深（<span style="color:#0d7680;font-weight:600;">青涨</span>'
+        ' / <span style="color:#c8102e;font-weight:600;">红跌</span>）；估值倍数按列内分位'
+        '（青 = 便宜 / 红 = 贵，NM 不参与）；FCF 收益青高红低。市值条为 √ 刻度。'
+        '点击列头排序；「中位数」行为当前板块列中位。最新快照：{date}。'
+    ),
     "heat.onboarding.title": "如何阅读本页",
+    # heat.tbl.* 分叉键（新 iframe 卡片专用）；heat.onboarding.body / heat.caption.filter_note
+    # 保持旧文案不动 —— a3_ai_heatmap（未迁移）仍在消费，语义与旧 Styler 表对应。
+    "heat.tbl.onboarding.body": (
+        "**倍数与收益**\n"
+        "- **配色图例**：回报列青涨红跌（按列内幅度加深）；估值倍数按列内分位染色"
+        "（青=便宜 / 红=贵，NM 不参与）；FCF 收益青高红低。\n"
+        "- **选项卡**：表内上方 tabs 快速切换 7 个细分板块（即时，无刷新）。\n"
+        "- **排序**：点击列头即按该列排序，再点反转；NM 恒沉底。\n\n"
+        "**筛选** — **最小市值**（侧边栏）：过滤掉极小市值标的，避免其极端估值拉偏板块中位。"
+    ),
+    "heat.tbl.filter_note": "侧边栏可设市值下限。当小市值标的拉偏板块中位时（如 4587 JP $904M vs GILD $166B），该筛选很有用。",
     "heat.onboarding.body": (
         "**倍数与收益**\n"
         "- **配色图例**：收益率绿涨红跌；估值倍数（P/E、EV/EBITDA）绿低红高（绿=便宜）；"
         "自由现金流收益率绿高红低。\n"
-        "- **选项卡**：上方选项卡快速切换 7 个细分板块。\n\n"
+        "- **选项卡**：上方选项卡快速切换细分板块。\n\n"
         "**筛选** — **最小市值**：过滤掉极小市值标的，避免其极端估值拉偏板块均值。\n\n"
         "**汇总**：展开下方「板块汇总」可看该板块的均值与中位数。"
     ),
-
-    "heat.caption.legend": "**配色图例**：收益率绿涨红跌；估值倍数（P/E、EV/EBITDA）绿低红高（绿=便宜）；自由现金流收益率绿高红低。代码采用 **彭博格式**（2269 HK / 4587 JP / 300760 CH）。最新数据：**{date}**",
     "heat.caption.filter_note": "通过侧边栏排序/筛选。当小市值标的拉偏板块均值时（如 4587 JP $904M vs GILD $166B），市值下限筛选很有用。",
 
     # ── Valuation Scanner ──

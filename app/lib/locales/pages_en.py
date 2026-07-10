@@ -110,8 +110,50 @@ STRINGS = {
     ),
 
     # ── CMSI Coverage ──
+    # hub.tbl.* — Market Hub tables (market_hub_tables iframe, zip5 design)
+    "hub.tbl.sp.title": "S&P 500 Sector Performance",
+    "hub.tbl.sp.sub": "11 GICS level-1 sectors (SPDR Select Sector ETF proxies) · ranked by YTD by default · click headers to sort",
+    "hub.tbl.hc.title": "Healthcare · Benchmarks",
+    "hub.tbl.hc.sub": "Healthcare benchmark ETFs · vs S&P = YTD excess · click headers to sort",
+    "hub.tbl.movers.title": "Top Movers · 1D",
+    "hub.tbl.movers.sub": "Healthcare coverage pool · ranked by 1D move · prices in local currency",
+
     "cov.title": "CMSI Coverage",
     "cov.caption": "28-ticker official cover list — HK 15 / US 10 / CN A-share 3. Latest data: {date}",
+    # cov.tbl.* — Coverage glass-card table (coverage_table iframe, zip5 design)
+    "cov.tbl.tab.hk": "HK",
+    "cov.tbl.tab.us": "US",
+    "cov.tbl.tab.cn": "CN",
+    "cov.tbl.tab.all": "ALL",
+    "cov.tbl.bench.own": "Own benchmark",
+    "cov.tbl.cover": "COVERAGE",
+    "cov.tbl.mcap_total": "TOTAL MCAP",
+    "cov.tbl.ytd_med": "YTD MEDIAN",
+    "cov.tbl.bench_prefix": "",
+    "cov.tbl.beat_label": "Beat ",
+    "cov.tbl.unit_names": "names",
+    "cov.tbl.median": "Coverage median",
+    "cov.tbl.grp_ret": "RETURNS %",
+    "cov.tbl.grp_exc_prefix": "vs ",
+    "cov.tbl.grp_val": "VALUATION ×",
+    "cov.tbl.col.t": "Ticker",
+    "cov.tbl.col.n": "Name",
+    "cov.tbl.col.mcap": "Mcap $B",
+    "cov.tbl.col.ytd": "YTD",
+    "cov.tbl.col.m1": "1M",
+    "cov.tbl.col.d5": "5D",
+    "cov.tbl.col.d1": "1D",
+    "cov.tbl.col.exc_prefix": "",
+    "cov.tbl.col.exc": "Excess",
+    "cov.tbl.col.exc_suffix": "",
+    "cov.tbl.col.peS": "Trail P/E",
+    "cov.tbl.col.peF": "Fwd P/E",
+    "cov.tbl.col.evE": "EV/EBITDA",
+    "cov.tbl.footnote": (
+        "Mcap in USD bn; returns are USD total return (incl. FX); multiples from the yfinance "
+        "snapshot (as of {date}); negative/zero multiples shown as NM; Excess = stock YTD − "
+        "market benchmark YTD (pp). Names with a model carry a red ● badge."
+    ),
     "cov.col.vs_hsi": "vs HSI YTD",
     "cov.col.tp_upside": "TP Upside %",
     "cov.col.reco": "Reco",
@@ -158,21 +200,51 @@ STRINGS = {
     "hc.summary.empty": "No sector data — backfill needed.",
     # ── Relative performance (Jonah: HSHCI vs HSI/HSTECH · NBI vs Nasdaq · S&P HC vs S&P) ──
     "hc.rs.section": "Relative Performance",
-    "hc.rs.section_meta": "Since last Aug · rebased=100",
+    "hc.rs.section_meta": "5 index pairs · re-anchored within window",
+    "hc.rs.win.meta": "REBASED = 100 · common trading days inner-joined · each card has its own window toggle (top-right); switching re-anchors at the window's first day",
+    "hc.rs.kicker.hk": "01 · HK LENS · HANG SENG",
+    "hc.rs.kicker.msci": "02 · MSCI CHINA · ETF PROXY",
+    "hc.rs.kicker.nbi": "03 · US BIOTECH",
+    "hc.rs.kicker.sphc": "04 · S&P HEALTH CARE",
+    "hc.rs.kicker.aibio": "05 · BIOTECH VS AI HARDWARE",
+    "hc.rs.footnote": (
+        "Basis: within each panel, all series are inner-joined on common trading days and "
+        "re-anchored to 100 at the selected window's first day; the pp badge = the red hero "
+        "line's cumulative excess vs that peer within the window (hero − peer, rebased points). "
+        "5D = last 5 common sessions; 1M / 6M by calendar lookback."
+    ),
     "hc.rs.hk.title": "Hang Seng Healthcare vs Hang Seng vs Hang Seng TECH",
     "hc.rs.msci.title": "MSCI China Health Care vs MSCI China (ETF proxy: KURE / MCHI)",
     "hc.rs.msci.src": "yfinance · ETF proxy (total return · USD)",
-    "hc.rs.hc_indices_note": (
-        "**Two China-healthcare indices — how they differ.**　"
-        "**① Hang Seng Healthcare (HSHCI)** — **HK-listed** healthcare only (innovative pharma / "
-        "biotech / devices / services), biotech-heavy and volatile; purely offshore, **no A-shares**; "
-        "an HKD price index (ex-dividend). The **HK-healthcare beta**.　"
-        "**② MSCI China Health Care (KURE tracks MSCI China All Shares Health Care)** — **all-China** "
-        "healthcare (A-shares + H-shares + ADRs, incl. A-share giants like Hengrui & Mindray), a broader "
-        "universe whose A-share inclusion dampens the HK biotech swings; a USD, total-return ETF. The "
-        "**all-China healthcare beta**.　"
-        "→ They diverge: use HSHCI for the **HK-healthcare / biotech de-positioning** story, MSCI (KURE) "
-        "for **all-China healthcare beta**."
+    # GLOSSARY structured card (zip4 design; replaces the old hc_indices_note prose)
+    "hc.rs.gl.eyebrow": "GLOSSARY",
+    "hc.rs.gl.title": "Two China-healthcare indices — how they differ",
+    "hc.rs.gl.sub_right": "Panels 01 / 02 above",
+    "hc.rs.gl.comp_label": "COMP",
+    "hc.rs.gl.feat_label": "TRAIT",
+    "hc.rs.gl.how_label": "HOW TO USE",
+    "hc.rs.gl.note_right": "They diverge — a basis difference, not a data error",
+    "hc.rs.gl.badge1": "HSHCI",
+    "hc.rs.gl.name1": "Hang Seng Healthcare",
+    "hc.rs.gl.tag1": "HK-healthcare beta",
+    "hc.rs.gl.chip1a": "Purely offshore · no A-shares",
+    "hc.rs.gl.chip1b": "HKD · price index · ex-dividend",
+    "hc.rs.gl.comp1": "HK-listed healthcare: innovative pharma / biotech / devices / services",
+    "hc.rs.gl.feat1": "Biotech-heavy, volatile",
+    "hc.rs.gl.badge2": "MSCI · KURE",
+    "hc.rs.gl.name2": "MSCI China Health Care",
+    "hc.rs.gl.tag2": "All-China healthcare beta",
+    "hc.rs.gl.chip2a": "A-shares + H-shares + ADRs",
+    "hc.rs.gl.chip2b": "USD ETF · total return",
+    "hc.rs.gl.comp2": "KURE tracks MSCI China All Shares Health Care, incl. A-share giants like Hengrui & Mindray",
+    "hc.rs.gl.feat2": "Broader basis; A-share inclusion dampens the HK biotech swings",
+    "hc.rs.gl.how1": (
+        'For the <b>HK-healthcare de-positioning / biotech</b> story → use <span style="font-family:'
+        "'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#c8102e;\">HSHCI</span>"
+    ),
+    "hc.rs.gl.how2": (
+        'For <b>all-China healthcare beta</b> → use <span style="font-family:'
+        "'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#1a1a1a;\">MSCI (KURE)</span>"
     ),
     "hc.rs.nbi.title": "Nasdaq Biotech (NBI) · S&P Biotech (XBI) vs Nasdaq Composite",
     "hc.rs.sphc.title": "S&P 500 Health Care vs S&P 500",
@@ -189,7 +261,6 @@ STRINGS = {
         "All three same-basis rebased — beta only, no single-name alpha."
     ),
     "hc.rs.ylabel": "Rebased (start = 100)",
-    "hc.rs.caption": "Anchored {anchor} (last Aug) · {detail}. Source: {src}, as of {asof}.",
     "hc.rs.read": (
         "HK healthcare is the lone bear (−22.4pp vs HSI), driven by **China-specific risk** "
         "(HK liquidity drain / VBP procurement / NRDL price cuts) — not a global healthcare "
@@ -201,6 +272,11 @@ STRINGS = {
     "hc.rs.flat": "{hero} ≈ flat vs {peer}",
     "hc.rs.empty": "No index-comparison data — run jobs/build_hc_overview_data.py to backfill.",
     # HSHCI full-cycle path (−70% → doubled → pullback)
+    "hc.rs.hshci.kicker": "06 · HK LENS · FULL CYCLE",
+    "hc.rs.hshci.chip": "Monthly close · absolute level",
+    "hc.rs.hshci.src": "iFind monthly close (latest daily endpoint)",
+    "hc.rs.hshci.vs_peak": "vs peak",
+    "hc.rs.hshci.vs_start": "vs start",
     "hc.rs.hshci.title": "Hang Seng Healthcare: full cycle since Jul 2021 (index level)",
     "hc.rs.hshci.ylabel": "Index level",
     "hc.rs.hshci.ann.start": "High {c:,.0f}",
@@ -225,11 +301,13 @@ STRINGS = {
     "hc.jp.hero": "Japan HC composite (40 names, cap-weighted)",
     "hc.jp.bench.topix": "TOPIX (1305.T ETF proxy)",
     "hc.jp.bench.n225": "Nikkei 225",
+    "hc.jp.kicker": "JAPAN HC · USD BASIS",
     "hc.jp.caption": (
-        "Anchored {anchor} · {detail}. Composite = market-cap-weighted across 40 names "
-        "(weights = May-2026 mcap snapshot, rebased at the anchor); "
+        "Composite = market-cap-weighted across 40 names (weights = May-2026 mcap snapshot, "
+        "normalized at the composite's base date, independent of the selected window); "
         "all three series in USD (FX included; FX largely cancels in the relative "
-        "spread); TOPIX proxied by the 1305.T ETF. Source: yfinance EOD cron, "
+        "spread); TOPIX proxied by the 1305.T ETF. Window re-anchoring and the pp badges "
+        "follow the Relative Performance section above. Source: yfinance EOD cron, "
         "as of {asof}."
     ),
     "hc.jp.detail": "All 40 names (by subsector · USD)",
@@ -388,22 +466,74 @@ STRINGS = {
     "heat.filter.header": "Filter",
     "heat.filter.min_mcap": "Min market cap (USD B)",
     "heat.filter.min_mcap_help": "Filter out small caps so they don't distort the mean.",
+    # Legacy Styler-table keys — still consumed by a3_ai_heatmap (AI heatmap not migrated)
     "heat.filter.sort_by": "Sort by",
     "heat.filter.sort_help": "Defaults to market cap descending.",
     "heat.agg.expander": "{sector} aggregates (mean / median / weighted)",
     "heat.agg.metric": "Metric",
+    "heat.caption.legend": "**Color legend**: returns green-up / red-down; multiples (P/E, EV/EBITDA) green-cheap / red-rich; FCF yield green-high / red-low. Ticker in **Bloomberg style** (2269 HK / 4587 JP / 300760 CH). Latest data: **{date}**",
+    "heat.empty": "No cross-section data — run jobs/fetch_eod to backfill.",
+    "heat.tbl.cover": "COVERAGE",
+    "heat.tbl.mcap_total": "TOTAL MCAP",
+    "heat.tbl.ytd_med": "YTD MEDIAN",
+    "heat.tbl.breadth": "YTD BREADTH",
+    "heat.tbl.up": "up",
+    "heat.tbl.dn": "down",
+    "heat.tbl.unit_names": "names",
+    "heat.tbl.median": "Sector median",
+    "heat.tbl.grp_ret": "RETURNS %",
+    "heat.tbl.grp_val": "VALUATION ×",
+    "heat.tbl.grp_cf": "CASH FLOW",
+    "heat.tbl.col.t": "Ticker",
+    "heat.tbl.col.n": "Name",
+    "heat.tbl.col.mcap": "Mcap $B",
+    "heat.tbl.col.ytd": "YTD",
+    "heat.tbl.col.m1": "1M",
+    "heat.tbl.col.d5": "5D",
+    "heat.tbl.col.d1": "1D",
+    "heat.tbl.col.peS": "Trail P/E",
+    "heat.tbl.col.peF": "Fwd P/E",
+    "heat.tbl.col.fcf": "FCF Yld",
+    "heat.tbl.sum.title": "Sector Summary",
+    "heat.tbl.sum.sub": "Equal-weight avg returns · {n} names · click a row to switch the sector below",
+    "heat.tbl.heat.title": "Sector Heatmap",
+    "heat.tbl.heat.sub": "Single-name cross-section · multiples from yfinance (trailing + 12M fwd) · click headers to sort",
+    "heat.tbl.sum.col.sector": "Sector",
+    "heat.tbl.sum.col.n": "Names",
+    "heat.tbl.sum.col.dist": "YTD dist",
+    "heat.tbl.sum.col.bench": "BM",
+    "heat.tbl.footnote_dyn": "Sector summary is equal-weighted; the YTD bar is scaled to the column's max magnitude (±{max}%).",
+    "heat.tbl.footnote": (
+        'Color legend: return cells deepen with within-column magnitude '
+        '(<span style="color:#0d7680;font-weight:600;">teal up</span> / '
+        '<span style="color:#c8102e;font-weight:600;">red down</span>); valuation multiples '
+        'tinted by within-column percentile (teal = cheap / red = rich, NM excluded); FCF yield '
+        'teal-high / red-low. Mcap bar is √-scaled. Click a column header to sort; the '
+        '"Sector median" row is the current sector\'s column median. Latest snapshot: {date}.'
+    ),
     "heat.onboarding.title": "How to read this page",
+    # heat.tbl.* forked keys (new iframe card only); heat.onboarding.body /
+    # heat.caption.filter_note keep the LEGACY text — a3_ai_heatmap still consumes them.
+    "heat.tbl.onboarding.body": (
+        "**Multiples & returns**\n"
+        "- **Color legend**: return cells teal-up / red-down (deepen with within-column "
+        "magnitude); multiples tinted by within-column percentile (teal = cheap / red = rich, "
+        "NM excluded); FCF yield teal-high / red-low.\n"
+        "- **Tabs**: switch across the 7 sub-sectors inside the table (instant, no rerun).\n"
+        "- **Sorting**: click a column header; click again to reverse. NM always sinks.\n\n"
+        "**Filters** — **Min market cap** (sidebar): drop tiny names whose extreme multiples "
+        "skew the sector median."
+    ),
+    "heat.tbl.filter_note": "Set a min market cap in the sidebar — useful when small caps distort the sector median (e.g. 4587 JP $904M vs GILD $166B).",
     "heat.onboarding.body": (
         "**Multiples & returns**\n"
         "- **Color legend**: returns green-up / red-down; multiples (P/E, EV/EBITDA) "
         "green-cheap / red-rich; FCF yield green-high / red-low.\n"
-        "- **Tabs**: piano-key through the 7 sub-sectors.\n\n"
+        "- **Tabs**: piano-key through the sub-sectors.\n\n"
         "**Filters** — **Min market cap**: drop tiny names whose extreme multiples skew the "
         "sector mean.\n\n"
         "**Aggregates**: expand 'Sector aggregates' for the sector's mean and median."
     ),
-
-    "heat.caption.legend": "**Color legend**: returns green-up / red-down; multiples (P/E, EV/EBITDA) green-cheap / red-rich; FCF yield green-high / red-low. Ticker in **Bloomberg style** (2269 HK / 4587 JP / 300760 CH). Latest data: **{date}**",
     "heat.caption.filter_note": "Sort/filter via the sidebar. The min-market-cap filter helps when small caps distort sector means (e.g. 4587 JP $904M vs GILD $166B).",
 
     # ── Valuation Scanner ──

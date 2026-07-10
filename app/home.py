@@ -20,6 +20,7 @@ from lib import i18n
 from lib import heatmap as hm
 from lib import heatmap_treemap
 from lib import market_hub_tiles
+from lib import market_hub_tables
 from lib import freshness
 
 st.set_page_config(
@@ -309,30 +310,219 @@ else:
 #     return (teal up / red down), grouped by healthcare sub-sector. ---
 _render_stock_heatmap()
 
-# --- 2. S&P 500 sectors (hero) — collapsible (expanded by default) ---
-with st.expander(i18n.t("home.panel.sp500_sector"), expanded=True):
-    st.caption(i18n.t("home.panel.sp500_caption"))
-    _render_benchmark_table("sp500_sector", _panels["sp500_sector"])
+# --- 2+3. Market Hub iframe — S&P 500 GICS sectors + HC benchmarks + 涨跌榜 ---
+# Three blocks in one self-contained iframe (client-side sort, no Streamlit rerun).
+# Replaces the old sp500_sector expander + healthcare benchmark/movers expanders.
+_prefer_cn = i18n.get_lang() == "zh"
 
-# --- 3. Healthcare domain — collapsible (expanded); benchmark + movers UNIFIED under
-#     one domain header. Inner blocks use subsection() (no dividing INK rule), so the
-#     HC benchmark and its movers read as ONE healthcare block. ---
-with st.expander(i18n.domain_name("healthcare"), expanded=True):
-    theme.subsection(i18n.t("home.sub.benchmarks"))
-    _render_benchmark_table("healthcare", _panels["healthcare"])
-    theme.subsection(i18n.t("home.section.movers"))
-    _render_movers("healthcare")
+# SP rows: 11 GICS SPDR ETFs (exclude ^GSPC; it becomes sp_ref)
+_GICS_ZH = {
+    "XLK": "信息技术", "XLC": "通信服务", "XLY": "非必需消费",
+    "XLF": "金融", "XLV": "医疗健康", "XLI": "工业",
+    "XLP": "必需消费", "XLE": "能源", "XLU": "公用事业",
+    "XLB": "材料", "XLRE": "房地产",
+}
+_GICS_EN = {
+    "XLK": "Technology", "XLC": "Comm. Services", "XLY": "Cons. Discretionary",
+    "XLF": "Financials", "XLV": "Health Care", "XLI": "Industrials",
+    "XLP": "Cons. Staples", "XLE": "Energy", "XLU": "Utilities",
+    "XLB": "Materials", "XLRE": "Real Estate",
+}
+_gics_names = _GICS_ZH if _prefer_cn else _GICS_EN
 
-# --- 4. AI domain — collapsible (collapsed by default). Benchmark table populated from
-#     the cross-market AI/semi set (LLM Wiki); movers stub until an AI stock universe
-#     lands. Future domains follow this same collapsible-card pattern. ---
-with st.expander(i18n.domain_name("ai"), expanded=False):
+_sp_etfs = [s for s in _panels["sp500_sector"] if s != "^GSPC"]
+_sp_rows = []
+for _sym in _sp_etfs:
+    if _sym not in bench_df.index:
+        continue
+    _row = bench_df.loc[_sym]
+    _rel = (float(_row["ytd_%"]) - float(gspc_ytd)) if (gspc_ytd is not None and not pd.isna(_row["ytd_%"]) and not pd.isna(gspc_ytd)) else None
+    _sp_rows.append([
+        _sym,
+        _gics_names.get(_sym, _row["name"]),
+        None if pd.isna(_row["1d_%"]) else float(_row["1d_%"]),
+        None if pd.isna(_row["5d_%"]) else float(_row["5d_%"]),
+        None if pd.isna(_row["1m_%"]) else float(_row["1m_%"]),
+        None if pd.isna(_row["3m_%"]) else float(_row["3m_%"]),
+        None if pd.isna(_row["ytd_%"]) else float(_row["ytd_%"]),
+        _rel,
+    ])
+
+_sp_ref = None
+if "^GSPC" in bench_df.index:
+    _gr = bench_df.loc["^GSPC"]
+    _sp_ref = [
+        "^GSPC",
+        "标普 500 指数" if _prefer_cn else "S&P 500 Index",
+        None if pd.isna(_gr["1d_%"]) else float(_gr["1d_%"]),
+        None if pd.isna(_gr["5d_%"]) else float(_gr["5d_%"]),
+        None if pd.isna(_gr["1m_%"]) else float(_gr["1m_%"]),
+        None if pd.isna(_gr["3m_%"]) else float(_gr["3m_%"]),
+        None if pd.isna(_gr["ytd_%"]) else float(_gr["ytd_%"]),
+        None,
+    ]
+
+# HC rows: design's 9 HC ETFs (exclude A/HK indices — not in iframe design)
+_HC_ORDER = ["XLV", "XBI", "XPH", "^SP500-352020", "IHI", "IHF", "XHS", "IGV", "IXJ"]
+_hc_rows = []
+for _sym in _HC_ORDER:
+    if _sym not in bench_df.index:
+        continue
+    _row = bench_df.loc[_sym]
+    _rel = (float(_row["ytd_%"]) - float(gspc_ytd)) if (gspc_ytd is not None and not pd.isna(_row["ytd_%"]) and not pd.isna(gspc_ytd)) else None
+    _hc_rows.append([
+        _sym,
+        i18n.bench_name(_sym, _row["name"]),
+        None if pd.isna(_row["1d_%"]) else float(_row["1d_%"]),
+        None if pd.isna(_row["5d_%"]) else float(_row["5d_%"]),
+        None if pd.isna(_row["1m_%"]) else float(_row["1m_%"]),
+        None if pd.isna(_row["3m_%"]) else float(_row["3m_%"]),
+        None if pd.isna(_row["ytd_%"]) else float(_row["ytd_%"]),
+        _rel,
+    ])
+
+# Movers: top_movers returns (gainers, losers) with index=ticker, cols=[name,last,1d_%,5d_%,1m_%,ytd_%]
+_hub_gainers_df, _hub_losers_df = db.top_movers(n=10, domain="healthcare")
+
+
+def _mover_rows(df: pd.DataFrame) -> list:
+    out = []
+    for _tk, _r in df.iterrows():
+        _mkt = ("HK" if str(_tk).endswith(".HK") else "JP" if str(_tk).endswith(".T") else "KR" if (str(_tk).endswith(".KS") or str(_tk).endswith(".KQ")) else "CN" if (str(_tk).endswith(".SS") or str(_tk).endswith(".SZ")) else "US")
+        out.append([
+            str(_tk),
+            _mkt,
+            str(_r.get("name", _tk)),
+            None if pd.isna(_r.get("last", float("nan"))) else float(_r["last"]),
+            None if pd.isna(_r.get("1d_%", float("nan"))) else float(_r["1d_%"]),
+            None if pd.isna(_r.get("5d_%", float("nan"))) else float(_r["5d_%"]),
+            None if pd.isna(_r.get("1m_%", float("nan"))) else float(_r["1m_%"]),
+        ])
+    return out
+
+
+_hub_payload = {
+    "sp_rows": _sp_rows,
+    "sp_ref":  _sp_ref,
+    "hc_rows": _hc_rows,
+    "gainers": _mover_rows(_hub_gainers_df),
+    "losers":  _mover_rows(_hub_losers_df),
+    "as_of":   latest or "",
+}
+_hub_labels = {
+    "hub.tbl.sp.title":      i18n.t("hub.tbl.sp.title"),
+    "hub.tbl.sp.sub":        i18n.t("hub.tbl.sp.sub"),
+    "hub.tbl.sp.right":      "GICS SPDR ETF",
+    "hub.tbl.hc.title":      i18n.t("hub.tbl.hc.title"),
+    "hub.tbl.hc.sub":        i18n.t("hub.tbl.hc.sub"),
+    "hub.tbl.hc.right":      "HC BENCHMARK",
+    "hub.tbl.movers.title":  i18n.t("hub.tbl.movers.title"),
+    "hub.tbl.movers.sub":    i18n.t("hub.tbl.movers.sub"),
+    "hub.tbl.movers.right":  "HEALTHCARE UNIVERSE",
+    "hub.tbl.grp.ret":       "回报 RETURNS %" if _prefer_cn else "RETURNS %",
+    "hub.tbl.grp.rel":       "相对标普 · YTD 超额 PP" if _prefer_cn else "vs S&P 500 · YTD excess PP",
+    "hub.tbl.col.tick":      "代码" if _prefer_cn else "Ticker",
+    "hub.tbl.col.name":      "名称" if _prefer_cn else "Name",
+    "hub.tbl.col.d1":        "1日" if _prefer_cn else "1D",
+    "hub.tbl.col.d5":        "5日" if _prefer_cn else "5D",
+    "hub.tbl.col.m1":        "1月" if _prefer_cn else "1M",
+    "hub.tbl.col.m3":        "3月" if _prefer_cn else "3M",
+    "hub.tbl.col.ytd":       "年初至今" if _prefer_cn else "YTD",
+    "hub.tbl.col.rel":       "相对PP" if _prefer_cn else "vs SPX",
+    "hub.tbl.col.dist":      "分布" if _prefer_cn else "Dist.",
+    "hub.tbl.movers.gainers": "涨幅前 10" if _prefer_cn else "Top 10 Gainers",
+    "hub.tbl.movers.losers":  "跌幅前 10" if _prefer_cn else "Top 10 Losers",
+    "hub.tbl.movers.col.rank":  "#",
+    "hub.tbl.movers.col.price": "最新价" if _prefer_cn else "Price",
+    "hub.tbl.footnote": (
+        "回报数据来源 Yahoo Finance cron EOD · 相对 PP = 标的 YTD − 标普 500 YTD · "
+        f"截至 {latest} · 仅供参考"
+        if _prefer_cn else
+        f"Returns: Yahoo Finance cron EOD · Relative PP = ticker YTD − S&P 500 YTD · "
+        f"as of {latest} · reference only"
+    ),
+    "hub.tbl.brand": "CMSI · MARKET HUB",
+}
+_hub_doc, _hub_h = market_hub_tables.render_market_hub(_hub_payload, _hub_labels)
+st.iframe(_hub_doc, height=_hub_h)
+
+# --- 4. AI domain — hub-style glass table (expanded by default). Benchmark table
+#     populated from the cross-market AI/semi set (LLM Wiki); movers stub until an AI
+#     stock universe lands. Future domains follow this same pattern. ---
+with st.expander(i18n.domain_name("ai"), expanded=True):
     _ai_syms = _panels.get("ai", [])
     if _ai_syms:
-        theme.subsection(i18n.t("home.sub.benchmarks"))
-        _render_benchmark_table("ai", _ai_syms)
-        theme.subsection(i18n.t("home.section.movers"))
-        _render_movers("ai")
+        _ai_present = [s for s in _ai_syms if s in bench_df.index]
+        _ai_rows = []
+        for _sym in _ai_present:
+            _row = bench_df.loc[_sym]
+            _rel = (float(_row["ytd_%"]) - float(gspc_ytd)) if (
+                gspc_ytd is not None
+                and not pd.isna(_row["ytd_%"])
+                and not pd.isna(gspc_ytd)
+            ) else None
+            _ai_rows.append([
+                _sym,
+                i18n.bench_name(_sym, _row["name"]),
+                None if pd.isna(_row["1d_%"]) else float(_row["1d_%"]),
+                None if pd.isna(_row["5d_%"]) else float(_row["5d_%"]),
+                None if pd.isna(_row["1m_%"]) else float(_row["1m_%"]),
+                None if pd.isna(_row["3m_%"]) else float(_row["3m_%"]),
+                None if pd.isna(_row["ytd_%"]) else float(_row["ytd_%"]),
+                _rel,
+            ])
+        _ai_labels = {
+            "bench.title":       "基准 / AI · BENCHMARKS" if _prefer_cn else "基准 / AI · BENCHMARKS",
+            "bench.sub":         "半导体 · AI主题 · 跨市场" if _prefer_cn else "Semis · AI Theme · Cross-Market",
+            "bench.right":       "AI BENCHMARK",
+            "bench.as_of":       latest or "",
+            "hub.tbl.grp.ret":   "回报 RETURNS %" if _prefer_cn else "RETURNS %",
+            "hub.tbl.grp.rel":   "相对标普 · YTD 超额 PP" if _prefer_cn else "vs S&P 500 · YTD excess PP",
+            "hub.tbl.col.tick":  "代码" if _prefer_cn else "Ticker",
+            "hub.tbl.col.name":  "名称" if _prefer_cn else "Name",
+            "hub.tbl.col.d1":    "1日" if _prefer_cn else "1D",
+            "hub.tbl.col.d5":    "5日" if _prefer_cn else "5D",
+            "hub.tbl.col.m1":    "1月" if _prefer_cn else "1M",
+            "hub.tbl.col.m3":    "3月" if _prefer_cn else "3M",
+            "hub.tbl.col.ytd":   "年初至今" if _prefer_cn else "YTD",
+            "hub.tbl.col.rel":   "相对PP" if _prefer_cn else "vs SPX",
+            "hub.tbl.col.dist":  "分布" if _prefer_cn else "Dist.",
+            "hub.tbl.footnote": (
+                "回报数据来源 Yahoo Finance cron EOD · 相对 PP = 标的 YTD − 标普 500 YTD · "
+                f"截至 {latest} · 仅供参考"
+                if _prefer_cn else
+                f"Returns: Yahoo Finance cron EOD · Relative PP = ticker YTD − S&P 500 YTD · "
+                f"as of {latest} · reference only"
+            ),
+            "hub.tbl.brand": "CMSI · MARKET HUB",
+        }
+        if _ai_rows:
+            _ai_doc, _ai_h = market_hub_tables.render_bench_block(_ai_rows, _ai_labels)
+            st.iframe(_ai_doc, height=_ai_h)
+        else:
+            st.caption(i18n.t("home.panel.empty"))
+        # AI 涨跌榜 — 与 hub 同款双 glass 卡（旧 _render_movers 表格样式退役）
+        _ai_g, _ai_l = db.top_movers(n=10, domain="ai")
+        if not _ai_g.empty:
+            _mv_labels = {
+                "hub.tbl.movers.title": "涨跌榜 · 1 日" if _prefer_cn else "Top Movers · 1D",
+                "hub.tbl.movers.sub": ("AI 覆盖池 · 按 1 日涨跌排序 · 价格为当地币种"
+                                        if _prefer_cn else
+                                        "AI coverage pool · ranked by 1D move · local currency"),
+                "hub.tbl.movers.right": "AI UNIVERSE",
+                "hub.tbl.movers.gainers": "涨幅前 10" if _prefer_cn else "Top 10 Gainers",
+                "hub.tbl.movers.losers": "跌幅前 10" if _prefer_cn else "Top 10 Losers",
+                "hub.tbl.movers.col.rank": "#",
+                "hub.tbl.movers.col.price": "最新价" if _prefer_cn else "Price",
+                "hub.tbl.col.tick": "代码" if _prefer_cn else "Ticker",
+                "hub.tbl.col.name": "名称" if _prefer_cn else "Name",
+                "hub.tbl.col.d1": "1日" if _prefer_cn else "1D",
+                "hub.tbl.col.d5": "5日" if _prefer_cn else "5D",
+                "hub.tbl.col.m1": "1月" if _prefer_cn else "1M",
+            }
+            _mv_doc, _mv_h = market_hub_tables.render_movers_block(
+                _mover_rows(_ai_g), _mover_rows(_ai_l), _mv_labels)
+            st.iframe(_mv_doc, height=_mv_h)
     else:
         st.caption(i18n.t("home.panel.empty"))
 

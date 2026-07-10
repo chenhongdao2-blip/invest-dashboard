@@ -1,8 +1,9 @@
 {
   "_meta": {
     "note": "港股高股息组合 调仓/收益 结构化数据源 — 供 lib/hd_rebalance_panel.py 渲染 Strategy Picks 高股息页(v3 当前版)的『调仓纪律 & 换仓记录』区。held/sold/new 三组由 v2/v3 picks CSV 实时求差;收益链 v1→v2→v3 分段净值由页面实时算(_chain_nav 同路径)。本文件只存: 收益链分段元信息(标签/日期/n,不含收益) + 换仓逻辑 + 精简 Rulebook(愿意分/分得出/分得久)。",
-    "as_of": "2026-07-07",
+    "as_of": "2026-07-11",
     "book": "v3",
+    "methodology_change": "2026-07-11 George 拍板:v3 建仓规则由 v2.2 桶配比制改为纯定性评分制,追溯至 2026-07-07 建仓日重建(口径变更事件);引擎唯一源从 build_positions_v22 切至 build_positions_v3。",
     "not_advice": "研究工具,不构成投资建议"
   },
 
@@ -24,19 +25,19 @@
         "note": "综合分定权 + 12% 现金缓冲", "note_en": "score-set weights + 12% cash buffer"
       },
       {
-        "ver": "v3", "label": "Wind 单源", "label_en": "Wind single-source",
+        "ver": "v3", "label": "纯评分定权", "label_en": "Pure score build",
         "from": "2026-07-07", "to": null, "n": 20,
         "tag": "进行中", "tag_en": "In progress", "current": true,
-        "note": "实时净值见上方走势图", "note_en": "live NAV tracked in the chart above"
+        "note": "纯定性总分前 20 · Wind 单源;实时净值见上方走势图", "note_en": "pure top-20 by qualitative score, Wind single-source; live NAV tracked in the chart above"
       }
     ]
   },
 
   "rebalance": {
     "prev_book": "v2", "prev_pick_date": "2026-06-11",
-    "pick_date": "2026-07-07", "turnover_pct": 45,
-    "logic": "换出 = 综合分排序下移 / payout 转不可持续 / 权重优化换入更高分同桶标的;非追涨杀跌。桶双轨:利率溢价桶(rate)吃利率下行重估,非利率桶(nonrate)吃盈利与治理确定性。v3 为 Wind 单源重算,派息 / ROAE 口径统一。",
-    "logic_en": "Sell = score rank slipped / payout turned unsustainable / weight optimization into a higher-scored name in the same bucket; not chase-the-move. Two buckets: rate (captures the re-rate as rates fall) + nonrate (earnings & governance certainty). v3 is a Wind single-source rebuild with unified payout/ROAE definitions.",
+    "pick_date": "2026-07-07", "turnover_pct": 80,
+    "logic": "v3 起建仓改为纯定性评分制(2026-07-11 修订,追溯至建仓日):100 支评分池主池/缓冲池合并、不设晋升线,按「愿意分/分得出/分得久」定性总分取前 20,评分^1.5 定权;取消利率桶 55/45 配比,桶占比自然形成(建仓时利率桶约 40%);伪高息/FCF覆盖不足/周期顶等风险标注保留展示、不作一票否决。换手 80%(16/20)主因规则切换,非个股观点逐一变化。Wind 单源、派息/ROAE 口径统一沿用。",
+    "logic_en": "From v3 the build is a pure qualitative-score scheme (revised 2026-07-11, restated to inception): the 100-name scored pool is merged (core + buffer, no promotion line), top 20 by the willing/able/durable total score, weights ∝ score^1.5; the 55/45 rate-bucket anchor is retired (rate share forms naturally, ~40% at build); risk flags (pseudo-high-yield / FCF shortfall / cycle-peak) are displayed but no longer veto. The 80% turnover (16/20) is driven by the rule switch, not name-by-name view changes. Wind single-source and unified payout/ROAE definitions carry over.",
     "buckets": {
       "rate": {"label": "利率溢价桶", "label_en": "Rate-premium", "note": "利率下行重估的高股息(银行 / 公用 / 高速)", "note_en": "high-div names that re-rate as rates fall (banks / utilities / toll roads)"},
       "nonrate": {"label": "非利率桶", "label_en": "Non-rate", "note": "盈利与治理驱动的高股息(消费 / 制造 / 能源)", "note_en": "earnings- & governance-driven high-div (consumer / manufacturing / energy)"}
@@ -55,7 +56,7 @@
     "rules": [
       {"id": "R1", "title": "三维达标线(愿意分 × 分得出 × 分得久)", "title_en": "3-dim gate", "desc": "公司治理 55% · 财务质量/现金流 25% · 行业护城河 20%,三重达标才入池", "desc_en": "Governance 55% · cash-flow quality 25% · moat 20% — must clear all three"},
       {"id": "R2", "title": "payout 卡 band + 银行用加权 ROAE", "title_en": "Payout band + weighted ROAE", "desc": "payout 30/70/100% band,>100% 或举债分红=红旗;银行必用加权 ROAE(公布值)非摊薄", "desc_en": "payout 30/70/100% band; >100% or debt-funded = red flag; banks use weighted ROAE, not diluted"},
-      {"id": "R3", "title": "评分定权,非等权", "title_en": "Score-weighted, not EW", "desc": "综合分定权(v1 等权 → v2/v3 定权),单票上限 ~6% 避免单一标的主导", "desc_en": "weights set by composite score (v1 EW → v2/v3 weighted); ~6% single-name cap"},
+      {"id": "R3", "title": "评分定权,非等权", "title_en": "Score-weighted, not EW", "desc": "综合分^1.5 定权(v1 等权 → v2/v3 定权),单票硬上限 10%(v3 建仓实际 4.2-4.7%)", "desc_en": "weights ∝ composite score^1.5 (v1 EW → v2/v3 weighted); 10% hard single-name cap (4.2-4.7% at v3 build)"},
       {"id": "R4", "title": "现金缓冲 ~12%", "title_en": "~12% cash buffer", "desc": "常态留 ~12% 现金(策略设计非误差),留再平衡与错杀弹药", "desc_en": "hold ~12% cash by design (not an error) — dry powder for rebalancing / mispricings"},
       {"id": "R5", "title": "权重漂移再平衡", "title_en": "Drift rebalance", "desc": "权重漂移超目标带触发 trim/add 回锚,不追涨杀跌", "desc_en": "trim/add back to target when weight drifts past the band; no chase"},
       {"id": "R6", "title": "评分掉档 → 人工 review", "title_en": "Score drop → human review", "desc": "治理 / payout / 护城河 恶化=真信号该动;价格波动=噪音不机械砍", "desc_en": "governance/payout/moat deterioration is a real signal; price noise isn't — don't auto-cut"}

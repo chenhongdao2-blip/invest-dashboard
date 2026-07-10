@@ -27,6 +27,7 @@ from lib import i18n
 from lib import strategy_hero
 from lib import strategy_banner as sb
 from lib import ipo_stage
+from lib import picks_table
 
 st.set_page_config(
     page_title="Strategy Picks · invest-dashboard",
@@ -56,7 +57,7 @@ def _overview_curve_card(strat_id: str) -> dict | None:
     if picks.empty:
         return None
     pick_date, bench_sym = cfg["pick_date"], cfg["benchmark"]
-    top_n = min(20, len(picks))
+    top_n = min(int(cfg.get("top_n", 20)), len(picks))
     pr = picks.sort_values("rank") if "rank" in picks.columns else picks
     top_syms = pr.head(top_n)["yf_sym"].dropna().tolist()
     wc = cfg.get("weight_col")
@@ -151,6 +152,60 @@ if _ov_cards:
     sb.overview_strip(_ov_cards)
 
 
+# ── Method-card config per strategy book ─────────────────────────────────────
+
+_BIOTECH_DIMS = [
+    {"name": "管线",   "pct": 40, "color": "#c8102e", "fg": "#fff1e5"},
+    {"name": "催化事件", "pct": 25, "color": "#0d7680", "fg": "#fff1e5"},
+    {"name": "并购",   "pct": 20, "color": "#1a1a1a", "fg": "#fff1e5"},
+    {"name": "财务",   "pct": 10, "color": "#E0A458", "fg": "#1a1a1a"},
+    {"name": "风险",   "pct":  5, "color": "#b8ab99", "fg": "#1a1a1a"},
+]
+_HD_DIMS = [
+    {"name": "公司治理", "pct": 55, "color": "#c8102e", "fg": "#fff1e5"},
+    {"name": "财务质量", "pct": 25, "color": "#0d7680", "fg": "#fff1e5"},
+    {"name": "行业护城河", "pct": 20, "color": "#1a1a1a", "fg": "#fff1e5"},
+]
+
+
+def _build_method_cfg(strat_id: str, prefer_cn: bool) -> dict:
+    """Return a picks_table.render_methodology() m-dict for the given strategy."""
+    is_biotech = strat_id in ("v4_biotech", "v5_biotech", "v6_biotech")
+    dims = _BIOTECH_DIMS if is_biotech else _HD_DIMS
+
+    version_chip = {
+        "v4_biotech": "v4 · 2026-04",
+        "v5_biotech": "v5 · 2026-05",
+        "v6_biotech": "v6 · 2026-07",
+        "hk_hd":   "v1 · 2026-03",
+        "hk_hd_v2": "v2 · 2026-06",
+        "hk_hd_v3": "v3 · 2026-07",
+    }.get(strat_id, strat_id)
+    universe_chip = "US Biotech" if is_biotech else "HK High-Div"
+
+    # Fetch methodology body text from i18n (existing keys, not new ones)
+    method_key = {
+        "v4_biotech": "strategy.v4.method",
+        "v5_biotech": "strategy.v5.method",
+        "v6_biotech": "strategy.v5.method",
+        "hk_hd":    "strategy.hd.method",
+        "hk_hd_v2": "strategy.hd.v2.method",
+        "hk_hd_v3": "strategy.hd.v3.method",
+    }.get(strat_id, "strategy.hd.method")
+    raw_md = i18n.t(method_key)
+    # Convert lightweight markdown to inline HTML (bold, newlines → <br>)
+    import re as _re
+    summary_html = _re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", raw_md)
+    summary_html = summary_html.replace("\n\n", "<br><br>").replace("\n", "<br>")
+
+    return {
+        "tag":          version_chip,
+        "chip":         universe_chip,
+        "dims":         dims,
+        "summary_html": summary_html,
+    }
+
+
 def render_strategy(strat_id: str) -> None:
     cfg = strat.STRATEGIES[strat_id]
     picks = cfg["loader"]()
@@ -165,21 +220,17 @@ def render_strategy(strat_id: str) -> None:
     bench2_name = cfg.get("benchmark2_name", "")
     disp_name = i18n.t(f"strategy.name.{strat_id}")
 
-    # --- Methodology (sourced; biotech vs high-dividend) ---
-    method_key = {
-        "v4_biotech": "strategy.v4.method",
-        "v5_biotech": "strategy.v5.method",
-        "v6_biotech": "strategy.v5.method",
-        "hk_hd": "strategy.hd.method",
-        "hk_hd_v2": "strategy.hd.v2.method",
-        "hk_hd_v3": "strategy.hd.v3.method",
-    }.get(strat_id, "strategy.hd.method")
-    with st.expander(i18n.t("strategy.method_expander")):
-        st.markdown(i18n.t(method_key))
+    # --- Methodology glass card (picks_table house design) ---
+    _is_biotech = strat_id in ("v4_biotech", "v5_biotech", "v6_biotech")
+    _prefer_cn = i18n.get_lang() == "zh"
+    _method_cfg = _build_method_cfg(strat_id, _prefer_cn)
+    with st.expander(i18n.t("strategy.method_expander"), expanded=True):
+        _mdoc, _mh = picks_table.render_methodology(_method_cfg, prefer_cn=_prefer_cn)
+        st.iframe(_mdoc, height=_mh)
 
     # --- Top-N selection (scoring model: portfolio = top 20 by score rank) ---
     n_total = len(picks)
-    top_n = min(20, n_total)
+    top_n = min(int(cfg.get("top_n", 20)), n_total)
     picks_ranked = picks.sort_values("rank") if "rank" in picks.columns else picks
     top_syms = picks_ranked.head(top_n)["yf_sym"].dropna().tolist()
 
@@ -197,9 +248,11 @@ def render_strategy(strat_id: str) -> None:
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
-    # 55 calendar days ≈ 30+ trading days of pre-inception history so the
-    # trailing 15D/30D columns have data even on a freshly built book (v2).
-    earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
+    # Fetch from the earlier of (pick_date - 55 days) and Jan 1 of current year so
+    # that YTD is computable for all strategy books regardless of pick_date.
+    _jan1 = f"{pd.Timestamp.now().year}-01-01"
+    _pre55 = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
+    earliest = min(_jan1, _pre55)
     bench_syms = tuple(s for s in (bench_sym, bench2_sym) if s)
     closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest,
                                       _ovr_mtime=strat._delisted_mtime())
@@ -306,66 +359,135 @@ def render_strategy(strat_id: str) -> None:
     # 30-trading-day sparkline closes per ticker (fetch window is 55 calendar
     # days, so even a fresh book has a full pre-inception window).
     perf["spark"] = [
-        picks_closes[t].dropna().tail(30).tolist()
+        picks_closes[t].dropna().tail(20).tolist()
         if t in picks_closes.columns else []
         for t in perf.index
     ]
     perf.index = [fmt.fmt_ticker_bbg(t) for t in perf.index]
 
-    disp = perf.rename(columns={
-        "rank": "Rank", "name": "Name", "score": "Score",
-        "weight_pct": "Weight", "bucket": "Bucket", "runrate_pct": "Yield",
-        "contrib_pct": "Contrib", "spark": "Spark",
-    })
-    front_cols = ["Rank", "Name", "Score", "Weight", "Bucket", "Yield",
-                  "Last", "Spark", "1D %", "5D %", "15D %", "30D %",
-                  "Since %", "Contrib"]
-    disp = disp[[c for c in front_cols if c in disp.columns]]
+    # --- Build picks_table payload ---
+    # Determine currency prefix per book
+    _ccy = "$" if _is_biotech else "HK$"
 
-    pct_cols_avail = [c for c in ["1D %", "5D %", "15D %", "30D %", "Since %", "Contrib"]
-                      if c in disp.columns]
-    extra_fmt = {}
-    for c, f in (("Last", "%.2f"), ("Score", "%.2f"),
-                 ("Weight", "%.2f"), ("Yield", "%.2f")):
-        if c in disp.columns:
-            extra_fmt[c] = f
-    col_labels = {
-        "Rank": i18n.t("strategy.col.rank"),
-        "Name": i18n.t("strategy.col.name"),
-        "Score": i18n.t("strategy.col.score"),
-        "Weight": i18n.t("strategy.col.weight"),
-        "Bucket": i18n.t("strategy.col.bucket"),
-        "Yield": i18n.t("strategy.col.runrate"),
-        "Last": i18n.t("strategy.col.last"),
-        "Spark": i18n.t("strategy.col.spark"),
-        "Since %": i18n.t("strategy.col.since"),
-        "Contrib": i18n.t("strategy.col.contrib"),
-    }
+    # perf.index is now BBG-formatted tickers (renamed above); build the reverse
+    # map (bbg → yf_sym) BEFORE the loop so we can look up picks_closes columns.
+    # Also build a forward map (yf_sym → bbg) for the tick field.
+    _bbg_to_yf: dict[str, str] = {}
+    for _orig_yf in picks["yf_sym"].dropna().unique():
+        _b = fmt.fmt_ticker_bbg(str(_orig_yf))
+        _bbg_to_yf[_b] = str(_orig_yf)
 
-    def _render_perf(slice_df: pd.DataFrame, height: int = 560) -> None:
-        ui.render_html_table(
-            slice_df,
-            int_cols=[c for c in ["Rank"] if c in slice_df.columns],
-            pct_cols=[c for c in pct_cols_avail if c in slice_df.columns],
-            text_cols=[c for c in ["Name", "Bucket"] if c in slice_df.columns],
-            spark_cols=[c for c in ["Spark"] if c in slice_df.columns],
-            bar_cols=[c for c in ["Weight", "Contrib"] if c in slice_df.columns],
-            extra_formats=extra_fmt,
-            column_labels=col_labels,
-            index_label=i18n.t("strategy.col.ticker"),
-            height=height,
-        )
+    # Compute YTD returns from picks_closes (which now fetches from Jan 1).
+    # db.compute_returns handles the per-ticker YTD anchor correctly.
+    import importlib as _il
+    _db = _il.import_module("lib.db")
+    _ytd_map: dict[str, float | None] = {}
+    if not picks_closes.empty:
+        _ret_df = _db.compute_returns(picks_closes)
+        for _col in _ret_df.index:
+            _v = _ret_df.loc[_col, "ytd_%"] if "ytd_%" in _ret_df.columns else float("nan")
+            _ytd_map[str(_col)] = float(_v) if pd.notna(_v) else None
+
+    def _pv(row: "pd.Series", col: str) -> "float | None":
+        v = row.get(col, None)
+        return float(v) if pd.notna(v) else None  # type: ignore[arg-type]
+
+    _payload_rows: list[dict] = []
+    for _bbg_sym, _row in perf.iterrows():
+        _bbg_sym = str(_bbg_sym)
+        # Resolve yf_sym for picks_closes column lookup
+        _orig_yf = _bbg_to_yf.get(_bbg_sym, _bbg_sym)
+
+        # name: from meta join; fallback to ticker
+        _name = str(_row.get("name", _bbg_sym)) if pd.notna(_row.get("name", None)) else _bbg_sym
+        # score: float or None
+        _score_raw = _row.get("score", None)
+        _score = float(_score_raw) if pd.notna(_score_raw) else None  # type: ignore[arg-type]
+        # price
+        _price_raw = _row.get("Last", None)
+        _price = float(_price_raw) if pd.notna(_price_raw) else None  # type: ignore[arg-type]
+        # spark: already computed as 20-day list of floats (or [])
+        _spark = _row.get("spark", []) or []
+
+        # since: for same-day books (e.g. v6 entered today), since==0.0 is
+        # uninformative — fall back to the 1D return so the column shows real moves.
+        _since_raw = _pv(_row, "Since %")
+        if _since_raw == 0.0:
+            _since_raw = _pv(_row, "1D %")
+
+        # YTD: use compute_returns result keyed by yf_sym (picks_closes columns)
+        _ytd = _ytd_map.get(_orig_yf)
+
+        _payload_rows.append({
+            "rank":  int(_row["rank"]) if "rank" in _row and pd.notna(_row["rank"]) else 0,
+            "tick":  _bbg_sym,
+            "name":  _name,
+            "score": _score,
+            "price": _price,
+            "ccy":   _ccy,
+            "spark": _spark,
+            "d1":    _pv(_row, "1D %"),
+            "d5":    _pv(_row, "5D %"),
+            "m1":    _pv(_row, "30D %"),   # 30D as "1月" proxy
+            "ytd":   _ytd,
+            "since": _since_raw,
+        })
+
+    # Sort by rank
+    _payload_rows.sort(key=lambda r: (r["rank"] == 0, r["rank"]))
+
+    # i18n labels for holdings table (inline — new picks.tbl.* keys not yet in locales)
+    _prefer_cn2 = i18n.get_lang() == "zh"
+    if _prefer_cn2:
+        _tbl_labels = {
+            "col_rank":  "名次",
+            "col_tick":  "代码",
+            "col_name":  "名称",
+            "col_score": "评分",
+            "col_price": "现价",
+            "col_d1":    "1日",
+            "col_d5":    "5日",
+            "col_m1":    "1月",
+            "col_ytd":   "年初至今",
+            "col_since": "建仓来",
+            "col_spark": "走势",
+            "nm_label":  "NM",
+            "footnote":  "含息复权总回报（yfinance auto_adjust=True）· 建仓来=入选日至今 · 年初至今=当年首个交易日至今",
+            "brand":     "CMSI",
+        }
+    else:
+        _tbl_labels = {
+            "col_rank":  "Rank",
+            "col_tick":  "Ticker",
+            "col_name":  "Name",
+            "col_score": "Score",
+            "col_price": "Price",
+            "col_d1":    "1D",
+            "col_d5":    "5D",
+            "col_m1":    "1M",
+            "col_ytd":   "YTD",
+            "col_since": "Since",
+            "col_spark": "Trend",
+            "nm_label":  "NM",
+            "footnote":  "Total return incl. dividends (yfinance auto_adjust=True) · Since = pick date to today · YTD = first trading day of current year to today",
+            "brand":     "CMSI",
+        }
+
+    def _render_picks_table(rows: list[dict], height: int = 560) -> None:
+        _doc, _h = picks_table.render_holdings(rows, _tbl_labels, height=height)
+        st.iframe(_doc, height=_h)
 
     # Top-N holdings (the actual portfolio) shown by default; full ranked universe in expander.
     holdings_title_key = ("strategy.holdings.title_weighted" if weights is not None
                           else "strategy.holdings.title")
     st.markdown(f"##### {i18n.t(holdings_title_key)}")
-    _render_perf(disp.head(top_n), height=560)
+    _render_picks_table(_payload_rows[:top_n], height=560)
     if asof:
         theme.provenance(i18n.t("common.provenance", src="yfinance", asof=asof))
-    if len(disp) > top_n:
-        with st.expander(i18n.t("strategy.holdings.all", n=len(disp))):
-            _render_perf(disp, height=620)
+    if len(_payload_rows) > top_n:
+        with st.expander(i18n.t("strategy.holdings.all", n=len(_payload_rows)),
+                         expanded=True):
+            _render_picks_table(_payload_rows, height=620)
 
 
 def render_hd_versions() -> None:

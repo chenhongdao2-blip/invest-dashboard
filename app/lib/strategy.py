@@ -191,8 +191,9 @@ STRATEGIES = {
         "name": "v6 biotech",
         "emoji": "🧬",
         "loader": load_v6,
-        # effective = 7月调仓 date; forward NAV anchored here (data added later).
-        "pick_date": "2026-07-08",
+        # effective = 2026-07-09 换仓 (v5.2 fresh run, 22 支等权: 20 引擎 + 2 人工 ALNY/GPCR); forward NAV anchored here.
+        "pick_date": "2026-07-09",
+        "top_n": 22,
         "benchmark": "XBI",
         "benchmark_name": "SPDR S&P Biotech",
         "currency": "USD",

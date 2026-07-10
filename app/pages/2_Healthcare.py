@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re as _re
+
 import pandas as pd
 import streamlit as st
 from pathlib import Path
@@ -17,6 +19,7 @@ from lib import fund_13f_matrix as f13m
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import rs_panel
 from lib import sector_overview as so
 
 
@@ -174,40 +177,51 @@ if _idx.empty:
 else:
     _cn = i18n.get_lang() == "zh"
     _asof = _idx["date"].max().date().isoformat()
+    st.caption(i18n.t("hc.rs.win.meta"))   # REBASED 说明行；窗口控件在每张卡片右上角
+
     _PANEL_TITLE = {"hk": "hc.rs.hk.title", "msci": "hc.rs.msci.title",
                     "nbi": "hc.rs.nbi.title", "sphc": "hc.rs.sphc.title",
                     "ai_bio": "hc.rs.aibio.title"}
-    # Cross-sector colouring (series_id-keyed): biotech family = CMSI-red, AI hardware
-    # = teal — so a peer that's *also* healthcare (XBI) isn't mistaken for broad market,
-    # and the AI-hardware line is visually separated from the red biotech cluster.
-    _RED_BIOTECH = {"color": theme.CMSI_RED, "dash": "dash", "width": 1.6}
-    _TEAL_AI = {"color": theme.UP, "dash": "solid", "width": 1.8}
+    # Design-source card chrome (相对表现 区间筛选 美化.dc.html): per-panel accent
+    # top-bar + numbered kicker + chart px height. Cross-sector colouring is
+    # series_id-keyed: biotech family (XBI) = CMSI-red so it isn't mistaken for
+    # broad market; AI hardware (^SOX) = teal solid, visually apart from red biotech.
+    _P_CHROME = {"hk":     (theme.CMSI_RED, 340, "hc.rs.kicker.hk"),
+                 "msci":   (theme.INK,      300, "hc.rs.kicker.msci"),
+                 "nbi":    (theme.INK,      260, "hc.rs.kicker.nbi"),
+                 "sphc":   (theme.INK,      260, "hc.rs.kicker.sphc"),
+                 "ai_bio": (theme.UP,       300, "hc.rs.kicker.aibio")}
+    _P_STYLE = {"HSI.HK":    {"dash": [6, 4]},
+                "HSTECH.HK": {"dash": [2, 3]},
+                "XBI":       {"color": theme.CMSI_RED, "dash": [6, 4], "width": 1.5},
+                "^SOX":      {"color": theme.UP, "dash": "solid", "width": 1.8}}
 
-    def _render_rs_panel(panel_id: str, *, height: int = 360,
-                         src: str = "iFind · yfinance",
-                         peer_styles: dict[str, dict] | None = None) -> None:
-        cfg = next((h, p) for pid, h, p in hco.PANELS if pid == panel_id)
-        hero_id, peer_ids = cfg
+    def _rs_series(ser: dict, sid: str, *, hero: bool) -> dict:
+        """One series payload for rs_panel (design line styles, hero = red solid)."""
+        s = ser[sid].dropna()
+        sty = _P_STYLE.get(sid, {})
+        return {"name": hco.series_name(_idx, sid, prefer_cn=_cn),
+                "dates": [d.date().isoformat() for d in s.index],
+                "closes": [float(v) for v in s.values],
+                "color": theme.CMSI_RED if hero else sty.get("color", "#8f8a84"),
+                "dash": "solid" if hero else sty.get("dash", [6, 4]),
+                "width": 2.2 if hero else sty.get("width", 1.4),
+                "hero": hero}
+
+    def _render_rs_panel(panel_id: str, *, src: str = "iFind · yfinance") -> None:
+        hero_id, peer_ids = next((h, p) for pid, h, p in hco.PANELS if pid == panel_id)
         ser = hco.panel_series(_idx, panel_id)
         if hero_id not in ser:
             return
-        hero_nm = hco.series_name(_idx, hero_id, prefer_cn=_cn)
-        peers = {hco.series_name(_idx, p, prefer_cn=_cn): ser[p] for p in peer_ids if p in ser}
-        # peer_styles is series_id-keyed; the chart wants display-name keys.
-        styles_by_name = {hco.series_name(_idx, sid, prefer_cn=_cn): st
-                          for sid, st in (peer_styles or {}).items()}
-        fig, meta = charts.index_compare_chart(
-            ser[hero_id], peers, hero_name=hero_nm, height=height,
-            title=i18n.t(_PANEL_TITLE[panel_id]), ylabel=i18n.t("hc.rs.ylabel"),
-            peer_styles=styles_by_name or None,
-        )
-        if fig is None:
-            return
-        st.plotly_chart(fig, width="stretch", theme=None, config={"displayModeBar": False})
-        # Scannable FT-style spread: "<peer> ±N.Npp" (vs hero, since anchor). −0.0 → 0.0.
-        parts = [f"{pn} {(pp if abs(pp) >= 0.05 else 0.0):+.1f}pp" for pn, pp in meta["spreads"].items()]
-        st.caption(i18n.t("hc.rs.caption", anchor=meta["anchor"], detail=" / ".join(parts),
-                          src=src, asof=_asof))
+        accent, chart_h, kicker_key = _P_CHROME[panel_id]
+        _series = ([_rs_series(ser, p, hero=False) for p in peer_ids if p in ser]
+                   + [_rs_series(ser, hero_id, hero=True)])
+        doc, h = rs_panel.render_panel({
+            "pid": panel_id, "kicker": i18n.t(kicker_key),
+            "title": i18n.t(_PANEL_TITLE[panel_id]), "accent": accent,
+            "chart_h": chart_h, "src": src, "asof": _asof, "series": _series,
+        }, prefer_cn=_cn)
+        st.iframe(doc, height=h)
 
     _render_rs_panel("hk")                          # headline: 3-line HK comparison, full width
 
@@ -216,26 +230,38 @@ else:
     # 「ETF 代理」。之后的 note 讲清两个医疗指数的成分与区别。
     if "KURE" in hco.panel_series(_idx, "msci"):
         _render_rs_panel("msci", src=i18n.t("hc.rs.msci.src"))
-        theme.md_note("释义 · 两个医疗指数怎么区分" if i18n.get_lang() == "zh" else "Two China-healthcare indices", i18n.t("hc.rs.hc_indices_note"))    # 两个医疗指数：成分 + 区别
+        # 释义 · GLOSSARY 结构化对照卡（zip4 设计，替换旧 md_note 长段落）
+        _gdoc, _gh = rs_panel.render_hc_glossary({k: i18n.t(f"hc.rs.gl.{k}") for k in (
+            "eyebrow", "title", "sub_right", "comp_label", "feat_label", "how_label",
+            "note_right", "badge1", "name1", "tag1", "chip1a", "chip1b", "comp1", "feat1",
+            "badge2", "name2", "tag2", "chip2a", "chip2b", "comp2", "feat2", "how1", "how2",
+        )}, height=350)
+        st.iframe(_gdoc, height=_gh)
 
     _c1, _c2 = st.columns(2)
     with _c1:
-        # nbi now carries 3 lines: ^NBI (red hero) · XBI (red dashed = biotech family) ·
+        # nbi carries 3 lines: ^NBI (red hero) · XBI (red dashed = biotech family) ·
         # Nasdaq (grey = broad market). XBI styled red so it doesn't read as "broad market".
-        _render_rs_panel("nbi", height=260, peer_styles={"XBI": _RED_BIOTECH})
+        _render_rs_panel("nbi")
     with _c2:
-        _render_rs_panel("sphc", height=260)
+        _render_rs_panel("sphc")
 
     # Cross-sector theme: biotech (NBI + XBI, red family) vs AI hardware (^SOX, teal).
     # Full-width below the supporting pair — the "rotation between the two hottest themes"
     # read. Hero = NBI (red), XBI red-dashed, ^SOX teal solid so the sectors separate.
     if "^SOX" in hco.panel_series(_idx, "ai_bio"):
-        _render_rs_panel("ai_bio", height=300,
-                         peer_styles={"XBI": _RED_BIOTECH, "^SOX": _TEAL_AI})
-        theme.md_note("释义 · 怎么读这张图" if i18n.get_lang() == "zh" else "How to read this chart", i18n.t("hc.rs.aibio.note"))
+        _render_rs_panel("ai_bio")
+        # ink 释义卡（墨底 cream 字——与白玻璃图表卡分层；markdown 粗体 → <b>）
+        _note_html = _re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", i18n.t("hc.rs.aibio.note"))
+        _ndoc, _nh = rs_panel.render_ink_note(
+            "释义 · 怎么读这张图" if _cn else "HOW TO READ THIS CHART",
+            _note_html, height=250)
+        st.iframe(_ndoc, height=_nh)
+    st.caption(i18n.t("hc.rs.footnote"))   # 口径脚注（设计稿底部：pp 徽章 + 窗口语义）
 
     # HSHCI full-cycle context (calendar time, absolute level): −70% → 翻倍 → 回调.
     # Milestones (start/trough/recovery-peak/now) computed from data — never hardcoded.
+    # Card format = rs_panel family (George 2026-07-10: 跟上面的 format 一样).
     _hist = hco.load_hshci_history()
     if not _hist.empty:
         _hd = _hist.sort_values("date").reset_index(drop=True)
@@ -243,24 +269,36 @@ else:
         _ipk = int(_hd["close"].iloc[_itr:].idxmax())
         _inow = len(_hd) - 1
         _ms = hco.hshci_milestones(_hd)
+
+        def _ann(i: int, text: str, pos: str) -> dict:
+            return {"d": _hd["date"].iloc[i].date().isoformat(),
+                    "v": float(_hd["close"].iloc[i]), "t": text, "pos": pos}
+
         _anns = [
-            {"x": _hd["date"].iloc[0], "y": float(_hd["close"].iloc[0]),
-             "text": i18n.t("hc.rs.hshci.ann.start", c=float(_hd["close"].iloc[0])), "ax": 0, "ay": -26},
-            {"x": _hd["date"].iloc[_itr], "y": float(_hd["close"].iloc[_itr]),
-             "text": i18n.t("hc.rs.hshci.ann.trough", c=float(_hd["close"].iloc[_itr]),
-                            p=_ms["trough"]["pct_start"]), "ax": 0, "ay": 36},
-            {"x": _hd["date"].iloc[_ipk], "y": float(_hd["close"].iloc[_ipk]),
-             "text": i18n.t("hc.rs.hshci.ann.peak", c=float(_hd["close"].iloc[_ipk]),
-                            p=_ms["peak"]["pct_trough"]), "ax": -44, "ay": -24},
-            {"x": _hd["date"].iloc[_inow], "y": float(_hd["close"].iloc[_inow]),
-             "text": i18n.t("hc.rs.hshci.ann.now", c=float(_hd["close"].iloc[_inow]),
-                            p=_ms["now"]["pct_peak"]), "ax": 20, "ay": 0},
+            _ann(0, i18n.t("hc.rs.hshci.ann.start", c=float(_hd["close"].iloc[0])), "right"),
+            _ann(_itr, i18n.t("hc.rs.hshci.ann.trough", c=float(_hd["close"].iloc[_itr]),
+                              p=_ms["trough"]["pct_start"]), "bottom"),
+            _ann(_ipk, i18n.t("hc.rs.hshci.ann.peak", c=float(_hd["close"].iloc[_ipk]),
+                              p=_ms["peak"]["pct_trough"]), "left"),
+            _ann(_inow, i18n.t("hc.rs.hshci.ann.now", c=float(_hd["close"].iloc[_inow]),
+                               p=_ms["now"]["pct_peak"]), "top"),
         ]
-        fig_hist = charts.hshci_history_chart(
-            _hd["date"].tolist(), _hd["close"].tolist(), _anns,
-            title=i18n.t("hc.rs.hshci.title"), ylabel=i18n.t("hc.rs.hshci.ylabel"),
-        )
-        st.plotly_chart(fig_hist, width="stretch", theme=None, config={"displayModeBar": False})
+        _hist_asof0 = str(_hd["asof"].iloc[0]) if "asof" in _hd.columns else _hd["date"].max().date().isoformat()
+        _dochist, _hhist = rs_panel.render_history_panel({
+            "kicker": i18n.t("hc.rs.hshci.kicker"), "title": i18n.t("hc.rs.hshci.title"),
+            "chip": i18n.t("hc.rs.hshci.chip"), "accent": theme.CMSI_RED, "chart_h": 340,
+            "src": i18n.t("hc.rs.hshci.src"), "asof": _hist_asof0, "name": "HSHCI",
+            "dates": [d.date().isoformat() for d in _hd["date"]],
+            "closes": [float(v) for v in _hd["close"]],
+            "anns": _anns,
+            "chips": [
+                {"k": i18n.t("hc.rs.hshci.vs_peak"), "v": f"{_ms['now']['pct_peak']:+.1%}",
+                 "neg": _ms["now"]["pct_peak"] < 0},
+                {"k": i18n.t("hc.rs.hshci.vs_start"), "v": f"{_ms['now']['pct_start']:+.1%}",
+                 "neg": _ms["now"]["pct_start"] < 0},
+            ],
+        }, prefer_cn=_cn)
+        st.iframe(_dochist, height=_hhist)
         _hist_asof = str(_hd["asof"].iloc[0]) if "asof" in _hd.columns else _hd["date"].max().date().isoformat()
         st.caption(i18n.t(
             "hc.rs.hshci.caption",
@@ -333,22 +371,36 @@ else:
         if "mcap_bn_jpy" in _jp.columns else None)
     _jpb = hco.jp_benchmarks_usd()
     if _comp is not None and _jpb:
-        _peers = {i18n.t("hc.jp.bench.topix"): _jpb["1305.T"]} if "1305.T" in _jpb else {}
+        # Same design-source card as the 相对表现 panels — per-chart 5D/1M/6M/全程
+        # control lives in the card's own header (client-side, re-anchors in window).
+        def _jp_series(name: str, s, *, hero: bool, dash="solid") -> dict:
+            s = s.dropna()
+            return {"name": name,
+                    "dates": [pd.Timestamp(d).date().isoformat() for d in s.index],
+                    "closes": [float(v) for v in s.values],
+                    "color": theme.CMSI_RED if hero else "#8f8a84",
+                    "dash": "solid" if hero else dash,
+                    "width": 2.2 if hero else 1.4, "hero": hero}
+
+        _jser = []
+        if "1305.T" in _jpb:
+            _jser.append(_jp_series(i18n.t("hc.jp.bench.topix"), _jpb["1305.T"],
+                                    hero=False, dash=[6, 4]))
         if "^N225" in _jpb:
-            _peers[i18n.t("hc.jp.bench.n225")] = _jpb["^N225"]
-        _figjp, _metajp = charts.index_compare_chart(
-            _comp, _peers, hero_name=i18n.t("hc.jp.hero"),
-            title=i18n.t("hc.jp.chart.title"), ylabel=i18n.t("hc.rs.ylabel"),
-        )
-        if _figjp is not None:
-            st.plotly_chart(_figjp, width="stretch", theme=None, config={"displayModeBar": False})
-            _partsjp = [f"{pn} {(pp if abs(pp) >= 0.05 else 0.0):+.1f}pp"
-                        for pn, pp in _metajp["spreads"].items()]
-            st.caption(i18n.t("hc.jp.caption", anchor=_metajp["anchor"],
-                              detail=" / ".join(_partsjp), asof=_jp_asof))
+            _jser.append(_jp_series(i18n.t("hc.jp.bench.n225"), _jpb["^N225"],
+                                    hero=False, dash=[2, 3]))
+        _jser.append(_jp_series(i18n.t("hc.jp.hero"), _comp, hero=True))
+        _docjp, _hjp = rs_panel.render_panel({
+            "pid": "jp", "kicker": i18n.t("hc.jp.kicker"),
+            "title": i18n.t("hc.jp.chart.title"), "accent": theme.INK,
+            "chart_h": 300, "src": "yfinance EOD cron", "asof": _jp_asof,
+            "series": _jser,
+        }, prefer_cn=_cn)
+        st.iframe(_docjp, height=_hjp)
+        st.caption(i18n.t("hc.jp.caption", asof=_jp_asof))
 
     # ③ full 40-name detail (expander keeps the section weight equal to its peers)
-    with st.expander(i18n.t("hc.jp.detail")):
+    with st.expander(i18n.t("hc.jp.detail"), expanded=True):   # George: section 不折叠
         _name_col = "name_cn" if _cn else "name_en"
         _dispjp = pd.DataFrame({
             "Name": _jpm[_name_col],
@@ -648,5 +700,5 @@ if _all_rets:
               window=("1 日" if prefer_cn else "1D"), prefer_cn=prefer_cn)
 
 # --- Onboarding ---
-with st.expander(i18n.t("hc.onboarding.title")):
+with st.expander(i18n.t("hc.onboarding.title"), expanded=True):   # George: section 不折叠
     st.markdown(i18n.t("hc.onboarding.body"))

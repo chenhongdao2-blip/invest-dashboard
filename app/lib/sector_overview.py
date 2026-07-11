@@ -265,11 +265,15 @@ def masthead(
     )
 
 
-def benchmark_table(rows: list[dict], *, source: str | None = None) -> None:
+def benchmark_table(rows: list[dict], *, source: str | None = None,
+                    section_label: str = "基准 · Benchmark ETF",
+                    tk_label: str = "Ticker") -> None:
     """基准多周期表 + sparkline + 发散色阶 + 相对标普发散条 (wave-2 glass reskin).
 
     Row dict: {tk, name, periods:{label:pct,...}, rel_sp(float pp), spark:[~30 closes]}.
     Period column order follows first row's periods key order (caller passes identical keys).
+    section_label / tk_label: 复用本表做「板块汇总」等非基准表时可改小节头与首列头
+    （默认值 = 原基准表，既有调用零回归）。
     """
     _inject_css()
     if not rows:
@@ -296,7 +300,7 @@ def benchmark_table(rows: list[dict], *, source: str | None = None) -> None:
         f'display:inline-block;border-radius:1px;flex:none"></span>'
         f'<span style="font-family:{t.FONT_MONO};font-size:12px;letter-spacing:.16em;'
         f'text-transform:uppercase;color:{t.INK};font-weight:600">'
-        f'基准 · Benchmark ETF</span>'
+        f'{_esc(section_label)}</span>'
         f'{legend}</div>'
     )
 
@@ -313,7 +317,7 @@ def benchmark_table(rows: list[dict], *, source: str | None = None) -> None:
         return f'<th style="{_TH}text-align:{align}">{_esc(label)}</th>'
 
     head = (
-        _th("Ticker", "left")
+        _th(tk_label, "left")
         + _th("名称", "left")
         + _th("趋势 30D", "left")
         + "".join(_th(p) for p in periods)

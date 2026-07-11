@@ -24,25 +24,6 @@ from lib import section_header
 from lib import sector_overview as so
 
 
-def _render_pct_table(
-    df: pd.DataFrame,
-    pct_cols: list[str],
-    num_cols: list[str] | None = None,
-    column_labels: dict | None = None,
-) -> None:
-    """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
-    text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
-    extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
-    ui.render_styled_table(
-        df,
-        pct_cols=pct_cols,
-        text_cols=text_cols,
-        extra_formats=extra_formats,
-        height=360,
-        heatmap=True,
-        column_labels=column_labels,
-    )
-
 st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
 
 # --- Sidebar global search ---
@@ -86,10 +67,17 @@ section_header.cover(i18n.t("hc.title"), "CMSI · HEALTHCARE",
                      rail=section_header.RAIL_HC, prefer_cn=prefer_cn)
 theme.page_radial_wash(1240)
 
-# --- 7 sector aggregate summary ---
+# --- 7 sector aggregate summary（wave-2 glass 复用 so.benchmark_table 设计族，
+#     George 2026-07-11「板块汇总也美化」）：30日等权走势 spark + 期间收益色阶 +
+#     相对标普发散条；名称列带成分数，首列 = 板块基准 ETF。---
 theme.section_header(i18n.t("hc.section.summary"), meta=i18n.t("hc.section.summary_meta"))
 
-rows = []
+_bench_all = bm.fetch_benchmarks()
+_gspc_ytd0 = (float(_bench_all.loc["^GSPC", "ytd_%"])
+              if (not _bench_all.empty and "^GSPC" in _bench_all.index
+                  and pd.notna(_bench_all.loc["^GSPC", "ytd_%"])) else None)
+
+_sum_rows: list[dict] = []
 all_returns_by_sector: dict[str, pd.DataFrame] = {}
 for sec in cfg["sectors"]:
     uni = db.sector_tickers("healthcare", sec["id"])
@@ -101,34 +89,43 @@ for sec in cfg["sectors"]:
     if rets.empty:
         continue
     all_returns_by_sector[sec["id"]] = rets
-    rows.append({
-        "Sector": i18n.sector_name(sec["id"]),
-        "Tickers": len(tickers),
-        "1D % avg": rets["1d_%"].mean(),
-        "5D % avg": rets["5d_%"].mean(),
-        "1M % avg": rets["1m_%"].mean(),
-        "YTD % avg": rets["ytd_%"].mean(),
-        "Benchmark": sec.get("benchmark", "—"),
+
+    # 板块 30 日等权走势：优先全窗无缺数的成分归一等权；全缺则宽松兜底
+    _tail = closes.tail(30)
+    _spark: list[float] = []
+    if not _tail.empty:
+        _full = _tail.dropna(axis=1, how="any")
+        _use = _full if not _full.empty else _tail
+        _norm = _use / _use.iloc[0]
+        _spark = [float(v) * 100 for v in _norm.mean(axis=1, skipna=True).tolist()
+                  if pd.notna(v)]
+
+    def _avg(col: str) -> float | None:
+        _v = rets[col].mean()
+        return None if pd.isna(_v) else float(_v)
+
+    _ytd_avg = _avg("ytd_%")
+    _sum_rows.append({
+        "tk": sec.get("benchmark", "—"),
+        "name": f'{i18n.sector_name(sec["id"])} · {len(tickers)}',
+        "periods": {"1日": _avg("1d_%"), "5日": _avg("5d_%"),
+                    "1月": _avg("1m_%"), "YTD": _ytd_avg},
+        "rel_sp": (_ytd_avg - _gspc_ytd0
+                   if (_gspc_ytd0 is not None and _ytd_avg is not None) else None),
+        "spark": _spark,
     })
 
-if not rows:
+if not _sum_rows:
     st.warning(i18n.t("hc.summary.empty"))
 else:
-    summary = pd.DataFrame(rows).set_index("Sector")
-    pct_cols = ["1D % avg", "5D % avg", "1M % avg", "YTD % avg"]
-    _render_pct_table(
-        summary,
-        pct_cols=pct_cols,
-        column_labels={
-            "Sector": i18n.t("hc.col.sector"),
-            "Tickers": i18n.t("hc.col.tickers"),
-            "Benchmark": i18n.t("hc.col.benchmark"),
-            "1D % avg": i18n.t("hc.col.1d_avg"),
-            "5D % avg": i18n.t("hc.col.5d_avg"),
-            "1M % avg": i18n.t("hc.col.1m_avg"),
-            "YTD % avg": i18n.t("hc.col.ytd_avg"),
-        },
-    )
+    _sum_asof = db.latest_snapshot_date()
+    _sum_src = (f"来源 Yahoo Finance cron EOD · 板块均值 = 成分等权 · 截至 {_sum_asof} · 仅供参考"
+                if prefer_cn else
+                f"Source: Yahoo Finance cron EOD · sector avg = equal-weight members · "
+                f"as of {_sum_asof} · for reference")
+    so.benchmark_table(_sum_rows, source=_sum_src,
+                       section_label="板块 · Sub-sectors",
+                       tk_label="基准" if prefer_cn else "Benchmark")
 
 st.divider()
 

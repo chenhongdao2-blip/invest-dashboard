@@ -20,6 +20,7 @@ from lib import heat_table
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import section_header
 
 st.set_page_config(page_title="Sector Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
 
@@ -31,7 +32,8 @@ cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("heat.title"), meta="SECTOR HEATMAP")
+section_header.cover(i18n.t("heat.title"), "CMSI · SECTOR HEATMAP",
+                     rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("heat.caption"))
 theme.page_radial_wash(1300)
 prefer_cn = i18n.get_lang() == "zh"

@@ -21,6 +21,7 @@ from lib import model_view
 from lib import theme
 from lib import ui
 from lib import wiki
+from lib import section_header
 
 st.set_page_config(page_title="Model Drill · invest-dashboard", page_icon="📊", layout="wide")
 
@@ -33,7 +34,8 @@ prefer_cn = i18n.get_lang() == "zh"
 with st.sidebar:
     ui.sidebar_search(key_prefix="model_drill")
 
-theme.page_header(i18n.t("model.title"))
+section_header.cover(i18n.t("model.title"), "CMSI · MODEL DRILL",
+                     rail=section_header.RAIL_US, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("model.intro"))
 
 # ── ticker resolution: query_params → global_ticker → selectbox ──

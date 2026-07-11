@@ -11,6 +11,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from lib import section_header
 from lib import db
 from lib import format as fmt
 from lib import ui
@@ -52,7 +53,8 @@ i18n.init_lang()
 with st.sidebar:
     ui.sidebar_search(key_prefix="ai_sec")
 i18n.render_lang_toggle()
-theme.page_header(i18n.t("ai.sec.title"))
+section_header.cover(i18n.t("ai.sec.title"), "CMSI · AI SEC FACTS",
+                     rail=section_header.RAIL_AI, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("ai.sec.caption"))
 
 # AI-domain US-listed pool only (US AI names auto-enter the SEC fetch pool)

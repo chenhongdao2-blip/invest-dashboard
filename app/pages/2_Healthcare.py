@@ -20,6 +20,7 @@ from lib import ui
 from lib import theme
 from lib import i18n
 from lib import rs_panel
+from lib import section_header
 from lib import sector_overview as so
 
 
@@ -76,9 +77,13 @@ def _stale_note(latest_iso, key: str) -> None:
 cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 i18n.init_lang()
 i18n.render_lang_toggle()
-theme.page_header(i18n.t("hc.title"))
-st.caption(cfg.get("description", "").strip())
 prefer_cn = i18n.get_lang() == "zh"
+
+# --- Section 封面头部（方案C·数据式；设计源「Section 封面头部 美化.dc.html」）---
+# 标题 + 右侧四指数轨，头部即概览；缺数据自动回退旧 page_header。
+# 原英文 sub-sector caption 已删（George 2026-07-11）。
+section_header.cover(i18n.t("hc.title"), "CMSI · HEALTHCARE",
+                     rail=section_header.RAIL_HC, prefer_cn=prefer_cn)
 theme.page_radial_wash(1240)
 
 # --- 7 sector aggregate summary ---

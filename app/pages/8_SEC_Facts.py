@@ -11,6 +11,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
+from lib import section_header
 from lib import db
 from lib import format as fmt
 from lib import ui
@@ -52,7 +53,8 @@ i18n.init_lang()
 with st.sidebar:
     ui.sidebar_search(key_prefix="sec")
 i18n.render_lang_toggle()
-theme.page_header(i18n.t("sec.title"))
+section_header.cover(i18n.t("sec.title"), "CMSI · SEC FACTS",
+                     rail=section_header.RAIL_US, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("sec.caption"))
 
 pool = sf.us_pool()

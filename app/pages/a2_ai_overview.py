@@ -19,6 +19,7 @@ from lib import ui
 from lib import theme
 from lib import i18n
 from lib import sector_overview as so
+from lib import section_header
 
 
 def _render_pct_table(
@@ -54,7 +55,8 @@ DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "ai.yml"
 cfg = db.load_domain_cfg(str(DOMAIN_CFG))
 i18n.init_lang()
 i18n.render_lang_toggle()
-theme.page_header(i18n.t("ai.ov.title"))
+section_header.cover(i18n.t("ai.ov.title"), "CMSI · AI",
+                     rail=section_header.RAIL_AI, prefer_cn=i18n.get_lang() == "zh")
 st.caption(cfg.get("description", "").strip())
 prefer_cn = i18n.get_lang() == "zh"
 theme.page_radial_wash(1240)

@@ -20,6 +20,7 @@ from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import section_header
 
 st.set_page_config(
     page_title="AI Universe · invest-dashboard",
@@ -40,7 +41,8 @@ with st.sidebar:
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("ai.cov.title"))
+section_header.cover(i18n.t("ai.cov.title"), "CMSI · AI COVERAGE",
+                     rail=section_header.RAIL_AI, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("ai.cov.caption", date=(db.latest_snapshot_date() or "—")))
 
 

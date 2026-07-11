@@ -30,6 +30,7 @@ from lib import heatmap as hm
 from lib import i18n
 from lib import theme
 from lib import ui
+from lib import section_header
 
 st.set_page_config(page_title="ETF Overview · invest-dashboard", page_icon="🧺", layout="wide")
 
@@ -155,7 +156,8 @@ def _crow(sym):
     return pd.NA, pd.NA
 
 
-theme.page_header(i18n.t("etf.title"))
+section_header.cover(i18n.t("etf.title"), "CMSI · ETF",
+                     rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
 as_of = db.latest_snapshot_date() or "—"
 st.caption(i18n.t("etf.caption", date=as_of))
 

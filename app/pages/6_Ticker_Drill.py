@@ -24,6 +24,7 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+from lib import section_header
 from lib import db
 from lib import format as fmt
 from lib import strategy as strat
@@ -274,10 +275,12 @@ def _back_to_list() -> None:
 if _in_detail:
     st.button("← 返回列表" if prefer_cn else "← Back to list",
               on_click=_back_to_list, key="drill_back")
-    theme.page_header(i18n.t("drill.title"))
+    section_header.cover(i18n.t("drill.title"), "CMSI · TICKER DRILL",
+                         rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
     st.caption(i18n.t("drill.caption"))
 else:
-    theme.page_header("行情 / 个股" if prefer_cn else "Market & Stocks")
+    section_header.cover("行情 / 个股" if prefer_cn else "Market & Stocks", "CMSI · MARKET & STOCKS",
+                         rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
     st.caption(
         "用下方选股框选一只看完整详情，或浏览/筛选全市场行情表（按领域/地区/行业）。"
         if prefer_cn else

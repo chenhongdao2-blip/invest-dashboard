@@ -24,6 +24,7 @@ from lib import i18n
 from lib import model_view
 from lib import theme
 from lib import ui
+from lib import section_header
 
 st.set_page_config(
     page_title="CMSI Coverage · invest-dashboard",
@@ -38,7 +39,8 @@ with st.sidebar:
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("cov.title"), meta="CMSI COVERAGE")
+section_header.cover(i18n.t("cov.title"), "CMSI · COVERAGE",
+                     rail=section_header.RAIL_HC, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("cov.caption", date=(db.latest_snapshot_date() or "—")))
 theme.page_radial_wash(1300)
 

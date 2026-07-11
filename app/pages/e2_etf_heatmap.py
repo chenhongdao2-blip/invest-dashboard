@@ -15,6 +15,7 @@ from lib import heatmap as hm
 from lib import i18n
 from lib import theme
 from lib import ui
+from lib import section_header
 
 st.set_page_config(page_title="ETF Heatmap · invest-dashboard", page_icon="🔥", layout="wide")
 
@@ -25,7 +26,8 @@ with st.sidebar:
 
 prefer_cn = i18n.get_lang() == "zh"
 
-theme.page_header(i18n.t("etf.heat.title"))
+section_header.cover(i18n.t("etf.heat.title"), "CMSI · ETF HEATMAP",
+                     rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
 latest = db.latest_snapshot_date() or "—"
 st.caption(i18n.t("etf.heat.caption", date=latest))
 

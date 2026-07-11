@@ -15,13 +15,15 @@ import streamlit as st
 
 from lib import db, i18n, theme, ui
 from lib import rrg, crowding, regime
+from lib import section_header
 
 st.set_page_config(page_title="Sector Rotation · invest-dashboard", page_icon="🧭", layout="wide")
 
 i18n.init_lang()
 i18n.render_lang_toggle()
 
-theme.page_header(i18n.t("rot.title"))
+section_header.cover(i18n.t("rot.title"), "CMSI · SECTOR ROTATION",
+                     rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("rot.caption"))
 
 with st.sidebar:

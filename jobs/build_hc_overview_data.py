@@ -45,7 +45,9 @@ ANCHOR = "2025-08-01"
 END = (date.today() + timedelta(days=1)).isoformat()
 
 # iFind raw HK pull (provenance file already saved by the session).
-HK_RAW = OUT / "hk_index_raw_ifind_20260601.csv"
+# 20260711 = 20260601 merged with the 2026-06-02→07-10 iFind increment
+# (session 2026-07-11; HSHCI/HSI/HSTECH daily closes, HSI cross-checked vs yfinance ^HSI).
+HK_RAW = OUT / "hk_index_raw_ifind_20260711.csv"
 
 # Desktop xlsx (external, not committed) — audited fund-positioning source.
 XLSX = Path(

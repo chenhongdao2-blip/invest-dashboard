@@ -18,6 +18,7 @@ from lib import regime
 from lib import rrg
 from lib import theme
 from lib import ui
+from lib import section_header
 
 st.set_page_config(page_title="ETF Rotation · invest-dashboard", page_icon="🧭", layout="wide")
 
@@ -28,7 +29,8 @@ with st.sidebar:
 
 prefer_cn = i18n.get_lang() == "zh"
 
-theme.page_header(i18n.t("etf.rot.title"))
+section_header.cover(i18n.t("etf.rot.title"), "CMSI · ETF ROTATION",
+                     rail=section_header.RAIL_GLOBAL, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("etf.rot.caption"))
 
 BENCH = "XLV"   # broad-HC anchor (config/domains/etf.yml benchmarks.primary)

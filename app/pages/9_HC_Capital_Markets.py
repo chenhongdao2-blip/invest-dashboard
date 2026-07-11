@@ -25,6 +25,7 @@ from lib import ipo_detail
 from lib import ipo_tracker
 from lib import theme
 from lib import ui
+from lib import section_header
 
 st.set_page_config(page_title="Capital Markets · invest-dashboard", page_icon="💰", layout="wide")
 
@@ -165,8 +166,8 @@ def _source_links(df: pd.DataFrame) -> None:
 
 
 # ══ Page header + taxonomy callout (above the tabs) ════════════════════════
-theme.page_header(i18n.t("capital.page.title"),
-                  meta=i18n.t("mnc_ma.page.asof", asof=meta.get("as_of", "")))
+section_header.cover(i18n.t("capital.page.title"), "CMSI · HC CAPITAL MARKETS",
+                     rail=section_header.RAIL_HC, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("mnc_ma.intro"))
 theme.md_note("来源 · 口径" if i18n.get_lang() == "zh" else "Source · basis", i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
 theme.md_note("释义 · M&A vs BD" if i18n.get_lang() == "zh" else "Definitions · M&A vs BD", i18n.t("capital.def"))

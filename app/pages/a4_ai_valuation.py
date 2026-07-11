@@ -17,6 +17,7 @@ from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
+from lib import section_header
 
 st.set_page_config(
     page_title="AI Valuation Scanner · invest-dashboard",
@@ -84,7 +85,8 @@ with st.sidebar:
 
 # --- Build candidate universe ---
 i18n.render_lang_toggle()
-theme.page_header(i18n.t("ai.scan.title"))
+section_header.cover(i18n.t("ai.scan.title"), "CMSI · AI VALUATION",
+                     rail=section_header.RAIL_AI, prefer_cn=i18n.get_lang() == "zh")
 st.caption(i18n.t("scan.caption", date=(db.latest_snapshot_date() or "—")))
 
 if not selected_sectors:

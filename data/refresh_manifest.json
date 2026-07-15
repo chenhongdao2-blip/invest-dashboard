@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-07-14T23:30:19+00:00",
-    "source_date": "2026-07-14"
+    "refreshed_at": "2026-07-15T11:01:23+00:00",
+    "source_date": "2026-07-15"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",

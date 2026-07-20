@@ -494,6 +494,12 @@ STRINGS = {
     "heat.tbl.col.peS": "Trail P/E",
     "heat.tbl.col.peF": "Fwd P/E",
     "heat.tbl.col.fcf": "FCF Yld",
+    # Region filter chips (in-table client-side multi-select; all off = full set)
+    "heat.tbl.region.US": "US",
+    "heat.tbl.region.HK": "HK",
+    "heat.tbl.region.CN": "A-share",
+    "heat.tbl.region.JP": "Japan",
+    "heat.tbl.region.KR": "Korea",
     "heat.tbl.sum.title": "Sector Summary",
     "heat.tbl.sum.sub": "Equal-weight avg returns · {n} names · click a row to switch the sector below",
     "heat.tbl.heat.title": "Sector Heatmap",

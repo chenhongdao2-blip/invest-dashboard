@@ -56,6 +56,7 @@ def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
         return []
     rets = db.compute_returns(db.get_close_series_usd(tickers))
     mults = db.latest_multiples(tickers)
+    region_by_tk = dict(zip(uni["ticker"], uni["region"]))
     rows = []
     for tk in tickers:
         r = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)
@@ -66,7 +67,7 @@ def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
             continue
         fcf = m.get("fcf_yield")
         rows.append({
-            "t": tk, "n": name_map.get(tk, tk), "mcap": mcap_b,
+            "t": tk, "n": name_map.get(tk, tk), "mcap": mcap_b, "r": region_by_tk.get(tk, ""),
             "ytd": r.get("ytd_%"), "m1": r.get("1m_%"),
             "d5": r.get("5d_%"), "d1": r.get("1d_%"),
             "peS": m.get("trailing_pe"), "peF": m.get("forward_pe"),
@@ -103,6 +104,12 @@ else:
         "sum_right": "EQUAL-WEIGHT AVG",
         "heat_title": i18n.t("heat.tbl.heat.title"),
         "heat_sub": i18n.t("heat.tbl.heat.sub"),
+        # 地区过滤 chips（客户端多选，无 rerun；顺序即渲染顺序）
+        "regions": {
+            "US": i18n.t("heat.tbl.region.US"), "HK": i18n.t("heat.tbl.region.HK"),
+            "CN": i18n.t("heat.tbl.region.CN"), "JP": i18n.t("heat.tbl.region.JP"),
+            "KR": i18n.t("heat.tbl.region.KR"),
+        },
         "sum_cols": {
             "sector": i18n.t("heat.tbl.sum.col.sector"), "n": i18n.t("heat.tbl.sum.col.n"),
             "d1": i18n.t("heat.tbl.col.d1"), "d5": i18n.t("heat.tbl.col.d5"),

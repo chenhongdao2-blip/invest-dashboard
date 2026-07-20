@@ -1,4 +1,6 @@
-# CXO & Life Sciences sector — 18 tickers
+# CXO & Life Sciences sector — 26 tickers
+# (2026-07-20 补回 2359.HK/2269.HK + 新增 A+H 双挂 4 家 × 双代码 + 药明合联:
+#  yml 是单一真相, 早前 DB 注入的两支药明回归文件管理)
 sector_id: cxo
 domain: healthcare
 
@@ -72,3 +74,44 @@ tickers:
     name_cn: 亚速旺
     name_en: As One
     region: JP
+  # ── 中国 CXO（2026-07-20）：一线 A+H 双挂 × 4 家（双代码并收）+ 药明生物/合联 ──
+  - ticker: 2359.HK
+    name_cn: 药明康德
+    name_en: WuXi AppTec
+    region: HK
+  - ticker: 603259.SS
+    name_cn: 药明康德
+    name_en: WuXi AppTec
+    region: CN
+  - ticker: 3759.HK
+    name_cn: 康龙化成
+    name_en: Pharmaron
+    region: HK
+  - ticker: 300759.SZ
+    name_cn: 康龙化成
+    name_en: Pharmaron
+    region: CN
+  - ticker: 3347.HK
+    name_cn: 泰格医药
+    name_en: Tigermed
+    region: HK
+  - ticker: 300347.SZ
+    name_cn: 泰格医药
+    name_en: Tigermed
+    region: CN
+  - ticker: 6821.HK
+    name_cn: 凯莱英
+    name_en: Asymchem
+    region: HK
+  - ticker: 002821.SZ
+    name_cn: 凯莱英
+    name_en: Asymchem
+    region: CN
+  - ticker: 2269.HK
+    name_cn: 药明生物
+    name_en: WuXi Biologics
+    region: HK
+  - ticker: 2268.HK
+    name_cn: 药明合联
+    name_en: WuXi XDC
+    region: HK

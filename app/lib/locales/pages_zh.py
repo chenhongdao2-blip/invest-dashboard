@@ -472,6 +472,12 @@ STRINGS = {
     "heat.tbl.col.peS": "静态P/E",
     "heat.tbl.col.peF": "动态P/E",
     "heat.tbl.col.fcf": "FCF收益",
+    # 地区过滤 chips（表内客户端多选；全部点灭 = 全集）
+    "heat.tbl.region.US": "美股",
+    "heat.tbl.region.HK": "H股",
+    "heat.tbl.region.CN": "A股",
+    "heat.tbl.region.JP": "日股",
+    "heat.tbl.region.KR": "韩股",
     "heat.tbl.sum.title": "板块汇总",
     "heat.tbl.sum.sub": "等权平均收益 · 共 {n} 标的 · 点击行切换下方板块",
     "heat.tbl.heat.title": "板块热力图",

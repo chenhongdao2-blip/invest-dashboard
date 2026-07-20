@@ -6,6 +6,8 @@
 
 整个 section = 一张自包含 st.iframe：
 - 板块 tabs（名称 + 家数，红字 + 2.5px 红下划线 = active）—— 客户端切换，无 rerun
+- 地区 chips（美股/H股/A股/日股/韩股…，行带 region 时出现，多选过滤）—— 客户端
+  切换，无 rerun；tabs / 汇总 / 中位数行 / 染色统计全部随过滤联动
 - 摘要条：覆盖 N 家 · 总市值 · YTD 中位 · YTD 广度条（teal 涨 / 红 跌）
 - 白玻璃表（rgba(255,255,255,.45)+blur）：
   · 组头带（回报 RETURNS % / 估值 VALUATION × / 现金流）+ 可点击排序列头（sticky）
@@ -66,6 +68,7 @@ def render_heat_table(sectors: list[dict], *, labels: dict,
     sectors = [{"id": str, "name": str（本地化 tab 名）, "bench": "XLV"（基准 chip，可缺）,
       "rows": [
         {"t": "LLY", "n": "礼来制药", "mcap": 1084.2（$B）,
+         "r": "US"（universe_member.region，可缺——缺则不带地区 chips）,
          "ytd"/"m1"/"d5"/"d1": %（已是百分数）,
          "peS"/"peF"/"evE"/"evS": 倍数, "fcf": %（已 ×100）},
     ]}]
@@ -73,6 +76,11 @@ def render_heat_table(sectors: list[dict], *, labels: dict,
         grp_ret/grp_val/grp_cf/footnote/footnote_dyn（{max} 占位）/brand +
         sum_title/sum_sub/sum_right/heat_title/heat_sub +
         sum_cols{sector,n,d1,d5,m1,ytd,dist,bench} + cols{t,n,mcap,...,fcf}。
+        可选 regions = {"US": "美股", ...} —— 按此顺序渲染地区 chips；缺省 = 全选。
+
+    地区过滤（2026-07-20）：行带 r 字段时，tabs 右侧渲染地区 chips（多选）。
+    过滤纯客户端：tabs 家数 / 板块汇总 / 中位数行 / 列染色统计 / 摘要条全部随
+    过滤后的行集重算；chips 全灭 = 不过滤（全集），全排除状态不会出现。
 
     zip(4) 设计新增「板块汇总」：等权平均收益表在热力表上方，行 = 板块（点击行
     切换下方热力表 tab，客户端联动）；YTD 分布 = 以列内最大幅度为满刻度的中心
@@ -85,7 +93,7 @@ def render_heat_table(sectors: list[dict], *, labels: dict,
     for sec in sectors:
         rows = []
         for r in sec["rows"]:
-            row = {"t": str(r["t"]), "n": str(r["n"])}
+            row = {"t": str(r["t"]), "n": str(r["n"]), "r": str(r.get("r") or "")}
             for k in _NUM_KEYS:
                 v = _clean(r.get(k))
                 # 卖方惯例：负/零估值倍数（亏损期 P/E、负 EBITDA 的 EV/EBITDA）= NM，
@@ -97,15 +105,26 @@ def render_heat_table(sectors: list[dict], *, labels: dict,
         secs_js.append({"id": str(sec["id"]), "name": str(sec["name"]),
                         "bench": str(sec.get("bench") or "—"), "rows": rows})
 
+    # 地区 chips：labels.regions 提供 {code: label}（顺序即渲染顺序），且数据里
+    # 至少一行带 r 才启用。chip 默认全选（不过滤）；全部点灭 = 回到全集。
+    regions_cfg = labels.get("regions") or {}
+    has_regions = bool(regions_cfg) and any(row["r"] for s in secs_js for row in s["rows"])
+    payload_regions = (
+        [{"code": str(code), "label": str(label), "on": True}
+         for code, label in regions_cfg.items()]
+        if has_regions else []
+    )
+
     payload = json.dumps(
-        {"sectors": secs_js, "labels": labels},
+        {"sectors": secs_js, "labels": labels, "regions": payload_regions},
         ensure_ascii=False, separators=(",", ":"),
     ).replace("</", "<\\/")
 
     table_max_h = max(320, height - 210)   # tabs+摘要+脚注 chrome 之外给表体
     # 板块汇总块高：section 头 46 + 列头 34 + 行 38×n + 容器边距 12 + 热力图小节头 44
     summary_h = 136 + 38 * len(secs_js)
-    iframe_h = height + summary_h
+    regions_h = 38 if has_regions else 0   # 地区 chips 一行（含与 tabs 的间距）
+    iframe_h = height + summary_h + regions_h
 
     js = r"""
 var P = __PAYLOAD__;
@@ -131,6 +150,28 @@ var COLS = [
 ];
 var st_ = { tab: P.sectors.length ? P.sectors[0].id : null, sortKey: 'mcap', sortDir: -1 };
 
+// ── 地区过滤（chips 多选；全部点灭 = 不过滤 = 全集）──
+var REG = P.regions || [];
+function filterActive(){
+  // null = 不过滤：chips 全亮（初始）或全灭（全灭=全集，避免用户把自己锁进空集）。
+  // 全亮时不过滤还有防御意义：数据里出现 chips 列表之外的新 region 不会被误杀。
+  var on = REG.filter(function(g){ return g.on; }).map(function(g){ return g.code; });
+  if (!on.length || on.length === REG.length) return null;
+  return on;
+}
+function rowsFiltered(sec){
+  var act = filterActive();
+  if (act == null) return sec.rows;
+  return sec.rows.filter(function(r){ return r.r && act.indexOf(r.r) >= 0; });
+}
+function renderRegionChips(){
+  if (!REG.length) return;
+  document.getElementById('rchips').innerHTML = REG.map(function(g){
+    return '<button data-reg="'+g.code+'" class="rchip'+(g.on?' on':'')+'" ' +
+      'style="font-family:'+mono+';">'+esc(g.label)+'</button>';
+  }).join('');
+}
+
 function median(vs){
   var s = vs.filter(function(v){ return v != null && isFinite(v); }).slice().sort(function(a,b){ return a-b; });
   if (!s.length) return null;
@@ -147,18 +188,22 @@ function fmt(type, v){
 function blFor(i){ return (i===3||i===7||i===11) ? '1px solid __SEP__' : 'none'; }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// 板块汇总：等权平均（忽略 null），tint 以列内最大幅度为分母，YTD 分布条同刻度
-var SUMS = P.sectors.map(function(s){
-  function avg(k){
-    var vs = s.rows.map(function(r){ return r[k]; }).filter(function(v){ return v != null && isFinite(v); });
-    return vs.length ? vs.reduce(function(a,b){ return a+b; }, 0)/vs.length : null;
-  }
-  return { id:s.id, name:s.name, n:s.rows.length, bench:s.bench,
-           vals:[avg('d1'), avg('d5'), avg('m1'), avg('ytd')] };
-});
-var S_MAX = [0,0,0,0];
-SUMS.forEach(function(r){ for (var i=0;i<4;i++){ var v=r.vals[i]; if (v!=null) S_MAX[i]=Math.max(S_MAX[i], Math.abs(v)); } });
-var YTD_MAX = S_MAX[3] || 1;
+// 板块汇总：等权平均（忽略 null，随地区过滤重算），tint 以列内最大幅度为分母，YTD 分布条同刻度
+var SUMS = [], S_MAX = [0,0,0,0], YTD_MAX = 1;
+function computeSums(){
+  SUMS = P.sectors.map(function(s){
+    var rows = rowsFiltered(s);
+    function avg(k){
+      var vs = rows.map(function(r){ return r[k]; }).filter(function(v){ return v != null && isFinite(v); });
+      return vs.length ? vs.reduce(function(a,b){ return a+b; }, 0)/vs.length : null;
+    }
+    return { id:s.id, name:s.name, n:rows.length, bench:s.bench,
+             vals:[avg('d1'), avg('d5'), avg('m1'), avg('ytd')] };
+  });
+  S_MAX = [0,0,0,0];
+  SUMS.forEach(function(r){ for (var i=0;i<4;i++){ var v=r.vals[i]; if (v!=null) S_MAX[i]=Math.max(S_MAX[i], Math.abs(v)); } });
+  YTD_MAX = S_MAX[3] || 1;
+}
 
 function renderSummary(){
   var html = SUMS.map(function(r){
@@ -202,24 +247,25 @@ function renderSummary(){
 }
 
 function render(){
+  computeSums();
   renderSummary();
   var sec = null;
   P.sectors.forEach(function(s){ if (s.id === st_.tab) sec = s; });
   if (!sec) return;
 
-  // tabs
+  // tabs（家数随地区过滤联动）
   document.getElementById('tabs').innerHTML = P.sectors.map(function(s){
     var on = s.id === st_.tab;
     return '<button data-tab="'+s.id+'" style="appearance:none;background:transparent;border:none;margin:0 0 -1px;cursor:pointer;' +
       'display:inline-flex;align-items:baseline;gap:6px;padding:8px 2px 10px;' +
       'border-bottom:2.5px solid '+(on?RED:'transparent')+';">' +
       '<span style="font-size:14px;font-weight:'+(on?700:500)+';color:'+(on?RED:'#6b655e')+';letter-spacing:.01em;">'+esc(s.name)+'</span>' +
-      '<span style="font-family:'+mono+';font-size:10px;color:'+MUT+';">('+s.rows.length+')</span></button>';
+      '<span style="font-family:'+mono+';font-size:10px;color:'+MUT+';">('+rowsFiltered(s).length+')</span></button>';
   }).join('');
 
-  // sort（NM 恒沉底）
+  // sort（NM 恒沉底；行集 = 地区过滤后）
   var sk = st_.sortKey, dir = st_.sortDir;
-  var rows = sec.rows.slice().sort(function(a,b){
+  var rows = rowsFiltered(sec).slice().sort(function(a,b){
     var x = a[sk], y = b[sk];
     if (sk === 't' || sk === 'n') return String(x).localeCompare(String(y)) * dir;
     var xBad = (x == null || !isFinite(x)), yBad = (y == null || !isFinite(y));
@@ -355,6 +401,16 @@ document.getElementById('thead').addEventListener('click', function(e){
   else { st_.sortKey = k; st_.sortDir = (k === 't' || k === 'n') ? 1 : -1; }
   render();
 });
+var _rch = document.getElementById('rchips');
+if (_rch) _rch.addEventListener('click', function(e){
+  var b = e.target.closest('button[data-reg]');
+  if (!b) return;
+  var code = b.getAttribute('data-reg');
+  REG.forEach(function(g){ if (g.code === code) g.on = !g.on; });
+  renderRegionChips();
+  render();
+});
+renderRegionChips();
 render();
 """
     js = (js.replace("__PAYLOAD__", payload)
@@ -409,6 +465,11 @@ render();
         ".hrow:hover{background:rgba(255,255,255,.8);}"
         "button:hover{opacity:.85;}"
         f"#scroller{{max-height:{table_max_h}px;overflow:auto;}}"
+        ".rchip{appearance:none;cursor:pointer;border-radius:2px;padding:3px 10px;"
+        f"font-size:10px;letter-spacing:.06em;border:1px solid {_EDGE};"
+        f"background:rgba(255,255,255,.35);color:{_MUT};font-weight:500;}}"
+        ".rchip.on{"
+        f"background:rgba(200,16,46,.07);border-color:{_RED};color:{_RED};font-weight:700;}}"
         "</style></head><body>"
         # ── 板块汇总（zip4 设计：等权平均，行点击 = 切换下方热力表 tab）──
         '<div style="display:flex;align-items:center;gap:10px;">'
@@ -430,8 +491,12 @@ render();
         f'<span style="font-size:16px;font-weight:700;color:{_INK};">{labels["heat_title"]}</span>'
         f'<span style="font-size:11.5px;color:{_MUT};">{labels["heat_sub"]}</span>'
         '</div>'
-        # tabs
+        # tabs（+ 地区 chips：行带 region 时出现；多选过滤，全部点灭 = 全集）
         f'<div id="tabs" style="display:flex;gap:26px;border-bottom:1px solid {_EDGE};flex-wrap:wrap;"></div>'
+        + (
+            '<div id="rchips" style="display:flex;gap:8px;flex-wrap:wrap;margin:9px 0 0;"></div>'
+            if has_regions else ''
+        ) +
         # 摘要条
         '<div style="display:flex;align-items:center;gap:22px;flex-wrap:wrap;padding:13px 2px 14px;">'
         + _sum_pair("cover", "sumCount") + _sum_pair("mcap_total", "sumMcap") + _sum_pair("ytd_med", "sumYtd") +

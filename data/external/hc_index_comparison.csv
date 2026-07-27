@@ -244,7 +244,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,154.5,yfinance · ETF
 2026-07-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,152.11000061035156,yfinance · ETF
 2026-07-23,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,152.22999572753906,yfinance · ETF
-2026-07-24,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,150.47999572753906,yfinance · ETF
+2026-07-27,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,150.58999633789062,yfinance · ETF
 2025-08-01,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4483.35009765625,yfinance
 2025-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4575.81005859375,yfinance
 2025-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4508.43017578125,yfinance
@@ -490,7 +490,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6552.43994140625,yfinance
 2026-07-22,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6470.7099609375,yfinance
 2026-07-23,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6526.2900390625,yfinance
-2026-07-24,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6494.3916015625,yfinance
+2026-07-27,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6512.8212890625,yfinance
 2025-08-01,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5527.60986328125,yfinance
 2025-08-04,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5624.41015625,yfinance
 2025-08-05,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5561.68994140625,yfinance
@@ -736,7 +736,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12356.16015625,yfinance
 2026-07-22,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12410.669921875,yfinance
 2026-07-23,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12343.83984375,yfinance
-2026-07-24,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,11818.8857421875,yfinance
+2026-07-27,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,11554.8798828125,yfinance
 2025-08-01,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4132.88,iFind
 2025-08-04,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4149.84,iFind
 2025-08-05,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4300.12,iFind
@@ -1672,7 +1672,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.5,yfinance · ETF
 2026-07-22,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.621999740600586,yfinance · ETF
 2026-07-23,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.5,yfinance · ETF
-2026-07-24,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.211200714111328,yfinance · ETF
+2026-07-27,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.375200271606445,yfinance · ETF
 2025-08-01,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,55.46989440917969,yfinance · ETF
 2025-08-04,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.402244567871094,yfinance · ETF
 2025-08-05,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.784996032714844,yfinance · ETF
@@ -1918,7 +1918,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,54.0,yfinance · ETF
 2026-07-22,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,53.56999969482422,yfinance · ETF
 2026-07-23,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,53.349998474121094,yfinance · ETF
-2026-07-24,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,53.33000183105469,yfinance · ETF
+2026-07-27,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,54.2599983215332,yfinance · ETF
 2025-08-01,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,85.53849792480469,yfinance · ETF
 2025-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.42444610595703,yfinance · ETF
 2025-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.45430755615234,yfinance · ETF
@@ -2164,7 +2164,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,154.5,yfinance · ETF
 2026-07-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,152.11000061035156,yfinance · ETF
 2026-07-23,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,152.22999572753906,yfinance · ETF
-2026-07-24,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,150.47999572753906,yfinance · ETF
+2026-07-27,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,150.58999633789062,yfinance · ETF
 2025-08-01,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,20650.130859375,yfinance
 2025-08-04,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,21053.580078125,yfinance
 2025-08-05,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,20916.55078125,yfinance
@@ -2410,7 +2410,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,25837.2109375,yfinance
 2026-07-22,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,25690.900390625,yfinance
 2026-07-23,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,25137.689453125,yfinance
-2026-07-24,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,24975.82421875,yfinance
+2026-07-27,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,24932.08203125,yfinance
 2025-08-01,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4483.35009765625,yfinance
 2025-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4575.81005859375,yfinance
 2025-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4508.43017578125,yfinance
@@ -2656,7 +2656,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6552.43994140625,yfinance
 2026-07-22,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6470.7099609375,yfinance
 2026-07-23,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6526.2900390625,yfinance
-2026-07-24,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6494.3916015625,yfinance
+2026-07-27,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6512.8212890625,yfinance
 2025-08-01,^GSPC,S&P 500,标普500,sphc,6238.009765625,yfinance
 2025-08-04,^GSPC,S&P 500,标普500,sphc,6329.93994140625,yfinance
 2025-08-05,^GSPC,S&P 500,标普500,sphc,6299.18994140625,yfinance
@@ -2902,7 +2902,7 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-21,^GSPC,S&P 500,标普500,sphc,7509.2001953125,yfinance
 2026-07-22,^GSPC,S&P 500,标普500,sphc,7498.9599609375,yfinance
 2026-07-23,^GSPC,S&P 500,标普500,sphc,7408.2998046875,yfinance
-2026-07-24,^GSPC,S&P 500,标普500,sphc,7411.97998046875,yfinance
+2026-07-27,^GSPC,S&P 500,标普500,sphc,7413.18017578125,yfinance
 2025-08-01,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1527.2900390625,yfinance
 2025-08-04,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1548.81005859375,yfinance
 2025-08-05,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1542.800048828125,yfinance
@@ -3144,4 +3144,4 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-15,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1845.5699462890625,yfinance
 2026-07-16,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1886.3399658203125,yfinance
 2026-07-17,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1878.1300048828125,yfinance
-2026-07-24,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1893.800048828125,yfinance
+2026-07-27,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1903.6199951171875,yfinance

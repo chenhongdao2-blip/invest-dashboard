@@ -128,6 +128,7 @@ body{height:100vh;display:flex;flex-direction:column;overflow:hidden;padding:24p
 .td-sector{color:#4a4a4a;font-size:12px}
 .td-date{font-size:11px;color:#8a8580;width:84px}
 .td-d1{text-align:right;font-weight:700;width:92px}
+.td-cum{text-align:right;font-weight:700;width:92px}
 
 /* dock — C45: bounded flex column that FILLS its grid row (align-self:stretch).
    Stretch is the fix for the round-4 defect: under align-self:start the dock
@@ -176,6 +177,9 @@ function esc(s) {
 /* M3: a row has a renderable day-1 return only when it is a finite number;
    pending rows (null) and non-finite listed rows both fall through to '—'. */
 function hasD1(r) { return typeof r.d1_pct === 'number' && isFinite(r.d1_pct); }
+/* 至今涨幅 = 相对发行价的累计收益(链式口径,见 refresh_ipo_picks_px.py)。
+   未刷新 / pending / 撤回行都没有它 → 同 d1 一样诚实显示 '—',不造 0。 */
+function hasCum(r) { return typeof r.cum_pct === 'number' && isFinite(r.cum_pct); }
 
 function retColor(pct) {
   if (pct === null || pct === undefined) return '#8a8580';
@@ -287,8 +291,15 @@ function buildRankRows() {
       var sign = r.d1_pct >= 0 ? '+' : '';
       d1html = '<span style="color:' + retColor(r.d1_pct) + '">' + sign + r.d1_pct.toFixed(1) + '%</span>';
     }
+    var cumhtml;
+    if (!hasCum(r)) {
+      cumhtml = '<span style="color:#8a8580">—</span>';
+    } else {
+      var csign = r.cum_pct >= 0 ? '+' : '';
+      cumhtml = '<span style="color:' + retColor(r.cum_pct) + '">' + csign + r.cum_pct.toFixed(1) + '%</span>';
+    }
     var rankStr = r.rank === null ? '—' : String(r.rank).padStart(2, '0');
-    var listDateCell = r.list_date || (r.pending ? '待上市' : '—');
+    var listDateCell = r.list_date || (r.withdrawn ? '撤回发行' : (r.pending ? '待上市' : '—'));
     tr.innerHTML =
       '<td class="td-no">' + rankStr + '</td>'
       + '<td class="td-code">' + esc(r.code) + '</td>'
@@ -297,7 +308,8 @@ function buildRankRows() {
       + '<td class="td-tier">' + chipHtml(r.tier) + '</td>'
       + '<td class="td-sector" style="font-size:12px;color:#4a4a4a">' + esc(r.sub_sector) + '</td>'
       + '<td class="td-date">' + esc(listDateCell) + '</td>'
-      + '<td class="td-d1">' + d1html + '</td>';
+      + '<td class="td-d1">' + d1html + '</td>'
+      + '<td class="td-cum">' + cumhtml + '</td>';
     tr.addEventListener('mouseenter', function() { showDock(r.code); });
     tbody.appendChild(tr);
   });
@@ -311,12 +323,14 @@ var VIEW = ROWS.slice();
 
 function defaultDir(key) {
   /* numeric + date columns open desc; text columns asc; tier asc by TIER_ORDER */
-  if (key === 'score' || key === 'd1_pct' || key === 'rank' || key === 'list_date') return 'desc';
+  if (key === 'score' || key === 'd1_pct' || key === 'cum_pct'
+      || key === 'rank' || key === 'list_date') return 'desc';
   return 'asc';
 }
 
 function sortMissing(r, key) {
-  if (key === 'd1_pct')    return !(typeof r.d1_pct === 'number' && isFinite(r.d1_pct));
+  if (key === 'd1_pct')    return !hasD1(r);
+  if (key === 'cum_pct')   return !hasCum(r);
   if (key === 'rank')      return !(typeof r.rank === 'number' && isFinite(r.rank));
   if (key === 'list_date') return !r.list_date;
   if (key === 'tier')      return TIER_ORDER.indexOf(r.tier) < 0;
@@ -385,6 +399,7 @@ function showDock(code) {
   var dock = document.getElementById('dock-content');
   var color = retColor(row.d1_pct);
   var d1str = hasD1(row) ? ((row.d1_pct >= 0 ? '+' : '') + row.d1_pct.toFixed(1) + '%') : '—';
+  var cumstr = hasCum(row) ? ((row.cum_pct >= 0 ? '+' : '') + row.cum_pct.toFixed(1) + '%') : '—';
   var intra = INTRADAY[code];
 
   var chartBranch = !!(intra && intra.pts && intra.pts.length >= 2);
@@ -394,12 +409,14 @@ function showDock(code) {
     svgHtml = '<div class="dock-chart"></div>';   /* filled after measuring (two-step) */
     var hi = Math.max.apply(null, intra.pts).toFixed(1);
     var lo = Math.min.apply(null, intra.pts).toFixed(1);
-    footStr = '区间高 ' + (parseFloat(hi) >= 0 ? '+' : '') + hi + '% · 区间低 ' + (parseFloat(lo) >= 0 ? '+' : '') + lo + '% · 来源 ' + esc(row.source || 'futu 5min');
+    footStr = '区间高 ' + (parseFloat(hi) >= 0 ? '+' : '') + hi + '% · 区间低 ' + (parseFloat(lo) >= 0 ? '+' : '') + lo + '% · 至今 ' + cumstr + ' · 来源 ' + esc(row.source || 'futu 5min');
   } else if (!row.pending) {
     svgHtml = '<div class="dock-chart"><div class="dock-empty">盘中路径未采集 · 仅首日收盘</div></div>';
-    footStr = '首日收盘 ' + d1str;
+    footStr = '首日收盘 ' + d1str + ' · 至今 ' + cumstr;
   } else {
-    svgHtml = '<div class="dock-chart"><div class="dock-empty">待上市 · 盘中路径暂无</div></div>';
+    svgHtml = '<div class="dock-chart"><div class="dock-empty">'
+            + (row.withdrawn ? '发行人撤回全球发售 · 未实际上市' : '待上市 · 盘中路径暂无')
+            + '</div></div>';
   }
 
   /* step 1: insert skeleton (empty .dock-chart placeholder) */
@@ -473,13 +490,21 @@ def _build_html(
     df = picks.copy()
     df["code"] = df["code"].astype(str)
 
-    listed_mask = df["status"].fillna("").astype(str).str.lower() == "listed"
-    df_listed  = df[listed_mask].copy()
-    df_pending = df[~listed_mask].copy()
+    _status     = df["status"].fillna("").astype(str).str.lower()
+    listed_mask = _status == "listed"
+    # 'withdrawn' = 发行人撤回全球发售，永远不会上市（例：2523 永康控股 2026-07-08）。
+    # 它既不是 listed（无首日实绩）也不是 pending（不该挂在"待上市"里等），
+    # 所以从 pending 拆出来单独计数、单独渲染。
+    wd_mask     = _status == "withdrawn"
+    df_listed   = df[listed_mask].copy()
+    df_pending  = df[~listed_mask & ~wd_mask].copy()
 
-    n_total   = len(df)
-    n_listed  = len(df_listed)
-    n_pending = len(df_pending)
+    n_total     = len(df)
+    n_listed    = len(df_listed)
+    n_pending   = len(df_pending)
+    n_withdrawn = int(wd_mask.sum())
+    # only surfaces when a withdrawal exists, so the common foot text is unchanged
+    _wd_foot    = f" · 撤回 {n_withdrawn}" if n_withdrawn else ""
 
     # M3 (KPI/tier statistics): any arithmetic on day1_ret must run over FINITE
     # listed rows only. A listed row with None/NaN/inf day1_ret would otherwise
@@ -578,11 +603,18 @@ def _build_html(
 
     rank_rows: list[dict[str, Any]] = []
     for idx, row in df_sorted.iterrows():
-        is_pending = str(row.get("status", "")).strip().lower() != "listed"
+        _st        = str(row.get("status", "")).strip().lower()
+        is_pending = _st != "listed"
+        # withdrawn rows keep pending=True (no d1, sinks to the bottom of every
+        # sort) but carry their own flag so the UI says 撤回发行, never 待上市.
+        is_wd      = _st == "withdrawn"
         # M3: listed row with non-finite day1_ret (None/NaN/inf) → None → JS renders
         # '—' honestly (never 'NaN%'); pending is always None.
         d1_pct     = (float(row["day1_ret"]) * 100.0
                       if not is_pending and _finite(row["day1_ret"]) else None)
+        _cum_raw   = row.get("cum_ret") if "cum_ret" in df_sorted.columns else None
+        cum_pct    = (float(_cum_raw) * 100.0
+                      if not is_pending and _finite(_cum_raw) else None)
         try:
             ld_raw   = row["list_date"]
             list_date = "" if _is_na(ld_raw) else str(ld_raw)
@@ -597,7 +629,11 @@ def _build_html(
             "sub_sector": str(row.get("sub_sector", "") or ""),
             "list_date":  list_date,
             "d1_pct":     d1_pct,
+            # 至今涨幅 vs 发行价 (jobs/refresh_ipo_picks_px.py 刷)。缺列/未刷新/非有限
+            # → None → JS 渲染 '—'。pending 与 withdrawn 行天然没有。
+            "cum_pct":    cum_pct,
             "pending":    is_pending,
+            "withdrawn":  is_wd,
             "source":     src_lookup.get(str(row["code"]), "futu 5min"),
         })
 
@@ -706,7 +742,7 @@ def _build_html(
   <div class="glass kpi-card" style="border-top-color:#1a1a1a">
     <div class="kpi-label">样本</div>
     <div class="kpi-value" style="color:#1a1a1a">{n_total}</div>
-    <div class="kpi-foot">已上市 {n_listed} · 待上市 {n_pending}</div>
+    <div class="kpi-foot">已上市 {n_listed} · 待上市 {n_pending}{_wd_foot}</div>
   </div>
   <div class="glass kpi-card" style="border-top-color:#0d7680">
     <div class="kpi-label">最高首日</div>
@@ -760,6 +796,7 @@ def _build_html(
             <th data-key="sub_sector">子板块<span class="sort-ind"></span></th>
             <th data-key="list_date" style="width:84px">上市日期<span class="sort-ind"></span></th>
             <th data-key="d1_pct" class="r" style="width:92px">首日涨幅<span class="sort-ind"></span></th>
+            <th data-key="cum_pct" class="r" style="width:92px">至今涨幅<span class="sort-ind"></span></th>
           </tr>
         </thead>
         <tbody id="rank-body"></tbody>
@@ -1041,16 +1078,16 @@ if __name__ == "__main__":
     else:
         print("PASS [Case6]: const TIER_ORDER injected, single-source == py _TIER_ORDER (incl. 重点申购+)")
 
-    # ── Case 7: all 8 sortable th data-key attributes present (C19/C20) ──────
+    # ── Case 7: all 9 sortable th data-key attributes present (C19/C20) ──────
     _missing_keys = [
         k for k in ("rank", "code", "name", "score", "tier",
-                    "sub_sector", "list_date", "d1_pct")
+                    "sub_sector", "list_date", "d1_pct", "cum_pct")
         if f'data-key="{k}"' not in html
     ]
     if _missing_keys:
         errs.append(f"FAIL [Case7]: missing thead data-key attrs: {_missing_keys}")
     else:
-        print("PASS [Case7]: all 8 thead data-key attrs present")
+        print("PASS [Case7]: all 9 thead data-key attrs present")
 
     # ── Case 8: sort state machine + pending-sink markers in JS (C21/C27) ────
     for _tok in ("function sortRows(", "sortKey", "a.pending !== b.pending"):
@@ -1222,6 +1259,94 @@ if __name__ == "__main__":
         errs.append(f"FAIL [Case13/C45]: missing dock-bound tokens: {_c45_missing}")
     else:
         print("PASS [Case13/C45]: dock stretch-fills row + measured buildSVG(w,h) + [140,340] clamp + no-clip meet svg all present")
+
+    # ── Case 14: status='withdrawn' (发行人撤回全球发售, 例 2523 永康控股) ────────
+    # A withdrawn deal has no first-day outcome and will NEVER get one, so it must
+    # not sit in 待上市 forever. It stays in the sample count (a call WAS scored),
+    # is excluded from n_pending, and renders 撤回发行 instead of 待上市.
+    picks_wd = pd.DataFrame({
+        "code":       ["1234", "5678", "2523"],
+        "name_cn":    ["已上市股", "待上市股", "撤回股"],
+        "name_en":    ["Listed", "Pending", "Withdrawn"],
+        "score":      [8.5, 6.0, 4.57],
+        "tier":       ["重点申购+", "推荐申购", "不申购"],
+        "list_date":  ["2026-06-01", "2026-07-30", ""],
+        "day1_ret":   [0.5, None, None],
+        "sub_sector": ["医疗器械", "制药", "集装箱堆场"],
+        "offer_price":[10.0, 8.0, None],
+        "day1_close": [15.0, None, None],
+        "status":     ["listed", "pending", "withdrawn"],
+        "source":     ["Wind", "iFind", "撤回"],
+    })
+    html_c14 = _build_html(picks_wd, pd.DataFrame(columns=["code", "time", "close"]),
+                           prefer_cn=True, as_of="2026-07-29")
+    if "已上市 1 · 待上市 1 · 撤回 1" not in html_c14:
+        errs.append("FAIL [Case14]: KPI foot must split withdrawn out of 待上市")
+    else:
+        print("PASS [Case14]: KPI foot '已上市 1 · 待上市 1 · 撤回 1' (withdrawn ≠ pending)")
+    for _tok in ("'撤回发行'", "发行人撤回全球发售"):
+        if _tok not in html_c14:
+            errs.append(f"FAIL [Case14]: withdrawn UI label {_tok} not emitted")
+        else:
+            print(f"PASS [Case14]: withdrawn UI label {_tok} emitted")
+    # withdrawn must keep pending=true so the sort pipeline still sinks it,
+    # and must never carry a d1_pct (there is no first day to report).
+    if '"d1_pct": null, "cum_pct": null, "pending": true, "withdrawn": true' not in html_c14:
+        errs.append("FAIL [Case14]: withdrawn row must be d1_pct=null + cum_pct=null + "
+                    "pending=true (else it breaks the sort sink or fabricates a return)")
+    else:
+        print("PASS [Case14]: withdrawn row = d1/cum null + pending true (sinks, no fake return)")
+    if '"withdrawn": true' in html_c14.split('"code": "2523"')[0]:
+        errs.append("FAIL [Case14]: a non-withdrawn row was flagged withdrawn")
+    else:
+        print("PASS [Case14]: withdrawn flag confined to the withdrawn row")
+
+    # ── Case 15: 至今涨幅 column (cum_ret) ────────────────────────────────────
+    # Guards the two ways this column can lie: (a) a missing/unrefreshed cum_ret
+    # must render '—', never a fabricated 0.0%; (b) a pending row must never
+    # inherit a cum_pct. Header/thead wiring is covered by Case7.
+    picks_cum = pd.DataFrame({
+        "code":       ["1234", "5678", "9999"],
+        "name_cn":    ["有至今", "无至今", "待上市"],
+        "name_en":    ["HasCum", "NoCum", "Pending"],
+        "score":      [8.5, 7.0, 6.0],
+        "tier":       ["重点申购+", "推荐申购", "推荐申购"],
+        "list_date":  ["2026-06-01", "2026-06-02", "2026-08-01"],
+        "day1_ret":   [0.5, 0.2, None],
+        "sub_sector": ["医疗器械", "制药", "半导体"],
+        "offer_price":[10.0, 8.0, 20.0],
+        "day1_close": [15.0, 9.6, None],
+        "status":     ["listed", "listed", "pending"],
+        "source":     ["Wind", "iFind", "card"],
+        "cum_ret":    [-0.32, None, 1.5],   # row2 unrefreshed; row3 must be ignored
+    })
+    html_c15 = _build_html(picks_cum, pd.DataFrame(columns=["code", "time", "close"]),
+                           prefer_cn=True, as_of="2026-07-29")
+    if '"d1_pct": 50.0, "cum_pct": -32.0' not in html_c15:
+        errs.append("FAIL [Case15]: listed row cum_pct not carried as pct (-32.0)")
+    else:
+        print("PASS [Case15]: listed row cum_ret → cum_pct -32.0 (×100 at payload)")
+    if '"d1_pct": 20.0, "cum_pct": null' not in html_c15:
+        errs.append("FAIL [Case15]: unrefreshed cum_ret must be null (renders '—'), not 0")
+    else:
+        print("PASS [Case15]: unrefreshed cum_ret → null → honest '—' (no fabricated 0.0%)")
+    if '"cum_pct": null, "pending": true' not in html_c15:
+        errs.append("FAIL [Case15]: pending row must not carry a cum_pct")
+    else:
+        print("PASS [Case15]: pending row cum_pct null (never inherits a since-listing return)")
+    for _tok in ("function hasCum(", "td-cum", "key === 'cum_pct'"):
+        if _tok not in html_c15:
+            errs.append(f"FAIL [Case15]: missing cum-column wiring token {_tok!r}")
+        else:
+            print(f"PASS [Case15]: cum-column wiring {_tok!r} present")
+    # a CSV predating the column must still render (graceful degrade, all '—')
+    html_c15b = _build_html(picks_cum.drop(columns=["cum_ret"]),
+                            pd.DataFrame(columns=["code", "time", "close"]),
+                            prefer_cn=True, as_of="2026-07-29")
+    if '"cum_pct": null' not in html_c15b or "至今涨幅" not in html_c15b:
+        errs.append("FAIL [Case15]: missing cum_ret column must degrade to all-null, header kept")
+    else:
+        print("PASS [Case15]: CSV without cum_ret degrades gracefully (header kept, all null)")
 
     if errs:
         print("\n".join(errs))

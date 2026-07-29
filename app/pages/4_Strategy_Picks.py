@@ -1282,7 +1282,13 @@ def render_ipo_strategy() -> None:
     picks    = strat.load_ipo()
     intraday = strat.load_ipo_intraday()
     prefer_cn = st.session_state.get("lang", "zh") != "en"
-    as_of = picks["list_date"].dropna().max() if "list_date" in picks.columns else "2026-07-03"
+    # 截至日 = 最近一个「已有首日实绩」的上市日,不是全表 list_date 最大值 —— 后者会被
+    # 尚未挂牌的 pending 行(例 3308 中际旭创 2026-07-30)拉到未来,header 显示明天的日期。
+    _listed = (picks[picks["status"].astype(str).str.lower() == "listed"]
+               if "status" in picks.columns else picks)
+    as_of = (_listed["list_date"].dropna().max()
+             if "list_date" in _listed.columns and not _listed["list_date"].dropna().empty
+             else "2026-07-03")
     ipo_stage.render(picks, intraday, prefer_cn=prefer_cn, as_of=str(as_of))
 
 

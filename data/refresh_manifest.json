@@ -20,16 +20,16 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-07-31T23:43:24+00:00",
-    "source_date": "2026-08-01"
+    "refreshed_at": "2026-08-03T23:49:22+00:00",
+    "source_date": "2026-08-04"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-07-31T23:43:26+00:00",
-    "source_date": "2026-07-31",
+    "refreshed_at": "2026-08-03T23:49:24+00:00",
+    "source_date": "2026-08-03",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"
   },
   "hk_ipo_tracker": {
@@ -61,7 +61,7 @@
     "source": "SEC EDGAR",
     "max_age_days": 140,
     "status": "ok",
-    "refreshed_at": "2026-07-31T23:43:34+00:00",
+    "refreshed_at": "2026-08-03T23:50:01+00:00",
     "source_date": "2026-03-31",
     "note": "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
   },

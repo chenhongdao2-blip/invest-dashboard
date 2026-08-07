@@ -1,12 +1,12 @@
 date,series_id,name_en,name_cn,panel,close,source
-2025-08-01,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,85.53850555419922,yfinance · ETF
-2025-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.42444610595703,yfinance · ETF
-2025-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.45430755615234,yfinance · ETF
+2025-08-01,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,85.53849792480469,yfinance · ETF
+2025-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.4244384765625,yfinance · ETF
+2025-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.45429992675781,yfinance · ETF
 2025-08-06,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,85.73758697509766,yfinance · ETF
-2025-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,84.9312744140625,yfinance · ETF
+2025-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,84.93128204345703,yfinance · ETF
 2025-08-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,85.04077911376953,yfinance · ETF
-2025-08-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,84.77201080322266,yfinance · ETF
-2025-08-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.52397918701172,yfinance · ETF
+2025-08-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,84.77201843261719,yfinance · ETF
+2025-08-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,86.52398681640625,yfinance · ETF
 2025-08-13,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.11214447021484,yfinance · ETF
 2025-08-14,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.16191864013672,yfinance · ETF
 2025-08-15,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,90.26686096191406,yfinance · ETF
@@ -15,23 +15,23 @@ date,series_id,name_en,name_cn,panel,close,source
 2025-08-20,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,88.81351470947266,yfinance · ETF
 2025-08-21,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.51032257080078,yfinance · ETF
 2025-08-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,90.5057601928711,yfinance · ETF
-2025-08-25,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,88.38546752929688,yfinance · ETF
+2025-08-25,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,88.3854751586914,yfinance · ETF
 2025-08-26,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.49041748046875,yfinance · ETF
 2025-08-27,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.87863159179688,yfinance · ETF
 2025-08-28,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.87863159179688,yfinance · ETF
 2025-08-29,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,89.44063568115234,yfinance · ETF
-2025-09-02,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,92.45683288574219,yfinance · ETF
+2025-09-02,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,92.45682525634766,yfinance · ETF
 2025-09-03,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.22332763671875,yfinance · ETF
-2025-09-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.04414367675781,yfinance · ETF
+2025-09-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.04415130615234,yfinance · ETF
 2025-09-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,95.0350341796875,yfinance · ETF
-2025-09-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.9997787475586,yfinance · ETF
-2025-09-09,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,94.5472640991211,yfinance · ETF
+2025-09-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.99977111816406,yfinance · ETF
+2025-09-09,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,94.54727172851562,yfinance · ETF
 2025-09-10,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.4721908569336,yfinance · ETF
 2025-09-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,95.26398468017578,yfinance · ETF
 2025-09-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.69119262695312,yfinance · ETF
 2025-09-15,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.00433349609375,yfinance · ETF
 2025-09-16,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.31291961669922,yfinance · ETF
-2025-09-17,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.34278106689453,yfinance · ETF
+2025-09-17,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,93.3427734375,yfinance · ETF
 2025-09-18,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,96.2395248413086,yfinance · ETF
 2025-09-19,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,95.16444396972656,yfinance · ETF
 2025-09-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,96.88406372070312,yfinance · ETF
@@ -253,6 +253,8 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,147.30999755859375,yfinance · ETF
 2026-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,151.8800048828125,yfinance · ETF
 2026-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,153.00999450683594,yfinance · ETF
+2026-08-06,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,154.5,yfinance · ETF
+2026-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),ai_bio,157.3699951171875,yfinance · ETF
 2025-08-01,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4483.35009765625,yfinance
 2025-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4575.81005859375,yfinance
 2025-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,4508.43017578125,yfinance
@@ -506,7 +508,9 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-31,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6452.85009765625,yfinance
 2026-08-03,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6431.2001953125,yfinance
 2026-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6578.4501953125,yfinance
-2026-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6630.8955078125,yfinance
+2026-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6630.89990234375,yfinance
+2026-08-06,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6659.08984375,yfinance
+2026-08-07,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,ai_bio,6781.83984375,yfinance
 2025-08-01,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5527.60986328125,yfinance
 2025-08-04,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5624.41015625,yfinance
 2025-08-05,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,5561.68994140625,yfinance
@@ -760,7 +764,9 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-31,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,11311.080078125,yfinance
 2026-08-03,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,11430.349609375,yfinance
 2026-08-04,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12179.259765625,yfinance
-2026-08-05,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12008.8828125,yfinance
+2026-08-05,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12008.8798828125,yfinance
+2026-08-06,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12048.6904296875,yfinance
+2026-08-07,^SOX,PHLX Semiconductor (SOX),费城半导体 (SOX),ai_bio,12356.787109375,yfinance
 2025-08-01,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4132.88,iFind
 2025-08-04,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4149.84,iFind
 2025-08-05,HSHCI.HK,Hang Seng Healthcare,恒生医疗保健,hk,4300.12,iFind
@@ -1705,6 +1711,8 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.084999084472656,yfinance · ETF
 2026-08-04,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.459999084472656,yfinance · ETF
 2026-08-05,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.350000381469727,yfinance · ETF
+2026-08-06,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,17.469999313354492,yfinance · ETF
+2026-08-07,KURE,MSCI China Health Care (KURE),MSCI中国医疗保健(KURE),msci,18.539899826049805,yfinance · ETF
 2025-08-01,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,55.46989440917969,yfinance · ETF
 2025-08-04,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.402244567871094,yfinance · ETF
 2025-08-05,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.784996032714844,yfinance · ETF
@@ -1959,14 +1967,16 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,55.900001525878906,yfinance · ETF
 2026-08-04,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.09000015258789,yfinance · ETF
 2026-08-05,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.0099983215332,yfinance · ETF
-2025-08-01,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,85.53850555419922,yfinance · ETF
-2025-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.42444610595703,yfinance · ETF
-2025-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.45430755615234,yfinance · ETF
+2026-08-06,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,55.90999984741211,yfinance · ETF
+2026-08-07,MCHI,MSCI China (MCHI),MSCI中国(MCHI),msci,56.56999969482422,yfinance · ETF
+2025-08-01,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,85.53849792480469,yfinance · ETF
+2025-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.4244384765625,yfinance · ETF
+2025-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.45429992675781,yfinance · ETF
 2025-08-06,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,85.73758697509766,yfinance · ETF
-2025-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,84.9312744140625,yfinance · ETF
+2025-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,84.93128204345703,yfinance · ETF
 2025-08-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,85.04077911376953,yfinance · ETF
-2025-08-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,84.77201080322266,yfinance · ETF
-2025-08-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.52397918701172,yfinance · ETF
+2025-08-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,84.77201843261719,yfinance · ETF
+2025-08-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,86.52398681640625,yfinance · ETF
 2025-08-13,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.11214447021484,yfinance · ETF
 2025-08-14,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.16191864013672,yfinance · ETF
 2025-08-15,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,90.26686096191406,yfinance · ETF
@@ -1975,23 +1985,23 @@ date,series_id,name_en,name_cn,panel,close,source
 2025-08-20,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,88.81351470947266,yfinance · ETF
 2025-08-21,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.51032257080078,yfinance · ETF
 2025-08-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,90.5057601928711,yfinance · ETF
-2025-08-25,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,88.38546752929688,yfinance · ETF
+2025-08-25,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,88.3854751586914,yfinance · ETF
 2025-08-26,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.49041748046875,yfinance · ETF
 2025-08-27,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.87863159179688,yfinance · ETF
 2025-08-28,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.87863159179688,yfinance · ETF
 2025-08-29,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,89.44063568115234,yfinance · ETF
-2025-09-02,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,92.45683288574219,yfinance · ETF
+2025-09-02,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,92.45682525634766,yfinance · ETF
 2025-09-03,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.22332763671875,yfinance · ETF
-2025-09-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.04414367675781,yfinance · ETF
+2025-09-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.04415130615234,yfinance · ETF
 2025-09-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,95.0350341796875,yfinance · ETF
-2025-09-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.9997787475586,yfinance · ETF
-2025-09-09,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,94.5472640991211,yfinance · ETF
+2025-09-08,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.99977111816406,yfinance · ETF
+2025-09-09,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,94.54727172851562,yfinance · ETF
 2025-09-10,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.4721908569336,yfinance · ETF
 2025-09-11,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,95.26398468017578,yfinance · ETF
 2025-09-12,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.69119262695312,yfinance · ETF
 2025-09-15,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.00433349609375,yfinance · ETF
 2025-09-16,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.31291961669922,yfinance · ETF
-2025-09-17,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.34278106689453,yfinance · ETF
+2025-09-17,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,93.3427734375,yfinance · ETF
 2025-09-18,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,96.2395248413086,yfinance · ETF
 2025-09-19,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,95.16444396972656,yfinance · ETF
 2025-09-22,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,96.88406372070312,yfinance · ETF
@@ -2213,6 +2223,8 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,147.30999755859375,yfinance · ETF
 2026-08-04,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,151.8800048828125,yfinance · ETF
 2026-08-05,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,153.00999450683594,yfinance · ETF
+2026-08-06,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,154.5,yfinance · ETF
+2026-08-07,XBI,S&P Biotech (XBI),标普生物科技 (XBI),nbi,157.3699951171875,yfinance · ETF
 2025-08-01,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,20650.130859375,yfinance
 2025-08-04,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,21053.580078125,yfinance
 2025-08-05,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,20916.55078125,yfinance
@@ -2467,6 +2479,8 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,25913.900390625,yfinance
 2026-08-04,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,26584.990234375,yfinance
 2026-08-05,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,26363.439453125,yfinance
+2026-08-06,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,26348.349609375,yfinance
+2026-08-07,^IXIC,Nasdaq Composite,纳斯达克综合,nbi,26690.615234375,yfinance
 2025-08-01,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4483.35009765625,yfinance
 2025-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4575.81005859375,yfinance
 2025-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,4508.43017578125,yfinance
@@ -2720,7 +2734,9 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-31,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6452.85009765625,yfinance
 2026-08-03,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6431.2001953125,yfinance
 2026-08-04,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6578.4501953125,yfinance
-2026-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6630.8955078125,yfinance
+2026-08-05,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6630.89990234375,yfinance
+2026-08-06,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6659.08984375,yfinance
+2026-08-07,^NBI,Nasdaq Biotech (NBI),纳斯达克生物科技,nbi,6781.83984375,yfinance
 2025-08-01,^GSPC,S&P 500,标普500,sphc,6238.009765625,yfinance
 2025-08-04,^GSPC,S&P 500,标普500,sphc,6329.93994140625,yfinance
 2025-08-05,^GSPC,S&P 500,标普500,sphc,6299.18994140625,yfinance
@@ -2975,6 +2991,8 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-08-03,^GSPC,S&P 500,标普500,sphc,7600.5,yfinance
 2026-08-04,^GSPC,S&P 500,标普500,sphc,7736.52001953125,yfinance
 2026-08-05,^GSPC,S&P 500,标普500,sphc,7723.5498046875,yfinance
+2026-08-06,^GSPC,S&P 500,标普500,sphc,7709.9599609375,yfinance
+2026-08-07,^GSPC,S&P 500,标普500,sphc,7757.64013671875,yfinance
 2025-08-01,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1527.2900390625,yfinance
 2025-08-04,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1548.81005859375,yfinance
 2025-08-05,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1542.800048828125,yfinance
@@ -3216,4 +3234,4 @@ date,series_id,name_en,name_cn,panel,close,source
 2026-07-15,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1845.5699462890625,yfinance
 2026-07-16,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1886.3399658203125,yfinance
 2026-07-17,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1878.1300048828125,yfinance
-2026-08-05,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1913.0,yfinance
+2026-08-07,^SP500-35,S&P 500 Health Care,标普500医疗保健,sphc,1930.5899658203125,yfinance

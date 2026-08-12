@@ -190,8 +190,10 @@ def render_market_hub(payload: dict, labels: dict,
         + _card_open
         + _grp_band
         + _col_headers("sp")
-        + f'<div id="spref" style="display:grid;grid-template-columns:{_GRID};padding:0 14px;'
-          f'border-bottom:1px solid {_EDGE};background:rgba(255,255,255,.35);"></div>'
+        # NOTE: 纯容器，不要加 display:grid/padding —— JS 注入的 mkRow() 自带
+        # grid-template-columns + padding:0 14px；再包一层 grid 会把整行塞进
+        # 第一个 96px 轨道，导致基准行相对 body 行左移且列宽塌缩（对不齐）。
+        + f'<div id="spref" style="border-bottom:1px solid {_EDGE};"></div>'
         + '<div id="spbody"></div>'
         + _card_close
     )

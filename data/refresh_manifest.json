@@ -20,16 +20,16 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-08-14T23:00:47+00:00",
-    "source_date": "2026-08-15"
+    "refreshed_at": "2026-08-17T23:01:21+00:00",
+    "source_date": "2026-08-18"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-08-14T23:00:49+00:00",
-    "source_date": "2026-08-14",
+    "refreshed_at": "2026-08-17T23:01:23+00:00",
+    "source_date": "2026-08-17",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"
   },
   "hk_ipo_tracker": {
@@ -61,8 +61,8 @@
     "source": "SEC EDGAR",
     "max_age_days": 140,
     "status": "ok",
-    "refreshed_at": "2026-08-14T23:00:59+00:00",
-    "source_date": "2026-03-31",
+    "refreshed_at": "2026-08-17T23:02:04+00:00",
+    "source_date": "2026-06-30",
     "note": "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
   },
   "biotech_catalysts": {

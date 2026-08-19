@@ -106,7 +106,7 @@ for sec in cfg["sectors"]:
 
     _ytd_avg = _avg("ytd_%")
     _sum_rows.append({
-        "tk": sec.get("benchmark", "—"),
+        "tk": "CMSI Focus",
         "name": f'{i18n.sector_name(sec["id"])} · {len(tickers)}',
         "periods": {"1日": _avg("1d_%"), "5日": _avg("5d_%"),
                     "1月": _avg("1m_%"), "YTD": _ytd_avg},
@@ -119,13 +119,13 @@ if not _sum_rows:
     st.warning(i18n.t("hc.summary.empty"))
 else:
     _sum_asof = db.latest_snapshot_date()
-    _sum_src = (f"来源 Yahoo Finance cron EOD · 板块均值 = 成分等权 · 截至 {_sum_asof} · 仅供参考"
+    _sum_src = (f"来源 Yahoo Finance cron EOD · CMSI Focus = 覆盖成分等权组合(非指数) · 截至 {_sum_asof} · 仅供参考"
                 if prefer_cn else
-                f"Source: Yahoo Finance cron EOD · sector avg = equal-weight members · "
-                f"as of {_sum_asof} · for reference")
+                f"Source: Yahoo Finance cron EOD · CMSI Focus = equal-weight coverage composite "
+                f"(not an index) · as of {_sum_asof} · for reference")
     so.benchmark_table(_sum_rows, source=_sum_src,
                        section_label="板块 · Sub-sectors",
-                       tk_label="基准" if prefer_cn else "Benchmark")
+                       tk_label="Ticker")
 
 st.divider()
 

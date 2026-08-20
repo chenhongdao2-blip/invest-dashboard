@@ -37,8 +37,9 @@
     "source": "Wind+Futu(本地)",
     "max_age_days": 9,
     "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:23+00:00",
-    "source_date": "2026-06-24"
+    "refreshed_at": "2026-08-20T14:37:02+00:00",
+    "source_date": "2026-08-20",
+    "note": "Wind 主源 + Futu OpenD 交叉核对 (42 名, 价差 <5%)"
   },
   "mnc_ma_deals": {
     "label": "MNC M&A / BD 交易",

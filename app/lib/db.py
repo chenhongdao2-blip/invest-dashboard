@@ -68,7 +68,9 @@ def universe_summary() -> pd.DataFrame:
 # ---------- universe ----------
 @st.cache_data(ttl=300)
 def all_tickers() -> list[str]:
-    return query("SELECT DISTINCT ticker FROM universe_member")["ticker"].tolist()
+    return query(
+        "SELECT DISTINCT ticker FROM universe_member WHERE status IS NULL"
+    )["ticker"].tolist()
 
 
 @st.cache_data(ttl=300)
@@ -76,6 +78,7 @@ def sector_tickers(domain: str, sector: str) -> pd.DataFrame:
     return query(
         "SELECT ticker, name_cn, name_en, region "
         "FROM universe_member WHERE domain = ? AND sector = ? "
+        "AND status IS NULL "
         "ORDER BY ticker",
         (domain, sector),
     )
@@ -84,6 +87,10 @@ def sector_tickers(domain: str, sector: str) -> pd.DataFrame:
 @st.cache_data(ttl=300)
 def ticker_to_name(prefer_cn: bool = True) -> dict[str, str]:
     """Resolve display name. M10 audit fix: default to Chinese first (中文卖方 习惯).
+
+    NOTE: 刻意 **不** 过滤 status —— 已退市/更名的标的仍需解析出中文名, 否则
+    Strategy Picks 里被收购的历史 pick(如 FOLD/阿米库斯)会退化成裸代码显示。
+    扫描与排序路径的过滤在 all_tickers / sector_tickers / top_movers 三处。
 
     Set prefer_cn=False to fall back to English-first."""
     if prefer_cn:
@@ -308,7 +315,8 @@ def top_movers(n: int = 10, domain: str | None = None) -> tuple[pd.DataFrame, pd
     category can show its OWN movers (HC movers under HC, AI movers under AI)."""
     if domain:
         tickers = tuple(
-            query("SELECT DISTINCT ticker FROM universe_member WHERE domain = ?",
+            query("SELECT DISTINCT ticker FROM universe_member "
+                  "WHERE domain = ? AND status IS NULL",
                   (domain,))["ticker"].tolist()
         )
     else:

@@ -19,6 +19,20 @@ DOMAINS_DIR = REPO_ROOT / "config" / "domains"
 UNIVERSES_DIR = REPO_ROOT / "config" / "universes"
 
 
+def ensure_status_column(conn: sqlite3.Connection) -> None:
+    """Idempotent migration: add universe_member.status if missing.
+
+    init_db.py uses CREATE TABLE IF NOT EXISTS, so an ALREADY-EXISTING db (incl.
+    the one cron drives on Cloud) never picks up new columns on its own. Without
+    this, the first run after deploy would die on 'no such column: status' and
+    take the whole daily refresh down with it.
+    """
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(universe_member)")}
+    if "status" not in cols:
+        conn.execute("ALTER TABLE universe_member ADD COLUMN status TEXT")
+        print("[load_universe] migrated: universe_member.status added")
+
+
 def load_domains() -> list[dict]:
     """Read all domain YAMLs."""
     domains = []
@@ -51,12 +65,13 @@ def upsert_members(conn: sqlite3.Connection, domain_id: str,
             entry.get("name_en"),
             entry.get("region"),
             entry.get("note"),
+            entry.get("status"),
         ))
     conn.executemany(
         """
         INSERT OR REPLACE INTO universe_member
-            (domain, sector, ticker, name_cn, name_en, region, note)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+            (domain, sector, ticker, name_cn, name_en, region, note, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """,
         rows,
     )
@@ -71,6 +86,7 @@ def main() -> None:
 
     conn = sqlite3.connect(DB_PATH)
     try:
+        ensure_status_column(conn)
         total = 0
         for domain in load_domains():
             domain_id = domain["_domain_id"]

@@ -27,6 +27,8 @@ tickers:
   - ticker: SEM
     name_en: Select Medical
     region: US
+    status: delisted
+    status_note: "2026-08-20 核实：冻结价，最后成交 2026-06-30"
   - ticker: OPCH
     name_en: Option Care Health
     region: US

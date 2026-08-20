@@ -41,7 +41,6 @@ i18n.render_lang_toggle()
 
 section_header.cover(i18n.t("cov.title"), "CMSI · COVERAGE",
                      rail=section_header.RAIL_HC, prefer_cn=i18n.get_lang() == "zh")
-st.caption(i18n.t("cov.caption", date=(db.latest_snapshot_date() or "—")))
 theme.page_radial_wash(1300)
 
 prefer_cn = i18n.get_lang() == "zh"
@@ -56,6 +55,14 @@ if cmsi.empty:
 
 tickers = tuple(cmsi["ticker"].tolist())
 cmsi_idx = cmsi.set_index("ticker")
+
+# Caption counts are derived from the loaded universe, never hardcoded — the
+# 28/15/10 literals went stale the moment a name was added to the yml.
+_reg = cmsi["region"].value_counts()
+st.caption(i18n.t("cov.caption",
+                  n=len(cmsi), hk=int(_reg.get("HK", 0)),
+                  us=int(_reg.get("US", 0)), cn=int(_reg.get("CN", 0)),
+                  date=(db.latest_snapshot_date() or "—")))
 
 # ---------------------------------------------------------------------------
 # 2. 数据层：回报 + 倍数 + 基准

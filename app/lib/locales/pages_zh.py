@@ -117,7 +117,7 @@ STRINGS = {
     "hub.tbl.movers.sub": "医疗健康覆盖池 · 按 1 日涨跌排序 · 价格为当地币种",
 
     "cov.title": "CMSI 覆盖名单",
-    "cov.caption": "28 只官方覆盖名单——港股 15 / 美股 10 / A 股 3。最新数据：{date}",
+    "cov.caption": "{n} 只官方覆盖名单——港股 {hk} / 美股 {us} / A 股 {cn}。最新数据：{date}",
     # cov.tbl.* — Coverage 玻璃卡片表（coverage_table iframe，zip5 设计）
     "cov.tbl.tab.hk": "HK",
     "cov.tbl.tab.us": "US",
@@ -687,6 +687,13 @@ STRINGS = {
     "drill.sec.runway": "现金跑道 ≈ {years} 年（现金+短投 ÷ 年度研发，截至 {date}，粗略估算）",
     "drill.sec.source": "来源：SEC XBRL · 最新申报 {filed} · 仅美股口径",
     "drill.membership": "所属板块",
+    "drill.transcript.title": "业绩会纪要",
+    "drill.transcript.meta": "{date} 电话会 · 本地全文 · 不发布至公开云端",
+    "drill.transcript.unverified": "该纪要的公司名未与覆盖名单核对一致,请自行确认纪要主体是否为本标的。",
+    "drill.transcript.open": "展开 {date} 业绩会全文",
+    "drill.transcript.tab.pres": "管理层陈述",
+    "drill.transcript.tab.qa": "问答 Q&A",
+    "drill.transcript.caption": "来源 minodata 海外纪要(授权内容)· 仅本地可见 · 内部参考,不可外发",
     "drill.onboarding.title": "如何阅读本页",
     "drill.onboarding.body": (
         "**Memo 来源**：若 `~/Documents/LLM Wiki/Wiki/companies/<ticker>-*.md` 存在，"
@@ -969,11 +976,11 @@ STRINGS = {
     ),
 
     # ── Pharma MNC M&A（deal-level，MNCs basket xlsx / mnc-deal-scanner）──
-    "mnc_ma.page.asof": "13 家药企 MNC · 历史并购",
-    "mnc_ma.intro": "13 家全球药企 MNC 的历史并购全集——deal-level，可按公司 / 治疗领域 / 年份切。数据来自 MNCs basket（mnc-deal-scanner skill 维护）。",
+    "mnc_ma.page.asof": "{nmnc} 家药企 MNC · 历史并购",
+    "mnc_ma.intro": "{nmnc} 家全球药企 MNC 的历史并购全集——deal-level，可按公司 / 治疗领域 / 年份切。数据来自 MNCs basket（mnc-deal-scanner skill 维护）。",
     "mnc_ma.source_note": "来源：MNCs basket summary（{source}）。金额含已披露(Actual)与合理估算(Estimated)；deal-level 多源 cross-check。**不含任何卖方评级**。",
     "mnc_ma.kpi.total": "历史并购总额",
-    "mnc_ma.kpi.total_foot": "{n} 笔 · {ymin}-{ymax} · 13 家药企 MNC",
+    "mnc_ma.kpi.total_foot": "{n} 笔 · {ymin}-{ymax} · {nmnc} 家药企 MNC",
     "mnc_ma.kpi.deals": "并购笔数",
     "mnc_ma.kpi.deals_foot": "已披露 {actual} · 估算 {est}",
     "mnc_ma.kpi.top": "最活跃买家",
@@ -1250,4 +1257,23 @@ STRINGS = {
     "etf.rot.caption": "每支 ETF 相对广基医疗基准(XLV)轮动 —— 领先 / 转弱 / 落后 / 改善。",
     "etf.rot.thin": "历史足够的 ETF 太少,无法绘制轮动图。",
     "etf.rot.note": "基准 = {bench}(广基医疗)。周频 RS-Ratio / RS-Momentum。",
+
+    # ── Market Hub · 业绩会日历 (earn.*) — minodata 日历事实层 ──
+    "earn.section.title": "业绩会日历",
+    "earn.section.meta": "覆盖池标的 · 时间为香港时间 (HKT) · 预告时间为估计值",
+    "earn.upcoming.title": "未来 7 天",
+    "earn.past.title": "近 3 天已开",
+    "earn.col.date": "日期",
+    "earn.col.ticker": "代码",
+    "earn.col.name": "名称",
+    "earn.col.region": "市场",
+    "earn.col.time": "时间 (HKT)",
+    "earn.col.status": "状态",
+    "earn.col.detail": "详情",
+    "earn.status.today": "今日",
+    "earn.status.tomorrow": "明日",
+    "earn.status.done": "已开",
+    "earn.status.draft": "纪要已出",
+    "earn.empty": "未来 7 天覆盖池内暂无业绩会安排。",
+    "earn.source": "来源 minodata 业绩会日历（仅日历事实，非纪要内容）· 截至 {asof} · 仅供参考",
 }

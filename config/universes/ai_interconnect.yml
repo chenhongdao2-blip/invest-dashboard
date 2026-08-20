@@ -13,11 +13,11 @@ tickers:
     name_en: Lumentum Holdings
     region: US
   - ticker: CIEN
-    name_cn: 晶科网络
+    name_cn: Ciena
     name_en: Ciena
     region: US
   - ticker: ANET
-    name_cn: 思科竞争者
+    name_cn: 阿里斯塔网络
     name_en: Arista Networks
     region: US
   - ticker: APH
@@ -99,7 +99,7 @@ tickers:
     region: CN
   - ticker: 300502.SZ
     name_cn: 新易盛
-    name_en: Hisense Broadband (XRS)
+    name_en: Eoptolink Technology
     region: CN
   - ticker: 300394.SZ
     name_cn: 天孚通信
@@ -119,11 +119,11 @@ tickers:
     region: CN
   - ticker: 300476.SZ
     name_cn: 胜宏科技
-    name_en: Shengyi Electronics (Shenghong)
+    name_en: Victory Giant Technology
     region: CN
   - ticker: 002463.SZ
     name_cn: 沪电股份
-    name_en: Shennan Circuits / Shanghai Electric PCB
+    name_en: WUS Printed Circuit
     region: CN
   - ticker: 600183.SS
     name_cn: 生益科技

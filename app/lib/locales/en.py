@@ -419,6 +419,7 @@ STRINGS = {
     "strategy.name.v6_biotech": "US Biotech AI Picks · July Rebalance",
     "strategy.name.hk_hd": "HK High-Dividend Picks",
     "strategy.name.hk_hd_v2": "HK High-Dividend v2 · Standard Build",
+    "strategy.name.hk_hd_v3": "HK High-Dividend v3 · Score-Weighted",
     "strategy.v4.tag": "Lookback build",
     "strategy.v5.tag": "catalyst-monitor",
     "strategy.v4.method": (

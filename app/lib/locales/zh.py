@@ -374,6 +374,7 @@ STRINGS = {
     "strategy.name.v6_biotech": "美国生物科技选股 · 7月调仓",
     "strategy.name.hk_hd": "港股高股息选股",
     "strategy.name.hk_hd_v2": "港股高股息 v2 · 标准建仓",
+    "strategy.name.hk_hd_v3": "港股高股息 v3 · 评分加权",
     "strategy.v4.tag": "回看版",
     "strategy.v5.tag": "catalyst-monitor",
     "strategy.v4.method": (

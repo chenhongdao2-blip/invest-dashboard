@@ -278,12 +278,17 @@ html, body, [data-testid="stApp"], [data-testid="stAppViewContainer"], [data-tes
 [data-testid="stSidebar"] {{
   background: {PAPER} !important;
   border-right: 1px solid #d9c9b5 !important;
-  min-width: 250px !important;
-  position: relative;
+  /* 设计的 3px 红色左边条：用 border-left,不用 ::before + position:relative。
+     2026-08-20 DOM 二分实测:position:relative 让收起后的 sidebar 仍占常规流
+     300px,Streamlit 原生 collapse 拿不回宽度 → 右侧内容一点不加宽,收起按钮形同
+     虚设(改成 position:absolute 后 block-container 立刻 1212→1512)。border 不需要
+     定位锚点,收起时随 sidebar 一起消失。导航 active 红点锚在 a 自身
+     (stSidebarNav a 有 position:relative),不受本次改动影响。 */
+  border-left: 3px solid {CMSI_RED} !important;
 }}
-[data-testid="stSidebar"]::before {{
-  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
-  background: {CMSI_RED}; z-index: 10;
+/* 最小宽度只约束展开态 —— 无条件 min-width 会在收起时把宽度重新钉住。 */
+[data-testid="stSidebar"][aria-expanded="true"] {{
+  min-width: 250px !important;
 }}
 /* brand lockup (st.logo) — give it breathing room like the design 品牌块 */
 [data-testid="stSidebarHeader"] {{
@@ -1112,7 +1117,14 @@ def page_radial_wash(max_width_px: int = 1240) -> None:
     {PAPER} !important;
   background-attachment: fixed;
 }}
-.block-container {{ max-width: {max_width_px}px !important; }}
+.block-container {{
+  max-width: {max_width_px}px !important;
+  /* Streamlit 默认左右各 75px 留白,在 1512 笔电 + sidebar 展开时把内容区压到
+     1062px —— 恰好等于覆盖表 11 列所需宽度,一点不剩给表体的竖向滚动条,于是卡片
+     被迫长出横向滚动条。收到 40px 回收 70px。 */
+  padding-left: 40px !important;
+  padding-right: 40px !important;
+}}
 /* Sidebar 收起时:page-scoped 的 max-width 会盖掉全局 collapse 加宽规则,导致内容
    仍卡在 {max_width_px}px 居中 → 左侧一大片浪费(George 2026-07-10)。这里补一条
    同结构 :has() 规则,收起时把内容加宽到 1760(填满笔电、2K 仍留克制边距)。 */

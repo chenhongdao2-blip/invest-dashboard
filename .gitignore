@@ -69,6 +69,23 @@ data/external/hshci_history.png
 data/external/hshci_drawdown_compare.png
 落地代码/
 
+# minodata earnings-call transcripts — licensed content, local-only, NEVER public Cloud.
+# The committed data/external/earnings_calendar.json carries calendar FACTS only.
+data/local/earnings_transcripts/
+
+# Local twin of the earnings calendar — keeps minodata's internal `ipid`
+# (vendor primary key). The committed data/external/earnings_calendar.json
+# is the stripped public version written by the same job.
+data/local/earnings_calendar_full.json
+
 # Universe 清理清单完整版含第三方数据商派生数据与供应商横评结论 —— local-only,
 # NEVER public。committed 的 docs/2026-08-20-universe-cleanup.md 是脱敏版。
 docs/2026-08-20-universe-cleanup-full.md
+
+# FactSet 原始产物（deal-level dump + 增强脚本）—— 第三方付费授权数据,
+# local-only, NEVER public Cloud。
+data/external/factset_raw/
+
+# MNC M&A 交易表完整版含第三方付费数据源派生列 (fs_*: 成交额/状态/EV 倍数/交易号)
+# —— local-only, NEVER public。
+data/external/mnc_ma_deals_full.csv

@@ -1,4 +1,4 @@
-# Healthcare Coverage List — 28 tickers (HK + US + 3 CN A-share)
+# Healthcare Coverage List — 31 tickers (HK 17 + US 11 + 3 CN A-share)
 # Note: 部分 ticker 与 sector universe cross-membership（dashboard 自动 dedup）
 # `sector:` 字段 = 该覆盖名的真实板块。load_universe 会同时写入一行真实 sector +
 # 一行 _coverage，于是 Market Data 等页面显示「真实板块 / 覆盖」而非只有 _coverage。
@@ -77,6 +77,16 @@ tickers:
     name_en: Hansoh Pharma
     region: HK
     sector: pharma
+  - ticker: 6915.HK
+    name_cn: 江西生物
+    name_en: Jiangxi Institute of Biological Products
+    region: HK
+    sector: biotech
+  - ticker: 6938.HK
+    name_cn: 瑞博生物
+    name_en: Ribo Life Science
+    region: HK
+    sector: biotech
   - ticker: 9995.HK
     name_cn: 荣昌生物
     name_en: Remegen
@@ -124,6 +134,11 @@ tickers:
     name_en: BeOne Medicines
     region: US
     sector: biotech
+  - ticker: TAK
+    name_cn: 武田药品
+    name_en: Takeda Pharmaceutical
+    region: US
+    sector: pharma
   - ticker: TMO
     name_cn: 赛默飞世尔
     name_en: Thermo Fisher

@@ -119,7 +119,7 @@ STRINGS = {
     "hub.tbl.movers.sub": "Healthcare coverage pool · ranked by 1D move · prices in local currency",
 
     "cov.title": "CMSI Coverage",
-    "cov.caption": "28-ticker official cover list — HK 15 / US 10 / CN A-share 3. Latest data: {date}",
+    "cov.caption": "{n}-ticker official cover list — HK {hk} / US {us} / CN A-share {cn}. Latest data: {date}",
     # cov.tbl.* — Coverage glass-card table (coverage_table iframe, zip5 design)
     "cov.tbl.tab.hk": "HK",
     "cov.tbl.tab.us": "US",
@@ -720,6 +720,13 @@ STRINGS = {
     "drill.sec.runway": "Cash runway ≈ {years} yr ((cash + ST investments) ÷ annual R&D, as of {date}, rough)",
     "drill.sec.source": "Source: SEC XBRL · latest filing {filed} · US filers only",
     "drill.membership": "Universe membership",
+    "drill.transcript.title": "Earnings Call Transcript",
+    "drill.transcript.meta": "{date} call · local full text · never published to public Cloud",
+    "drill.transcript.unverified": "Company name did not match the coverage roster — confirm this transcript belongs to this ticker.",
+    "drill.transcript.open": "Open full transcript · {date}",
+    "drill.transcript.tab.pres": "Prepared Remarks",
+    "drill.transcript.tab.qa": "Q&A",
+    "drill.transcript.caption": "Source: minodata transcripts (licensed) · local only · internal reference, do not distribute",
     "drill.onboarding.title": "How to read this page",
     "drill.onboarding.body": (
         "**Memo source**: if `~/Documents/LLM Wiki/Wiki/companies/<ticker>-*.md` exists, the top "
@@ -1002,11 +1009,11 @@ STRINGS = {
     ),
 
     # ── Pharma MNC M&A (deal-level, MNCs basket xlsx / mnc-deal-scanner) ──
-    "mnc_ma.page.asof": "13 pharma MNCs · M&A history",
-    "mnc_ma.intro": "The full M&A history of 13 global pharma MNCs — deal-level, sliceable by company / therapeutic area / year. Data from the MNCs basket (maintained by the mnc-deal-scanner skill).",
+    "mnc_ma.page.asof": "{nmnc} pharma MNCs · M&A history",
+    "mnc_ma.intro": "The full M&A history of {nmnc} global pharma MNCs — deal-level, sliceable by company / therapeutic area / year. Data from the MNCs basket (maintained by the mnc-deal-scanner skill).",
     "mnc_ma.source_note": "Source: MNCs basket summary ({source}). Values include disclosed (Actual) and reasonable estimates (Estimated); deal-level cross-checked. **No sell-side rating.**",
     "mnc_ma.kpi.total": "Total M&A (lifetime)",
-    "mnc_ma.kpi.total_foot": "{n} deals · {ymin}-{ymax} · 13 pharma MNCs",
+    "mnc_ma.kpi.total_foot": "{n} deals · {ymin}-{ymax} · {nmnc} pharma MNCs",
     "mnc_ma.kpi.deals": "Deal Count",
     "mnc_ma.kpi.deals_foot": "disclosed {actual} · estimated {est}",
     "mnc_ma.kpi.top": "Most Acquisitive",
@@ -1281,4 +1288,23 @@ STRINGS = {
     "etf.rot.caption": "Each ETF rotates against the broad-HC benchmark (XLV) — Leading / Weakening / Lagging / Improving.",
     "etf.rot.thin": "Too few ETFs with enough history for a rotation graph.",
     "etf.rot.note": "Benchmark = {bench} (broad healthcare). Weekly RS-Ratio / RS-Momentum.",
+
+    # ── Market Hub · Earnings calendar (earn.*) — minodata calendar-facts layer ──
+    "earn.section.title": "Earnings Calendar",
+    "earn.section.meta": "Covered names · times in Hong Kong Time (HKT) · preview times are estimates",
+    "earn.upcoming.title": "Next 7 Days",
+    "earn.past.title": "Reported · Last 3 Days",
+    "earn.col.date": "Date",
+    "earn.col.ticker": "Ticker",
+    "earn.col.name": "Name",
+    "earn.col.region": "Market",
+    "earn.col.time": "Time (HKT)",
+    "earn.col.status": "Status",
+    "earn.col.detail": "Detail",
+    "earn.status.today": "Today",
+    "earn.status.tomorrow": "Tomorrow",
+    "earn.status.done": "Held",
+    "earn.status.draft": "Transcript out",
+    "earn.empty": "No earnings calls scheduled for covered names in the next 7 days.",
+    "earn.source": "Source: minodata earnings calendar (calendar facts only, no transcript content) · as of {asof} · for reference",
 }

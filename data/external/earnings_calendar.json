@@ -1,0 +1,182 @@
+{
+ "schema_version": 1,
+ "retrieved_at_utc": "2026-08-20T02:07:31+00:00",
+ "as_of_hkt": "2026-08-20",
+ "source_timezone": "America/New_York",
+ "window_hkt": {
+  "from": "2026-08-17",
+  "to": "2026-08-27"
+ },
+ "n_events": 14,
+ "source": "minodata 海外纪要 API (calendar facts only)",
+ "events": [
+  {
+   "ticker": "EYPT",
+   "name_cn": "伊普特",
+   "name_en": "EyePoint Pharmaceuticals, Inc.",
+   "region": "US",
+   "date_hkt": "2026-08-17",
+   "time_hkt": "20:00",
+   "date_et": "2026-08-17",
+   "time_et": "08:00",
+   "upcoming": false,
+   "speech_draft": true
+  },
+  {
+   "ticker": "VIAV",
+   "name_cn": "威亚维解决方案",
+   "name_en": "Viavi Solutions",
+   "region": "US",
+   "date_hkt": "2026-08-18",
+   "time_hkt": "05:00",
+   "date_et": "2026-08-17",
+   "time_et": "17:00",
+   "upcoming": false,
+   "speech_draft": false
+  },
+  {
+   "ticker": "FN",
+   "name_cn": "法布里耐特",
+   "name_en": "Fabrinet",
+   "region": "US",
+   "date_hkt": "2026-08-18",
+   "time_hkt": "05:00",
+   "date_et": "2026-08-17",
+   "time_et": "17:00",
+   "upcoming": false,
+   "speech_draft": true
+  },
+  {
+   "ticker": "OCUL",
+   "name_cn": "奥库拉",
+   "name_en": "Ocular Therapeutix, Inc.",
+   "region": "US",
+   "date_hkt": "2026-08-18",
+   "time_hkt": "08:00",
+   "date_et": "2026-08-17",
+   "time_et": "20:00",
+   "upcoming": false,
+   "speech_draft": false
+  },
+  {
+   "ticker": "AMLX",
+   "name_cn": "艾米利克斯",
+   "name_en": "Amylyx Pharmaceuticals, Inc.",
+   "region": "US",
+   "date_hkt": "2026-08-18",
+   "time_hkt": "20:00",
+   "date_et": "2026-08-18",
+   "time_et": "08:00",
+   "upcoming": false,
+   "speech_draft": true
+  },
+  {
+   "ticker": "AAOI",
+   "name_cn": "应用光电",
+   "name_en": "Applied Optoelectronics (AOI)",
+   "region": "US",
+   "date_hkt": "2026-08-18",
+   "time_hkt": "23:00",
+   "date_et": "2026-08-18",
+   "time_et": "11:00",
+   "upcoming": false,
+   "speech_draft": false
+  },
+  {
+   "ticker": "ANET",
+   "name_cn": "阿里斯塔网络",
+   "name_en": "Arista Networks",
+   "region": "US",
+   "date_hkt": "2026-08-19",
+   "time_hkt": "03:00",
+   "date_et": "2026-08-18",
+   "time_et": "15:00",
+   "upcoming": false,
+   "speech_draft": false
+  },
+  {
+   "ticker": "ADI",
+   "name_cn": "亚德诺半导体",
+   "name_en": "Analog Devices",
+   "region": "US",
+   "date_hkt": "2026-08-19",
+   "time_hkt": "22:00",
+   "date_et": "2026-08-19",
+   "time_et": "10:00",
+   "upcoming": false,
+   "speech_draft": false
+  },
+  {
+   "ticker": "WAY",
+   "name_cn": "Waystar",
+   "name_en": "Waystar",
+   "region": "US",
+   "date_hkt": "2026-08-26",
+   "time_hkt": "02:00",
+   "date_et": "2026-08-25",
+   "time_et": "14:00",
+   "upcoming": true,
+   "speech_draft": false
+  },
+  {
+   "ticker": "ENTG",
+   "name_cn": "恩特格里斯",
+   "name_en": "Entegris",
+   "region": "US",
+   "date_hkt": "2026-08-26",
+   "time_hkt": "23:00",
+   "date_et": "2026-08-26",
+   "time_et": "11:00",
+   "upcoming": true,
+   "speech_draft": false
+  },
+  {
+   "ticker": "INTC",
+   "name_cn": "英特尔",
+   "name_en": "Intel",
+   "region": "US",
+   "date_hkt": "2026-08-27",
+   "time_hkt": "01:35",
+   "date_et": "2026-08-26",
+   "time_et": "13:35",
+   "upcoming": true,
+   "speech_draft": false
+  },
+  {
+   "ticker": "CDNS",
+   "name_cn": "铿腾电子",
+   "name_en": "Cadence Design Systems",
+   "region": "US",
+   "date_hkt": "2026-08-27",
+   "time_hkt": "03:25",
+   "date_et": "2026-08-26",
+   "time_et": "15:25",
+   "upcoming": true,
+   "speech_draft": false
+  },
+  {
+   "ticker": "HQY",
+   "name_cn": null,
+   "name_en": "HealthEquity",
+   "region": "US",
+   "date_hkt": "2026-08-27",
+   "time_hkt": "20:30",
+   "date_et": "2026-08-27",
+   "time_et": "08:30",
+   "upcoming": true,
+   "speech_draft": false
+  },
+  {
+   "ticker": "ON",
+   "name_cn": "安森美",
+   "name_en": "ON Semiconductor",
+   "region": "US",
+   "date_hkt": "2026-08-27",
+   "time_hkt": "23:55",
+   "date_et": "2026-08-27",
+   "time_et": "11:55",
+   "upcoming": true,
+   "speech_draft": false
+  }
+ ]
+}

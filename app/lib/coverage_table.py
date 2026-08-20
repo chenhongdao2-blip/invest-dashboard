@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 
 from lib import theme
 
@@ -40,7 +41,29 @@ _ROW_RULE = "#ebd9c8"
 
 # 11 列 grid（与设计稿吻合，在 1240 内容区一屏放下）
 # 代码 / 名称 / 市值 / YTD / 1月 / 5日 / 1日 / 超额 / 静PE / 动PE / EV/EBITDA
-_GRID = "88px minmax(150px,1fr) 130px 84px 78px 78px 78px 96px 80px 80px 92px"
+_GRID = "88px minmax(125px,1fr) 130px 84px 78px 78px 78px 96px 80px 80px 92px"
+
+# 卡片最小宽度 = 列宽合计 + 行内边距 + 表体竖向滚动条宽度。
+# 别写死：2026-08-20 实测 min-width 硬编码 1040px，而 11 列合计 1034 + padding 28
+# = 内容真实需要 1062px。#scroller 的竖条再吃掉 15px → 可用宽只剩 1025，于是表体
+# 自己冒出第二条横向滚动条（叠在外框那条上面），且那条横条又反过来吃掉 15px 高度
+# (600→585)，把文档撑过 iframe 高度，再冒出第四条。四条滚动条同源于这一个数。
+_ROW_PAD_PX = 28      # 每行 padding:0 14px
+_SCROLLBAR_PX = 20    # 竖条实测 15px（macOS）/ Windows 17px，留到 20 覆盖两者
+
+
+def _grid_min_px(grid: str = _GRID) -> int:
+    """_GRID 各列最小宽之和（minmax(a,1fr) 记 a）。加列/改列宽自动跟随。"""
+    return sum(int(a or b) for a, b in
+               re.findall(r"minmax\(\s*(\d+)px[^)]*\)|(\d+)px", grid))
+
+
+_CARD_MIN_W = _grid_min_px() + _ROW_PAD_PX + _SCROLLBAR_PX
+
+# tabs + 摘要条 + 脚注 + 卡片边框占用的高度（表体 max-height 之外）。
+# 实测 204px @1440px；留 12px 余量吸收换行。原值 180 少算 24px，导致文档高度
+# 超出 iframe → iframe 自身多出一条纵向滚动条。
+_CHROME_PX = 216
 
 
 def _clean(v) -> float | None:
@@ -126,7 +149,7 @@ def render_coverage(tabs_payload: list[dict], *, labels: dict,
         ensure_ascii=False, separators=(",", ":"),
     ).replace("</", "<\\/")
 
-    table_max_h = max(300, height - 180)  # tabs+摘要+脚注 chrome 之外给表体
+    table_max_h = max(300, height - _CHROME_PX)  # chrome 之外给表体
     iframe_h = height
 
     # NM 恒沉底修正：xBad/yBad → 直接返回 1 / -1（不用 -Infinity*sortDir）
@@ -422,7 +445,7 @@ render();
         # 表格（组头带 + sticky 列头 + 中位数行 + 滚动表体）
         f'<div style="border:1px solid {_EDGE};border-radius:2px;background:rgba(255,255,255,.45);'
         '-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);overflow-x:auto;">'
-        '<div style="min-width:1040px;">'
+        f'<div style="min-width:{_CARD_MIN_W}px;">'
         # 组头带（动态内容 by JS）
         f'<div id="grpBand" style="display:grid;grid-template-columns:{_GRID};padding:0 14px;background:rgba(255,241,229,.9);"></div>'
         '<div id="scroller">'

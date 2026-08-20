@@ -284,6 +284,23 @@ def main() -> None:
 
     # 7) refresh stamp
     (EXT / ".last_refresh").write_text(f"1\t{today}")
+
+    # 8) 回写 refresh_manifest —— 别靠人手动跑。2026-08-20 实测:本 job 从不调
+    #    update_manifest, 于是 manifest 卡在 source_date=2026-06-24 且 status 仍是
+    #    'ok', 而 CSV 里 as_of 已是 07-09 —— 看板新鲜度徽章同时报错了日期和状态,
+    #    按其自身 max_age_days=9 已逾期 48 天却毫无提示。
+    #    source_date 由 update_manifest 从 hk_hc_ipo_meta.json 的 as_of 解析,
+    #    不在此处传值, 避免两处各写一份。失败不致命(数据已落盘)。
+    try:
+        mres = subprocess.run(
+            [sys.executable, str(REPO_ROOT / "jobs" / "update_manifest.py"),
+             "hk_ipo_tracker", "ok", "--note", meta["source"]],
+            capture_output=True, text=True, timeout=60)
+        print((mres.stdout or mres.stderr).strip().splitlines()[-1]
+              if (mres.stdout or mres.stderr) else "[manifest] no output")
+    except Exception as e:  # noqa: BLE001 — 数据已写好, 徽章滞后不该让整个 job 失败
+        print(f"[manifest] 回写失败(数据已落盘, 请手动跑 "
+              f"jobs/update_manifest.py hk_ipo_tracker ok): {type(e).__name__}: {e}")
     print(f"[done] universe={len(res)} | with_offer={meta['n_with_offer']} | suspended={meta['n_suspended']} | "
           f"clean={meta['n_clean']} | break(full)={meta['break_rate_full']} | break(clean)={meta['break_rate_clean']}")
     print(f"       大/中/小市值 = {meta['n_large_300yi']}/{meta['n_mid_100_300yi']}/{meta['n_small_100yi']}")

@@ -119,11 +119,11 @@ tickers:
     name_en: Jusung Engineering
     region: KR
     note: "KOSDAQ .KQ — yfinance 待验证"
-  - ticker: 078000.KQ
+  - ticker: 058470.KQ
     name_cn: Leeno工业
     name_en: Leeno Industrial
     region: KR
-    note: "KOSDAQ .KQ — yfinance 待验证"
+    note: "KOSDAQ .KQ — 2026-08-20 核实：原填 078000.KQ 为错配代码，yfinance 对其返回 longName 缺失的畸形对象但仍有价格；正确代码 058470.KQ（리노공업），drillr + yfinance 双源确认"
   - ticker: 095340.KQ
     name_cn: ISC
     name_en: ISC

@@ -59,6 +59,8 @@ def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
     rets = db.compute_returns(db.get_close_series_usd(tickers))
     mults = db.latest_multiples(tickers)
     region_by_tk = dict(zip(uni["ticker"], uni["region"]))
+    # A+H 次要腿：仍进明细表（保留 A/H 溢价可见），但由 heat_table 的等权平均剔除
+    sl_by_tk = dict(zip(uni["ticker"], uni["secondary_listing"]))
     rows = []
     for tk in tickers:
         r = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)
@@ -70,6 +72,7 @@ def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
         fcf = m.get("fcf_yield")
         rows.append({
             "t": tk, "n": name_map.get(tk, tk), "mcap": mcap_b, "r": region_by_tk.get(tk, ""),
+            "sl": int(sl_by_tk.get(tk) or 0),
             "ytd": r.get("ytd_%"), "m1": r.get("1m_%"),
             "d5": r.get("5d_%"), "d1": r.get("1d_%"),
             "peS": m.get("trailing_pe"), "peF": m.get("forward_pe"),

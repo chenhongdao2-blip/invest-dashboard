@@ -19,6 +19,21 @@ DOMAINS_DIR = REPO_ROOT / "config" / "domains"
 UNIVERSES_DIR = REPO_ROOT / "config" / "universes"
 
 
+def ensure_status_column(conn: sqlite3.Connection) -> None:
+    """Idempotent migration: add universe_member.status / secondary_listing if missing.
+
+    init_db.py uses CREATE TABLE IF NOT EXISTS, so an ALREADY-EXISTING db (incl.
+    the one cron drives on Cloud) never picks up new columns on its own. Without
+    this, the first run after deploy would die on 'no such column: status' and
+    take the whole daily refresh down with it.
+    """
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(universe_member)")}
+    for name, decl in (("status", "TEXT"), ("secondary_listing", "INTEGER")):
+        if name not in cols:
+            conn.execute(f"ALTER TABLE universe_member ADD COLUMN {name} {decl}")
+            print(f"[load_universe] migrated: universe_member.{name} added")
+
+
 def load_domains() -> list[dict]:
     """Read all domain YAMLs."""
     domains = []
@@ -40,9 +55,32 @@ def load_universe_file(filename: str) -> dict:
 
 def upsert_members(conn: sqlite3.Connection, domain_id: str,
                    sector_id: str, tickers: list[dict]) -> int:
-    """Insert/replace universe_member rows. Returns row count."""
+    """Insert/replace universe_member rows. Returns row count.
+
+    保留语义 (2026-08-20): status / secondary_listing 只有在 entry 显式给出时才写入,
+    否则沿用库里已有的值。
+
+    为什么必需: 同一个 (domain, sector, ticker) 会被写两次 —— 一次来自板块 yml,
+    一次来自 coverage yml 的「回填真实 sector」二轮 (例如 2359.HK 在 hc_cxo.yml 里
+    标了 secondary_listing, 又在 cmsi_coverage_hc.yml 里带 sector: cxo)。两条走同一
+    主键, 后写的 INSERT OR REPLACE 会把前者的标记整列抹成 NULL。这类丢失是静默的:
+    行还在、名称还在, 只有标记没了, 页面照常渲染。
+    """
+    existing: dict[tuple, tuple] = {}
+    keys = [(domain_id, sector_id, e["ticker"]) for e in tickers]
+    if keys:
+        ph = ",".join("?" * len(keys))
+        cur = conn.execute(
+            f"""SELECT domain, sector, ticker, status, secondary_listing
+                FROM universe_member
+                WHERE domain = ? AND sector = ? AND ticker IN ({ph})""",
+            (domain_id, sector_id, *[k[2] for k in keys]),
+        )
+        existing = {(r[0], r[1], r[2]): (r[3], r[4]) for r in cur}
+
     rows = []
     for entry in tickers:
+        prev = existing.get((domain_id, sector_id, entry["ticker"]), (None, None))
         rows.append((
             domain_id,
             sector_id,
@@ -51,12 +89,17 @@ def upsert_members(conn: sqlite3.Connection, domain_id: str,
             entry.get("name_en"),
             entry.get("region"),
             entry.get("note"),
+            entry.get("status") if "status" in entry
+                else prev[0],
+            (1 if entry.get("secondary_listing") else None) if "secondary_listing" in entry
+                else prev[1],
         ))
     conn.executemany(
         """
         INSERT OR REPLACE INTO universe_member
-            (domain, sector, ticker, name_cn, name_en, region, note)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+            (domain, sector, ticker, name_cn, name_en, region, note, status,
+             secondary_listing)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         rows,
     )
@@ -71,6 +114,7 @@ def main() -> None:
 
     conn = sqlite3.connect(DB_PATH)
     try:
+        ensure_status_column(conn)
         total = 0
         for domain in load_domains():
             domain_id = domain["_domain_id"]

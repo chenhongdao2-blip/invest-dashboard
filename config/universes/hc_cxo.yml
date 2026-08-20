@@ -79,6 +79,8 @@ tickers:
     name_cn: 药明康德
     name_en: WuXi AppTec
     region: HK
+    secondary_listing: true
+    secondary_note: "A+H 双上市，主腿 603259.SS。2026-08-20 按 60 日美元成交额中位数定：本腿 123.5M vs 主腿 1,130.6M（9.2×）。仅从板块汇总等权平均中剔除，明细表仍显示两条腿以保留 A/H 溢价信息。"
   - ticker: 603259.SS
     name_cn: 药明康德
     name_en: WuXi AppTec
@@ -87,6 +89,8 @@ tickers:
     name_cn: 康龙化成
     name_en: Pharmaron
     region: HK
+    secondary_listing: true
+    secondary_note: "A+H 双上市，主腿 300759.SZ。2026-08-20 按 60 日美元成交额中位数定：本腿 16.9M vs 主腿 321.9M（19.0×）。仅从板块汇总等权平均中剔除，明细表仍显示两条腿以保留 A/H 溢价信息。"
   - ticker: 300759.SZ
     name_cn: 康龙化成
     name_en: Pharmaron
@@ -95,6 +99,8 @@ tickers:
     name_cn: 泰格医药
     name_en: Tigermed
     region: HK
+    secondary_listing: true
+    secondary_note: "A+H 双上市，主腿 300347.SZ。2026-08-20 按 60 日美元成交额中位数定：本腿 8.2M vs 主腿 148.8M（18.1×）。仅从板块汇总等权平均中剔除，明细表仍显示两条腿以保留 A/H 溢价信息。"
   - ticker: 300347.SZ
     name_cn: 泰格医药
     name_en: Tigermed
@@ -103,6 +109,8 @@ tickers:
     name_cn: 凯莱英
     name_en: Asymchem
     region: HK
+    secondary_listing: true
+    secondary_note: "A+H 双上市，主腿 002821.SZ。2026-08-20 按 60 日美元成交额中位数定：本腿 11.7M vs 主腿 257.1M（22.0×）。仅从板块汇总等权平均中剔除，明细表仍显示两条腿以保留 A/H 溢价信息。"
   - ticker: 002821.SZ
     name_cn: 凯莱英
     name_en: Asymchem

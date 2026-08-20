@@ -93,7 +93,8 @@ def render_heat_table(sectors: list[dict], *, labels: dict,
     for sec in sectors:
         rows = []
         for r in sec["rows"]:
-            row = {"t": str(r["t"]), "n": str(r["n"]), "r": str(r.get("r") or "")}
+            row = {"t": str(r["t"]), "n": str(r["n"]), "r": str(r.get("r") or ""),
+                   "sl": 1 if r.get("sl") else 0}
             for k in _NUM_KEYS:
                 v = _clean(r.get(k))
                 # 卖方惯例：负/零估值倍数（亏损期 P/E、负 EBITDA 的 EV/EBITDA）= NM，
@@ -193,11 +194,14 @@ var SUMS = [], S_MAX = [0,0,0,0], YTD_MAX = 1;
 function computeSums(){
   SUMS = P.sectors.map(function(s){
     var rows = rowsFiltered(s);
+    // A+H 次要腿(sl=1)不进汇总：同一家公司两条腿都计入会拿到双倍等权权重。
+    // 明细热力表用的仍是 rows(含两条腿), 只有本汇总口径按公司去重。
+    var aggRows = rows.filter(function(r){ return !r.sl; });
     function avg(k){
-      var vs = rows.map(function(r){ return r[k]; }).filter(function(v){ return v != null && isFinite(v); });
+      var vs = aggRows.map(function(r){ return r[k]; }).filter(function(v){ return v != null && isFinite(v); });
       return vs.length ? vs.reduce(function(a,b){ return a+b; }, 0)/vs.length : null;
     }
-    return { id:s.id, name:s.name, n:rows.length, bench:s.bench,
+    return { id:s.id, name:s.name, n:aggRows.length, bench:s.bench,
              vals:[avg('d1'), avg('d5'), avg('m1'), avg('ytd')] };
   });
   S_MAX = [0,0,0,0];

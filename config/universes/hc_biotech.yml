@@ -96,6 +96,8 @@ tickers:
     name_en: "KalVista Pharmaceuticals, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：冻结价，最后成交 2026-06-12"
   - ticker: AXSM
     name_cn: "阿克索姆"
     name_en: "Axsome Therapeutics, Inc."
@@ -116,6 +118,8 @@ tickers:
     name_en: "Catalyst Pharmaceuticals, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：冻结价，最后成交 2026-07-21"
   - ticker: IMVT
     name_cn: "伊慕诺万特"
     name_en: "Immunovant, Inc."
@@ -296,16 +300,22 @@ tickers:
     name_en: "Soleno Therapeutics, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: CNTA
     name_cn: "森特萨"
     name_en: "Centessa Pharmaceuticals plc"
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：冻结价，最后成交 2026-06-29"
   - ticker: TERN
     name_cn: "特恩斯"
     name_en: "Terns Pharmaceuticals, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: PRAX
     name_cn: "普拉克西斯"
     name_en: "Praxis Precision Medicines, Inc."
@@ -316,16 +326,22 @@ tickers:
     name_en: "Day One Biopharmaceuticals, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: APLS
     name_cn: "阿佩利斯"
     name_en: "Apellis Pharmaceuticals, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: FOLD
     name_cn: "阿米克斯"
     name_en: "Amicus Therapeutics, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价；BioMarin $14.50/股现金收购，2026-04-27 退市"
   - ticker: RYTM
     name_cn: "瑞斯姆"
     name_en: "Rhythm Pharmaceuticals, Inc."
@@ -336,6 +352,8 @@ tickers:
     name_en: "Arcellx, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: MLYS
     name_cn: "米内拉利斯"
     name_en: "Mineralys Therapeutics, Inc."
@@ -451,6 +469,8 @@ tickers:
     name_en: "Nuvalent, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：冻结价，最后成交 2026-07-21"
   - ticker: MBX
     name_cn: "MBX Biosciences"
     name_en: "MBX Biosciences, Inc."
@@ -836,13 +856,19 @@ tickers:
     name_en: "RAPT Therapeutics, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"
   - ticker: GLTO
     name_cn: "加莱克托"
     name_en: "Galecto, Inc."
     region: US
     sub: ""
+    status: renamed
+    status_note: "2026-08-20 核实：Galecto 更名 Damora Therapeutics，现用代码 DMRA（本文件内已收录）。GLTO 在 yfinance 已 404；DMRA 报价 32.44 与旧代码一致。保留本行仅为历史名称解析。"
   - ticker: VTYX
     name_cn: "文蒂克斯"
     name_en: "Ventyx Biosciences, Inc."
     region: US
     sub: ""
+    status: delisted
+    status_note: "2026-08-20 核实：yfinance 已无报价"

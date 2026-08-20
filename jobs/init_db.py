@@ -68,6 +68,10 @@ CREATE TABLE IF NOT EXISTS universe_member (
     -- NULL = 活跃。'delisted'（已退市/被收购）/'renamed'（代码变更）的行保留在表内,
     -- 好让历史 pick 仍能解析出中文名, 但会被 db.py 的扫描/排序视图排除。
     status    TEXT,
+    -- A+H / 多地上市的次要腿。1 = 从板块汇总的等权平均中剔除(否则同一家公司拿
+    -- 双倍权重), 但仍保留在明细热力表里以显示 A/H 溢价。与 status 不同:
+    -- status 会把标的逐出展示, 本字段只影响聚合。
+    secondary_listing INTEGER,
     PRIMARY KEY (domain, sector, ticker)
 );
 CREATE INDEX IF NOT EXISTS idx_um_ticker ON universe_member(ticker);

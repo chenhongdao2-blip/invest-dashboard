@@ -76,7 +76,8 @@ def all_tickers() -> list[str]:
 @st.cache_data(ttl=300)
 def sector_tickers(domain: str, sector: str) -> pd.DataFrame:
     return query(
-        "SELECT ticker, name_cn, name_en, region "
+        "SELECT ticker, name_cn, name_en, region, "
+        "COALESCE(secondary_listing, 0) AS secondary_listing "
         "FROM universe_member WHERE domain = ? AND sector = ? "
         "AND status IS NULL "
         "ORDER BY ticker",

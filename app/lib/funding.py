@@ -29,7 +29,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 AGG_PATH = REPO_ROOT / "data" / "external" / "funding_aggregate.json"            # legacy monthly (PitchBook, retired from page)
 MNC_PATH = REPO_ROOT / "data" / "external" / "funding_mnc_balance_2026Q1.json"
 PUBLIC_PATH = REPO_ROOT / "data" / "external" / "funding_public_q1_2026.json"    # Option-2 quarterly public-source interim
-MNC_DEALS_PATH = REPO_ROOT / "data" / "external" / "mnc_ma_deals.csv"            # Pharma MNC M&A deal-level (from MNCs basket xlsx)
+# Pharma MNC M&A deal-level. 双文件契约 (2026-08-20): `_full` 版含第三方付费数据源
+# 派生的 fs_* 列, gitignored 仅本地; committed 的 mnc_ma_deals.csv 已由
+# jobs/export_mnc_deals_public.py 物理剥离那些列。本地全量优先, 缺失回落公开版 ——
+# 于是本地跑有全列, 公开 Cloud 只有公开子集。消费方须对 fs_* 缺失保持容忍
+# (load_mnc_deals 会补空列, 依赖它们的页面小节自行守卫)。
+_MNC_FULL = REPO_ROOT / "data" / "external" / "mnc_ma_deals_full.csv"
+_MNC_PUBLIC = REPO_ROOT / "data" / "external" / "mnc_ma_deals.csv"
+MNC_DEALS_PATH = _MNC_FULL if _MNC_FULL.exists() else _MNC_PUBLIC
 MNC_DEALS_META = REPO_ROOT / "data" / "external" / "mnc_ma_deals_meta.json"
 
 # Source-tier labels (research-data.md). The aggregate is a curated monthly export

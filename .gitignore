@@ -72,3 +72,8 @@ data/external/hshci_drawdown_compare.png
 # Universe 清理清单完整版含第三方数据商派生数据与供应商横评结论 —— local-only,
 # NEVER public。committed 的 docs/2026-08-20-universe-cleanup.md 是脱敏版。
 docs/2026-08-20-universe-cleanup-full.md
+
+# MNC M&A 交易表完整版含第三方付费数据源派生列 (fs_*: 成交额/状态/EV 倍数/交易号)
+# —— local-only, NEVER public。committed 的 data/external/mnc_ma_deals.csv 是
+# jobs/export_mnc_deals_public.py 剥离后的公开版。
+data/external/mnc_ma_deals_full.csv

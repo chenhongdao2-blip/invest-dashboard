@@ -1,0 +1,45 @@
+name: Fetch earnings calendar
+
+# Canary-first: workflow_dispatch ONLY until a manual run proves the US runner
+# reaches event.zais.minodata.com and the logs stay clean of the key. Add the
+# daily cron line only after that canary passes.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: data-writer-main   # shared by ALL data-writing workflows → only one
+      cancel-in-progress: false # touches main at a time (no push race / clobber)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Init schema + universe (idempotent)
+        run: |
+          python jobs/init_db.py
+          python jobs/load_universe.py
+
+      - name: Fetch earnings calendar
+        # Key is step-scoped only; the job logs date windows and counts, never
+        # headers/bodies. Public repo → these logs are public.
+        env:
+          MINODATA_KEY: ${{ secrets.MINODATA_KEY }}
+        run: |
+          python jobs/fetch_earnings_calendar.py
+          python jobs/update_manifest.py earnings_calendar ok
+
+      - name: Commit data
+        run: |
+          ./scripts/commit_data.sh "data: earnings calendar refresh $(date -u +%Y-%m-%d) [skip ci]" data/external/earnings_calendar.json data/refresh_manifest.json

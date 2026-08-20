@@ -22,6 +22,7 @@ from lib import heatmap_treemap
 from lib import market_hub_tiles
 from lib import market_hub_tables
 from lib import freshness
+from lib import earnings_cal
 
 st.set_page_config(
     page_title="invest-dashboard",
@@ -445,6 +446,75 @@ _hub_labels = {
 }
 _hub_doc, _hub_h = market_hub_tables.render_market_hub(_hub_payload, _hub_labels)
 st.iframe(_hub_doc, height=_hub_h)
+
+# --- 3b. 业绩会日历 — minodata 日历事实层（公开仓只发日历行，纪要正文不发布）。
+#     时区已实证为美东，job 侧已转 HKT 且跨天对齐；状态词用「今日/明日」而非
+#     「今晚」（中芯类是 08:30 HKT 晨会）。深链前校验 ticker ∈ universe。---
+_cal = earnings_cal.load()
+theme.section_header(i18n.t("earn.section.title"), meta=i18n.t("earn.section.meta"))
+if _cal and _cal.get("events"):
+    _cal_today = str(_cal.get("as_of_hkt", ""))
+    from datetime import datetime as _dt, timedelta as _td
+    _cal_tmr = ((_dt.strptime(_cal_today, "%Y-%m-%d") + _td(days=1)).strftime("%Y-%m-%d")
+                if _cal_today else "")
+    _valid_tks = set(db.all_tickers())
+    _s_today, _s_tmr = i18n.t("earn.status.today"), i18n.t("earn.status.tomorrow")
+    _s_done, _s_draft = i18n.t("earn.status.done"), i18n.t("earn.status.draft")
+
+    def _earn_df(evts: list[dict], past: bool) -> pd.DataFrame:
+        rows = []
+        for e in evts:
+            if past:
+                status = _s_draft if e.get("speech_draft") else _s_done
+            else:
+                status = (_s_today if e["date_hkt"] == _cal_today
+                          else _s_tmr if e["date_hkt"] == _cal_tmr else "—")
+            rows.append({
+                "Date": e["date_hkt"][5:],                      # MM-DD (HKT)
+                "Ticker": e["ticker"],
+                "Name": (e.get("name_cn") or e.get("name_en") or e["ticker"])
+                        if _prefer_cn else (e.get("name_en") or e.get("name_cn") or e["ticker"]),
+                "Region": e.get("region") or "—",
+                "Time": e.get("time_hkt") or "—",
+                "Status": status,
+                "_open": (f"/Ticker_Drill?ticker={e['ticker']}"
+                          if e["ticker"] in _valid_tks else None),
+            })
+        return pd.DataFrame(rows)
+
+    _earn_labels = {
+        "Date": i18n.t("earn.col.date"), "Ticker": i18n.t("earn.col.ticker"),
+        "Name": i18n.t("earn.col.name"), "Region": i18n.t("earn.col.region"),
+        "Time": i18n.t("earn.col.time"), "Status": i18n.t("earn.col.status"),
+        "_open": i18n.t("earn.col.detail"),
+    }
+    _earn_status_cls = {_s_today: "up", _s_draft: "up"}
+
+    def _earn_table(evts: list[dict], past: bool) -> None:
+        df = _earn_df(evts, past)
+        ui.render_html_table(
+            df,
+            text_cols=["Date", "Ticker", "Name", "Region"],
+            right_text_cols=["Time"],
+            status_cols={"Status": _earn_status_cls},
+            nav_cols=["_open"], nav_label="详情 ↗" if _prefer_cn else "Open ↗",
+            column_labels=_earn_labels, hide_index=True,
+            height=min(88 + 37 * len(df), 420),
+        )
+
+    _earn_up = [e for e in _cal["events"] if e.get("upcoming")]
+    _earn_past = [e for e in _cal["events"] if not e.get("upcoming")]
+    theme.subsection(i18n.t("earn.upcoming.title"))
+    if _earn_up:
+        _earn_table(_earn_up, past=False)
+    else:
+        st.caption(i18n.t("earn.empty"))
+    if _earn_past:
+        theme.subsection(i18n.t("earn.past.title"))
+        _earn_table(_earn_past, past=True)
+    st.caption(i18n.t("earn.source", asof=_cal_today))
+else:
+    st.caption(i18n.t("earn.empty"))
 
 # --- 4. AI domain — hub-style glass table (expanded by default). Benchmark table
 #     populated from the cross-market AI/semi set (LLM Wiki); movers stub until an AI

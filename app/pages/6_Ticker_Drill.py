@@ -33,6 +33,7 @@ from lib import wiki
 from lib import theme
 from lib import i18n
 from lib import thesis_cards
+from lib import earnings_cal
 
 
 def _reco_label(mean) -> str:
@@ -629,6 +630,37 @@ if wiki_page is not None:
             prefer_cn=_zh,
             contradiction=wiki_page.sections.get("矛盾与待验证"))
         st.divider()
+
+# ---------- 业绩会纪要 (本地双轨) ----------
+# 全文只存 gitignored data/local/earnings_transcripts/（minodata 授权内容，
+# 纪要正文永不发布到公开云端）；云端该目录不存在 → 此块自动整体消失。
+_tsc = earnings_cal.transcript_for(ticker)
+if _tsc and (_tsc["pres"] or _tsc["qa"]):
+    theme.section_header(i18n.t("drill.transcript.title"),
+                         meta=i18n.t("drill.transcript.meta", date=_tsc["date_hkt"]))
+    if _tsc.get("name_check") != "pass":
+        st.warning(i18n.t("drill.transcript.unverified"))
+
+    def _tsc_render(speeches: list[dict]) -> None:
+        for _sp in speeches:
+            _nm = (_sp["speaker"].get("name") or "—")
+            _info = _sp["speaker"].get("info") or ""
+            _body = " ".join(
+                ((s.get("ts") or s.get("text") or "") if _zh
+                 else (s.get("text") or s.get("ts") or ""))
+                for s in _sp["segs"]).strip()
+            if _body:
+                st.markdown(f"**{_nm}**{('  ·  ' + _info) if _info else ''}\n\n{_body}")
+
+    with st.expander(i18n.t("drill.transcript.open", date=_tsc["date_hkt"]), expanded=False):
+        _tab_p, _tab_q = st.tabs([i18n.t("drill.transcript.tab.pres"),
+                                  i18n.t("drill.transcript.tab.qa")])
+        with _tab_p:
+            _tsc_render(_tsc["pres"])
+        with _tab_q:
+            _tsc_render(_tsc["qa"])
+        st.caption(i18n.t("drill.transcript.caption"))
+    st.divider()
 
 # ---------- 核心逻辑 · 四主线编号卡 (zip8「个股详情 礼来 美化」1:1) ----------
 # 把 wiki `核心投资逻辑` 那面中文文字墙拆成编号玻璃卡(摘要条 + N 条主线,每卡要点

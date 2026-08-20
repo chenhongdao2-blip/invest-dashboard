@@ -66,10 +66,36 @@ def universe_summary() -> pd.DataFrame:
 
 
 # ---------- universe ----------
+@st.cache_data(ttl=600)
+def _has_column(table: str, col: str) -> bool:
+    """Does `table` have `col` in the DB this process is reading?
+
+    HOTFIX 2026-08-20: universe_member.status / secondary_listing 由
+    jobs/load_universe.py 的 ensure_status_column() 幂等迁移添加, 但**应用是直接
+    读 data/snapshots.db 的, 从不跑那个迁移**。代码先于 cron 部署时(本次就是),
+    app 会对着还没长出新列的库执行 `WHERE status IS NULL` → OperationalError,
+    整站 500。故所有依赖新列的过滤都必须先问一句列在不在。
+
+    迁移跑过之后本函数恒真, 过滤照常生效; 跑之前退化为不过滤(退市股会短暂出现
+    在扫描里)——这是可接受的降级, 比整站崩掉好。
+    """
+    try:
+        with sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True) as conn:
+            return col in {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+    except Exception:
+        return False
+
+
+def _active_clause(prefix: str = "") -> str:
+    """`AND <p>status IS NULL` when the column exists, else empty string."""
+    return f" AND {prefix}status IS NULL" if _has_column("universe_member", "status") else ""
+
+
 @st.cache_data(ttl=300)
 def all_tickers() -> list[str]:
+    where = " WHERE status IS NULL" if _has_column("universe_member", "status") else ""
     return query(
-        "SELECT DISTINCT ticker FROM universe_member WHERE status IS NULL"
+        f"SELECT DISTINCT ticker FROM universe_member{where}"
     )["ticker"].tolist()
 
 
@@ -77,10 +103,12 @@ def all_tickers() -> list[str]:
 def sector_tickers(domain: str, sector: str) -> pd.DataFrame:
     return query(
         "SELECT ticker, name_cn, name_en, region, "
-        "COALESCE(secondary_listing, 0) AS secondary_listing "
-        "FROM universe_member WHERE domain = ? AND sector = ? "
-        "AND status IS NULL "
-        "ORDER BY ticker",
+        + ("COALESCE(secondary_listing, 0) AS secondary_listing "
+           if _has_column("universe_member", "secondary_listing")
+           else "0 AS secondary_listing ")
+        + "FROM universe_member WHERE domain = ? AND sector = ? "
+        + _active_clause()
+        + " ORDER BY ticker",
         (domain, sector),
     )
 
@@ -317,7 +345,7 @@ def top_movers(n: int = 10, domain: str | None = None) -> tuple[pd.DataFrame, pd
     if domain:
         tickers = tuple(
             query("SELECT DISTINCT ticker FROM universe_member "
-                  "WHERE domain = ? AND status IS NULL",
+                  "WHERE domain = ?" + _active_clause(),
                   (domain,))["ticker"].tolist()
         )
     else:

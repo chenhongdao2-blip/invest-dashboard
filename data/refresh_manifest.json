@@ -12,8 +12,8 @@
     "source": "SEC EDGAR",
     "max_age_days": 10,
     "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:23+00:00",
-    "source_date": "2026-06-24"
+    "refreshed_at": "2026-08-29T05:58:23+00:00",
+    "source_date": "2026-08-28"
   },
   "benchmarks_fx": {
     "label": "FX / MSCI World 基准",

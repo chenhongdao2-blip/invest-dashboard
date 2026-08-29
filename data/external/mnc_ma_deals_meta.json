@@ -23,5 +23,5 @@
     "known_gap": "FactSet 对 Roche(ROG-CH) 返回 0 笔 — 看板 ROG PathAI/SAGA 两笔为本表独有, 勿删",
     "date_semantics": "date 列语义不一: 2026 行=宣布日, 历史行=交割日(已用 Celgene 3084870MM 实证)。新增 announce_date/close_date 两列为准, date 列保留兼容。"
   },
-  "note": "2026-08-20 FactSet 增强: 补 close_date/lag_days/fs_tv_mn/fs_status/EV倍数/direction; 新增 12 笔[11 buy+1 sell]; universe 17->20 加 VRTX/BAYN/4568-JP; 3 笔 Rumor 隔离至 mnc_ma_rumors.json(local-only) 不计入总额. 2026-08-29 FactSet 复扫 8/10-8/29 窗口 20 家 MNC 零新交易(PatSnap+web 双源交叉确认)."
+  "note": "2026-08-20 FactSet 增强: 补 close_date/lag_days/fs_tv_mn/fs_status/EV倍数/direction; 新增 12 笔[11 buy+1 sell]; universe 17->20 加 VRTX/BAYN/4568-JP; 3 笔 Rumor 隔离至 mnc_ma_rumors.json(local-only) 不计入总额. 2026-08-29 FactSet 复扫 8/1-8/29 完整窗口 20 家 MNC: 零新宣布交易; 唯一记录=AZN←BMS status=Rumor(8/2, dealId 4304612MM)→按规则留在 rumors 隔离文件. PatSnap 侧 LLY 剥离 Cialis 新加坡权益(8/4,未披露金额)低于 FactSet 收录门槛, 按 M&A 主源口径不入表."
 }

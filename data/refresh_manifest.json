@@ -103,12 +103,12 @@
     "status": "ok"
   },
   "etf_hc_holdings": {
-    "refreshed_at": null,
+    "refreshed_at": "2026-08-29T06:16:14+00:00",
     "label": "ETF 持仓/画像(HC篮)",
     "source": "etf-data CLI(本地)",
     "max_age_days": 45,
-    "source_date": "2026-06-29",
-    "status": "stale"
+    "source_date": "2026-08-29",
+    "status": "ok"
   },
   "china_fund_hc_positioning": {
     "refreshed_at": null,

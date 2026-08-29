@@ -37,7 +37,9 @@ jobs:
         env:
           # No SEC_PROXY here — Actions runners are in the US and reach SEC directly.
           # SEC_UA can be set to a real name+email via repo secret/variable if desired.
-          SEC_UA: ${{ vars.SEC_UA || 'invest-dashboard CI (contact: research@invest-dashboard.local)' }}
+          # NB: value quoted — the unquoted "(contact: ...)" colon made the whole
+          # workflow invalid YAML, so the schedule never ran (2026-05-30 → 2026-08-29).
+          SEC_UA: "${{ vars.SEC_UA || 'invest-dashboard CI (contact: research@invest-dashboard.local)' }}"
         run: |
           python jobs/fetch_sec_facts.py
           python jobs/update_manifest.py sec_facts ok

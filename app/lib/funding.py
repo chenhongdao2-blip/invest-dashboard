@@ -311,17 +311,67 @@ MNC_IR_URL = {
     "BIIB": "https://investors.biogen.com/news-releases",
     "UCB": "https://www.ucb.com/stories-media/Press-Releases",
     "MRK.DE": "https://www.merckgroup.com/en/news.html",  # Merck KGaA (Darmstadt) — NOT Merck & Co
+    # 2026-08 FactSet 增强新增买家 (17 -> 20)
+    "VRTX": "https://investors.vrtx.com/press-releases",
+    "BAYN": "https://www.bayer.com/en/news-stories",
+    "4568-JP": "https://www.daiichisankyo.com/media/press_release/",  # 第一三共 (本表仅剥离方向)
 }
 
+
+MNC_RUMORS_PATH = REPO_ROOT / "data" / "external" / "mnc_ma_rumors.json"  # 传闻隔离, 不计入总额
 
 BD_DEALS_PATH = REPO_ROOT / "data" / "external" / "bd_deals.csv"   # report-format BD/licensing (2025 from ED report TABLE 59 + 2026)
 
 
 @st.cache_data(ttl=600)
 def load_mnc_deals() -> pd.DataFrame:
+    """全量交易表。含 2026-08 FactSet 增强列：announce_date / close_date / lag_days /
+    date_basis / direction / fs_tv_mn / fs_status / fs_ev_ebitda / fs_ev_sales /
+    fs_deal_id / flag。
+
+    ⚠ `date` 列语义不一致（2026 行=宣布日，历史行=交割日，已用 Celgene 实证）。
+    需要明确语义时一律读 announce_date / close_date，勿用 `date`。
+    ⚠ `direction`：buy=该 MNC 作为买方；sell=剥离。所有"谁最爱买"类聚合
+    必须先过 buy_side()，否则剥离会被算成收购。"""
     df = pd.read_csv(MNC_DEALS_PATH)
     df["year"] = df["year"].astype(int)
+    for c in ("announce_date", "close_date", "date_basis", "direction",
+              "fs_status", "fs_deal_id", "flag"):
+        if c not in df.columns:
+            df[c] = ""
+    for c in ("lag_days", "fs_tv_mn", "fs_ev_ebitda", "fs_ev_sales"):
+        if c not in df.columns:
+            df[c] = pd.NA
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    df["direction"] = df["direction"].fillna("buy").replace("", "buy")
     return df
+
+
+def buy_side(df: pd.DataFrame) -> pd.DataFrame:
+    """仅买方交易。剔除剥离（direction=='sell'），避免污染"谁最爱买"口径。"""
+    if "direction" not in df.columns:
+        return df
+    return df[df["direction"].fillna("buy") != "sell"]
+
+
+@st.cache_data(ttl=600)
+def load_mnc_rumors() -> list[dict]:
+    """传闻 / 已取消交易 — 隔离展示，绝不计入 M&A 总额或笔数。"""
+    if not MNC_RUMORS_PATH.exists():
+        return []
+    with MNC_RUMORS_PATH.open(encoding="utf-8") as f:
+        return json.load(f).get("deals", [])
+
+
+def mnc_close_lag(df: pd.DataFrame, year: int | None = None) -> pd.DataFrame:
+    """announce -> close 时滞。仅保留真实有间隔的行：FactSet 在交割日未知时
+    会用宣布日填充 close_date，lag==0 并非"当天交割"，直接统计会把中位数腰斩。"""
+    d = df[df["lag_days"].notna() & (df["lag_days"] > 0)]
+    if year is not None:
+        d = d[d["year"] == year]
+    cols = [c for c in ("ticker", "company", "target", "announce_date",
+                        "close_date", "lag_days", "fs_status") if c in d.columns]
+    return d[cols].sort_values("lag_days", ascending=False)
 
 
 @st.cache_data(ttl=600)
@@ -339,7 +389,7 @@ def mnc_ma_meta() -> dict:
 
 def mnc_by_company(df: pd.DataFrame) -> pd.DataFrame:
     """Per-MNC league: ticker → company, n deals, total USD bn. Desc by total."""
-    g = (df.groupby(["ticker", "company"])
+    g = (buy_side(df).groupby(["ticker", "company"])
            .agg(n=("target", "size"), total_bn=("deal_size_mn", lambda x: x.sum() / 1000.0))
            .reset_index().sort_values("total_bn", ascending=False))
     return g
@@ -347,7 +397,7 @@ def mnc_by_company(df: pd.DataFrame) -> pd.DataFrame:
 
 def mnc_by_ta(df: pd.DataFrame) -> pd.DataFrame:
     """By therapeutic-area bucket: ta_group → n, total USD bn. Desc by total."""
-    g = (df.groupby("ta_group")
+    g = (buy_side(df).groupby("ta_group")
            .agg(n=("target", "size"), total_bn=("deal_size_mn", lambda x: x.sum() / 1000.0))
            .reset_index().sort_values("total_bn", ascending=False))
     return g
@@ -355,7 +405,7 @@ def mnc_by_ta(df: pd.DataFrame) -> pd.DataFrame:
 
 def mnc_by_year(df: pd.DataFrame) -> pd.DataFrame:
     """By completion year: year → n, total USD bn. Ascending year, gap-filled."""
-    g = (df.groupby("year")
+    g = (buy_side(df).groupby("year")
            .agg(n=("target", "size"), total_bn=("deal_size_mn", lambda x: x.sum() / 1000.0))
            .reset_index())
     full = pd.DataFrame({"year": range(int(g["year"].min()), int(g["year"].max()) + 1)})
@@ -365,7 +415,7 @@ def mnc_by_year(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def mnc_top_deals(df: pd.DataFrame, n: int = 20) -> pd.DataFrame:
-    return df.nlargest(n, "deal_size_mn").copy()
+    return buy_side(df).nlargest(n, "deal_size_mn").copy()
 
 
 # ── BD / licensing insight layer (bd_deals.csv = the 99-row canonical BD set) ──

@@ -44,11 +44,12 @@
   },
   "mnc_ma_deals": {
     "label": "MNC M&A / BD 交易",
-    "source": "PatSnap(切换中;原PharmCube已停)",
+    "source": "M&A:FactSet(本地) / BD:PatSnap(本地)",
     "max_age_days": 7,
-    "status": "stale",
-    "refreshed_at": "2026-06-24T23:44:24+00:00",
-    "source_date": "2026-06-25"
+    "status": "ok",
+    "refreshed_at": "2026-08-29T06:12:59+00:00",
+    "source_date": "2026-08-29",
+    "note": "M&A:FactSet / BD:PatSnap 双源切换完成(2026-08-29)"
   },
   "hshci_monthly": {
     "label": "HSHCI 月线/长周期",
@@ -90,8 +91,8 @@
     "label": "申万行业日线(板块轮动A股腿)",
     "source": "Wind(job待改写;原iFind已停用)",
     "max_age_days": 7,
-    "source_date": "2026-06-05",
-    "status": "stale"
+    "source_date": "2026-08-28",
+    "status": "ok"
   },
   "bd_deals": {
     "refreshed_at": null,

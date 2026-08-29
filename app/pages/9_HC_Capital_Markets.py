@@ -39,8 +39,11 @@ deals = funding.load_mnc_deals()
 meta = funding.mnc_ma_meta()
 mnc_bs = funding.load_mnc()
 
-ma = deals[deals["deal_type"] == "M&A"].copy()        # true acquisitions only
-mnc_bd = deals[deals["deal_type"] == "BD"].copy()      # 39-row BD subset — M&A-tab YTD count card only
+# buy_side() 必须在这里过一道：2026-08 起表内含剥离行(direction=='sell')，
+# 不过滤会把"卖出"算成"收购"，YTD 总额与笔数都会虚增。
+ma = funding.buy_side(deals[deals["deal_type"] == "M&A"]).copy()   # true acquisitions only
+mnc_bd = funding.buy_side(deals[deals["deal_type"] == "BD"]).copy()  # BD subset — M&A-tab YTD count card only
+ma_sell = deals[(deals["deal_type"] == "M&A") & (deals["direction"] == "sell")].copy()  # 剥离, 单独口径
 
 BD_ACCENT = theme.SECTOR_PALETTE[3]   # "#4a6fa5" muted slate-blue — BD value bars (NOT teal/red)
 IPO_ACCENT = theme.SECTOR_PALETTE[2]  # IPO break-rate bars (distinct from M&A/BD)
@@ -80,6 +83,13 @@ def _kpi(label: str, value: str, sub: str, vcls: str = "") -> str:
     )
 
 
+def _trunc(s, n: int = 46) -> str:
+    """标的名截断。长名会把 render_html_table 的右侧列挤出容器宽度导致视觉截断；
+    完整名保留在下方「并购明细」全表。"""
+    s = str(s)
+    return s if len(s) <= n else s[: n - 1] + "…"
+
+
 def _ym(d, y) -> str:
     """ISO date -> 'YYYY-MM'; fall back to the year when no month is on file."""
     s = str(d)
@@ -109,10 +119,16 @@ def _deal_table_b3(df: pd.DataFrame, height: int) -> None:
     col_u = i18n.t("mnc_ma.col.upfront")
     col_m = i18n.t("mnc_ma.col.milestone")
     col_s = i18n.t("mnc_ma.col.src")
+    _zh = i18n.get_lang() == "zh"
+    col_cl = "交割" if _zh else "Closed"
+    # 宣布 vs 实际交割：FactSet 双日期。空 close_date = 仍在途（含待监管批准）。
+    closed = [(str(c)[:10] if isinstance(c, str) and len(str(c)) >= 10
+               else ("在途" if _zh else "pending")) for c in df.get("close_date", [""] * len(df))]
     disp = pd.DataFrame({
-        c_tgt: df["target"].astype(str),
+        c_tgt: [_trunc(t, 52) for t in df["target"]],
         col_s: df["source_url"].astype(str),                # 来源 — right after the company
         c_yr: [_ym(d, y) for d, y in zip(df["date"], df["year"])],
+        col_cl: closed,
         col_t: df["deal_size_mn"] / 1000.0,
         col_u: df["upfront_musd"] / 1000.0,
         col_m: df["milestone_musd"] / 1000.0,
@@ -122,7 +138,7 @@ def _deal_table_b3(df: pd.DataFrame, height: int) -> None:
     disp.index.name = i18n.t("mnc_ma.col.ticker")
     ui.render_html_table(
         disp, extra_formats={col_t: "%.2f", col_u: "%.2f", col_m: "%.2f"},
-        text_cols=[c_tgt, c_ta], right_text_cols=[c_yr], link_cols=[col_s],
+        text_cols=[c_tgt, c_ta], right_text_cols=[c_yr, col_cl], link_cols=[col_s],
         index_label=i18n.t("mnc_ma.col.ticker"), height=height,
     )
 
@@ -168,7 +184,7 @@ def _source_links(df: pd.DataFrame) -> None:
 # ══ Page header + taxonomy callout (above the tabs) ════════════════════════
 section_header.cover(i18n.t("capital.page.title"), "CMSI · HC CAPITAL MARKETS",
                      rail=section_header.RAIL_HC, prefer_cn=i18n.get_lang() == "zh")
-st.caption(i18n.t("mnc_ma.intro"))
+st.caption(i18n.t("mnc_ma.intro", nmnc=meta.get("n_mncs", "")))
 theme.md_note("来源 · 口径" if i18n.get_lang() == "zh" else "Source · basis", i18n.t("mnc_ma.source_note", source=meta.get("source", "")))
 theme.md_note("释义 · M&A vs BD" if i18n.get_lang() == "zh" else "Definitions · M&A vs BD", i18n.t("capital.def"))
 
@@ -199,6 +215,113 @@ with tab_ma:
     if not ma26.empty:
         _deal_table_b3(ma26, height=min(820, 80 + 36 * len(ma26)))
 
+    # ══ FactSet 增强区 (2026-08-20) ═══════════════════════════════════════
+    # 数据来源 FactSet MergersAcquisitions。三块回答本表原先答不了的问题：
+    #   ① 宣布到交割要多久 ② 同一笔交易两个口径差多少 ③ 哪些只是传闻
+    _fz = i18n.get_lang() == "zh"
+
+    # ── ① 交割节奏 (announce -> close) ──
+    # ⚠ mnc_close_lag 已过滤 lag>0：FactSet 在交割日未知时用宣布日填充，
+    #    lag==0 并非"当天交割"，含进去会把中位数腰斩。
+    _lag = funding.mnc_close_lag(deals, 2026)
+    if not _lag.empty:
+        _n_pending = int((ma26["close_date"].astype(str).str.len() < 10).sum())
+        theme.section_header("交割节奏" if _fz else "Deal timing",
+                             meta=("宣布 → 实际交割 · FactSet 双日期"
+                                   if _fz else "Announce → close · FactSet dual dates"))
+        theme.kpi_strip([
+            _kpi("中位时滞" if _fz else "Median lag", f"{_lag['lag_days'].median():.0f}d",
+                 (f"{len(_lag)} 笔已交割且时滞>0" if _fz else f"{len(_lag)} closed, lag>0"), vcls="up"),
+            _kpi("最长时滞" if _fz else "Longest lag", f"{_lag['lag_days'].max():.0f}d",
+                 (f"{_lag.iloc[0]['ticker']} 收 {str(_lag.iloc[0]['target'])[:26]}"
+                  if _fz else f"{_lag.iloc[0]['ticker']} / {str(_lag.iloc[0]['target'])[:26]}")),
+            _kpi("仍在途" if _fz else "Still pending", f"{_n_pending}",
+                 ("已宣布未交割 · 不影响本年总额口径"
+                  if _fz else "announced, not yet closed"), vcls="up-deep"),
+        ])
+        _lt = pd.DataFrame({
+            ("标的" if _fz else "Target"): [_trunc(t, 44) for t in _lag["target"]],
+            ("宣布" if _fz else "Announced"): _lag["announce_date"].astype(str),
+            ("交割" if _fz else "Closed"): _lag["close_date"].astype(str),
+            ("天数" if _fz else "Days"): _lag["lag_days"].astype(float),
+        })
+        _lt.index = _lag["ticker"].astype(str); _lt.index.name = i18n.t("mnc_ma.col.ticker")
+        ui.render_html_table(
+            _lt, extra_formats={("天数" if _fz else "Days"): "%.0f"},
+            text_cols=[("标的" if _fz else "Target")],
+            right_text_cols=[("宣布" if _fz else "Announced"), ("交割" if _fz else "Closed")],
+            index_label=i18n.t("mnc_ma.col.ticker"), height=min(560, 80 + 34 * len(_lt)))
+        theme.md_note(
+            "读法" if _fz else "How to read",
+            ("2026 已交割交易的 announce→close 中位 **{m:.0f} 天**。本表 `date` 列语义历史上不一致"
+             "（2026 行=宣布日，历史行=交割日，已用 Celgene 实证），需要明确口径时请读 "
+             "`announce_date` / `close_date` 两列，勿用 `date`。"
+             ).format(m=_lag["lag_days"].median()) if _fz else
+            ("Median announce→close for 2026 closed deals: **{m:.0f} days**. The legacy `date` "
+             "column mixes semantics — use `announce_date` / `close_date`."
+             ).format(m=_lag["lag_days"].median()))
+
+    # ── ② 金额口径差异 (看板含CVR总额 vs FactSet 前付股权对价) ──
+    _conf = deals[(deals["year"] == 2026) & deals["flag"].fillna("").str.contains("口径差")]
+    # 本小节渲染的是第三方付费数据源的成交额。公开部署上该列已被
+    # jobs/export_mnc_deals_public.py 物理剥离 → 全为 NA → 整节不渲染。
+    # 本地有 mnc_ma_deals_full.csv 时照常显示。勿改成填零/占位: 那会把
+    # 「没有授权公开」伪装成「数值为零」。
+    if not _conf.empty and _conf["fs_tv_mn"].notna().any():
+        theme.section_header("金额口径差异" if _fz else "Deal-value basis gap",
+                             meta=("同一笔交易两个口径 · 本表数字未被改写"
+                                   if _fz else "Two bases, same deal · dashboard values untouched"))
+        _ct = pd.DataFrame({
+            ("标的" if _fz else "Target"): [_trunc(t, 40) for t in _conf["target"]],
+            ("本表 含CVR" if _fz else "Here (incl. CVR)"): _conf["deal_size_mn"] / 1000.0,
+            ("FactSet 前付" if _fz else "FactSet (upfront)"): _conf["fs_tv_mn"] / 1000.0,
+            ("差" if _fz else "Gap"): (_conf["fs_tv_mn"] - _conf["deal_size_mn"]) / _conf["deal_size_mn"],
+        })
+        _ct.index = _conf["ticker"].astype(str); _ct.index.name = i18n.t("mnc_ma.col.ticker")
+        ui.render_html_table(
+            _ct, pct_decimal_cols=[("差" if _fz else "Gap")],
+            extra_formats={("本表 含CVR" if _fz else "Here (incl. CVR)"): "%.2f",
+                           ("FactSet 前付" if _fz else "FactSet (upfront)"): "%.2f"},
+            text_cols=[("标的" if _fz else "Target")],
+            index_label=i18n.t("mnc_ma.col.ticker"), height=min(460, 80 + 34 * len(_ct)))
+        theme.md_note(
+            "为什么两个数都对" if _fz else "Why both are right",
+            "**不是谁错了，是两个口径。** 本表取含 CVR / 里程碑的总额，FactSet 取前付股权对价。"
+            "分歧只出现在带或有对价的公开要约上——小额私有交易两边分毫不差。"
+            "对外引用时必须说明用的是哪一个：Arcellx 新闻原文写的是「$6.2bn in cash and contingent "
+            "payout」，同一笔交易存在三个数字。"
+            if _fz else
+            "**Neither is wrong — they are two bases.** This table carries headline value incl. "
+            "CVR/milestones; FactSet carries upfront equity consideration. The gap appears only on "
+            "public tender offers with contingent value rights.")
+
+    # ── ③ 传闻追踪 (隔离, 不计入任何总额) ──
+    _rum = funding.load_mnc_rumors()
+    if _rum:
+        theme.section_header("传闻追踪" if _fz else "Rumor watch",
+                             meta=("⚠ 不计入上方总额与笔数" if _fz else "⚠ excluded from all totals"))
+        _rt = pd.DataFrame({
+            ("标的" if _fz else "Target"): [_trunc(r["target"], 44) for r in _rum],
+            ("首报" if _fz else "Reported"): [r["announce_date"] for r in _rum],
+            ("状态" if _fz else "Status"): [r["status"] for r in _rum],
+            ("传闻对价 $B" if _fz else "Rumored $B"):
+                [(r["reported_value_mn"] / 1000.0) if r.get("reported_value_mn") else float("nan")
+                 for r in _rum],
+        })
+        _rt.index = [r["ticker"] for r in _rum]; _rt.index.name = i18n.t("mnc_ma.col.ticker")
+        ui.render_html_table(
+            _rt, extra_formats={("传闻对价 $B" if _fz else "Rumored $B"): "%.2f"},
+            text_cols=[("标的" if _fz else "Target"), ("状态" if _fz else "Status")],
+            right_text_cols=[("首报" if _fz else "Reported")],
+            index_label=i18n.t("mnc_ma.col.ticker"), height=80 + 34 * len(_rt))
+        theme.md_note(
+            "纪律" if _fz else "Discipline",
+            "这三笔**全部排除在 M&A 总额与笔数之外**。若把 MRK←Revolution Medicines 的 $30.4B 传闻"
+            "误计入，2026 总额会虚增约 26%。AZN←BMS 为未证实传闻，**禁止在客户可见产物中当事实引用**。"
+            if _fz else
+            "All three are excluded from M&A totals and counts. Counting the cancelled "
+            "MRK←Revolution rumor alone would inflate 2026 by ~26%.")
+
     # ── Lifetime M&A (true acquisitions only) ──
     ma_total_bn = meta["ma_total_mn"] / 1000.0
     by_co = funding.mnc_by_company(ma)
@@ -213,7 +336,7 @@ with tab_ma:
                          meta=i18n.t("mnc_ma.section.league_meta") + " " + i18n.t("mnc_ma.ma_only"))
     theme.kpi_strip([
         _kpi(i18n.t("mnc_ma.kpi.total"), f"${ma_total_bn / 1000:,.2f}T",
-             i18n.t("mnc_ma.kpi.total_foot", n=meta["n_ma"], ymin=meta["year_min"], ymax=meta["year_max"]), vcls="up-deep"),
+             i18n.t("mnc_ma.kpi.total_foot", n=meta["n_ma"], ymin=meta["year_min"], ymax=meta["year_max"], nmnc=meta.get("n_mncs", "")), vcls="up-deep"),
         _kpi(i18n.t("mnc_ma.kpi.deals"), f"{meta['n_ma']:,}",
              i18n.t("mnc_ma.kpi.deals_foot", actual=n_actual, est=n_est)),
         _kpi(i18n.t("mnc_ma.kpi.top"), f"${top_co['total_bn']:,.0f}B",

@@ -42,7 +42,7 @@ DATASETS: dict[str, dict] = {
     "benchmarks_fx":      {"label": "FX / MSCI World 基准",    "source": "yfinance",        "max_age_days": 4},
     "hc_index_comparison":{"label": "相对表现(美股线)",       "source": "yfinance",        "max_age_days": 4},
     "hk_ipo_tracker":     {"label": "港股 IPO 散点/破发",      "source": "Wind+Futu(本地)", "max_age_days": 9},
-    "mnc_ma_deals":       {"label": "MNC M&A / BD 交易",       "source": "PatSnap(切换中;原PharmCube已停)", "max_age_days": 7},
+    "mnc_ma_deals":       {"label": "MNC M&A / BD 交易",       "source": "M&A:FactSet(本地) / BD:PatSnap(本地)", "max_age_days": 7},
     "hshci_monthly":      {"label": "HSHCI 月线/长周期",       "source": "Wind(本地)",      "max_age_days": 40},
     "us_hc_13f":          {"label": "美国医疗基金 13F 持仓",   "source": "SEC EDGAR",        "max_age_days": 140},
     # ── 2026-08-29 暗数据纳管：以下数据集此前不在 manifest,过期无人知 ──
@@ -98,7 +98,13 @@ def resolve_source_date(key: str) -> str | None:
         except Exception:  # noqa: BLE001
             return None
     if key == "mnc_ma_deals":
-        return _csv_max_date(EXT / "mnc_ma_deals.csv")
+        # 事件流数据集: 新鲜度 = 上次扫描时间(meta as_of), 不是最后一笔 deal 的日期 ——
+        # 安静期没有新交易不等于数据过期
+        try:
+            j = json.loads((EXT / "mnc_ma_deals_meta.json").read_text())
+            return str(j.get("as_of", ""))[:10] or None
+        except Exception:  # noqa: BLE001
+            return None
     if key == "hshci_monthly":
         return _csv_max_date(EXT / "hshci_history_monthly.csv")
     if key == "us_hc_13f":

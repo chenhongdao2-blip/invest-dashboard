@@ -1,19 +1,19 @@
 {
-  "as_of": "2026-06-29",
+  "as_of": "2026-08-29",
   "source": "etf-data-mcp CLI (stockanalysis+barchart for holdings, yfinance for profile/perf)",
   "n_etfs": 10,
   "holdings_cap_note": "Upstream caps weighted rows at top ~25; tail is symbol-only (rank/name/weight=None). Tail kept for '+N more'; unknown weight is None, never 0.",
   "weight_sum_pct_by_etf": {
-    "XLV": 85.62,
-    "VHT": 73.0,
-    "IYH": 80.69,
-    "IBB": 64.8,
-    "XBI": 30.46,
-    "XPH": 47.73,
-    "PPH": 99.92,
-    "IHI": 96.56,
-    "IHF": 91.76,
-    "ARKG": 94.19
+    "XLV": 0.0,
+    "VHT": 0.0,
+    "IYH": 0.0,
+    "IBB": 0.0,
+    "XBI": 0.0,
+    "XPH": 0.0,
+    "PPH": 0.0,
+    "IHI": 0.0,
+    "IHF": 0.0,
+    "ARKG": 0.0
   },
-  "built_at": "2026-06-29T15:28:03"
+  "built_at": "2026-08-29T14:16:00"
 }

@@ -1,14 +1,27 @@
 {
   "source": "MNCs basket summary Mar26.xlsx (mnc-deal-scanner 维护)",
-  "as_of": "2026-06-27 (added 5 M&A [Gilead<-Arcellx/Tubulis, Biogen<-Apellis, UCB<-Neurona, Merck KGaA<-Bio-Techne] + 3 BD [Novartis<-Antares, Lilly<-Abbisko, Lilly<-Sangamo]; universe expanded beyond original 13; M&A sourced via web/deal-tracker since PharmCube carries no corporate M&A)",
-  "n_deals": 446,
-  "n_ma": 399,
+  "as_of": "2026-08-29",
+  "n_deals": 458,
+  "n_ma": 410,
   "n_bd": 47,
-  "total_mn": 1643838.8,
-  "ma_total_mn": 1550959.8,
+  "total_mn": 1665638.8,
+  "ma_total_mn": 1572759.8,
   "bd_total_mn": 92879.0,
-  "n_mncs": 17,
+  "n_mncs": 20,
   "year_min": 1986,
   "year_max": 2026,
-  "tier": "MEDIUM-HIGH"
+  "tier": "MEDIUM-HIGH (2026 M&A 经 FactSet 交叉验证; 历史行仍为 web/deal-tracker 单源)",
+  "n_sell_side": 1,
+  "factset_enrichment": {
+    "matched_existing": 25,
+    "added": 12,
+    "rumors_excluded": 3,
+    "size_basis_conflicts": 9,
+    "close_date_coverage_2026": 24,
+    "lag_median_days_2026": 45.5,
+    "lag_max_days_2026": 85.0,
+    "known_gap": "FactSet 对 Roche(ROG-CH) 返回 0 笔 — 看板 ROG PathAI/SAGA 两笔为本表独有, 勿删",
+    "date_semantics": "date 列语义不一: 2026 行=宣布日, 历史行=交割日(已用 Celgene 3084870MM 实证)。新增 announce_date/close_date 两列为准, date 列保留兼容。"
+  },
+  "note": "2026-08-20 FactSet 增强: 补 close_date/lag_days/fs_tv_mn/fs_status/EV倍数/direction; 新增 12 笔[11 buy+1 sell]; universe 17->20 加 VRTX/BAYN/4568-JP; 3 笔 Rumor 隔离至 mnc_ma_rumors.json(local-only) 不计入总额. 2026-08-29 FactSet 复扫 8/10-8/29 窗口 20 家 MNC 零新交易(PatSnap+web 双源交叉确认)."
 }

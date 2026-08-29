@@ -48,6 +48,11 @@ jobs:
       - name: Load universe
         run: python jobs/load_universe.py
 
+      - name: Load SW/HSCI sector seeds (idempotent)
+        # 申万31+HSCI11 周线由本地 Wind job (jobs/pull_sw_industry_wind.py) 刷 seed
+        # CSV 后 commit；这里对 committed seed 幂等入库,云端 db 不再依赖手动 db push
+        run: python jobs/load_sw_industry.py
+
       - name: Fetch FX / MSCI World
         run: |
           python jobs/fetch_fx_world.py

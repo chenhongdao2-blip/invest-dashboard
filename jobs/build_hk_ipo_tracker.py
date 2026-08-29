@@ -282,8 +282,9 @@ def main() -> None:
     }
     META_JSON.write_text(json.dumps(meta, ensure_ascii=False, indent=2))
 
-    # 7) refresh stamp
-    (EXT / ".last_refresh").write_text(f"1\t{today}")
+    # 7) （2026-08-29 移除 .last_refresh 写入：那是投融资页 deal 层的 marker，
+    #    归 docs/funding-pipeline.md 步骤⑥写；本 job 写它 = 语义污染，且旧格式
+    #    "1\t日期" 会让 funding-staleness hook Date.parse 失败报「无 marker」。）
 
     # 8) 回写 refresh_manifest —— 别靠人手动跑。2026-08-20 实测:本 job 从不调
     #    update_manifest, 于是 manifest 卡在 source_date=2026-06-24 且 status 仍是

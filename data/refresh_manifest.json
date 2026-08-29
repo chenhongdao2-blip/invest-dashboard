@@ -12,8 +12,9 @@
     "source": "SEC EDGAR",
     "max_age_days": 10,
     "status": "ok",
-    "refreshed_at": "2026-08-29T05:58:23+00:00",
-    "source_date": "2026-08-28"
+    "refreshed_at": "2026-08-29T06:09:08+00:00",
+    "source_date": "2026-08-29",
+    "note": "2026-08-29 YAML 修复(PR#48)后首次成功运行,周一 cron 恢复"
   },
   "benchmarks_fx": {
     "label": "FX / MSCI World 基准",
@@ -21,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-08-28T06:22:30+00:00",
-    "source_date": "2026-08-28"
+    "source_date": "2026-08-29"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -37,25 +38,26 @@
     "source": "Wind+Futu(本地)",
     "max_age_days": 9,
     "status": "ok",
-    "refreshed_at": "2026-08-20T14:37:02+00:00",
-    "source_date": "2026-08-20",
-    "note": "Wind 主源 + Futu OpenD 交叉核对 (42 名, 价差 <5%)"
+    "refreshed_at": "2026-08-29T05:54:14+00:00",
+    "source_date": "2026-08-29",
+    "note": "Wind (price/mktcap/20d turnover) + Futu OpenD cross-check"
   },
   "mnc_ma_deals": {
     "label": "MNC M&A / BD 交易",
-    "source": "PharmCube",
-    "max_age_days": 4,
-    "status": "ok",
+    "source": "PatSnap(切换中;原PharmCube已停)",
+    "max_age_days": 7,
+    "status": "stale",
     "refreshed_at": "2026-06-24T23:44:24+00:00",
-    "source_date": "2026-06-22"
+    "source_date": "2026-06-25"
   },
   "hshci_monthly": {
     "label": "HSHCI 月线/长周期",
-    "source": "iFind(本地)",
+    "source": "Wind(本地)",
     "max_age_days": 40,
     "status": "ok",
-    "refreshed_at": "2026-06-24T23:44:24+00:00",
-    "source_date": "2026-06-01"
+    "refreshed_at": "2026-08-29T05:39:28+00:00",
+    "source_date": "2026-08-28",
+    "note": "2026-08-29 起 iFind→Wind 换源(锚点连续性校验内置于 jobs/hshci_history.py)"
   },
   "us_hc_13f": {
     "label": "美国医疗基金 13F 持仓",
@@ -68,11 +70,67 @@
   },
   "biotech_catalysts": {
     "label": "生科组合 催化剂时点",
-    "source": "手工维护(引擎 + transcript 核对)",
+    "source": "手工(PatSnap变化探测+transcript核对)",
     "max_age_days": 30,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-07-09T18:00:00+00:00",
     "source_date": "2026-07-09",
     "note": "data/content/biotech_catalysts.csv;每次成分股 earnings/readout 后手动更新,>30 天转黄提示复核。刷新后同步 bump source_date。"
+  },
+  "earnings_calendar": {
+    "refreshed_at": "2026-08-29T06:05:03+00:00",
+    "label": "业绩会日历",
+    "source": "minodata API(GH手动dispatch)",
+    "max_age_days": 7,
+    "source_date": "2026-08-29",
+    "status": "ok"
+  },
+  "sw_industry_daily": {
+    "refreshed_at": "2026-08-29T06:03:19+00:00",
+    "label": "申万行业日线(板块轮动A股腿)",
+    "source": "Wind(job待改写;原iFind已停用)",
+    "max_age_days": 7,
+    "source_date": "2026-06-05",
+    "status": "stale"
+  },
+  "bd_deals": {
+    "refreshed_at": null,
+    "label": "BD/授权交易明细",
+    "source": "PatSnap(本地)",
+    "max_age_days": 7,
+    "source_date": "2026-08-31",
+    "status": "ok"
+  },
+  "etf_hc_holdings": {
+    "refreshed_at": null,
+    "label": "ETF 持仓/画像(HC篮)",
+    "source": "etf-data CLI(本地)",
+    "max_age_days": 45,
+    "source_date": "2026-06-29",
+    "status": "stale"
+  },
+  "china_fund_hc_positioning": {
+    "refreshed_at": null,
+    "label": "中国基金 HC 持仓(季)",
+    "source": "手工(公募季报 audited xlsx)",
+    "max_age_days": 135,
+    "status": "ok",
+    "source_date": "2026-04-30"
+  },
+  "cn_pharma_headcount": {
+    "refreshed_at": null,
+    "label": "医药公司员工人数(年)",
+    "source": "手工(年报)",
+    "max_age_days": 300,
+    "source_date": "2026-06-03",
+    "status": "ok"
+  },
+  "funding_quarterly": {
+    "refreshed_at": null,
+    "label": "投融资季度面板(公开源)",
+    "source": "手工(多源三角+对抗核验)",
+    "max_age_days": 120,
+    "source_date": "2026-06-01",
+    "status": "ok"
   }
 }

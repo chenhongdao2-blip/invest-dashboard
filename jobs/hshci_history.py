@@ -1,58 +1,65 @@
 """恒生医疗保健指数(HSHCI.HK) 长周期完整轨迹 — 2021.7 至今 绝对点位。
 
 一条线讲完「−70% → 翻倍 → 回调」：2021.7 高位 → 2024.6 见底(−69%) →
-2025.9 反弹峰(较底 +118%, ×2.2) → 今(较峰 −26%)。
+2025.9 反弹峰(较底 +118%, ×2.2) → 今。
 
 产物:
   data/external/hshci_history_monthly.csv  — committed, 看板 + Excel 下载读
   data/external/hshci_history.png          — 独立日历时间单线图(带 4 个里程碑标注)
 
-数据: iFind 指数月收盘点位(HSHCI 不在 Yahoo)；末点为最新交易日日频收盘
-(2026-07-09 3362.19，iFind index-mcp 2026-07-10 拉取)。
+数据: Wind 指数月收盘点位 w.wsd("HSHCI.HI", Period=M)（HSHCI 不在 Yahoo）。
+Wind 月线的末点自动落在最新交易日 → 天然满足「末点为最新交易日」口径。
+2026-08-29 起由 iFind 切换 Wind（iFind 2026-08-21 停用）；切换时已用三个
+历史月锚点（2021-07 / 2024-06 / 2025-09）核对，两源逐分不差，见 ANCHORS。
 
-Run:
-    uv run --with pandas --with matplotlib python jobs/hshci_history.py
+Run（须本机 Wind 终端在线；WindPy 绑 python3.14）:
+    python3.14 jobs/hshci_history.py
 """
 
 from __future__ import annotations
 
 import csv
+import sys
 from datetime import date
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
 OUT_CSV = REPO / "data" / "external" / "hshci_history_monthly.csv"
 OUT_PNG = REPO / "data" / "external" / "hshci_history.png"
-ASOF = "2026-07-09"
 
-# (date, 收盘点位) — iFind 指数月收盘；末点为最新交易日日频
-ROWS = [
-    ("2021-07-30", 6797.79), ("2021-08-31", 6189.86), ("2021-09-30", 6055.17),
-    ("2021-10-29", 5533.48), ("2021-11-30", 5386.32), ("2021-12-31", 4726.51),
-    ("2022-01-31", 4040.59), ("2022-02-28", 4042.98), ("2022-03-31", 3675.70),
-    ("2022-04-29", 3379.05), ("2022-05-31", 3354.39), ("2022-06-30", 3844.93),
-    ("2022-07-29", 3620.03), ("2022-08-31", 3461.51), ("2022-09-30", 2816.60),
-    ("2022-10-31", 2790.86), ("2022-11-30", 3571.49), ("2022-12-30", 3812.62),
-    ("2023-01-31", 4114.84), ("2023-02-28", 3683.29), ("2023-03-31", 3491.70),
-    ("2023-04-28", 3601.89), ("2023-05-31", 3126.47), ("2023-06-30", 2981.44),
-    ("2023-07-31", 3239.02), ("2023-08-31", 2925.05), ("2023-09-29", 2897.64),
-    ("2023-10-31", 3043.83), ("2023-11-30", 3087.24), ("2023-12-29", 2877.71),
-    ("2024-01-31", 2186.31), ("2024-02-29", 2456.25), ("2024-03-28", 2268.46),
-    ("2024-04-30", 2286.03), ("2024-05-31", 2204.20), ("2024-06-28", 2083.51),
-    ("2024-07-31", 2098.40), ("2024-08-30", 2176.41), ("2024-09-30", 2736.02),
-    ("2024-10-31", 2422.17), ("2024-11-29", 2411.19), ("2024-12-31", 2332.91),
-    ("2025-01-28", 2342.90), ("2025-02-28", 2720.31), ("2025-03-31", 2921.43),
-    ("2025-04-30", 2953.49), ("2025-05-30", 3182.64), ("2025-06-30", 3450.04),
-    ("2025-07-31", 4236.57), ("2025-08-29", 4325.82), ("2025-09-30", 4551.28),
-    ("2025-10-31", 4048.32), ("2025-11-28", 4044.78), ("2025-12-31", 3661.52),
-    ("2026-01-30", 3974.92), ("2026-02-27", 3889.51), ("2026-03-31", 3688.14),
-    ("2026-04-30", 3730.51), ("2026-05-29", 3383.26), ("2026-06-30", 3158.04),
-    ("2026-07-09", 3362.19),   # 最新交易日日频（iFind index-mcp 2026-07-10 拉取）
-]
+START = "2021-07-01"
+SOURCE_LABEL = "Wind 指数月收盘(末点最新交易日)"
+
+# 换源连续性锚点：iFind 时代烘焙值，Wind 返回值必须逐一吻合，防止拿错指数/口径。
+ANCHORS = {
+    "2021-07-30": 6797.79,   # 起点高位
+    "2024-06-28": 2083.51,   # 见底月
+    "2025-09-30": 4551.28,   # 反弹峰月
+}
 
 INK = "#1A1A1A"
 GREY = "#8A8580"
 CMSI_RED = "#C8102E"
+
+
+def fetch_rows() -> list[tuple[str, float]]:
+    """Wind 月线 HSHCI.HI；带锚点连续性校验，不通过就拒绝写盘。"""
+    from WindPy import w
+
+    w.start()
+    r = w.wsd("HSHCI.HI", "close", START, date.today().isoformat(), "Period=M")
+    if r.ErrorCode != 0:
+        sys.exit(f"[fatal] Wind ErrorCode={r.ErrorCode}, 不写盘（保留旧 CSV）")
+    rows = [(t.isoformat() if hasattr(t, "isoformat") else str(t), round(float(c), 2))
+            for t, c in zip(r.Times, r.Data[0]) if c == c]  # NaN guard
+    if len(rows) < 55:
+        sys.exit(f"[fatal] Wind 只返回 {len(rows)} 个月点(<55)，疑截断，不写盘")
+    got = dict(rows)
+    for d, expect in ANCHORS.items():
+        if abs(got.get(d, float("nan")) - expect) > 0.01:
+            sys.exit(f"[fatal] 锚点 {d} 校验失败: Wind={got.get(d)} vs iFind烘焙={expect}，"
+                     f"疑指数/口径漂移，不写盘")
+    return rows
 
 
 def milestones(rows):
@@ -71,15 +78,21 @@ def milestones(rows):
     }
 
 
-def write_csv():
+def _ym(d: str) -> str:
+    """'2024-06-28' → '2024.6'（里程碑标签随数据走，不再硬编码年月）。"""
+    y, m, _ = d.split("-")
+    return f"{y}.{int(m)}"
+
+
+def write_csv(rows, asof: str):
     with OUT_CSV.open("w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         w.writerow(["date", "close", "source", "asof"])
-        for d, c in ROWS:
-            w.writerow([d, c, "iFind 指数月收盘(末点日频)", ASOF])
+        for d, c in rows:
+            w.writerow([d, c, SOURCE_LABEL, asof])
 
 
-def render_png():
+def render_png(rows, asof: str):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
@@ -89,9 +102,9 @@ def render_png():
     rcParams["font.sans-serif"] = ["Arial Unicode MS"]
     rcParams["axes.unicode_minus"] = False
 
-    xs = [date.fromisoformat(d) for d, _ in ROWS]
-    ys = [c for _, c in ROWS]
-    m = milestones(ROWS)
+    xs = [date.fromisoformat(d) for d, _ in rows]
+    ys = [c for _, c in rows]
+    m = milestones(rows)
 
     fig, ax = plt.subplots(figsize=(11.0, 6.0), dpi=200)
     fig.patch.set_facecolor("white")
@@ -108,14 +121,14 @@ def render_png():
         ax.scatter([d], [v], color=color, s=46, zorder=5)
 
     sd, sv = pt("start")
-    ax.annotate(f"2021.7 高位\n{sv:,.0f}", (sd, sv), textcoords="offset points",
+    ax.annotate(f"{_ym(m['start'][0])} 高位\n{sv:,.0f}", (sd, sv), textcoords="offset points",
                 xytext=(6, 8), fontsize=10, fontweight="bold", color=INK)
     td, tv = pt("trough")
-    ax.annotate(f"2024.6 见底 {tv:,.0f}\n自高位 {m['trough'][2]:+.0%}", (td, tv),
+    ax.annotate(f"{_ym(m['trough'][0])} 见底 {tv:,.0f}\n自高位 {m['trough'][2]:+.0%}", (td, tv),
                 textcoords="offset points", xytext=(-6, -42), fontsize=10,
                 fontweight="bold", color=GREY, ha="center")
     pd_, pv = pt("peak")
-    ax.annotate(f"2025.9 反弹 {pv:,.0f}\n较底 {m['peak'][2]:+.0%} (×{1+m['peak'][2]:.1f})",
+    ax.annotate(f"{_ym(m['peak'][0])} 反弹 {pv:,.0f}\n较底 {m['peak'][2]:+.0%} (×{1+m['peak'][2]:.1f})",
                 (pd_, pv), textcoords="offset points", xytext=(-150, 6), fontsize=10,
                 fontweight="bold", color=CMSI_RED)
     nd, nv = pt("now")
@@ -135,10 +148,11 @@ def render_png():
     ax.set_axisbelow(True)
     ax.set_ylim(min(ys) - 250, max(ys) + 450)
 
-    note = (f"完整轨迹：2021.7 {sv:,.0f} → 2024.6 见底 {tv:,.0f}（{m['trough'][2]:+.0%}）"
-            f" → 2025.9 反弹 {pv:,.0f}（较底 {m['peak'][2]:+.0%}）→ 今 {nv:,.0f}"
-            f"（较峰 {m['now'][2]:+.0%}，较 2021.7 仍 {m['now'][3]:+.0%}）。"
-            f"来源：iFind 指数月收盘，截至 {ASOF}。")
+    note = (f"完整轨迹：{_ym(m['start'][0])} {sv:,.0f} → {_ym(m['trough'][0])} 见底 {tv:,.0f}"
+            f"（{m['trough'][2]:+.0%}）→ {_ym(m['peak'][0])} 反弹 {pv:,.0f}"
+            f"（较底 {m['peak'][2]:+.0%}）→ 今 {nv:,.0f}"
+            f"（较峰 {m['now'][2]:+.0%}，较 {_ym(m['start'][0])} 仍 {m['now'][3]:+.0%}）。"
+            f"来源：Wind 指数月收盘，截至 {asof}。")
     fig.text(0.01, 0.012, note, fontsize=8, color=GREY)
     fig.subplots_adjust(left=0.085, right=0.965, top=0.91, bottom=0.12)
     fig.savefig(OUT_PNG, facecolor="white")
@@ -146,10 +160,12 @@ def render_png():
 
 
 def main():
-    write_csv()
-    render_png()
-    m = milestones(ROWS)
-    print(f"[ok] {OUT_CSV}")
+    rows = fetch_rows()
+    asof = rows[-1][0]
+    write_csv(rows, asof)
+    render_png(rows, asof)
+    m = milestones(rows)
+    print(f"[ok] {OUT_CSV}  ({len(rows)} 月点, 截至 {asof}, 源 Wind)")
     print(f"[ok] {OUT_PNG}")
     print(f"  start {m['start'][1]:,.0f} → trough {m['trough'][1]:,.0f} ({m['trough'][2]:+.1%}) "
           f"→ peak {m['peak'][1]:,.0f} ({m['peak'][2]:+.1%}) → now {m['now'][1]:,.0f} "

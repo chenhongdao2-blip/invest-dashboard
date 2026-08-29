@@ -44,6 +44,9 @@ jobs:
         run: |
           python jobs/fetch_eod.py --backfill-days "${{ github.event.inputs.backfill_days || '0' }}"
           python jobs/update_manifest.py eod_prices ok
+          # 每日顺带全量审计：按 source_date 重算所有数据集 status,
+          # 让 manifest JSON 对直接读它的消费者(hook/人)也说真话
+          python jobs/update_manifest.py --audit
 
       - name: Commit data
         run: |

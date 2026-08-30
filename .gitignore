@@ -45,6 +45,15 @@ data/snapshots.db.bak-*
 cov_*.txt
 cov_*.json
 
+# 源码就地备份 — 任意目录下的 *.py.bak-<tag>。上面第 40 行的
+# data/external/*.bak-* 只覆盖数据目录, 管不到 app/ 下的代码备份
+# (如 app/lib/funding.py.bak-factset-*)。改代码前的临时副本一律不进仓。
+*.py.bak-*
+
+# 根目录整包备份 tar — 破坏性操作前的现场快照, local-only。
+/.backup-external-*.tar.gz
+/.provenance-fix-backup-*.tar.gz
+
 # Analyst model extracts — FULL versions are confidential (TP/DCF + Visible Alpha):
 # local-only, NEVER public Cloud. The desensitized copies under data/models_public/
 # (dcf/target stripped by jobs/export_public_model.py) ARE committed & shipped to Cloud.

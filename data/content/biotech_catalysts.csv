@@ -1,23 +1,23 @@
 ticker,catalyst,timing,type,source
 IMCR,brenetafusp 黑色素瘤 + TEBE-AM 顶线,H2 2026,临床读出,transcript验证
-CYTK,aficamten HCM 商业放量 + HFpEF 拓展,进行中,商业化/拓展,引擎
+CYTK,"aficamten HCM 全球放量【美/中/欧已批,7/29 英国 MHRA+NICE 获批】+ HFpEF 拓展",进行中,商业化/拓展,引擎+PatSnap验证
 DNLI,DNL126 Sanfilippo 49周 pivotal 数据,2026-09,pivotal读出,transcript验证★捞回
-NAMS,obicetrapib 血脂 P3 / 监管,2026-2027,P3/监管,引擎
+NAMS,"obicetrapib 欧盟 7/24 CHMP 正面意见(Ubeslo 单药+Evlarco 复方),EC 决定在即 + 心血管结局 P3",H2 2026 EC 决定,监管,新闻验证★升级
 RAPP,RAP-219 癫痫 P2a 读出,2026内,P2读出,引擎
 XENE,azetukalner 抑郁MDD 读出【原判8月→transcript纠正】,H1 2027,P3读出,transcript纠正⚠️
 IRON,bitopertin EPP 上市申请,2026内,监管,引擎
-QURE,"AMT-130 亨廷顿 pivotal【已涨+173%/3M,追高风险】",2026内,pivotal读出,引擎⚠️追高
-BNTX,BNT327 PD-L1×VEGF双抗 III期多癌种,2026-2027,P3读出,引擎
-CLDX,barzolvolimab CSU/CIndU 读出,2026内,P3读出,引擎
-SRRK,SRK-439 × GLP-1 肌肉保留数据,2026内,联用数据,引擎
+QURE,"AMT-130 亨廷顿 BLA 提交(加速批准通道,FDA 6月转向免 sham 确证)+4年数据 9 月【追高风险】",Q3 2026 BLA,监管/数据读出,transcript验证★升级⚠️追高
+BNTX,"BNT327 PD-L1×VEGF双抗 III期多癌种;8/20 WCLC 首披联用 ADC 肺癌数据【8/28 终止一项 CRC P2,资产未点名待核⚠️】",2026-2027,P3读出,引擎+新闻⚠️
+CLDX,"barzolvolimab CSU/CIndU 读出【7/21 结节性痒疹 P2 失败,主/关键次要终点均未达】",2026内,P3读出,引擎+新闻⚠️
+SRRK,"apitegromab SMA PDUFA 9/30(BLA 已重报,换 fill-finish 产线)+ SRK-439×GLP-1 肌肉保留数据",2026-09-30 PDUFA,PDUFA监管,新闻验证★升级
 MLYS,lorundrostat 难治性高血压 PDUFA,2026-12,PDUFA监管,transcript验证★捞回
 MIRM,"brelovitug 丁肝 AZURE-4【管理层锚BLA 2027,8月未确认】",BLA 2027,监管,transcript纠正⚠️
-BBIO,acoramidis ATTR-CM 商业放量 + 事件数据,进行中,商业化,引擎
-RYTM,setmelanotide MC4R 适应症扩展,2026内,监管/拓展,引擎
+BBIO,"acoramidis 放量+ESC OLE 数据(8/28-31)+encaleret ADH1 NDA 受理;竞品 eplontersen P3 失败利好稳定剂",进行中,商业化/监管,引擎+新闻验证
+RYTM,"setmelanotide 获得性下丘脑肥胖美国放量(400+ 处方启动)+周制剂肥胖中期数据积极",进行中,商业化/拓展,引擎+新闻验证
 PHVS,deucrictibant HAE 口服预防读出,2026内,读出,引擎
-SNDX,revumenib menin 白血病组合拓展,2026内,拓展,引擎
-EWTX,sevasemten/EDG-7500 BMD·HCM Ph3【6M已涨+94%】,2026内,P3读出,引擎⚠️追高
+SNDX,revumenib menin 白血病组合拓展+R&D day 新增 NSCLC/骨髓纤维化管线,2026内,拓展,引擎+新闻
+EWTX,"EDG-7500 HCM 推进(CIRRUS-HCM P2 顶线已出)【sevasemten+MD 业务 7/13 已售 Servier 上限 $2.65bn,转纯心血管】",2026内,P2/P3,新闻验证★重写⚠️追高
 MAZE,MZE829 口服ApoL1 肾病 P2,2026内,P2读出,引擎
-GMAB,epcoritamab(Epkinly)抗体平台拓展,进行中,拓展,引擎
-ALNY,vutrisiran ATTR-CM 放量 + 阿尔茨海默管线,进行中,商业化/管线,人工加入
+GMAB,epcoritamab(Epkinly)拓展+petosemtamab CRC 两项新 P3(8/6 宣布),进行中,拓展,引擎+新闻
+ALNY,"vutrisiran ATTR-CM 放量(Q2 产品收入+74%)+ESC ATTR/高血压数据;竞品 eplontersen 失败利好",进行中,商业化/管线,新闻验证
 GPCR,"aleniglipron 口服GLP-1 肥胖【已过P2,Q3进P3】",Q3 2026 起P3,P3启动,transcript验证/人工加入

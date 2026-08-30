@@ -73,10 +73,10 @@
     "label": "生科组合 催化剂时点",
     "source": "手工(PatSnap变化探测+transcript核对)",
     "max_age_days": 30,
-    "status": "stale",
-    "refreshed_at": "2026-07-09T18:00:00+00:00",
-    "source_date": "2026-07-09",
-    "note": "data/content/biotech_catalysts.csv;每次成分股 earnings/readout 后手动更新,>30 天转黄提示复核。刷新后同步 bump source_date。"
+    "status": "ok",
+    "refreshed_at": "2026-08-29T06:51:14+00:00",
+    "source_date": "2026-08-29",
+    "note": "8/29 sweep: PatSnap 4/22后余额耗尽,余18只drillr新闻fallback;12行更新,transcript锚QURE"
   },
   "earnings_calendar": {
     "refreshed_at": "2026-08-29T06:05:03+00:00",

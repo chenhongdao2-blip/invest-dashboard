@@ -65,6 +65,19 @@
 - 中文不开 italic；英文 italic 仅用于 latin 公司名补注。
 - font-size **任何位置 ≥ 11px**。
 
+### 2.1 Emoji 替代锚点（v1.0 §6 并入，2026-08-30）
+
+§0.7 禁 emoji 后，靠这四个锚点承担"视觉定位"职能：
+
+| 位置 | 锚点 | 规格 |
+|------|------|------|
+| 页面标题前 | `[03 / 07]` 序号 | mono · ink-3 · 11px |
+| Section h2 | 4px ▎红竖条 + 标题 | 标题字本身黑（见 §2 硬规则） |
+| Ticker 前缀 | 1-2 字母 region chip | `HK` / `US` / `CN` |
+| KPI label | UPPERCASE eyebrow + 末尾 ▎红条 | tracking 放宽 |
+
+补充理由（v1.0 原文）：emoji 在富途/同花顺 client、Windows、PDF 导出、机构 email 转发时渲染各不相同，**部分 GB 字体直接缺字**（如 🧬 显示成豆腐块）。卖方研报从不出现 emoji。
+
 ---
 
 ## 3. Page mapping (v2.0 — 容纳策略表现)
@@ -145,6 +158,24 @@
 ## 7. "金融专业感" 自评 (1-10) + 落地顺序
 
 目标 8.5（FT.com tables = 9.0 天花板；Bloomberg 9.5 不追）。
+
+### 7.1 分维度评分口径（v1.0 §7 并入，2026-08-30）
+
+「当前」列是 **2026-05 v1.0 成文时的基线快照，非现状**——保留它是为了能量出进展，别当今天的读数用。「目标 / 关键动作」是仍然有效的设计指引。
+
+| 维度 | 2026-05 基线 | 目标 | 关键动作 |
+|------|--------------|------|----------|
+| 字体执行 (tabular) | 5 | 9 | 全表 `font-variant-numeric: tabular-nums` |
+| 颜色克制 | 7 | 9 | 删 emoji + cell 染字不染底 |
+| 表格密度 | 4 | 8.5 | 行高 36px + padding-x 12px + 字 13px |
+| 排版层级 (eyebrow) | 5 | 9 | UPPERCASE + tracking + `[NN / 07]` 序号 |
+| 章节分隔 | 3 | 8 | 2px ink top rule + 4px 红条（替代 `st.divider`） |
+| Plotly 调性 | 5 | 8.5 | 套 `theme.PLOTLY_LAYOUT` + line-width 1.5 |
+| 整体 | 6 | 8.5 | —— |
+
+外部对照阶梯（主观，用于校准"8.5 是什么水平"）：Bloomberg terminal 9.5（数字密度天花板，属 desk 不属早会，不追）· FT.com tables 9.0（本方案对标方向）· Stifel research PDF 8.5（黑红 + Times serif，不是我们的色）· 中信中金 PDF 8.0（传统但信息密度高）。
+
+### 7.2 落地顺序
 
 落地顺序（v2.0）：
 1. **Stage 2** —— Coverage 主表迁 `components.html` HTML 表（治本 dark；本文件 §5.1）。

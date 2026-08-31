@@ -12,8 +12,8 @@
     "source": "SEC EDGAR",
     "max_age_days": 10,
     "status": "ok",
-    "refreshed_at": "2026-08-29T06:09:08+00:00",
-    "source_date": "2026-08-29",
+    "refreshed_at": "2026-08-31T13:48:12+00:00",
+    "source_date": "2026-08-31",
     "note": "2026-08-29 YAML 修复(PR#48)后首次成功运行,周一 cron 恢复"
   },
   "benchmarks_fx": {

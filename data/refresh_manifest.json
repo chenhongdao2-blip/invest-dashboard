@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-01T14:09:59+00:00",
-    "source_date": "2026-09-01"
+    "refreshed_at": "2026-09-02T00:31:34+00:00",
+    "source_date": "2026-09-02"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
@@ -22,13 +22,13 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-08-29T06:10:50+00:00",
-    "source_date": "2026-09-01"
+    "source_date": "2026-09-02"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",
     "max_age_days": 4,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T06:10:51+00:00",
     "source_date": "2026-08-28",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"

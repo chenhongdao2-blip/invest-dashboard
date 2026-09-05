@@ -4,7 +4,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-04T13:27:07+00:00",
+    "refreshed_at": "2026-09-05T00:22:30+00:00",
     "source_date": "2026-09-04"
   },
   "sec_facts": {
@@ -92,7 +92,7 @@
     "source": "Wind(job待改写;原iFind已停用)",
     "max_age_days": 7,
     "source_date": "2026-08-28",
-    "status": "ok"
+    "status": "stale"
   },
   "bd_deals": {
     "refreshed_at": null,

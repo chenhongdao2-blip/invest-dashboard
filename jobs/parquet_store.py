@@ -303,6 +303,48 @@ def upsert_rows(table: str, df: pd.DataFrame) -> dict[str, int]:
 
 
 # ──────────────────────────────────────────────────────────────────────────
+# dual write (transition period — SQLite stays the source of truth)
+# ──────────────────────────────────────────────────────────────────────────
+DUAL_WRITE_ENV = "PARQUET_DUAL_WRITE"
+_OFF = {"", "0", "false", "no", "off"}
+
+
+def dual_write_enabled() -> bool:
+    """Is the Parquet shadow write on? Default ON; `PARQUET_DUAL_WRITE=0` turns it off.
+
+    The flag exists to DISABLE, not to enable: during the dual-write week every job
+    must populate both stores or the parity check is meaningless. It is the rollback
+    lever — set it to 0 and the jobs behave exactly as they did before this PR.
+    """
+    return os.environ.get(DUAL_WRITE_ENV, "1").strip().lower() not in _OFF
+
+
+def dual_write(table: str, rows, columns: list[str] | None = None) -> dict[str, int]:
+    """Shadow-write rows that were just committed to SQLite. Never raises.
+
+    `rows` is a DataFrame, or a list of tuples plus `columns`.
+
+    WHY it swallows exceptions: SQLite is still the source of truth this week, and a
+    fault in the shadow store must not take down a working data pipeline. That is not
+    the same as failing silently — jobs/parity_check.py runs in the workflow after the
+    fetch and before the commit, so anything this call fails to write shows up as a
+    row-count/anti-join divergence and turns the run red. The loud signal lives where
+    it can check the OUTCOME rather than the mechanism.
+    """
+    if not dual_write_enabled():
+        return {}
+    try:
+        df = rows if isinstance(rows, pd.DataFrame) else pd.DataFrame(list(rows), columns=columns)
+        if len(df) == 0:
+            return {}
+        return upsert_rows(table, df)
+    except Exception as e:  # noqa: BLE001 — see docstring
+        print(f"[parquet] WARNING dual-write to {table} failed ({type(e).__name__}: {e}); "
+              f"SQLite is unaffected — jobs/parity_check.py will flag the divergence")
+        return {}
+
+
+# ──────────────────────────────────────────────────────────────────────────
 # read
 # ──────────────────────────────────────────────────────────────────────────
 def read_table(table: str, where: str | None = None) -> pd.DataFrame:

@@ -13,9 +13,15 @@ from __future__ import annotations
 
 import csv
 import sqlite3
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from jobs import parquet_store as pq  # noqa: E402
+
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
 # (seed CSV, 该文件缺 market 列时的默认市场)
 SEEDS = [
@@ -33,6 +39,14 @@ def _upsert(conn: sqlite3.Connection, rows: list[tuple]) -> int:
         rows,
     )
     conn.commit()
+    # PR4 dual write. Two seeds, a handful of year partitions — written inline.
+    parts = pq.dual_write(
+        "sw_industry_daily", rows,
+        ["ticker", "name_cn", "market", "date", "close", "turnover_rate"],
+    )
+    if parts:
+        print(f"[parquet] sw_industry_daily: {len(rows)} rows → "
+              f"{', '.join(f'{k}({v})' for k, v in sorted(parts.items()))}")
     return len(rows)
 
 

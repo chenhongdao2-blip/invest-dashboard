@@ -136,6 +136,13 @@ def _overview_ipo_card() -> dict | None:
 theme.page_radial_wash(1240)
 
 # ── Opening banner: LIVE title + 3-strategy overview strip + dual-track ────────
+# NOT lazy, on purpose. `_overview_curve_card("hk_hd")` still fires a yfinance burst
+# at module scope because the HD books are 0/74 in `prices_daily` (see the TODO at
+# the view selector below) — but this strip is a BANNER shown above every view, not
+# a view of its own, so folding it into the selector would delete the HD card from
+# the other three views. That is a layout change, not a lazy-loading change, and the
+# fix for the burst is the universe decision in that TODO, not a wrapper here.
+# `fetch_picks_closes` is `@st.cache_data(ttl=3600)`, so the cost is one burst/hour.
 _ov_cards = [c for c in (_overview_curve_card("v5_biotech"),
                          _overview_curve_card("hk_hd"),
                          _overview_ipo_card()) if c]

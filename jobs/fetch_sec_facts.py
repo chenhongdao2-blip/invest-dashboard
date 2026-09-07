@@ -192,6 +192,37 @@ def is_fresh(conn: sqlite3.Connection, ticker: str) -> bool:
         return False
 
 
+def _has_sec_fact_parquet(ticker: str) -> bool:
+    """Does this ticker's shadow file exist?
+
+    An unsafe partition key reads as present on purpose: `write_sec_fact_parquet`
+    cannot produce a file for one either, so treating it as missing would re-download
+    a multi-MB payload every single run to satisfy a check that can never pass. No US
+    ticker matches that today; the guard is here so it stays a non-event if one does.
+    """
+    try:
+        return pq.partition_path("sec_fact", ticker).exists()
+    except ValueError:
+        return True
+
+
+def missing_sec_fact_files(conn: sqlite3.Connection) -> list[str]:
+    """Tickers whose SQLite row says 'ok' but whose shadow file is not on disk.
+
+    The backstop for the swallowed exception in `write_sec_fact_parquet`: that write
+    warns and lets the fetch stand, and unlike the daily tables there is no parity
+    check downstream to catch the result — `sec_fact` shadows a BLOB, so there is
+    nothing to anti-join against. This is the anti-join, done on filenames.
+
+    Empty while the shadow write is off: there is no store to be short of.
+    """
+    if not pq.dual_write_enabled():
+        return []
+    ok = {r[0] for r in conn.execute(
+        "SELECT ticker FROM sec_company WHERE sec_status = 'ok'")}
+    return sorted(t for t in ok if not _has_sec_fact_parquet(t))
+
+
 def latest_filed_from_submissions(session: requests.Session, cik10: str) -> str | None:
     """Newest XBRL-bearing filing date for a CIK, or None if the probe fails.
 
@@ -227,6 +258,13 @@ def should_refetch(conn: sqlite3.Connection, session: requests.Session,
     The clock survives as the fallback for the two cases the filing check cannot
     decide: no stored `latest_filed` to compare against, and a failed probe. In both
     it errs toward fetching once the snapshot is older than FRESH_HOURS.
+
+    A missing shadow file is its OWN reason to fetch, ahead of both. `payload_gzip`
+    and `data/parquet/sec_fact/<T>.parquet` are written from the same download, but
+    `write_sec_fact_parquet` swallows its exceptions — so a transient write failure
+    leaves the DB row complete and the file absent, and the filing check would then
+    answer "no XBRL filing since ..." every week until the company next files. For a
+    10-K-only filer that is a quarter of a hole in a store nothing else refills.
     """
     row = conn.execute(
         "SELECT sec_status, fetched_at, latest_filed FROM sec_company WHERE ticker = ?",
@@ -234,6 +272,9 @@ def should_refetch(conn: sqlite3.Connection, session: requests.Session,
     ).fetchone()
     if not row or row[0] != "ok" or not row[1]:
         return True, "no usable prior snapshot"
+
+    if pq.dual_write_enabled() and not _has_sec_fact_parquet(ticker):
+        return True, "parquet missing"
 
     stored = row[2]
     if stored:
@@ -260,9 +301,13 @@ def write_sec_fact_parquet(ticker: str, cf: dict, keep: frozenset[str]) -> int:
     the source of truth for the read side, so a fault here warns and lets the fetch
     stand rather than failing a run over a store nothing reads yet. Unlike the daily
     tables there is no parity check to catch it afterwards — sec_fact shadows a BLOB,
-    not a table, so there is nothing to anti-join against — which is why the warning
-    is the signal and `jobs/normalize_sec_facts.py` can rebuild the whole store from
-    the blobs in ~6 seconds.
+    not a table, so there is nothing to anti-join against.
+
+    Two things catch what this swallows, because a warning in a log nobody reads is
+    not a signal: `should_refetch` treats an absent file as its own reason to fetch
+    again next run, and `missing_sec_fact_files` fails the run at the end if any
+    'ok' ticker still has none. Worst case `jobs/normalize_sec_facts.py` rebuilds the
+    whole store from the blobs in ~6 seconds.
     """
     if not pq.dual_write_enabled():
         return 0
@@ -396,6 +441,19 @@ def main() -> None:
                 f"[sec] >{FAIL_THRESHOLD:.0%} of attempted fetches failed "
                 f"({n_fail}/{attempted}) — check proxy / UA / SEC status"
             )
+
+        # Completeness, after the outage threshold above so a wholesale SEC failure
+        # reports as the outage rather than as 280 missing files. Every 'ok' row must
+        # have its shadow file; `write_sec_fact_parquet` only warns, and there is no
+        # parity check downstream to notice (sec_fact shadows a BLOB, not a table).
+        missing = missing_sec_fact_files(conn)
+        if missing:
+            print(f"[sec] INCOMPLETE — {len(missing)} ticker(s) marked ok with no "
+                  f"data/parquet/sec_fact file: {missing[:20]}"
+                  + (f" … and {len(missing) - 20} more" if len(missing) > 20 else ""))
+            print("[sec] rebuild the whole store from the blobs: "
+                  "python jobs/normalize_sec_facts.py")
+            raise SystemExit(1)
     finally:
         conn.close()
 

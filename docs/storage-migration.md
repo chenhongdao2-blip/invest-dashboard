@@ -121,6 +121,19 @@ SQLite side to anti-join against. Its guarantee is different: it is fully re-der
 from `payload_gzip` in seconds, and `tests/test_sec_fact_normalize.py` pins its output
 against the real `_load_facts` for three tickers, whole-frame and in row order.
 
+What it gets instead is an anti-join on **filenames**, at the end of
+`jobs/fetch_sec_facts.py`: every ticker whose row says `sec_status='ok'` must have a
+`data/parquet/sec_fact/<TICKER>.parquet`, or the run prints the missing list and exits
+non-zero (so the workflow's `if: failure()` stamp fires and the manifest does not go
+green over a hole). `write_sec_fact_parquet` only warns on failure — deliberately, so
+a shadow-store fault cannot kill a working fetch — and without this check that warning
+would be the only trace.
+
+The same gap is also its own reason to re-fetch: `should_refetch` returns
+`(True, "parquet missing")` when the file is absent, ahead of the filing check. Without
+that, a ticker that lost its file would get "no XBRL filing since ..." every week until
+the company next filed — for a 10-K-only filer, a quarter.
+
 ## Rollback
 
 ```bash

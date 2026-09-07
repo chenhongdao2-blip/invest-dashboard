@@ -291,3 +291,94 @@ def test_a_failed_prior_status_is_not_treated_as_a_snapshot():
 
     conn = _sec_conn(status="failed")
     assert fsf.should_refetch(conn, _Session({}), "LLY", "0")[0] is True
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the gate must also notice a MISSING shadow file
+# ══════════════════════════════════════════════════════════════════════════
+def test_a_missing_parquet_file_forces_a_refetch(tmp_path, monkeypatch):
+    """`write_sec_fact_parquet` swallows its exceptions, so a transient write
+    failure leaves no file — and the filing check would then answer "no XBRL
+    filing since ..." every week until the company next files, which for a
+    10-K-only filer is a quarter. The gap has to be its own reason to re-fetch."""
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))     # nothing in it
+    conn = _sec_conn(latest_filed="2026-08-01")
+    s = _Session(_subs(["2026-08-01"], [1]))                    # no new filing
+    fetch, why = fsf.should_refetch(conn, s, "LLY", "0000059478")
+    assert fetch is True, "a missing shadow file must re-fetch on its own"
+    assert why == "parquet missing"
+
+
+def test_the_missing_file_check_is_off_when_dual_write_is(tmp_path, monkeypatch):
+    """With the rollback lever pulled there is no shadow store to be short of."""
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    conn = _sec_conn(latest_filed="2026-08-01")
+    fetch, why = fsf.should_refetch(conn, _Session(_subs(["2026-08-01"], [1])),
+                                    "LLY", "0000059478")
+    assert fetch is False and "no XBRL filing since" in why
+
+
+def test_a_present_parquet_file_does_not_disturb_the_filing_gate(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    ps.write_partition("sec_fact", "LLY", ps.empty_frame("sec_fact"))
+    conn = _sec_conn(latest_filed="2026-08-01")
+    fetch, why = fsf.should_refetch(conn, _Session(_subs(["2026-08-01"], [1])),
+                                    "LLY", "0000059478")
+    assert fetch is False and "no XBRL filing since" in why
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# post-run completeness — the backstop for a swallowed write
+# ══════════════════════════════════════════════════════════════════════════
+def _ok_conn(*tickers: str):
+    c = sqlite3.connect(":memory:")
+    c.executescript(_SEC_SCHEMA)
+    c.executemany("INSERT INTO sec_company (ticker, sec_status, fetched_at) "
+                  "VALUES (?, 'ok', '2026-09-07T00:00:00+00:00')",
+                  [(t,) for t in tickers])
+    c.commit()
+    return c
+
+
+def test_completeness_names_the_ticker_whose_write_was_swallowed(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    for t in ("LLY", "MSFT"):
+        ps.write_partition("sec_fact", t, ps.empty_frame("sec_fact"))
+    conn = _ok_conn("LLY", "MSFT", "AZN")           # AZN's write "failed"
+    assert fsf.missing_sec_fact_files(conn) == ["AZN"]
+
+
+def test_completeness_is_empty_when_every_ok_ticker_has_a_file(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    for t in ("LLY", "MSFT"):
+        ps.write_partition("sec_fact", t, ps.empty_frame("sec_fact"))
+    conn = _ok_conn("LLY", "MSFT")
+    conn.execute("INSERT INTO sec_company (ticker, sec_status) VALUES ('RHHBY', 'not_mapped')")
+    conn.commit()
+    assert fsf.missing_sec_fact_files(conn) == []   # not_mapped has no file to miss
+
+
+def test_completeness_is_silent_when_dual_write_is_disabled(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    assert fsf.missing_sec_fact_files(_ok_conn("LLY")) == []
+
+
+def test_the_committed_store_is_complete(conn):
+    """The invariant on real data, not a fixture: every ok ticker has its file."""
+    from jobs import fetch_sec_facts as fsf
+
+    assert fsf.missing_sec_fact_files(conn) == []

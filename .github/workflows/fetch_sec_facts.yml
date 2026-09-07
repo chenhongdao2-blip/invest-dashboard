@@ -45,13 +45,20 @@ jobs:
           python jobs/update_manifest.py sec_facts ok
 
       - name: Commit data
+        # H10 audit: a naive `git add/commit/push` raced the other data lanes on
+        # main; commit_data.sh does fetch → rebase → push with conflict-aware retry.
         run: |
-          git config user.email "data-bot@github.com"
-          git config user.name "data-bot"
-          git add data/snapshots.db data/refresh_manifest.json
-          if git diff-index --quiet HEAD; then
-            echo "No data changes to commit"
-          else
-            git commit -m "data: SEC facts refresh $(date -u +%Y-%m-%d) [skip ci]"
-            git push
-          fi
+          ./scripts/commit_data.sh "data: SEC facts refresh $(date -u +%Y-%m-%d) [skip ci]" \
+            data/snapshots.db data/refresh_manifest.json
+
+      # C4 audit: three runs died (08-29 ×2, 09-01) leaving NO trace in the
+      # manifest — the freshness audit lived INSIDE the monitored job, so when the
+      # job died the audit died with it and the dashboard kept showing green.
+      # This step runs on ANY prior-step failure and stamps `failed` (which does
+      # NOT bump source_date), then pushes ONLY the manifest.
+      - name: Stamp failure in refresh manifest
+        if: failure()
+        run: |
+          python jobs/update_manifest.py sec_facts failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          ./scripts/commit_data.sh "data: SEC facts failure stamp $(date -u +%Y-%m-%d) [skip ci]" \
+            data/refresh_manifest.json

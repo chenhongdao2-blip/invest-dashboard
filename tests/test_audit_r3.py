@@ -439,6 +439,13 @@ def test_c4_commit_data_recovers_from_binary_rebase_conflict():
         "commit_data.sh does not resolve the binary conflict in favour of the "
         "freshly-produced data file"
     )
-    assert "reset --hard" not in src, (
+    # `reset --hard` may be NAMED in a comment (the header explains why it is the
+    # wrong cure); it must never be EXECUTED.
+    code = "\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith("#"))
+    assert "reset --hard" not in code, (
         "a hard reset would discard the run's freshly fetched data"
+    )
+    assert "--theirs" in code, (
+        "during a REBASE `--theirs` is the commit being replayed (this run's data) "
+        "and `--ours` is origin/main — keeping our file requires --theirs"
     )

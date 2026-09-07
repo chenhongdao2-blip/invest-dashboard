@@ -43,3 +43,15 @@ jobs:
       - name: Commit data
         run: |
           ./scripts/commit_data.sh "data: earnings calendar refresh $(date -u +%Y-%m-%d) [skip ci]" data/external/earnings_calendar.json data/refresh_manifest.json
+
+      # C4 audit: three runs died (08-29 ×2, 09-01) leaving NO trace in the
+      # manifest — the freshness audit lived INSIDE the monitored job, so when the
+      # job died the audit died with it and the dashboard kept showing green.
+      # This step runs on ANY prior-step failure and stamps `failed` (which does
+      # NOT bump source_date), then pushes ONLY the manifest.
+      - name: Stamp failure in refresh manifest
+        if: failure()
+        run: |
+          python jobs/update_manifest.py earnings_calendar failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          ./scripts/commit_data.sh "data: earnings calendar failure stamp $(date -u +%Y-%m-%d) [skip ci]" \
+            data/refresh_manifest.json

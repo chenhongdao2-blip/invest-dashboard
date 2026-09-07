@@ -254,6 +254,7 @@ def test_c3_pages_import_the_single_percentile_definition():
         ("lib.earnings_cal", "load_calendar"),
         ("lib.earnings_cal", "local_transcript"),
         ("lib.strategy", "_delisted_overrides"),
+        ("lib.strategy", "fetch_picks_closes"),
     ],
 )
 def test_h2_cache_invalidation_args_are_not_underscore_prefixed(module, func):

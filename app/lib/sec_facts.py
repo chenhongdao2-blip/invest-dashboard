@@ -368,6 +368,22 @@ def _facts(ticker: str, taxonomy: str, concept: str, unit: str | None) -> pd.Dat
     return df[m]
 
 
+# An annual duration is decided by the COMPUTED SPAN, never by the `fp` label.
+# R3 audit C2: a 10-K tags its Q4 three-month rows `fp="FY"` as well, so an
+# `fp == "FY"` clause let 91-day rows through — AGIO FY2014 Revenues rendered
+# 14,636,000 against a true 65,358,000 (4.5× understatement); ADI FY2013 EPS
+# 0.64 vs 2.14. Measured over 150 tickers: 231 ambiguous period groups, 33 rows
+# where the short span won. The upper bound rejects cumulative multi-year rows.
+_ANNUAL_SPAN_MIN = 350
+_ANNUAL_SPAN_MAX = 400
+
+
+def _span_days(df: pd.DataFrame) -> pd.Series:
+    """end_date − start_date in days (NaN when either side is missing/blank)."""
+    return (pd.to_datetime(df["end_date"], errors="coerce")
+            - pd.to_datetime(df["start_date"], errors="coerce")).dt.days
+
+
 def _filter_period(df: pd.DataFrame, period_type: str, period: str) -> pd.DataFrame:
     """period ∈ {'annual','quarterly'}; period_type ∈ {'duration','instant'}."""
     if df.empty:
@@ -375,12 +391,12 @@ def _filter_period(df: pd.DataFrame, period_type: str, period: str) -> pd.DataFr
     d = df.copy()
     if period_type == "duration":
         d = d[d["start_date"].astype(str) != ""]
-        span = (pd.to_datetime(d["end_date"]) - pd.to_datetime(d["start_date"])).dt.days
+        span = _span_days(d)
         if period == "annual":
-            sel = (d["fp"] == "FY") | (span >= 350)
+            sel = span.between(_ANNUAL_SPAN_MIN, _ANNUAL_SPAN_MAX)
         else:  # quarterly
             sel = span <= 100
-        d = d[sel]
+        d = d[sel.fillna(False)]
     else:  # instant (balance-sheet point-in-time)
         d = d[d["start_date"].astype(str) == ""]
         if period == "annual":
@@ -391,10 +407,38 @@ def _filter_period(df: pd.DataFrame, period_type: str, period: str) -> pd.DataFr
 
 
 def _rank(df: pd.DataFrame) -> pd.DataFrame:
-    """Latest fiscal period first; within a period, most-recently-filed (amendment) wins."""
+    """Latest fiscal period first; within a period, most-recently-filed (amendment)
+    wins; on a full (end_date, filed) tie the LONGEST duration wins.
+
+    R3 audit C2: two rows can share (end_date, filed) — a 10-K files the FY row and
+    the Q4 row on the same day — and the default quicksort is UNSTABLE, so which one
+    surfaced depended on payload row order and the pandas version. The span tiebreak
+    makes the outcome deterministic AND correct (the 12-month row is the annual
+    figure); `kind="mergesort"` pins stability for every remaining exact tie.
+    """
     if df.empty:
         return df
-    return df.sort_values(["end_date", "filed"], ascending=[False, False])
+    d = df.copy()
+    d["_span"] = _span_days(d).fillna(-1)
+    d = d.sort_values(["end_date", "filed", "_span"], ascending=[False, False, False],
+                      kind="mergesort")
+    return d.drop(columns="_span")
+
+
+def _dedupe_by_end_date(df: pd.DataFrame) -> pd.DataFrame:
+    """One row per end_date: most-recently-filed wins, longest span breaks the tie.
+
+    Same determinism hazard as `_rank` — `drop_duplicates(keep="first")` keeps
+    whichever row the preceding sort happened to leave first.
+    """
+    if df.empty:
+        return df
+    d = df.copy()
+    d["_span"] = _span_days(d).fillna(-1)
+    d = d.sort_values(["end_date", "filed", "_span"], ascending=[True, False, False],
+                      kind="mergesort")
+    d = d.drop_duplicates(subset=["end_date"], keep="first").reset_index(drop=True)
+    return d.drop(columns="_span")
 
 
 def pick_kpi_fact(ticker: str, kpi_key: str, period: str = "annual") -> dict | None:
@@ -461,9 +505,9 @@ def concept_timeseries(
     df = _filter_period(df, period_type, freq)
     if df.empty:
         return df
-    # one value per end_date: keep most-recently-filed (amendment supersedes)
-    df = df.sort_values(["end_date", "filed"], ascending=[True, False])
-    df = df.drop_duplicates(subset=["end_date"], keep="first").reset_index(drop=True)
+    # one value per end_date: keep most-recently-filed (amendment supersedes),
+    # longest span breaks a same-day tie (audit C2 — see _dedupe_by_end_date)
+    df = _dedupe_by_end_date(df)
     df = df[["end_date", "value", "fy", "fp", "form", "unit"]].copy()
     df["yoy"] = df["value"].pct_change(4 if freq == "quarterly" else 1) * 100
     if freq == "quarterly":

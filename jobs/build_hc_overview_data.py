@@ -18,6 +18,13 @@ Two committed outputs the Streamlit app reads (cloud can't fetch these live):
    Yahoo (404 / empty). US indices come from yfinance. The HK raw pull is kept
    for provenance at data/external/hk_index_raw_ifind_<date>.csv.
 
+   CONTINUITY GATE: a series whose consecutive observations jump more than
+   MAX_GAP_TRADING_DAYS apart is REFUSED (exit non-zero) rather than written —
+   yfinance silently returned nothing for ^SP500-35 between 2026-07-17 and
+   2026-09-04 and the page drew a straight line across the hole. Pass --allow-gaps
+   to persist such a fetch deliberately; it is then recorded with degraded=true in
+   data/external/hc_index_comparison_meta.json, not written silently.
+
 2. data/external/china_fund_hc_positioning.csv
    12 offshore China-equity funds' healthcare over/underweight vs their own
    benchmark, as of 31 Mar 2026, extracted from the audited xlsx
@@ -28,12 +35,15 @@ Run locally (proxy needed for yfinance in CN):
     HTTP_PROXY=http://127.0.0.1:7897 HTTPS_PROXY=http://127.0.0.1:7897 \
     uv run --with yfinance --with openpyxl --with pandas \
     python jobs/build_hc_overview_data.py
+    python jobs/build_hc_overview_data.py --allow-gaps   # persist a holed fetch
 """
 
 from __future__ import annotations
 
 import argparse
-from datetime import date, timedelta
+import json
+import sys
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -41,6 +51,12 @@ import pandas as pd
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "data" / "external"
 ANCHOR = "2025-08-01"
+
+# Continuity gate. No series may jump more than this many TRADING days between two
+# consecutive observations. 5 = "a whole week of sessions vanished" — comfortably
+# above any real market closure, comfortably below the seven-week ^SP500-35 hole
+# this gate exists to catch (see enforce_continuity).
+MAX_GAP_TRADING_DAYS = 5
 # yfinance `end` is EXCLUSIVE — use tomorrow so the latest completed session is included.
 END = (date.today() + timedelta(days=1)).isoformat()
 
@@ -92,12 +108,102 @@ US_TICKERS = sorted({sid for sids in PANEL_SERIES.values()
                      for sid in sids if SERIES_META[sid][2].startswith("yfinance")})
 
 
-def build_index_comparison() -> pd.DataFrame:
+def _trading_day_gap(d0: pd.Timestamp, d1: pd.Timestamp) -> int:
+    """Sessions between two consecutive observations, on pandas' US business-day
+    calendar (Mon-Fri).
+
+    NOTE ON PRECISION: `pd.bdate_range` does not know market holidays, so a span
+    containing e.g. Thanksgiving or Christmas is OVER-counted by one day per
+    holiday. That is the safe direction for a tripwire — over-counting can only
+    make the gate fire slightly more eagerly, never blind it — and the slack at a
+    threshold of 5 is ample: the worst US holiday cluster adds ~2-3 days, while the
+    failure this gate exists to catch measures 35.
+    """
+    return len(pd.bdate_range(d0, d1)) - 1
+
+
+def find_continuity_breaks(
+    closes: dict[str, pd.DataFrame], max_gap: int = MAX_GAP_TRADING_DAYS
+) -> list[dict]:
+    """Every jump longer than `max_gap` trading days, as
+    [{series_id, prev_date, next_date, trading_day_gap}, ...] sorted by series.
+
+    Checked on the per-series `closes` map (each unique series exactly once), NOT
+    on the exploded long frame — otherwise a series in two panels (^NBI / XBI) would
+    report the same hole twice.
+    """
+    breaks: list[dict] = []
+    for sid in sorted(closes):
+        c = closes[sid]
+        if c is None or c.empty:
+            continue
+        dates = pd.to_datetime(c["date"]).sort_values().reset_index(drop=True)
+        for i in range(1, len(dates)):
+            gap = _trading_day_gap(dates[i - 1], dates[i])
+            if gap > max_gap:
+                breaks.append({
+                    "series_id": sid,
+                    "prev_date": dates[i - 1].strftime("%Y-%m-%d"),
+                    "next_date": dates[i].strftime("%Y-%m-%d"),
+                    "trading_day_gap": int(gap),
+                })
+    return breaks
+
+
+def enforce_continuity(
+    closes: dict[str, pd.DataFrame], *, allow_gaps: bool = False,
+    max_gap: int = MAX_GAP_TRADING_DAYS,
+) -> list[dict]:
+    """Continuity gate: refuse to write a series with a hole in it.
+
+    Why this exists: on 2026-09-07 the Healthcare page's "S&P 500 Health Care vs
+    S&P 500" panel drew a straight red line from mid-July to early September.
+    yfinance had returned NO bars for ^SP500-35 between 2026-07-17 and 2026-09-04
+    (242 points against ^GSPC's 276 in the same panel). This job wrote whatever it
+    received, the front end joined the two surviving points 35 sessions apart, and
+    the chart showed a smooth 6% climb that never happened. A hole is not data; two
+    endpoints are not a series.
+
+    Returns the break list (empty when clean) so the caller can record it in meta.
+    Exits non-zero unless `allow_gaps`.
+    """
+    breaks = find_continuity_breaks(closes, max_gap=max_gap)
+    if not breaks:
+        return breaks
+
+    detail = "\n".join(
+        f"    {b['series_id']}: {b['prev_date']} -> {b['next_date']}"
+        f" = {b['trading_day_gap']} trading days (max {max_gap})"
+        f"  source={SERIES_META.get(b['series_id'], ('', '', '?'))[2]!r}"
+        for b in breaks
+    )
+    n = len({b["series_id"] for b in breaks})
+    msg = (
+        f"REFUSING TO WRITE — {n} series has a hole longer than {max_gap} trading days:\n"
+        f"{detail}\n"
+        "  Consecutive observations that far apart are not a series. The front end\n"
+        "  connects them with a straight line, so the reader sees a smooth move that\n"
+        "  never happened (see enforce_continuity's docstring: that is exactly what\n"
+        "  ^SP500-35 did on the Healthcare page on 2026-09-07).\n"
+        "  Fix the upstream source, or re-run with --allow-gaps to persist this fetch\n"
+        "  deliberately (it will be labelled degraded in hc_index_comparison_meta.json)."
+    )
+    if not allow_gaps:
+        sys.exit(msg)
+    print(f"WARNING: {msg}\n  --allow-gaps given: writing anyway, labelled degraded.")
+    return breaks
+
+
+def build_index_comparison(*, allow_gaps: bool = False) -> tuple[pd.DataFrame, list[dict]]:
     """Long tidy frame: date, series_id, name_en, name_cn, panel, close, source.
 
     Fetch each unique series' close ONCE (HK from iFind provenance, US from yfinance),
-    then explode by PANEL_SERIES membership so a series shared across panels (^NBI /
-    XBI in nbi + ai_bio) is emitted as one row-set per panel.
+    run the continuity gate over those per-series closes, then explode by
+    PANEL_SERIES membership so a series shared across panels (^NBI / XBI in nbi +
+    ai_bio) is emitted as one row-set per panel.
+
+    Returns (frame, continuity_breaks). Non-empty breaks means the caller passed
+    allow_gaps=True and the output must be labelled degraded.
     """
     closes: dict[str, pd.DataFrame] = {}   # series_id -> df(date, close)
 
@@ -119,6 +225,9 @@ def build_index_comparison() -> pd.DataFrame:
             raise RuntimeError(f"yfinance returned empty for {t}")
         closes[t] = pd.DataFrame({"date": ser.index, "close": ser.values})
 
+    # --- continuity gate: a hole is not data (see enforce_continuity) ---
+    breaks = enforce_continuity(closes, allow_gaps=allow_gaps)
+
     # --- explode by panel membership (a series can land in >1 panel) ---
     rows: list[pd.DataFrame] = []
     for panel, sids in PANEL_SERIES.items():
@@ -138,7 +247,8 @@ def build_index_comparison() -> pd.DataFrame:
     df["source"] = df["series_id"].map(lambda s: SERIES_META[s][2])
     df = df.sort_values(["panel", "series_id", "date"]).reset_index(drop=True)
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    return df[["date", "series_id", "name_en", "name_cn", "panel", "close", "source"]]
+    cols = ["date", "series_id", "name_en", "name_cn", "panel", "close", "source"]
+    return df[cols], breaks
 
 
 def build_fund_positioning() -> pd.DataFrame:
@@ -217,14 +327,35 @@ def main() -> None:
              "Desktop xlsx unavailable on a CI runner. The committed "
              "china_fund_hc_positioning.csv is left untouched.",
     )
+    ap.add_argument(
+        "--allow-gaps", action="store_true",
+        help=f"Persist a series with a hole longer than {MAX_GAP_TRADING_DAYS} trading "
+             "days anyway. Without this the continuity gate REFUSES to write and exits "
+             "non-zero (a gap makes the chart draw a straight line across missing "
+             "sessions). With it, the break is recorded in "
+             "hc_index_comparison_meta.json with degraded=true — labelled, not silent.",
+    )
     args = ap.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
 
-    idx = build_index_comparison()
+    idx, breaks = build_index_comparison(allow_gaps=args.allow_gaps)
     idx_path = OUT / "hc_index_comparison.csv"
     idx.to_csv(idx_path, index=False)
     print(f"[ok] {idx_path}  ({len(idx)} rows, {idx['series_id'].nunique()} series)")
+
+    # Sibling meta (not a new CSV column — hc_overview.py / export_hc_relative_xlsx.py
+    # read the CSV schema). Mirrors etf_hc_meta.json: the gate's verdict is always
+    # recorded, so "clean" and "knowingly degraded" are distinguishable downstream.
+    meta_path = OUT / "hc_index_comparison_meta.json"
+    meta_path.write_text(json.dumps({
+        "built_at": datetime.now().isoformat(timespec="seconds"),
+        "anchor": ANCHOR,
+        "max_gap_trading_days": MAX_GAP_TRADING_DAYS,
+        "degraded": bool(breaks),
+        "continuity_breaks": breaks,
+    }, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[ok] {meta_path}  (degraded={bool(breaks)}, {len(breaks)} break(s))")
     for panel, g in idx.groupby("panel"):
         spread = g.groupby("series_id")["date"].agg(["min", "max", "count"])
         print(f"   panel {panel}:")

@@ -133,6 +133,30 @@ behave exactly as they did before. `tests/test_dual_write.py` pins that. The
 committed Parquet files can then be left in place (stale but harmless, since nothing
 reads them) or deleted with `git rm -r data/parquet`.
 
+**The parity check honours the same flag.** With `PARQUET_DUAL_WRITE=0` it prints
+
+```
+[parity] SKIP — dual write disabled (PARQUET_DUAL_WRITE=0)
+```
+
+and exits 0 without opening either store. That is not a courtesy: the gate runs before
+"Commit data" in all three workflows, so a rolled-back pipeline — whose Parquet store
+is frozen while SQLite keeps moving — would otherwise diverge within a day and fail
+here, stopping the whole data pipeline on the exact path taken to get out of trouble.
+Nothing reads Parquet yet, so there is nothing left to protect once the shadow write
+is off. `tests/test_parity_check.py::test_main_skips_when_dual_write_is_disabled`
+pins it against a deliberately divergent store.
+
+Re-enabling the flag after a rollback leaves the Parquet store short by exactly the
+rows written while it was off, and the next parity run will say so. Backfill before
+re-arming the gate:
+
+```bash
+python jobs/migrate_sqlite_to_parquet.py     # idempotent; re-derives every partition
+python jobs/normalize_sec_facts.py           # and the SEC store from the blobs
+python jobs/parity_check.py                  # must be green before trusting CI again
+```
+
 A shadow-write fault does not fail a run on its own: it warns and lets the fetch
 stand, because SQLite is still the source of truth and a working pipeline must not
 die for a store nothing reads. The parity check is what turns the resulting

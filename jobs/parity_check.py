@@ -26,6 +26,10 @@ definition of one that does not matter.
 
 Exit code 0 = every table matches. Non-zero = at least one did not, with a summary.
 
+`PARQUET_DUAL_WRITE=0` short-circuits the whole check to a SKIP and exit 0: that flag
+is the rollback lever, and with the shadow write off the two stores are SUPPOSED to
+drift apart. See `main()`.
+
 Usage:
     python jobs/parity_check.py                      # all four tables
     python jobs/parity_check.py --table prices_daily
@@ -156,6 +160,18 @@ def check_table(conn: sqlite3.Connection, table: str, max_samples: int) -> list[
 
 def main() -> None:
     args = parse_args()
+
+    # The rollback lever must not break the thing it exists to rescue. This gate runs
+    # BEFORE "Commit data" in all three workflows, so with `PARQUET_DUAL_WRITE=0` — the
+    # documented rollback (docs/storage-migration.md § Rollback) — the Parquet store
+    # freezes while SQLite keeps moving, and every table diverges by design within a
+    # day. Failing on that would stop the whole data pipeline on the exact path taken
+    # to get OUT of trouble. Nothing reads Parquet yet, so there is nothing to protect
+    # here once the shadow write is off.
+    if not ps.dual_write_enabled():
+        print("[parity] SKIP — dual write disabled (PARQUET_DUAL_WRITE=0)")
+        return
+
     if not args.db.exists():
         raise SystemExit(f"DB not found at {args.db}")
     tables = args.table or TABLES

@@ -94,3 +94,39 @@ def test_null_equals_null_is_not_a_divergence(stores):
     ps.write_partition("benchmarks_daily", "2026-08", df)
 
     assert _check(stores) == []
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the rollback lever must not be a foot-gun
+# ══════════════════════════════════════════════════════════════════════════
+def test_main_skips_when_dual_write_is_disabled(tmp_path, monkeypatch, capsys):
+    """`PARQUET_DUAL_WRITE=0` is the documented rollback (docs/storage-migration.md).
+
+    The gate runs BEFORE "Commit data" in all three workflows, so a rolled-back
+    pipeline whose Parquet store is frozen mid-week would fail here and stop the
+    whole run — the rollback lever would break the thing it exists to rescue.
+    Divergence is the POINT of this fixture: the store below is deliberately
+    empty against a populated SQLite, which is exactly what a mid-week rollback
+    looks like on day two.
+    """
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path / "empty-parquet"))
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    db = tmp_path / "snapshots.db"
+    conn = sqlite3.connect(db)
+    conn.executescript(_SCHEMA)
+    conn.executemany("INSERT INTO benchmarks_daily VALUES (?,?,?)", ROWS)
+    conn.commit()
+    conn.close()
+    monkeypatch.setattr(sys, "argv",
+                    ["parity_check.py", "--db", str(db), "--table", "benchmarks_daily"])
+
+    # sanity: with the flag ON this same pair is a hard failure
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "1")
+    with pytest.raises(SystemExit) as red:
+        parity_check.main()
+    assert red.value.code == 1
+
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    parity_check.main()          # no SystemExit == exit 0
+    out = capsys.readouterr().out
+    assert "[parity] SKIP — dual write disabled (PARQUET_DUAL_WRITE=0)" in out

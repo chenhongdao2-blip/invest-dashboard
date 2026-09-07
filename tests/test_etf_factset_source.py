@@ -86,7 +86,7 @@ def test_known_mixed_case_brands_survive_the_title_casing(tmp_path):
     rows = bep._read_factset_holdings("XBI", tmp_path)["holdings"]
     names = {r["symbol"]: r["name"] for r in rows}
     assert names["ABBV"] == "AbbVie Inc Com"
-    assert names["BNTX"] == "BioNTech Se ADR", "ADR stays capitalised, brand keeps its case"
+    assert names["BNTX"] == "BioNTech SE ADR", "legal form + ADR stay capitalised, brand keeps its case"
 
 
 # --- the failure modes that matter -----------------------------------------

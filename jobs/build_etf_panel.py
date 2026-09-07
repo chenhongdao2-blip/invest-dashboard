@@ -151,7 +151,7 @@ _FACTSET_BANNED_KEYS = {"fsymId", "fsymSecurityId", "fsymRegionalId",
                         "adjHolding", "adjMarketValue"}
 
 # Words FactSet writes in caps that title() would mangle back into caps-lite.
-_NAME_KEEP_CAPS = {"ADR", "GDR", "REIT", "PLC", "NV", "SA", "AG", "AB", "USA",
+_NAME_KEEP_CAPS = {"ADR", "GDR", "REIT", "PLC", "NV", "SA", "SE", "AG", "AB", "USA",
                    "US", "UK", "II", "III", "AI"}
 _NAME_FIXUPS = {"Abbvie": "AbbVie", "Biontech": "BioNTech", "Crispr": "CRISPR",
                 "Genedx": "GeneDx", "Iqvia": "IQVIA", "Ge": "GE",

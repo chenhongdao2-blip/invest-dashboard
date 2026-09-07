@@ -562,6 +562,108 @@ def test_r2_latest_bar_returns_the_bars_date(monkeypatch):
 
 
 # ══════════════════════════════════════════════════════════════════════════
+# H10 review fixup — refresh_manifest.json must be MERGED, not won
+#
+# `git checkout --theirs` on the manifest keeps this run's whole file, which
+# silently discards every dataset entry the OTHER lane stamped while we were
+# fetching. The manifest is a per-dataset map with independent writers: two
+# lanes racing on it are not editing the same fact, they are each editing their
+# own key. Taking one side whole is a lost update, and the thing it loses is
+# precisely the `failed` stamp another lane just wrote — the C4 fix.
+# ══════════════════════════════════════════════════════════════════════════
+_MERGE = _REPO / "scripts" / "merge_manifest.py"
+
+
+def _run_merge(tmp_path, upstream: str, this_run: str):
+    """Run the merge script as the shell does; return (returncode, out, err, text)."""
+    import subprocess  # noqa: PLC0415
+
+    up = tmp_path / "upstream.json"
+    mine = tmp_path / "this_run.json"
+    out = tmp_path / "merged.json"
+    up.write_text(upstream, encoding="utf-8")
+    mine.write_text(this_run, encoding="utf-8")
+    r = subprocess.run(
+        [sys.executable, str(_MERGE), "--upstream", str(up),
+         "--this-run", str(mine), "--out", str(out)],
+        capture_output=True, text=True,
+    )
+    return r.returncode, r.stdout, r.stderr, (out.read_text(encoding="utf-8") if out.exists() else "")
+
+
+def test_h10_merge_manifest_unions_disjoint_keys(tmp_path):
+    """Two lanes stamping different datasets must both survive."""
+    import json  # noqa: PLC0415
+
+    up = json.dumps({"sec_facts": {"status": "failed", "refreshed_at": "2026-09-06T01:00:00+00:00"}})
+    mine = json.dumps({"eod_prices": {"status": "ok", "refreshed_at": "2026-09-06T02:00:00+00:00"}})
+    rc, _, err, text = _run_merge(tmp_path, up, mine)
+    assert rc == 0, err
+    merged = json.loads(text)
+    assert set(merged) == {"sec_facts", "eod_prices"}
+    assert merged["sec_facts"]["status"] == "failed"   # the other lane's C4 stamp
+
+
+def test_h10_merge_manifest_later_refreshed_at_wins(tmp_path):
+    import json  # noqa: PLC0415
+
+    up = json.dumps({"eod_prices": {"status": "failed", "refreshed_at": "2026-09-06T09:00:00+00:00"}})
+    mine = json.dumps({"eod_prices": {"status": "ok", "refreshed_at": "2026-09-06T02:00:00+00:00"}})
+    rc, _, err, text = _run_merge(tmp_path, up, mine)
+    assert rc == 0, err
+    # Upstream is NEWER here, so upstream wins even though it is not "our" side.
+    assert json.loads(text)["eod_prices"]["status"] == "failed"
+
+    rc, _, err, text = _run_merge(tmp_path, mine, up)   # swap: this run is newer
+    assert rc == 0, err
+    assert json.loads(text)["eod_prices"]["status"] == "failed"
+
+
+def test_h10_merge_manifest_falls_back_to_this_run(tmp_path):
+    """No usable timestamp on either side → this run's entry (documented tie-break)."""
+    import json  # noqa: PLC0415
+
+    up = json.dumps({"eod_prices": {"status": "failed", "refreshed_at": None}})
+    mine = json.dumps({"eod_prices": {"status": "ok"}})
+    rc, _, err, text = _run_merge(tmp_path, up, mine)
+    assert rc == 0, err
+    assert json.loads(text)["eod_prices"]["status"] == "ok"
+
+
+def test_h10_merge_manifest_malformed_side_exits_zero_with_warning(tmp_path):
+    """A corrupt side must not wedge the push — warn, keep this run, exit 0."""
+    import json  # noqa: PLC0415
+
+    mine = json.dumps({"eod_prices": {"status": "ok", "refreshed_at": "2026-09-06T02:00:00+00:00"}})
+    rc, out, err, text = _run_merge(tmp_path, "{not json at all", mine)
+    assert rc == 0, f"a corrupt side must not fail the merge: {err}"
+    assert "warn" in (out + err).lower(), "malformed input merged silently"
+    assert json.loads(text)["eod_prices"]["status"] == "ok"
+
+
+def test_h10_merge_manifest_writes_repo_json_style(tmp_path):
+    """indent=2, ensure_ascii=False, sorted keys, trailing newline."""
+    import json  # noqa: PLC0415
+
+    real = json.loads((_REPO / "data" / "refresh_manifest.json").read_text(encoding="utf-8"))
+    rc, _, err, text = _run_merge(tmp_path, json.dumps(real), json.dumps(real))
+    assert rc == 0, err
+    assert text == json.dumps(real, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    assert "\\u" not in text, "non-ASCII labels were escaped"
+
+
+def test_h10_commit_data_merges_the_manifest_instead_of_taking_a_side(tmp_path):
+    """The shell must route the manifest through the merge, not `--theirs` it."""
+    src = (_REPO / "scripts" / "commit_data.sh").read_text(encoding="utf-8")
+    code = "\n".join(ln for ln in src.splitlines() if not ln.lstrip().startswith("#"))
+    assert "merge_manifest.py" in code, (
+        "commit_data.sh still resolves data/refresh_manifest.json by taking one "
+        "whole side — that discards the other lane's dataset entries"
+    )
+    assert "refresh_manifest.json" in code
+
+
+# ══════════════════════════════════════════════════════════════════════════
 # C4 / H10 — every workflow stamps `failed` and pushes through commit_data.sh
 # ══════════════════════════════════════════════════════════════════════════
 _WORKFLOWS = sorted((_REPO / ".github" / "workflows").glob("*.yml"))

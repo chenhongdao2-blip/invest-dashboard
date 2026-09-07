@@ -46,6 +46,16 @@
 #       --theirs = YOUR replayed commit    (this run's freshly-fetched data)
 #   To keep the data this run produced we therefore want `--theirs`.
 #   (Under `git merge` the two would mean the opposite; this script only rebases.)
+#
+# ⚠ ONE ARTIFACT IS NOT RESOLVED THAT WAY: data/refresh_manifest.json.
+#   Keeping one whole side is right for `snapshots.db` (a binary blob this run
+#   rewrote wholesale) and wrong for the manifest, which is a map of independent
+#   per-dataset facts with independent writers. Two lanes racing on it are not
+#   editing the same fact — they are each editing their own key — so taking
+#   either side whole is a LOST UPDATE, and what it loses is the other lane's
+#   `failed` stamp from its own `if: failure()` step. That would put the
+#   dashboard back to showing green over a dead source: the C4 bug, walked back
+#   in through the conflict path. It goes through scripts/merge_manifest.py.
 set -euo pipefail
 
 MSG="${1:?usage: commit_data.sh \"<message>\" [path ...]}"
@@ -96,6 +106,32 @@ abandon_attempt() {
   git rebase --abort 2>/dev/null || git merge --abort 2>/dev/null || true
 }
 
+# The one artifact that must be merged per key rather than won outright.
+MANIFEST_PATH="data/refresh_manifest.json"
+MERGE_MANIFEST="$(cd "$(dirname "$0")" && pwd)/merge_manifest.py"
+
+# Rebuild the manifest from BOTH conflicted stages. Returns non-zero (leaving the
+# caller to fall back to the keep-ours policy) only when a stage is absent — i.e.
+# a delete/modify conflict rather than the content conflict this handles.
+# merge_manifest.py itself never fails on corrupt content: it warns and exits 0,
+# because abandoning the attempt here would throw away a whole fetch cycle.
+merge_manifest_conflict() {
+  c="$1"
+  up="$(mktemp)"; mine="$(mktemp)"
+  # Index stages during a rebase: :2 = --ours = origin/main, :3 = --theirs = the
+  # commit being replayed (this run). Same inversion as the header.
+  if git show ":2:$c" > "$up" 2>/dev/null && git show ":3:$c" > "$mine" 2>/dev/null; then
+    echo "[commit_data] conflict on '$c' — merging per dataset key (not taking a side)"
+    if python3 "$MERGE_MANIFEST" --upstream "$up" --this-run "$mine" --out "$c"; then
+      rm -f "$up" "$mine"
+      return 0
+    fi
+  fi
+  rm -f "$up" "$mine"
+  echo "[commit_data] could not merge '$c' from both stages — falling back to this run's copy" >&2
+  return 1
+}
+
 # Resolve conflicts by keeping THIS RUN's freshly-produced artifacts.
 # Returns 0 only when every conflicted path was one of ours and is now staged.
 resolve_our_artifacts() {
@@ -113,6 +149,10 @@ resolve_our_artifacts() {
       # not ours to auto-resolve — bail out and let the retry/abort path run.
       echo "[commit_data] unexpected conflict in '$c' (not a data artifact) — abandoning attempt" >&2
       IFS="$old_ifs"; return 1
+    fi
+    if [ "$c" = "$MANIFEST_PATH" ] && merge_manifest_conflict "$c"; then
+      git add -- "$c" || { IFS="$old_ifs"; return 1; }
+      continue
     fi
     # --theirs == the commit being replayed == this run's data. See the header.
     echo "[commit_data] binary conflict on '$c' — keeping this run's freshly-fetched copy"

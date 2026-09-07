@@ -669,13 +669,14 @@ def test_h10_merge_manifest_malformed_side_exits_zero_with_warning(tmp_path):
 
 
 def test_h10_merge_manifest_writes_repo_json_style(tmp_path):
-    """indent=2, ensure_ascii=False, sorted keys, trailing newline."""
+    """indent=2, ensure_ascii=False, insertion order (as update_manifest.py), trailing newline."""
     import json  # noqa: PLC0415
 
     real = json.loads((_REPO / "data" / "refresh_manifest.json").read_text(encoding="utf-8"))
     rc, _, err, text = _run_merge(tmp_path, json.dumps(real), json.dumps(real))
     assert rc == 0, err
-    assert text == json.dumps(real, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    assert text == json.dumps(real, ensure_ascii=False, indent=2) + "\n"
+    assert list(json.loads(text)) == list(real), "top-level key order must match upstream"
     assert "\\u" not in text, "non-ASCII labels were escaped"
 
 

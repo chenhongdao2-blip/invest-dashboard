@@ -56,9 +56,10 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Matches jobs/update_manifest.py's writer, plus sorted keys so the merged file
-# has one canonical ordering no matter which lane produced it (an unsorted merge
-# would show up as a whole-file diff on every race).
+# Matches jobs/update_manifest.py's writer exactly (indent=2, insertion order).
+# Key order is upstream's order with this run's new keys appended — the same
+# order update_manifest.py itself produces — so the next job's rewrite is a
+# no-op diff rather than a whole-file reorder.
 _INDENT = 2
 
 
@@ -67,7 +68,7 @@ def _warn(msg: str) -> None:
 
 
 def _dump(obj: dict) -> str:
-    return json.dumps(obj, ensure_ascii=False, indent=_INDENT, sort_keys=True) + "\n"
+    return json.dumps(obj, ensure_ascii=False, indent=_INDENT) + "\n"
 
 
 def _parse_ts(entry: object) -> datetime | None:

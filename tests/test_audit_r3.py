@@ -776,3 +776,30 @@ def test_c4_commit_data_recovers_from_binary_rebase_conflict():
         "during a REBASE `--theirs` is the commit being replayed (this run's data) "
         "and `--ours` is origin/main — keeping our file requires --theirs"
     )
+
+
+# ---------------------------------------------------------------------------
+# Ingest: a bar without a close must never reach prices_daily (found 2026-09-07:
+# 292/491 rows dated 2026-09-04 had OHLV but NULL close, then INSERT OR REPLACE
+# would let such a row clobber a good one on the next re-fetch window).
+# ---------------------------------------------------------------------------
+def test_ingest_prices_to_rows_skips_bars_without_a_close():
+    sys.path.insert(0, str(_REPO / "jobs"))
+    import fetch_eod  # noqa: PLC0415
+
+    idx = pd.to_datetime(["2026-09-02", "2026-09-03", "2026-09-04"])
+    df = pd.DataFrame(
+        {
+            "Open": [10.0, 11.0, 12.0],
+            "High": [10.5, 11.5, 12.5],
+            "Low": [9.5, 10.5, 11.5],
+            "Close": [10.2, 11.2, float("nan")],
+            "Adj Close": [10.2, 11.2, float("nan")],
+            "Volume": [100, 200, 300],
+        },
+        index=idx,
+    )
+    rows = fetch_eod.prices_to_rows("T1", df, "USD")
+    dates = [r[1] for r in rows]
+    assert dates == ["2026-09-02", "2026-09-03"], rows
+    assert all(r[5] is not None for r in rows), "close column must be populated"

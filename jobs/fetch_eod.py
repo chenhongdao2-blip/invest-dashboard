@@ -297,6 +297,7 @@ def prices_to_rows(
 ) -> list[tuple]:
     """Convert price DataFrame to upsert rows. Includes USD-converted close/adj_close."""
     rows = []
+    skipped: list[str] = []
     for ts, r in df.iterrows():
         d = ts.date().isoformat() if hasattr(ts, "date") else str(ts)[:10]
         adj_raw = r.get("Adj Close")
@@ -304,6 +305,12 @@ def prices_to_rows(
         # Explicit NaN-safe fallback (NaN is truthy in `or`, so don't use `or`)
         adj = _safe_float(adj_raw) if not pd.isna(adj_raw) else _safe_float(close_raw)
         close = _safe_float(close_raw)
+        if close is None:
+            # A bar with OHLV but no close is a partial/in-session or broken bar
+            # (2026-09-04: 292/491 rows). Persisting it would let INSERT OR
+            # REPLACE overwrite a good close with NULL on the next window.
+            skipped.append(d)
+            continue
         close_usd = close * fx_to_usd if close is not None else None
         adj_usd = adj * fx_to_usd if adj is not None else None
         rows.append((
@@ -318,6 +325,8 @@ def prices_to_rows(
             close_usd,
             adj_usd,
         ))
+    if skipped:
+        print(f"[prices] {ticker}: skipped {len(skipped)} bar(s) without a close: {skipped}")
     return rows
 
 

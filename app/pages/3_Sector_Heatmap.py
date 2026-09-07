@@ -4,8 +4,8 @@
 a 1:1 port of the claude.ai/design 「板块热力图 美化.dc.html」 handoff — one
 self-contained iframe carrying ALL sectors' cross-section (tabs / click-to-sort
 / per-column tint are client-side JS, so switching is instant, no rerun).
-Data layer unchanged: db.get_close_series_usd (M1 USD returns) +
-db.latest_multiples (yfinance static + fwd multiples snapshot).
+Data layer: db.market_frame("healthcare") — one cached cross-section (M1 USD
+returns + yfinance static + fwd multiples snapshot) instead of 16 queries.
 """
 
 from __future__ import annotations
@@ -49,18 +49,24 @@ with st.sidebar:
     )
 
 
+# R3 audit §4/§5: one cached cross-section for the whole domain, and ONE
+# `compute_returns` over it — not one of each per sub-sector. `returns_for` is
+# keyed on `as_of`, so the min-mcap slider below re-runs the page without
+# re-running the 258 ms return computation (that was the whole finding).
+_MF = db.market_frame("healthcare")
+_RETS = db.returns_for(tuple(_MF.close_usd.columns), _MF.as_of, "usd", "healthcare")
+
+
 def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
     """One sector's cross-section rows for heat_table (mcap $B, returns %, multiples,
     fcf_yield fraction → %). Missing values stay None → NM in-table."""
-    uni = db.sector_tickers("healthcare", sec_id)
-    tickers = tuple(uni["ticker"].tolist())
+    tickers = _MF.members.get(sec_id, ())
     if not tickers:
         return []
-    rets = db.compute_returns(db.get_close_series_usd(tickers))
-    mults = db.latest_multiples(tickers)
-    region_by_tk = dict(zip(uni["ticker"], uni["region"]))
+    rets, mults = _RETS, _MF.multiples
+    region_by_tk = _MF.meta["region"].to_dict()
     # A+H 次要腿：仍进明细表（保留 A/H 溢价可见），但由 heat_table 的等权平均剔除
-    sl_by_tk = dict(zip(uni["ticker"], uni["secondary_listing"]))
+    sl_by_tk = _MF.meta["secondary_listing"].to_dict()
     rows = []
     for tk in tickers:
         r = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)

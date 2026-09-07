@@ -270,8 +270,8 @@ def market_frame(domain: str | None = None) -> MarketFrame:
 
 @st.cache_data(ttl=300)
 def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
-                basis: str = "usd") -> pd.DataFrame:
-    """Cached `compute_returns` over a slice of the universe frame.
+                basis: str = "usd", domain: str | None = None) -> pd.DataFrame:
+    """Cached `compute_returns` over a slice of a market frame.
 
     `compute_returns` takes a DataFrame, which Streamlit cannot hash, so the cache
     lives on this keyed shell instead. `as_of` (pass `market_frame(...).as_of`) is
@@ -282,12 +282,22 @@ def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
     Per-ticker results are independent, so `returns_for(all).loc[subset]` equals
     `returns_for(subset)` — call it once per domain and slice, do not call it once
     per sub-sector.
+
+    `domain` picks WHICH frame to source from, and exists purely to avoid a cold-load
+    regression: design A.2 sources this from `market_frame(None)` unconditionally,
+    which makes a single domain page materialise the 494-ticker universe frame ON TOP
+    of its own 326-ticker one. Measured on `3_Sector_Heatmap.py`, that pushed the cold
+    AppTest render from 0.30 s to 0.39 s. Pass the same domain you passed
+    `market_frame` and there is only ever one frame in play.
     """
-    mf = market_frame(None)
+    mf = market_frame(domain)
     src = mf.close_usd if basis == "usd" else mf.close
     if src.empty:
         return pd.DataFrame()
-    cols = [t for t in tickers if t in src.columns]
+    # Sorted+deduped so the row order matches what the pivot in
+    # `get_close_series_usd` always produced, whatever order the caller collected
+    # its tickers in — and so two callers with the same SET share a cache bucket.
+    cols = sorted(set(tickers) & set(src.columns))
     if not cols:
         return pd.DataFrame()
     return compute_returns(src[cols])

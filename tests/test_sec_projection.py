@@ -153,3 +153,65 @@ def test_comp_table_call_sites_pass_tuples():
     for page in ("8_SEC_Facts.py", "a5_ai_sec.py"):
         src = (Path(__file__).resolve().parent.parent / "app" / "pages" / page).read_text()
         assert "sf.comp_table(tuple(comp_tickers), tuple(comp_kpis)" in src, page
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# Out-of-projection concepts: the browser offers them, so they must still chart
+# ──────────────────────────────────────────────────────────────────────────
+_BROWSER_TICKER = "A"
+
+
+def _browsable_out_of_projection(ticker: str) -> list[tuple[str, str, str]]:
+    """(taxonomy, concept, unit) triples the SEC page's selectbox offers but the
+    projection drops — built exactly the way `8_SEC_Facts.py` builds `ts_opts`."""
+    kept = sec_concepts.used_concepts()
+    all_df = sf.all_facts(ticker)
+    if all_df.empty:
+        return []
+    grp = (all_df[all_df["value"].notna()]
+           .groupby(["taxonomy", "concept", "unit"])["end_date"].nunique())
+    return [(tax, c, u) for (tax, c, u), n in grp.items() if n >= 2 and c not in kept]
+
+
+def test_browser_offers_concepts_the_projection_drops():
+    """Pins the premise of the next test: the two sets really do diverge."""
+    if db.query("SELECT 1 FROM sec_company WHERE ticker = ? AND sec_status = 'ok'",
+                (_BROWSER_TICKER,)).empty:
+        pytest.skip(f"{_BROWSER_TICKER} has no ok SEC payload")
+    assert _browsable_out_of_projection(_BROWSER_TICKER), \
+        "expected the browser to offer concepts outside used_concepts()"
+
+
+def test_concept_timeseries_serves_out_of_projection_concepts(monkeypatch):
+    """`8_SEC_Facts.py` / `a5_ai_sec.py` populate the concept picker from
+    `all_facts` (unprojected) and chart through `concept_timeseries`. If that read
+    only the projected frame, ~694 of A's 784 selectable concepts would render an
+    empty chart. Every offered concept must return what the pre-projection code
+    path returned — i.e. what `_load_facts_full` yields.
+    """
+    if db.query("SELECT 1 FROM sec_company WHERE ticker = ? AND sec_status = 'ok'",
+                (_BROWSER_TICKER,)).empty:
+        pytest.skip(f"{_BROWSER_TICKER} has no ok SEC payload")
+
+    offered = _browsable_out_of_projection(_BROWSER_TICKER)
+    assert offered
+    # A deterministic spot-check plus a broad sweep: the named one is the concept
+    # the R3 review reproduced against.
+    named = [t for t in offered if t[1] == "EntityPublicFloat"]
+    sample = named + [t for t in offered[:40] if t not in named]
+
+    got = {tc: sf.concept_timeseries(_BROWSER_TICKER, *tc) for tc in sample}
+
+    # The pre-PR path: same selection logic over the unprojected frame.
+    monkeypatch.setattr(sf, "_load_facts", sf._load_facts_full)
+    sf.concept_timeseries.clear()
+    want = {tc: sf.concept_timeseries(_BROWSER_TICKER, *tc) for tc in sample}
+    sf.concept_timeseries.clear()
+
+    empties = [tc for tc, df in got.items() if df.empty and not want[tc].empty]
+    assert not empties, f"{len(empties)}/{len(sample)} offered concepts chart empty: {empties[:5]}"
+    for tc in sample:
+        pd.testing.assert_frame_equal(
+            got[tc].reset_index(drop=True), want[tc].reset_index(drop=True),
+            check_dtype=False, obj=f"{tc}",
+        )

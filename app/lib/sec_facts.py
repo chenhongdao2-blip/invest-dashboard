@@ -174,12 +174,15 @@ def _load_facts(ticker: str) -> pd.DataFrame:
 
     R3 audit §5: the unprojected frame is 784 concepts / 40,102 rows / 30.55 MB for
     ELV, and `@st.cache_data` keeps a pickled copy beside it — a 10-ticker comp table
-    was the documented 1 GB OOM path on Streamlit Cloud. Nothing downstream of here
-    can reach a concept outside that set: `_facts` filters by (taxonomy, concept) out
-    of the KPI chains, and `sec_statements` looks up its own `tags`.
+    was the documented 1 GB OOM path on Streamlit Cloud. This covers the KPI cards
+    (`_facts` looks up the KPI chains) and `sec_statements` (its own `tags`), which
+    is where the volume is.
 
-    Deliberately NOT used by the full XBRL browser or `dominant_monetary_unit` —
-    those histogram every concept a filer reports and read `_load_facts_full`.
+    It is NOT the only reachable set. `concept_timeseries` doubles as the SEC pages'
+    concept-browser chart, and that picker is built from `all_facts`, so it offers
+    every tag the filer reports; `_facts` routes those to `_load_facts_full`. Nor is
+    it used by the browser table itself or `dominant_monetary_unit`, which histogram
+    every concept — both read `_load_facts_full` directly.
     """
     df = _parse_facts(ticker, sec_concepts.used_concepts())
     if df.empty:
@@ -401,8 +404,18 @@ def peer_medians(ticker: str, domain: str) -> dict:
 # Fact selection
 # ──────────────────────────────────────────────────────────────────────────
 def _facts(ticker: str, taxonomy: str, concept: str, unit: str | None) -> pd.DataFrame:
-    """Facts for one (taxonomy, concept[, unit]) — filtered from the parsed payload."""
-    df = _load_facts(ticker)
+    """Facts for one (taxonomy, concept[, unit]) — filtered from the parsed payload.
+
+    Reads the PROJECTED frame for the ~90 concepts the KPI and statement paths use,
+    and falls back to the unprojected parse for anything else. That fallback is not
+    defensive: `concept_timeseries` is also the SEC pages' concept-browser chart, and
+    those pages populate their picker from `all_facts` — every tag the filer reports,
+    784 for ELV. Serving that picker off the projected frame would render ~694 of
+    them as an empty chart. `_load_facts_full` has its own cache bucket, so the cost
+    is only paid when someone actually picks a long-tail tag.
+    """
+    df = (_load_facts(ticker) if concept in sec_concepts.used_concepts()
+          else _load_facts_full(ticker)[_KPI_FACT_COLS])
     if df.empty:
         return df
     m = (df["taxonomy"] == taxonomy) & (df["concept"] == concept)

@@ -134,6 +134,36 @@ The same gap is also its own reason to re-fetch: `should_refetch` returns
 that, a ticker that lost its file would get "no XBRL filing since ..." every week until
 the company next filed — for a 10-K-only filer, a quarter.
 
+### The local crash window — a killed backfill leaves parity red
+
+The two stores do not commit on the same boundary. `jobs/fetch_eod.py` calls
+`conn.commit()` once per batch of tickers (`fetch_eod.py:713`), but stages its Parquet
+rows in `_PQ_BUF` and flushes the whole table **once, after the batch loop finishes**
+(`_pq_flush("prices_daily")`, `fetch_eod.py:715`). Batching is deliberate —
+`upsert_multiples` is called once per ticker, ~500× a run, and an unbuffered write
+would re-read and rewrite the month partition every time — but it means a run killed
+mid-loop has SQLite rows that Parquet never saw. Ctrl-C, a laptop sleeping, an OOM
+kill: the window is the whole fetch.
+
+That is survivable for a normal run and **not** survivable for a deep local backfill.
+The next run fetches `today − max(--backfill-days, 5)` days, so a plain re-run only
+re-stages the last five days. Everything a killed `--backfill-days 60` had already
+committed to SQLite outside that window is now in one store and not the other, no
+subsequent ordinary run will ever touch those rows again, and `jobs/parity_check.py`
+stays red until the *same* deep backfill is repeated.
+
+Recover by re-deriving the partitions from SQLite rather than by re-fetching — it is
+seconds instead of minutes and does not depend on yfinance returning the same history:
+
+```bash
+python jobs/migrate_sqlite_to_parquet.py     # renders every partition whole from SQLite
+python jobs/parity_check.py                  # must be green before committing
+```
+
+Re-running `python jobs/fetch_eod.py --backfill-days 60` also works, and is the right
+choice if the interruption also left SQLite short. CI is not exposed to this: each
+workflow run is a fresh checkout that either completes or commits nothing.
+
 ## Rollback
 
 ```bash

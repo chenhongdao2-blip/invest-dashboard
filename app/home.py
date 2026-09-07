@@ -107,7 +107,7 @@ def _render_movers(domain: str) -> None:
     """Gainers/drags side-by-side for ONE domain (e.g. 'healthcare' / 'ai'), so each
     benchmark category shows its own movers. Empty domain (no tickers yet, e.g. AI) →
     a 'coming soon' caption instead of empty tables."""
-    gainers, losers = db.top_movers(n=10, domain=domain)
+    gainers, losers = db.top_movers(n=10, domain=domain, prefer_cn=i18n.get_lang() == "zh")
     if gainers.empty:
         st.caption(i18n.t("home.panel.empty"))
         return
@@ -383,7 +383,7 @@ for _sym in _HC_ORDER:
     ])
 
 # Movers: top_movers returns (gainers, losers) with index=ticker, cols=[name,last,1d_%,5d_%,1m_%,ytd_%]
-_hub_gainers_df, _hub_losers_df = db.top_movers(n=10, domain="healthcare")
+_hub_gainers_df, _hub_losers_df = db.top_movers(n=10, domain="healthcare", prefer_cn=_prefer_cn)
 
 
 def _mover_rows(df: pd.DataFrame) -> list:
@@ -572,7 +572,7 @@ with st.expander(i18n.domain_name("ai"), expanded=True):
         else:
             st.caption(i18n.t("home.panel.empty"))
         # AI 涨跌榜 — 与 hub 同款双 glass 卡（旧 _render_movers 表格样式退役）
-        _ai_g, _ai_l = db.top_movers(n=10, domain="ai")
+        _ai_g, _ai_l = db.top_movers(n=10, domain="ai", prefer_cn=_prefer_cn)
         if not _ai_g.empty:
             _mv_labels = {
                 "hub.tbl.movers.title": "涨跌榜 · 1 日" if _prefer_cn else "Top Movers · 1D",

@@ -354,10 +354,18 @@ def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
 
 # ---------- top movers ----------
 @st.cache_data(ttl=300)
-def top_movers(n: int = 10, domain: str | None = None) -> tuple[pd.DataFrame, pd.DataFrame]:
+def top_movers(n: int = 10, domain: str | None = None,
+               prefer_cn: bool = True) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Top n gainers and losers by 1-day return across universe tickers, optionally
     scoped to a single `domain` (e.g. 'healthcare' / 'ai') so each home-page benchmark
-    category can show its OWN movers (HC movers under HC, AI movers under AI)."""
+    category can show its OWN movers (HC movers under HC, AI movers under AI).
+
+    R3 audit H12: the name column used to be hard-wired to `ticker_to_name()`'s
+    Chinese-first default, so EN mode showed Chinese names on every movers table.
+    `prefer_cn` IS hashed into the cache key (no leading underscore) → each
+    language gets its own bucket instead of one poisoning the other. The default
+    stays True so any caller that has not been updated keeps today's behaviour.
+    """
     if domain:
         tickers = tuple(
             query("SELECT DISTINCT ticker FROM universe_member "
@@ -372,7 +380,7 @@ def top_movers(n: int = 10, domain: str | None = None) -> tuple[pd.DataFrame, pd
     rets = compute_returns(closes)
     if rets.empty:
         return pd.DataFrame(), pd.DataFrame()
-    name_map = ticker_to_name()
+    name_map = ticker_to_name(prefer_cn=prefer_cn)
     rets["name"] = rets.index.map(name_map)
     rets = rets[["name", "last", "1d_%", "5d_%", "1m_%", "ytd_%"]]
     gainers = rets.sort_values("1d_%", ascending=False).head(n)

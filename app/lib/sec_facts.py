@@ -374,6 +374,26 @@ def _facts(ticker: str, taxonomy: str, concept: str, unit: str | None) -> pd.Dat
 # 14,636,000 against a true 65,358,000 (4.5× understatement); ADI FY2013 EPS
 # 0.64 vs 2.14. Measured over 150 tickers: 231 ambiguous period groups, 33 rows
 # where the short span won. The upper bound rejects cumulative multi-year rows.
+#
+# WHAT THIS COSTS, and why the window is NOT widened (surveyed 2026-09-07):
+# a short first-fiscal-period annual — the stub year after an IPO or a reverse
+# merger — falls below the lower bound and is dropped. Measured cases:
+#   • ORKA FY2024: every annual row spans 328-329 days (reverse merger, Feb 2024)
+#     and NO full-length row exists for that end date, so FY2024 is absent from
+#     the annual series. FY2025 (364d) is present, so the LATEST FY is unaffected;
+#     the cost is a hole mid-series, not a wrong headline number.
+#   • MLTX 2021-12-31: `EarningsPerShareBasic/Diluted` span 296 days (from the
+#     2021-03-10 merger) and are dropped, while `EarningsPerShareBasicAndDiluted`
+#     spans 364 days and is kept. These are different concepts measuring
+#     different entities, not a stub-vs-full duplicate of one number.
+# Widening the lower bound would re-admit what this window exists to reject: a
+# 10-K tags its Q4 three-month rows `fp="FY"` too, and SVRA's own 2011-12-31
+# group holds 91-day rows beside the 364-day annual. Losing a stub year beats
+# reporting a quarter as a year, so the bounds stand.
+# (NB the SVRA `Revenues` row at 2011-12-31 that looks dropped is 5,679 days —
+#  an inception-to-date development-stage cumulative, rejected by the UPPER
+#  bound. It is not a short-stub case and widening the lower bound never
+#  recovers it.)
 _ANNUAL_SPAN_MIN = 350
 _ANNUAL_SPAN_MAX = 400
 
@@ -385,7 +405,12 @@ def _span_days(df: pd.DataFrame) -> pd.Series:
 
 
 def _filter_period(df: pd.DataFrame, period_type: str, period: str) -> pd.DataFrame:
-    """period ∈ {'annual','quarterly'}; period_type ∈ {'duration','instant'}."""
+    """period ∈ {'annual','quarterly'}; period_type ∈ {'duration','instant'}.
+
+    Short first-fiscal-period annuals (a stub year after an IPO or a reverse
+    merger, < _ANNUAL_SPAN_MIN days) are excluded ON PURPOSE, not by oversight —
+    see the constants above for why the window is not widened to admit them.
+    """
     if df.empty:
         return df
     d = df.copy()

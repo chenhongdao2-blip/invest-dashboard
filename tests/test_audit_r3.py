@@ -562,6 +562,33 @@ def test_r2_latest_bar_returns_the_bars_date(monkeypatch):
 
 
 # ══════════════════════════════════════════════════════════════════════════
+# C2 review fixup — the [350,400] annual window stays; its cost is documented
+# ══════════════════════════════════════════════════════════════════════════
+def test_c2_annual_window_is_not_widened():
+    """Widening the window is the wrong cure and must stay hard to do by accident.
+
+    The reviewer surveyed what [350,400] drops and found short first-fiscal-period
+    annuals. Widening the lower bound to admit them would re-admit exactly what
+    the window was built to reject: a 10-K tags its Q4 three-month rows `fp="FY"`
+    too, and SVRA's own 2011-12-31 group contains 91-day rows sitting beside the
+    364-day annual. Those were the 4.5× understatements (AGIO FY2014 Revenues).
+    The stubs are the cheaper loss, so the bounds are pinned here.
+    """
+    from lib import sec_facts as sf  # noqa: PLC0415
+
+    assert (sf._ANNUAL_SPAN_MIN, sf._ANNUAL_SPAN_MAX) == (350, 400)
+
+
+def test_c2_short_stub_exclusion_is_documented():
+    """A silent exclusion is indistinguishable from a missing filing downstream."""
+    src = (_REPO / "app" / "lib" / "sec_facts.py").read_text(encoding="utf-8")
+    assert "first-fiscal-period" in src or "首个财年" in src, (
+        "sec_facts.py does not say that short first-period annuals are excluded "
+        "on purpose"
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════
 # H10 review fixup — refresh_manifest.json must be MERGED, not won
 #
 # `git checkout --theirs` on the manifest keeps this run's whole file, which

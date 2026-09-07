@@ -42,8 +42,6 @@ def _render_pct_table(
     )
 
 
-st.set_page_config(page_title="AI Overview · invest-dashboard", page_icon="🏥", layout="wide")
-
 # --- Sidebar global search ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="ai_ov")

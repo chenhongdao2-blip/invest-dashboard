@@ -32,12 +32,6 @@ from lib import scorecard_table
 from lib import rebalance_panel
 from lib import hd_rebalance_panel
 
-st.set_page_config(
-    page_title="Strategy Picks · invest-dashboard",
-    page_icon="🧬",
-    layout="wide",
-)
-
 # Language: seed once + render the top-bar switch BEFORE any t() call so the
 # whole page renders in one language per run (cccg ship-gate #3).
 i18n.init_lang()
@@ -111,7 +105,6 @@ def _align(series: pd.Series | None, idx: pd.DatetimeIndex) -> list:
         return [None] * len(idx)
     r = series.reindex(idx)
     return [None if pd.isna(v) else round(float(v), 2) for v in r.values]
-
 
 
 # ── Strategy-banner overview cards (computed eagerly at page top; cached) ──────
@@ -1226,7 +1219,6 @@ def render_ipo_strategy() -> None:
              if "list_date" in _listed.columns and not _listed["list_date"].dropna().empty
              else "2026-07-03")
     ipo_stage.render(picks, intraday, prefer_cn=prefer_cn, as_of=str(as_of))
-
 
 
 # --- Dual-track guide cards (replaces the old 如何阅读 expander) ---

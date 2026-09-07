@@ -1,8 +1,8 @@
 """Home — landing page rendered by the st.navigation hub.
 
-The hub (streamlit_app.py) handles page registration + grouping. This file
-just renders the Home dashboard content. Keep its set_page_config so that
-when this page is active the browser tab title / icon match.
+The hub (streamlit_app.py) handles page registration + grouping, and now also the
+single `set_page_config` for the whole app (R3 audit §8.4). This file just renders
+the Home dashboard content; the browser tab title comes from its `st.Page(title=)`.
 """
 
 from __future__ import annotations
@@ -21,13 +21,6 @@ from lib import market_hub_tiles
 from lib import market_hub_tables
 from lib import freshness
 from lib import earnings_cal
-
-st.set_page_config(
-    page_title="invest-dashboard",
-    page_icon="📊",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
 
 # --- Unified sidebar search ---
 with st.sidebar:

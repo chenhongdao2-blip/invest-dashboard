@@ -24,8 +24,6 @@ from lib import section_header
 from lib import sector_overview as so
 
 
-st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
-
 # --- Sidebar global search ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="hc_overview")

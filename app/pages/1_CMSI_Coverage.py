@@ -26,12 +26,6 @@ from lib import theme
 from lib import ui
 from lib import section_header
 
-st.set_page_config(
-    page_title="CMSI Coverage · invest-dashboard",
-    page_icon="💎",
-    layout="wide",
-)
-
 # --- Sidebar ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="cmsi")

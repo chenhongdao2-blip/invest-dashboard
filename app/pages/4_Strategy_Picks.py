@@ -276,11 +276,17 @@ def render_strategy(strat_id: str) -> None:
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
-    # Fetch from the earlier of (pick_date - 55 days) and Jan 1 of current year so
-    # that YTD is computable for all strategy books regardless of pick_date.
-    _jan1 = f"{pd.Timestamp.now().year}-01-01"
+    # Fetch from the earlier of (pick_date - 55 days) and ~10 calendar days BEFORE
+    # Jan 1 of the current year so that YTD is computable for all strategy books
+    # regardless of pick_date.
+    # R3 audit C1: YTD anchors on the LAST close of the PRIOR year (see
+    # lib/db.py compute_returns). Starting the window at Jan 1 puts that anchor
+    # outside the fetched range by construction, so the page would keep showing
+    # the old (Jan-gap-losing) YTD even after the db.py fix. 10 days covers the
+    # longest year-end market closure plus a weekend.
+    _pre_ny = (pd.Timestamp(f"{pd.Timestamp.now().year}-01-01") - pd.Timedelta(days=10)).date().isoformat()
     _pre55 = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
-    earliest = min(_jan1, _pre55)
+    earliest = min(_pre_ny, _pre55)
     bench_syms = tuple(s for s in (bench_sym, bench2_sym) if s)
     closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest,
                                       _ovr_mtime=strat._delisted_mtime())

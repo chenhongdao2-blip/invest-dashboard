@@ -101,12 +101,18 @@ def _returns_row(t: str, ser: pd.Series | None, today: date) -> dict:
             return None
         return float((ser.iloc[-1] / prev - 1) * 100)
 
-    # YTD: anchor to data-driven year (not today.year) so cross-year DB rows work
+    # YTD: anchor to data-driven year (not today.year) so cross-year DB rows work,
+    # and to the LAST close BEFORE Jan 1 of that year (R3 audit C1 — the first close
+    # *of* the year drops the Jan-1 gap; see lib/db.py compute_returns). Falls back
+    # to the first close of the year when no prior-year bar exists.
     yr = ser.index.max().year
-    ytd_ser = ser[ser.index >= pd.Timestamp(f"{yr}-01-01")]
+    prior = ser[ser.index < pd.Timestamp(f"{yr}-01-01")]
+    base_pos = len(prior) - 1 if len(prior) else 0
     ytd: float | None = None
-    if not ytd_ser.empty:
-        ytd = float((ser.iloc[-1] / ytd_ser.iloc[0] - 1) * 100)
+    if len(ser) > base_pos:
+        base = ser.iloc[base_pos]
+        if not pd.isna(base) and base != 0:
+            ytd = float((ser.iloc[-1] / base - 1) * 100)
 
     return {
         "ticker": t, "name": BENCHMARKS[t], "last": last,

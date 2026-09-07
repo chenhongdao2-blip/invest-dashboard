@@ -192,12 +192,28 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
                 return NAN
             return float((ser.iloc[-1] / prev - 1) * 100)
 
-        # YTD: first close in current year (use each ticker's own anchor)
+        # YTD: anchor on the LAST close STRICTLY BEFORE Jan 1 of the series' own
+        # latest year (each ticker uses its own year so cross-year DB rows work).
+        #
+        # R3 audit C1 — anchoring on the FIRST close *of* the year silently drops
+        # the Jan-1 gap: shown = (1+true)/(1+jan_gap) − 1. Measured across 490
+        # tickers: median |error| 2.40pp, p90 10.6pp, max 86.0pp (SNDK showed
+        # +439.5% against a true +525.6%). The prior-year close is the standard
+        # YTD base — a stock that gapped +10% on the first trading day of January
+        # has earned that 10%.
+        #
+        # Fallback: a ticker listed mid-year (or backfilled only from January) has
+        # no prior-year bar; keep the old first-close-of-year behaviour there, as
+        # there is no better base and the gap does not exist.
         year = ser.index.max().year
-        this_year = ser[ser.index >= pd.Timestamp(f"{year}-01-01")]
-        if (not this_year.empty and this_year.iloc[0] != 0
-                and not (this_year.pct_change() < -SPLIT_GUARD).any()):
-            ytd = float((ser.iloc[-1] / this_year.iloc[0] - 1) * 100)
+        jan1 = pd.Timestamp(f"{year}-01-01")
+        prior = ser[ser.index < jan1]
+        anchor_pos = len(prior) - 1 if len(prior) else 0
+        window = ser.iloc[anchor_pos:]          # anchor bar .. last bar (inclusive)
+        base = window.iloc[0] if len(window) else NAN
+        if (len(window) and not pd.isna(base) and base != 0
+                and not (window.pct_change() < -SPLIT_GUARD).any()):
+            ytd = float((ser.iloc[-1] / base - 1) * 100)
         else:
             ytd = NAN
 

@@ -9,9 +9,16 @@ Mirrors lib/ipo_tracker.py: the deployed app cannot call the etf-data MCP, so a 
 job bakes the data and this loader just reads it. Every function is empty/{}-safe on a
 missing file (the page degrades to a notice, never crashes).
 
-Holdings shape (from upstream): each ETF has a weighted head (~top 25; `rank`/`weight_pct`
-populated) and a symbol-only tail (`rank`/`name`/`weight_pct` are NaN). The tail is the
-"+N more constituents" set. An unknown weight is NaN — NEVER 0 (zero would lie).
+Holdings shape (from upstream): each ETF normally has a weighted head (~top 25) and a
+symbol-only tail — the "+N more constituents" set. An unknown weight is NaN — NEVER 0
+(zero would lie).
+
+`weight_pct`, not `rank`, is what separates the two. The two upstream sources number
+rows differently: the primary (stockanalysis) ranks only the rows it weights, so the
+tail arrives rank-less; the symbols-only fallback (barchart) numbers EVERY row 1..N and
+weights none of them. Splitting on `rank` therefore silently mislabels a whole degraded
+ETF as fully weighted — which is exactly what happened to the 2026-08-29 rebuild (R3
+audit item 7). A weighted row is a row with a weight; that is the only stable contract.
 """
 from __future__ import annotations
 
@@ -69,27 +76,51 @@ def holdings_for(
 ) -> tuple[pd.DataFrame, list[str]]:
     """Split one ETF's holdings into (weighted_df, tail_symbols).
 
-    weighted_df : rows with a non-null `rank`, sorted by rank ascending — the named,
-                  weighted top holdings (all `weight_pct` non-null).
-    tail_symbols: the symbol-only tail (rows with null `rank`) as a list[str].
+    weighted_df : rows that carry a `weight_pct`, sorted by rank ascending — the named,
+                  weighted top holdings. Every row's `weight_pct` is non-null.
+    tail_symbols: every other symbol, as a list[str] — the "+N more" set.
+
+    The split is on `weight_pct`, NOT on `rank`: the symbols-only upstream fallback
+    numbers all rows but weights none, so a rank-based split would report a fully
+    degraded ETF as fully weighted (see the module docstring).
     """
     if holdings_df is None or holdings_df.empty or "etf_ticker" not in holdings_df.columns:
         return pd.DataFrame(columns=HOLDINGS_COLS), []
     sub = holdings_df[holdings_df["etf_ticker"] == etf_ticker]
     if sub.empty:
         return pd.DataFrame(columns=HOLDINGS_COLS), []
+    has_weight = sub["weight_pct"].notna()
     weighted = (
-        sub[sub["rank"].notna()]
+        sub[has_weight]
         .sort_values("rank")
         .reset_index(drop=True)
     )
     tail = (
-        sub[sub["rank"].isna()]["symbol"]
+        sub[~has_weight]["symbol"]
         .dropna()
         .astype(str)
         .tolist()
     )
     return weighted, tail
+
+
+def weight_coverage(holdings_df: pd.DataFrame) -> dict[str, tuple[int, int]]:
+    """Per-ETF `(weighted_rows, total_rows)`. The app-side degradation tripwire."""
+    if holdings_df is None or holdings_df.empty or "etf_ticker" not in holdings_df.columns:
+        return {}
+    out: dict[str, tuple[int, int]] = {}
+    for tk, grp in holdings_df.groupby("etf_ticker"):
+        out[str(tk)] = (int(grp["weight_pct"].notna().sum()), int(len(grp)))
+    return out
+
+
+def degraded_etfs(holdings_df: pd.DataFrame) -> list[str]:
+    """ETFs whose holdings arrived with ZERO weighted rows (symbols-only fallback).
+
+    The page should say so rather than render a weightless table as if it were a
+    weighted one.
+    """
+    return sorted(tk for tk, (w, _n) in weight_coverage(holdings_df).items() if w == 0)
 
 
 @st.cache_data(ttl=600)

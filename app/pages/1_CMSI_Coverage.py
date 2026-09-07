@@ -48,10 +48,13 @@ prefer_cn = i18n.get_lang() == "zh"
 # ---------------------------------------------------------------------------
 # 1. Universe 加载
 # ---------------------------------------------------------------------------
-_MF = db.market_frame("healthcare")
-# NOT `_MF.meta`: meta aggregates name/region with MAX per ticker, while the
-# coverage list shows the `_coverage` ROW (6938.HK is 瑞博生物 there and
-# 瑞博生物-B under hk_hc_ipo). One extra cheap query beats a renamed holding.
+# Deliberately NOT on `db.market_frame("healthcare")`, unlike the other HC pages.
+# The coverage list is ~31 names against the domain's 326, so materialising the
+# domain frame costs more than the four small queries it would replace: measured
+# cold AppTest 0.32 s -> 0.43 s. (It also cannot take names from `mf.meta`, which
+# aggregates with MAX per ticker — 6938.HK is 瑞博生物 in _coverage and
+# 瑞博生物-B under hk_hc_ipo.) A session that has already opened another HC page
+# would get the frame for free; a direct landing would not.
 cmsi = db.sector_tickers("healthcare", "_coverage")
 if cmsi.empty:
     st.warning("No CMSI coverage data — check config/universes/cmsi_coverage_hc.yml")
@@ -71,8 +74,9 @@ st.caption(i18n.t("cov.caption",
 # ---------------------------------------------------------------------------
 # 2. 数据层：回报 + 倍数 + 基准
 # ---------------------------------------------------------------------------
-rets = db.returns_for(tickers, _MF.as_of, "usd", "healthcare")
-mults = _MF.multiples.loc[_MF.multiples.index.intersection(tickers)]
+closes = db.get_close_series_usd(tickers)
+rets = db.compute_returns(closes)
+mults = db.latest_multiples(tickers)
 
 bench_df = bm.fetch_benchmarks()
 

@@ -424,14 +424,28 @@ def picks_closes_db(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
     both sources have a bar the values agree to a median relative difference of
     0.000000 (max 0.00117 across 26-62 symbols per book).
 
-    `COALESCE(adj_close, close)` matches yfinance's `auto_adjust=True`, which is
-    what the book's total-return maths assumes.
+    `COALESCE(adj_close, close)` is the book's total-return input, but the precise
+    claim is narrower than "matches yfinance `auto_adjust=True`": `jobs/fetch_eod.py`
+    pulls with `auto_adjust=False` over a ~5-day rolling window, so each row's
+    `adj_close` is FROZEN at the back-adjustment factor that was current when the row
+    was written. A later distribution re-adjusts the live series but not the rows
+    already in the DB, so for a distributing name the old end of the DB series
+    under-adjusts and total return is understated. Today that is harmless because 75
+    of the 77 DB-served pick/benchmark symbols have `adj_close ≡ close` and the two
+    that differ (REGN 0.40%, XBI 0.47%) are far inside the noise — an accident of the
+    current universe, not a property of the pipeline, so
+    `tests/test_strategy.py::test_db_sourced_picks_have_no_adjustment_drift` pins it
+    as a tripwire.
 
-    `benchmarks_daily` is deliberately NOT read here, though design A.3 has it:
-    that table stores a RAW close, so sourcing XBI or ^HSI from it silently turns
-    a total-return benchmark into a price benchmark and understates the hurdle by
-    the dividend yield — the exact defect audit H1 raises against the HD book's
-    benchmark. Benchmarks stay on the live `auto_adjust=True` fetch.
+    `benchmarks_daily` is deliberately NOT read here, though design A.3 has it. Its
+    `close` IS adjusted — `jobs/fetch_eod.py:fetch_benchmarks` pulls with
+    `auto_adjust=True` — so the older "that table stores a RAW close" reasoning was
+    simply wrong. The decision stands on two other facts: `3466.HK`, the HD books'
+    PRIMARY benchmark, has zero rows there at all, and the same per-row freeze
+    applies, worse — only a trailing 200-day window is rewritten each run, so a
+    benchmark's older rows keep whatever factor they were written with. Benchmarks
+    stay on the live `auto_adjust=True` fetch, which adjusts the whole series at
+    read time.
     """
     if not yf_syms:
         return pd.DataFrame()

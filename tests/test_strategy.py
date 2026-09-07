@@ -270,9 +270,11 @@ def test_picks_closes_db_covers_the_biotech_books_and_not_the_hd_ones():
 
 
 def test_picks_closes_db_does_not_read_benchmarks_daily():
-    """`benchmarks_daily` stores a RAW close. Sourcing XBI / ^HSI from it turns a
-    total-return benchmark into a price one and understates the hurdle by the
-    dividend yield — audit H1's defect, which design A.3 would have introduced."""
+    """`benchmarks_daily.close` IS adjusted (`fetch_benchmarks` uses
+    `auto_adjust=True`) — the earlier "RAW close" reasoning was wrong. The decision
+    to keep benchmarks on the live fetch stands anyway: `3466.HK`, the HD books'
+    primary benchmark, has no rows in that table, and only a trailing 200-day window
+    is rewritten each run, so older rows keep a stale back-adjustment factor."""
     import inspect
 
     src = inspect.getsource(strat.picks_closes_db)
@@ -377,3 +379,60 @@ def test_fetch_picks_closes_never_extends_past_the_snapshot(monkeypatch):
     # the override itself must survive the clamp — this is a truncation, not a drop
     sym = next(iter(set(syms) & set(overrides)))
     assert sym in got.columns and got[sym].notna().any()
+
+
+# Symbols whose DB `adj_close` is allowed to differ from `close` at all. Measured
+# 2026-09-07 over every pick + benchmark symbol `picks_closes_db` can serve:
+# 75 of 77 are ratio ≡ 1.0, and only these two carry a distribution.
+#   REGN  0.396%   XBI  0.466%   (max-vs-min of adj_close/close across the series)
+_ADJ_DRIFT_ALLOWLIST = {"REGN", "XBI"}
+_ADJ_DRIFT_MAX_PCT = 1.0
+
+
+def test_db_sourced_picks_have_no_adjustment_drift():
+    """`jobs/fetch_eod.py` writes `adj_close` from an `auto_adjust=False` pull over a
+    ~5-day rolling window, so every row's back-adjustment factor is FROZEN at write
+    time. A distribution re-adjusts the live yfinance series but not the rows already
+    in the DB, so for a distributing name the old end of `picks_closes_db` under-
+    adjusts and the book understates total return.
+
+    That defect is currently inert only because the pick universe happens to be
+    almost entirely non-distributing. This test converts that accident into a
+    tripwire: a symbol outside the allowlist must be EXACTLY flat, so onboarding a
+    distributing name (the HD books' 74 symbols, say) fails here and forces the
+    decision in the `TODO(George)` at `4_Strategy_Picks.py` to be made on purpose.
+    """
+    if not db.DB_PATH.exists():
+        pytest.skip("data/snapshots.db not present")
+    syms: set[str] = set()
+    for cfg in strat.STRATEGIES.values():
+        picks = cfg["loader"]()
+        if not picks.empty and "yf_sym" in picks.columns:
+            syms |= set(picks["yf_sym"].dropna())
+        syms |= {b for b in (cfg.get("benchmark"), cfg.get("benchmark2")) if b}
+    assert syms
+
+    ph = ",".join("?" * len(syms))
+    got = db.query(
+        f"SELECT ticker, MIN(adj_close / close) AS lo, MAX(adj_close / close) AS hi "
+        f"FROM prices_daily WHERE ticker IN ({ph}) "
+        f"AND close IS NOT NULL AND close != 0 AND adj_close IS NOT NULL "
+        f"GROUP BY ticker", tuple(sorted(syms)))
+    if got.empty:
+        pytest.skip("no DB-sourced pick symbols")
+    got["drift_pct"] = (got["hi"] - got["lo"]) / got["lo"] * 100
+
+    drifting = got[got["drift_pct"] > 0]
+    unexpected = drifting[~drifting["ticker"].isin(_ADJ_DRIFT_ALLOWLIST)]
+    assert unexpected.empty, (
+        "adj_close is frozen per row at write time, so a distributing symbol makes "
+        "the DB series understate total return. New drifting symbols:\n"
+        + unexpected[["ticker", "drift_pct"]].to_string(index=False)
+        + "\nEither re-adjust prices_daily.adj_close for the full history on every "
+          "run, compute TR from a dividends table, or allowlist it here with the "
+          "measured magnitude and a reason."
+    )
+    over = drifting[drifting["drift_pct"] > _ADJ_DRIFT_MAX_PCT]
+    assert over.empty, (
+        f"allowlisted symbols drifted past {_ADJ_DRIFT_MAX_PCT}%:\n"
+        + over[["ticker", "drift_pct"]].to_string(index=False))

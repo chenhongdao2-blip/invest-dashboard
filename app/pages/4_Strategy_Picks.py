@@ -1332,6 +1332,19 @@ sb.dual_track(
 # code change (+~24.5k rows), but that is a UNIVERSE decision — it changes the
 # denominator of fetch_eod's >10% missing-ticker abort — and is yours to make, not
 # this PR's. Until then the HD path stays live, just lazy.
+#
+# PRECONDITION, and it binds hardest on exactly this book: `fetch_eod` writes
+# `adj_close` from an `auto_adjust=False` pull over a ~5-day rolling window, so each
+# row's back-adjustment factor is frozen at write time and later distributions never
+# re-adjust the rows already stored. Before onboarding HD symbols into
+# `universe_member`, EITHER re-adjust `prices_daily.adj_close` on every run for the
+# FULL history of every symbol that pays distributions, OR compute total return from
+# a dividends table; otherwise HD total return will be understated — the old end of
+# each series under-adjusts, and a high-dividend book is the worst possible place to
+# absorb that. The current universe is inert on this only by accident (75 of 77
+# DB-served symbols have adj_close ≡ close);
+# `tests/test_strategy.py::test_db_sourced_picks_have_no_adjustment_drift` will fail
+# the moment a distributing symbol is onboarded, which is the point.
 _ts_ids = [k for k, c in strat.STRATEGIES.items() if not c.get("version_of")]
 _view_labels = [i18n.t(f"strategy.name.{sid}") for sid in _ts_ids]
 _view_labels.append(i18n.t("strategy.name.ipo"))

@@ -11,7 +11,6 @@ import streamlit as st
 from lib import db
 from lib import format as fmt
 from lib import theme
-from lib import i18n
 
 # Shared column tooltips — single source of truth for cross-page consistency.
 # Reference these via render_html_table(column_help=COLUMN_HELP) or splice

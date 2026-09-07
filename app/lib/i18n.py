@@ -270,14 +270,6 @@ _IPO_TIER_EN = {
 }
 
 
-def ipo_tier(tier_cn: str) -> str:
-    """Localize an IPO subscription tier. zh → as-is (CSV is already Chinese);
-    en → mapped English label (falls back to the raw value)."""
-    if get_lang() == "zh":
-        return tier_cn
-    return _IPO_TIER_EN.get(tier_cn, tier_cn)
-
-
 def bench_name(sym: str, fallback: str = "") -> str:
     """Localized benchmark long-name. zh → Chinese; en → English fallback (the
     df already carries the English name)."""

@@ -11,9 +11,7 @@ import pandas as pd
 import streamlit as st
 
 from lib import benchmarks as bm
-from lib import charts
 from lib import db
-from lib import format as fmt
 from lib import ui
 from lib import theme
 from lib import i18n
@@ -83,49 +81,6 @@ st.markdown(
 )
 
 
-def _render_pct_table(
-    df: pd.DataFrame,
-    pct_cols: list[str],
-    num_cols: list[str] | None = None,
-    column_labels: dict | None = None,
-) -> None:
-    """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
-    text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
-    extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
-    ui.render_html_table(
-        df,
-        pct_cols=pct_cols,
-        text_cols=text_cols,
-        extra_formats=extra_formats,
-        column_labels=column_labels,
-        height=360,
-        heatmap=True,
-    )
-
-
-def _render_movers(domain: str) -> None:
-    """Gainers/drags side-by-side for ONE domain (e.g. 'healthcare' / 'ai'), so each
-    benchmark category shows its own movers. Empty domain (no tickers yet, e.g. AI) →
-    a 'coming soon' caption instead of empty tables."""
-    gainers, losers = db.top_movers(n=10, domain=domain, prefer_cn=i18n.get_lang() == "zh")
-    if gainers.empty:
-        st.caption(i18n.t("home.panel.empty"))
-        return
-    rename_map = {"name": "Name", "last": "Last",
-                  "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "ytd_%": "YTD %"}
-    c1, c2 = st.columns(2)
-    with c1:
-        theme.subsection(i18n.t("home.movers.gainers"))
-        g = gainers.rename(columns=rename_map)
-        g.index = [fmt.fmt_ticker_bbg(t) for t in g.index]
-        _render_pct_table(g, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"], column_labels=i18n.common_cols())
-    with c2:
-        theme.subsection(i18n.t("home.movers.drags"))
-        l = losers.rename(columns=rename_map)
-        l.index = [fmt.fmt_ticker_bbg(t) for t in l.index]
-        _render_pct_table(l, pct_cols=["1D %", "5D %", "1M %", "YTD %"], num_cols=["Last"], column_labels=i18n.common_cols())
-
-
 # ---- Single-stock heatmap v2 — ranked bento grid (Healthcare + AI) ----
 # Data assembly + self-contained HTML render live in lib/heatmap.py
 # (build_domain_bento / render_bento_html). Replaces the v1 go.Treemap
@@ -192,38 +147,6 @@ def _render_stock_heatmap() -> None:
 bench_df = bm.fetch_benchmarks()
 gspc_ytd = bench_df.loc["^GSPC", "ytd_%"] if "^GSPC" in bench_df.index else None
 _panels = dict(bm.PANELS)
-
-
-def _render_benchmark_table(panel_id: str, syms: list[str]) -> None:
-    """One benchmark panel → FT-editorial HTML table (vs-SPX column; ^GSPC reference
-    row for the sector hero). Empty panel → 'coming soon' caption."""
-    present = [s for s in syms if s in bench_df.index]
-    if not present:
-        st.caption(i18n.t("home.panel.empty"))
-        return
-    sub = bench_df.reindex(present).copy()
-    sub["vs_spx_pp"] = (sub["ytd_%"] - gspc_ytd) if gspc_ytd is not None else pd.NA
-    if panel_id == "sp500_sector" and "^GSPC" in sub.index:
-        sub.loc["^GSPC", "vs_spx_pp"] = pd.NA
-    sub["Name"] = [i18n.bench_name(s, n) for s, n in zip(sub.index, sub["name"])]
-    show = sub[["Name", "1d_%", "5d_%", "1m_%", "3m_%", "ytd_%", "vs_spx_pp"]].rename(columns={
-        "1d_%": "1D %", "5d_%": "5D %", "1m_%": "1M %", "3m_%": "3M %",
-        "ytd_%": "YTD %", "vs_spx_pp": "vs SPX",
-    })
-    ui.render_html_table(
-        show,
-        pct_cols=["1D %", "5D %", "1M %", "3M %", "YTD %", "vs SPX"],
-        text_cols=["Name"],
-        column_labels=i18n.common_cols(),
-        heatmap=True,
-        ref_rows=({"^GSPC"} if panel_id == "sp500_sector" else None),
-        height=(520 if panel_id == "sp500_sector" else 360),
-    )
-    st.caption(
-        f"来源 Yahoo Finance cron EOD · 截至 {latest} · 仅供参考"
-        if i18n.get_lang() == "zh"
-        else f"Source: Yahoo Finance cron EOD · as of {latest} · reference only"
-    )
 
 
 # --- 1. Market Overview — [09] index tiles (sparkline + 52w range, real EOD data) ---

@@ -59,14 +59,6 @@ def last_fetch_utc() -> str | None:
     return df["value"].iloc[0] if not df.empty else None
 
 
-@st.cache_data(ttl=300)
-def universe_summary() -> pd.DataFrame:
-    return query(
-        "SELECT domain, sector, COUNT(*) AS n FROM universe_member "
-        "WHERE sector != '_coverage' GROUP BY domain, sector ORDER BY domain, sector"
-    )
-
-
 # ---------- universe ----------
 @st.cache_data(ttl=600)
 def _has_column(table: str, col: str) -> bool:

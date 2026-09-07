@@ -46,20 +46,6 @@ def _label(row: dict) -> str:
     return row.get("ticker") or row.get("issuer", "?")
 
 
-def consensus_table(data: dict, min_funds: int = 2) -> pd.DataFrame:
-    """Cross-fund consensus holdings: name | n_funds | total value | QoQ counts."""
-    rows = (data.get("aggregate") or {}).get("consensus") or []
-    out = [
-        {
-            "label": _label(r), "n_funds": r["n_funds"], "total_value": r["total_value"],
-            "n_new": r["n_new"], "n_add": r["n_add"], "n_trim": r["n_trim"],
-            "funds": ", ".join(r["funds"]),
-        }
-        for r in rows if r["n_funds"] >= min_funds
-    ]
-    return pd.DataFrame(out)
-
-
 def top_new_buys(data: dict) -> pd.DataFrame:
     rows = (data.get("aggregate") or {}).get("top_new_buys") or []
     return pd.DataFrame([
@@ -74,18 +60,6 @@ def top_exits(data: dict) -> pd.DataFrame:
     return pd.DataFrame([
         {"label": _label(r), "n_exits": r["n_exits"], "funds": ", ".join(r["funds"])}
         for r in rows
-    ])
-
-
-def fund_snapshot(fund: dict) -> pd.DataFrame:
-    """One fund's top holdings as display DataFrame (weight, QoQ tag, shares chg)."""
-    return pd.DataFrame([
-        {
-            "label": _label(r), "weight": r["weight"], "value": r["value"],
-            "qoq": r["qoq"],
-            "shares_chg_pct": r.get("shares_chg_pct"),
-        }
-        for r in fund.get("top_holdings") or []
     ])
 
 

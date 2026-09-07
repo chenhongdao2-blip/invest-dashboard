@@ -184,7 +184,7 @@ disp["EV/EBITDA"] = candidates["ev_ebitda"]
 disp["FCF Yld"] = candidates["fcf_yield"]
 disp.index.name = "Ticker"
 
-ui.render_styled_table(
+ui.render_html_table(
     disp,
     pct_cols=["YTD %", "1M %", "5D %"],
     pct_decimal_cols=["FCF Yld"],

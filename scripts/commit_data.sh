@@ -66,6 +66,7 @@ if [ "$#" -gt 0 ]; then
 else
   PATHS=(
     data/snapshots.db
+    data/parquet          # PR4: partitioned Parquet store (dual-written beside the DB)
     data/refresh_manifest.json
     data/external/hc_index_comparison.csv
   )

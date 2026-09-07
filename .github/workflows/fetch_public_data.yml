@@ -81,10 +81,19 @@ jobs:
           fi
           python jobs/update_manifest.py us_hc_13f ok --note "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
 
+      # PR4 dual-write gate. Runs AFTER the fetch and BEFORE the commit so a
+      # SQLite/Parquet divergence fails the run loudly instead of being committed
+      # and found later (audit §8.1). This lane writes benchmarks_daily (fetch_fx_world)
+      # and sw_industry_daily (load_sw_industry); the check covers all four tables
+      # regardless, because a store corrupted by ANY lane must not be pushed by this one.
+      - name: Parity check (SQLite vs Parquet)
+        run: python jobs/parity_check.py
+
       - name: Commit data
         run: |
           ./scripts/commit_data.sh "data: public market refresh $(date -u +%Y-%m-%d) [skip ci]" \
             data/snapshots.db \
+            data/parquet \
             data/refresh_manifest.json \
             data/external/hc_index_comparison.csv \
             data/external/us_hc_funds_13f.json

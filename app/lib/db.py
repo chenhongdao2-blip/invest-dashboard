@@ -581,18 +581,13 @@ def top_movers(n: int = 10, domain: str | None = None,
     language gets its own bucket instead of one poisoning the other. The default
     stays True so any caller that has not been updated keeps today's behaviour.
     """
-    if domain:
-        tickers = tuple(
-            query("SELECT DISTINCT ticker FROM universe_member "
-                  "WHERE domain = ?" + _active_clause(),
-                  (domain,))["ticker"].tolist()
-        )
-    else:
-        tickers = tuple(all_tickers())
+    mf = market_frame(domain)
+    tickers = tuple(mf.close.columns)
     if not tickers:
         return pd.DataFrame(), pd.DataFrame()
-    closes = get_close_series(tickers)
-    rets = compute_returns(closes)
+    # basis stays LOCAL, as it always was here — switching this table to USD is a
+    # display-semantics change (audit C6), not a performance one.
+    rets = returns_for(tickers, mf.as_of, "local", domain)
     if rets.empty:
         return pd.DataFrame(), pd.DataFrame()
     name_map = ticker_to_name(prefer_cn=prefer_cn)

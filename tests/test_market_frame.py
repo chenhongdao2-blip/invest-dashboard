@@ -145,3 +145,85 @@ def test_returns_for_matches_compute_returns_on_the_same_slice():
         db.returns_for(tickers, mf.as_of, "usd"),
         db.compute_returns(db.get_close_series_usd(tickers)),
     )
+
+
+# ──────────────────────────────────────────────────────────────────────────
+# The three claims the page migrations actually rest on
+# ──────────────────────────────────────────────────────────────────────────
+@pytest.mark.parametrize("domain", DOMAINS)
+def test_returns_for_a_sector_equals_the_old_per_sector_pull(domain):
+    """A sector slice of the DOMAIN frame has a wider date index than the old
+    per-sector `get_close_series_usd` pull (dates where only other sectors traded
+    are present, as all-NaN rows). `compute_returns` is invariant to those, and
+    every migrated page depends on it — so assert it, do not reason about it.
+    """
+    mf = db.market_frame(domain)
+    for sec, tickers in sorted(mf.members.items()):
+        if not tickers:
+            continue
+        old = db.compute_returns(db.get_close_series_usd(tickers))
+        new = db.returns_for(tickers, mf.as_of, "usd", domain)
+        pd.testing.assert_frame_equal(new, old.reindex(new.index), obj=f"{domain}/{sec}")
+
+
+@pytest.mark.parametrize("domain", DOMAINS)
+def test_multiples_subset_equals_latest_multiples_subset(domain):
+    mf = db.market_frame(domain)
+    for sec, tickers in sorted(mf.members.items()):
+        if not tickers:
+            continue
+        old = db.latest_multiples(tickers).sort_index()
+        new = mf.multiples.loc[mf.multiples.index.intersection(tickers)].sort_index()
+        # check_dtype=False: a 1-ticker `latest_multiples` pull leaves an all-None
+        # column as object where the domain frame infers float64. Every consumer
+        # runs it through `pd.to_numeric`.
+        pd.testing.assert_frame_equal(new, old, check_dtype=False, obj=f"{domain}/{sec}")
+
+
+@pytest.mark.parametrize("domain", DOMAINS)
+def test_meta_rows_match_sector_tickers_except_multi_sector(domain):
+    """WHY the coverage pages still call `sector_tickers` for their universe frame.
+
+    `meta` aggregates name/region with MAX per ticker; `sector_tickers` returns the
+    (domain, sector) ROW. For a ticker whose rows disagree they are different
+    values — 6938.HK is 瑞博生物-B under healthcare/hk_hc_ipo and 瑞博生物 under
+    _coverage and biotech, so rebuilding `1_CMSI_Coverage`'s list out of `meta`
+    renames a holding. Single-sector tickers must never diverge; multi-sector ones
+    may, and `meta`'s pick must still come from that ticker's own rows.
+    """
+    mf = db.market_frame(domain)
+    cols = ["name_cn", "name_en", "region", "secondary_listing"]
+    multi = set(db.query(
+        "SELECT ticker FROM universe_member GROUP BY ticker HAVING COUNT(*) > 1"
+    )["ticker"])
+    for sec, tickers in sorted(mf.members.items()):
+        if not tickers:
+            continue
+        old = db.sector_tickers(domain, sec).set_index("ticker")[cols]
+        new = mf.meta.loc[list(tickers), cols]
+        for tkr in tickers:
+            for c in cols:
+                if old.loc[tkr, c] == new.loc[tkr, c] or (
+                        pd.isna(old.loc[tkr, c]) and pd.isna(new.loc[tkr, c])):
+                    continue
+                assert tkr in multi, f"{domain}/{sec} {tkr}.{c} drifted on a single-row ticker"
+                vals = db.query(
+                    f"SELECT {c} AS v FROM universe_member WHERE ticker = ?", (tkr,))["v"]
+                assert new.loc[tkr, c] in set(vals.dropna())
+
+
+def test_returns_for_matches_the_old_pull_on_arbitrary_subsets():
+    """`quote_table` filters the roster by domain/region/sector, so it asks for
+    subsets that are not a sector and not a domain."""
+    import random
+
+    random.seed(7)
+    mf = db.market_frame(None)
+    allt = list(mf.close_usd.columns)
+    if not allt:
+        pytest.skip("prices_daily is empty")
+    for k in (1, 5, 40, 200, len(allt)):
+        sub = tuple(random.sample(allt, k))
+        old = db.compute_returns(db.get_close_series_usd(sub))
+        new = db.returns_for(sub, mf.as_of, "usd")
+        pd.testing.assert_frame_equal(new, old.reindex(new.index), obj=f"k={k}")

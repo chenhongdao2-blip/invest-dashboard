@@ -66,13 +66,15 @@ theme.section_header(i18n.t("hc.section.summary"), meta=i18n.t("hc.section.summa
 
 rows = []
 all_returns_by_sector: dict[str, pd.DataFrame] = {}
+_MF = db.market_frame("ai")
+_RETS = db.returns_for(tuple(_MF.close_usd.columns), _MF.as_of, "usd", "ai")
 for sec in cfg["sectors"]:
-    uni = db.sector_tickers("ai", sec["id"])
-    tickers = tuple(uni["ticker"].tolist())
+    tickers = _MF.members.get(sec["id"], ())
     if not tickers:
         continue
-    closes = db.get_close_series_usd(tickers)   # USD-converted for fair cross-region compare
-    rets = db.compute_returns(closes)
+    # USD-converted for fair cross-region compare; sliced out of the one domain-wide
+    # computation instead of re-running compute_returns per sector (audit §5).
+    rets = _RETS.loc[[t for t in _RETS.index if t in set(tickers)]]
     if rets.empty:
         continue
     all_returns_by_sector[sec["id"]] = rets

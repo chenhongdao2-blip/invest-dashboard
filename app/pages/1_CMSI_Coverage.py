@@ -48,6 +48,10 @@ prefer_cn = i18n.get_lang() == "zh"
 # ---------------------------------------------------------------------------
 # 1. Universe 加载
 # ---------------------------------------------------------------------------
+_MF = db.market_frame("healthcare")
+# NOT `_MF.meta`: meta aggregates name/region with MAX per ticker, while the
+# coverage list shows the `_coverage` ROW (6938.HK is 瑞博生物 there and
+# 瑞博生物-B under hk_hc_ipo). One extra cheap query beats a renamed holding.
 cmsi = db.sector_tickers("healthcare", "_coverage")
 if cmsi.empty:
     st.warning("No CMSI coverage data — check config/universes/cmsi_coverage_hc.yml")
@@ -67,9 +71,8 @@ st.caption(i18n.t("cov.caption",
 # ---------------------------------------------------------------------------
 # 2. 数据层：回报 + 倍数 + 基准
 # ---------------------------------------------------------------------------
-closes = db.get_close_series_usd(tickers)
-rets = db.compute_returns(closes)
-mults = db.latest_multiples(tickers)
+rets = db.returns_for(tickers, _MF.as_of, "usd", "healthcare")
+mults = _MF.multiples.loc[_MF.multiples.index.intersection(tickers)]
 
 bench_df = bm.fetch_benchmarks()
 

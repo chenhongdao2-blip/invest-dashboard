@@ -24,6 +24,7 @@ import gzip
 import json
 import os
 import sqlite3
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,10 +32,16 @@ from pathlib import Path
 import requests
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from jobs import normalize_sec_facts as nsf, parquet_store as pq, sec_concepts  # noqa: E402
+
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
 
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik10}.json"
+SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik10}.json"
 
 # SEC requires a UA carrying contact info. Override with a real name+email via SEC_UA.
 UA = os.environ.get("SEC_UA", "invest-dashboard research (contact: research@invest-dashboard.local)")
@@ -166,6 +173,12 @@ def set_meta(conn: sqlite3.Connection, key: str, value: str) -> None:
 
 
 def is_fresh(conn: sqlite3.Connection, ticker: str) -> bool:
+    """Clock guard: is the stored snapshot younger than FRESH_HOURS?
+
+    Kept as the SECONDARY guard only — see should_refetch(). A clock cannot know
+    whether the company filed anything, so on its own it both re-downloads 40 MB of
+    unchanged payloads every week AND leaves a same-day filing unfetched for 18h.
+    """
     row = conn.execute(
         "SELECT sec_status, fetched_at FROM sec_company WHERE ticker = ?", (ticker,)
     ).fetchone()
@@ -179,8 +192,87 @@ def is_fresh(conn: sqlite3.Connection, ticker: str) -> bool:
         return False
 
 
+def latest_filed_from_submissions(session: requests.Session, cik10: str) -> str | None:
+    """Newest XBRL-bearing filing date for a CIK, or None if the probe fails.
+
+    Only XBRL filings can change companyfacts, so the `isXBRL` flag is the filter:
+    without it every 8-K would look like a reason to re-download a multi-MB payload
+    that did not change. Falls back to the newest filing of any kind if the flag
+    array is missing, which errs toward re-fetching — the safe direction.
+    """
+    try:
+        r = http_get(session, SEC_SUBMISSIONS_URL.format(cik10=cik10))
+        if r.status_code != 200:
+            return None
+        recent = ((r.json().get("filings") or {}).get("recent") or {})
+    except Exception:  # noqa: BLE001 — a probe failure must not fail the ticker
+        return None
+    dates = recent.get("filingDate") or []
+    if not dates:
+        return None
+    flags = recent.get("isXBRL") or []
+    xbrl = [d for i, d in enumerate(dates) if i < len(flags) and flags[i]]
+    return max(xbrl) if xbrl else max(dates)
+
+
+def should_refetch(conn: sqlite3.Connection, session: requests.Session,
+                   ticker: str, cik10: str) -> tuple[bool, str]:
+    """Gate the companyfacts download on NEW FILINGS, not on a clock. → (fetch?, why).
+
+    The 18-hour clock this replaces answered the wrong question. companyfacts only
+    changes when the company files, so the right question is "has it filed since our
+    snapshot?" — one small submissions request answers it and saves the multi-MB
+    payload download for the ~99% of weeks when nothing was filed.
+
+    The clock survives as the fallback for the two cases the filing check cannot
+    decide: no stored `latest_filed` to compare against, and a failed probe. In both
+    it errs toward fetching once the snapshot is older than FRESH_HOURS.
+    """
+    row = conn.execute(
+        "SELECT sec_status, fetched_at, latest_filed FROM sec_company WHERE ticker = ?",
+        (ticker,),
+    ).fetchone()
+    if not row or row[0] != "ok" or not row[1]:
+        return True, "no usable prior snapshot"
+
+    stored = row[2]
+    if stored:
+        latest = latest_filed_from_submissions(session, cik10)
+        if latest:
+            if latest > stored:
+                return True, f"new filing {latest} (stored latest_filed={stored})"
+            return False, f"no XBRL filing since {stored}"
+        # probe failed — fall through to the clock rather than guessing
+
+    if is_fresh(conn, ticker):
+        return False, f"clock: snapshot younger than {FRESH_HOURS}h"
+    return True, f"clock: snapshot older than {FRESH_HOURS}h"
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
+
+
+def write_sec_fact_parquet(ticker: str, cf: dict, keep: frozenset[str]) -> int:
+    """Shadow the projected facts into data/parquet/sec_fact/<TICKER>.parquet. → bytes.
+
+    Same policy as the daily jobs' dual write: SQLite (still `payload_gzip`) remains
+    the source of truth for the read side, so a fault here warns and lets the fetch
+    stand rather than failing a run over a store nothing reads yet. Unlike the daily
+    tables there is no parity check to catch it afterwards — sec_fact shadows a BLOB,
+    not a table, so there is nothing to anti-join against — which is why the warning
+    is the signal and `jobs/normalize_sec_facts.py` can rebuild the whole store from
+    the blobs in ~6 seconds.
+    """
+    if not pq.dual_write_enabled():
+        return 0
+    try:
+        df = nsf.frame_from_companyfacts(cf, keep)
+        return nsf.write_ticker(ticker, df) if not df.empty else 0
+    except Exception as e:  # noqa: BLE001 — see docstring
+        print(f"[sec] WARNING parquet write for {ticker} failed "
+              f"({type(e).__name__}: {e}); rebuild with jobs/normalize_sec_facts.py")
+        return 0
 
 
 # ----- main -----
@@ -200,6 +292,10 @@ def main() -> None:
         tickers = get_us_tickers(conn, limit=args.limit, only=args.ticker)
         print(f"[sec] universe US tickers: {len(tickers)}")
 
+        keep = sec_concepts.used_concepts(DB_PATH)
+        print(f"[sec] parquet dual-write: "
+              f"{'on' if pq.dual_write_enabled() else 'OFF'} ({len(keep)} concepts kept)")
+
         n_ok = n_skip = n_nomap = n_fail = 0
         mapped = 0
 
@@ -218,12 +314,16 @@ def main() -> None:
                 continue
 
             mapped += 1
-            if not args.force and is_fresh(conn, t):
-                n_skip += 1
-                print(f"[sec] {idx}/{len(tickers)} {t}: fresh (skip)")
-                continue
-
             cik, cik10, title = cik_map[t]
+            if not args.force:
+                fetch, why = should_refetch(conn, session, t, cik10)
+                if not fetch:
+                    n_skip += 1
+                    print(f"[sec] {idx}/{len(tickers)} {t}: skip — {why}")
+                    time.sleep(RATE_SLEEP)   # the submissions probe was a request too
+                    continue
+                print(f"[sec] {idx}/{len(tickers)} {t}: fetching — {why}")
+
             url = SEC_FACTS_URL.format(cik10=cik10)
             try:
                 r = http_get(session, url)
@@ -253,7 +353,10 @@ def main() -> None:
                 })
                 conn.commit()
                 n_ok += 1
-                print(f"[sec] {idx}/{len(tickers)} {t}: ok  facts={n}  taxonomy={tax_primary}  latest={latest_filed}")
+                nbytes = write_sec_fact_parquet(t, cf, keep)
+                print(f"[sec] {idx}/{len(tickers)} {t}: ok  facts={n}  taxonomy={tax_primary}  "
+                      f"latest={latest_filed}"
+                      + (f"  parquet={nbytes / 1024:.1f}KB" if nbytes else ""))
             except Exception as e:  # noqa: BLE001 — persist failure, keep going
                 conn.rollback()
                 # Preserve a previously-good snapshot: a transient SEC/proxy outage

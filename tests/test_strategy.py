@@ -341,7 +341,7 @@ def test_strategy_page_uses_a_lazy_selector_not_st_tabs():
            / "app" / "pages" / "4_Strategy_Picks.py").read_text()
     assert "st.segmented_control(" in src
     assert "st.tabs(" not in src
-    assert "TODO(George)" in src, "the HD universe decision must stay documented"
+    assert "DECISION 2026-09-07" in src, "the HD universe decision must stay documented"
 
 
 def test_fetch_picks_closes_never_extends_past_the_snapshot(monkeypatch):
@@ -399,8 +399,9 @@ def test_db_sourced_picks_have_no_adjustment_drift():
     That defect is currently inert only because the pick universe happens to be
     almost entirely non-distributing. This test converts that accident into a
     tripwire: a symbol outside the allowlist must be EXACTLY flat, so onboarding a
-    distributing name (the HD books' 74 symbols, say) fails here and forces the
-    decision in the `TODO(George)` at `4_Strategy_Picks.py` to be made on purpose.
+    distributing name (the HD books' 74 symbols, say) fails here. HD was decided
+    AGAINST onboarding on 2026-09-07 (see the DECISION block in
+    `4_Strategy_Picks.py`); this tripwire now guards a reversal of that.
     """
     if not db.DB_PATH.exists():
         pytest.skip("data/snapshots.db not present")

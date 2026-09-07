@@ -1331,27 +1331,30 @@ sb.dual_track(
 # `st.segmented_control`, already used at home.py:144 and themed at theme.py:236.
 # Only the chosen view's body runs.
 #
-# TODO(George): the three HK high-dividend books still hit yfinance because their
-# 74 symbols (and the 3466.HK benchmark) are NOT in `universe_member` — measured
-# coverage against `prices_daily` is 0/74, against 27/27, 62/66 and 22/22 for the
-# biotech books, which now read from the snapshot. Onboarding them under a
-# dedicated `domain='strategy'` would make `jobs/fetch_eod.py` pick them up with no
-# code change (+~24.5k rows), but that is a UNIVERSE decision — it changes the
-# denominator of fetch_eod's >10% missing-ticker abort — and is yours to make, not
-# this PR's. Until then the HD path stays live, just lazy.
+# DECISION 2026-09-07 (George): the three HK high-dividend books are NOT onboarded
+# into `universe_member`. They keep reading yfinance live; only the laziness above
+# stops that from costing every page load. This is settled, not pending work.
 #
-# PRECONDITION, and it binds hardest on exactly this book: `fetch_eod` writes
-# `adj_close` from an `auto_adjust=False` pull over a ~5-day rolling window, so each
-# row's back-adjustment factor is frozen at write time and later distributions never
-# re-adjust the rows already stored. Before onboarding HD symbols into
-# `universe_member`, EITHER re-adjust `prices_daily.adj_close` on every run for the
-# FULL history of every symbol that pays distributions, OR compute total return from
-# a dividends table; otherwise HD total return will be understated — the old end of
-# each series under-adjusts, and a high-dividend book is the worst possible place to
-# absorb that. The current universe is inert on this only by accident (75 of 77
-# DB-served symbols have adj_close ≡ close);
-# `tests/test_strategy.py::test_db_sourced_picks_have_no_adjustment_drift` will fail
-# the moment a distributing symbol is onboarded, which is the point.
+# What was on the table: their 74 symbols (and the 3466.HK benchmark) have 0/74
+# coverage in `prices_daily`, against 27/27, 62/66 and 22/22 for the biotech books,
+# which read from the snapshot. Onboarding them under a dedicated `domain='strategy'`
+# would have made `jobs/fetch_eod.py` pick them up with no code change (+~24.5k rows).
+#
+# Why not: `fetch_eod` writes `adj_close` from an `auto_adjust=False` pull over a
+# ~5-day rolling window, so each row's back-adjustment factor is frozen at write time
+# and later distributions never re-adjust the rows already stored. Onboarding HD would
+# therefore understate HD total return — the old end of each series under-adjusts, and
+# a high-dividend book is the worst possible place to absorb that. Fixing it first
+# means EITHER re-adjusting `prices_daily.adj_close` on every run for the FULL history
+# of every distributing symbol, OR computing total return from a dividends table.
+# That work buys latency, not correctness, so it was not worth doing; onboarding also
+# changes the denominator of fetch_eod's >10% missing-ticker abort.
+#
+# The current universe is inert on this only by accident (75 of 77 DB-served symbols
+# have adj_close ≡ close). `tests/test_strategy.py::test_db_sourced_picks_have_no_
+# adjustment_drift` stays in place: it fails the moment a distributing symbol is
+# onboarded, so whoever reverses this decision hits the precondition instead of
+# shipping understated returns.
 _ts_ids = [k for k, c in strat.STRATEGIES.items() if not c.get("version_of")]
 _view_labels = [i18n.t(f"strategy.name.{sid}") for sid in _ts_ids]
 _view_labels.append(i18n.t("strategy.name.ipo"))

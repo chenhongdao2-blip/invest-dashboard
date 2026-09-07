@@ -1,19 +1,108 @@
 {
-  "as_of": "2026-06-29",
-  "source": "etf-data-mcp CLI (stockanalysis+barchart for holdings, yfinance for profile/perf)",
-  "n_etfs": 10,
-  "holdings_cap_note": "Upstream caps weighted rows at top ~25; tail is symbol-only (rank/name/weight=None). Tail kept for '+N more'; unknown weight is None, never 0.",
-  "weight_sum_pct_by_etf": {
-    "XLV": 85.62,
-    "VHT": 73.0,
-    "IYH": 80.69,
-    "IBB": 64.8,
-    "XBI": 30.46,
-    "XPH": 47.73,
-    "PPH": 99.92,
-    "IHI": 96.56,
-    "IHF": 91.76,
-    "ARKG": 94.19
+  "as_of": "2026-08-31",
+  "holdings_as_of_oldest": "2026-07-31",
+  "perf_as_of": "2026-09-04",
+  "source": "holdings: FactSet Ownership fund_holdings (via a Claude session, baked to\ndata/external/_factset_raw/); profile+perf: etf-data-mcp CLI (yfinance)",
+  "holdings_as_of_by_etf": {
+    "XLV": "2026-08-31",
+    "VHT": "2026-07-31",
+    "IYH": "2026-08-31",
+    "IBB": "2026-08-31",
+    "XBI": "2026-08-31",
+    "XPH": "2026-08-31",
+    "PPH": "2026-08-31",
+    "IHI": "2026-08-31",
+    "IHF": "2026-08-31",
+    "ARKG": "2026-08-31"
   },
-  "built_at": "2026-06-29T15:28:03"
+  "n_etfs": 10,
+  "holdings_cap_note": "FactSet weights EVERY constituent, so there is no symbol-only tail: weighted_rows == total rows. The page shows the top rows and lists the rest as '+N more'. Unknown weight is still None, never 0.",
+  "weight_sum_pct_by_etf": {
+    "XLV": 100.0,
+    "VHT": 99.82,
+    "IYH": 100.0,
+    "IBB": 100.0,
+    "XBI": 99.9,
+    "XPH": 99.99,
+    "PPH": 100.0,
+    "IHI": 100.0,
+    "IHF": 100.0,
+    "ARKG": 98.3
+  },
+  "weighted_rows_by_etf": {
+    "XLV": 61,
+    "VHT": 412,
+    "IYH": 101,
+    "IBB": 238,
+    "XBI": 147,
+    "XPH": 65,
+    "PPH": 25,
+    "IHI": 47,
+    "IHF": 61,
+    "ARKG": 32
+  },
+  "upstream_by_etf": {
+    "XLV": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "VHT": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "IYH": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "IBB": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "XBI": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "XPH": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "PPH": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "IHI": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "IHF": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    },
+    "ARKG": {
+      "source": "factset:fund_holdings",
+      "reliability": "HIGH",
+      "partial": false,
+      "error": null
+    }
+  },
+  "degraded_etfs": [],
+  "built_at": "2026-09-07T19:59:19"
 }

@@ -50,7 +50,7 @@ DATASETS: dict[str, dict] = {
     "earnings_calendar":  {"label": "业绩会日历",              "source": "minodata API(GH手动dispatch)",          "max_age_days": 7},
     "sw_industry_daily":  {"label": "申万行业日线(板块轮动A股腿)", "source": "Wind(job待改写;原iFind已停用)",     "max_age_days": 7},
     "bd_deals":           {"label": "BD/授权交易明细",         "source": "PatSnap(本地)",                          "max_age_days": 7},
-    "etf_hc_holdings":    {"label": "ETF 持仓/画像(HC篮)",     "source": "etf-data CLI(本地)",                     "max_age_days": 45},
+    "etf_hc_holdings":    {"label": "ETF 持仓/画像(HC篮)",     "source": "FactSet fund_holdings(权重)+etf-data CLI(画像)", "max_age_days": 45},
     "china_fund_hc_positioning": {"label": "中国基金 HC 持仓(季)", "source": "手工(公募季报 audited xlsx)",       "max_age_days": 135},
     "cn_pharma_headcount":{"label": "医药公司员工人数(年)",    "source": "手工(年报)",                             "max_age_days": 300},
     "funding_quarterly":  {"label": "投融资季度面板(公开源)",  "source": "手工(多源三角+对抗核验)",                "max_age_days": 120},

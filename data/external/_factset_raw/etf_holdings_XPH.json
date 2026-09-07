@@ -1,0 +1,333 @@
+{
+  "etf_ticker": "XPH",
+  "as_of": "2026-08-31",
+  "currency": "USD",
+  "source": "FactSet_Ownership.fund_holdings topn=ALL",
+  "holdings": [
+    {
+      "securityTicker": "AMLX-US",
+      "securityName": "AMYLYX PHARMACEUTICALS INC  COM",
+      "weightClose": 3.65340871408232
+    },
+    {
+      "securityTicker": "CRNX-US",
+      "securityName": "CRINETICS PHARMACEUTICALS INC  COM",
+      "weightClose": 3.60652204052704
+    },
+    {
+      "securityTicker": "MBX-US",
+      "securityName": "MBX BIOSCIENCES INC  COM",
+      "weightClose": 2.89618246897362
+    },
+    {
+      "securityTicker": "ATAI-US",
+      "securityName": "ATAIBECKLEY INC  COM",
+      "weightClose": 2.82925079779982
+    },
+    {
+      "securityTicker": "OMER-US",
+      "securityName": "OMEROS CORP  COM",
+      "weightClose": 2.68406947242618
+    },
+    {
+      "securityTicker": "DFTX-US",
+      "securityName": "DEFINIUM THERAPEUTIC INC  COM",
+      "weightClose": 2.49024910858724
+    },
+    {
+      "securityTicker": "ELVN-US",
+      "securityName": "ENLIVEN THERAPEUTICS INC  COM",
+      "weightClose": 2.27965641852276
+    },
+    {
+      "securityTicker": "NUVB-US",
+      "securityName": "NUVATION BIO INC  CL A",
+      "weightClose": 2.1187312838638
+    },
+    {
+      "securityTicker": "CORT-US",
+      "securityName": "CORCEPT THERAPEUTICS INC  COM",
+      "weightClose": 2.1142280678531
+    },
+    {
+      "securityTicker": "ETON-US",
+      "securityName": "ETON PHARMACEUTICALS INC  COM",
+      "weightClose": 2.0801087765916
+    },
+    {
+      "securityTicker": "PRGO-US",
+      "securityName": "PERRIGO CO PLC  COM",
+      "weightClose": 1.90965383974378
+    },
+    {
+      "securityTicker": "EWTX-US",
+      "securityName": "EDGEWISE THERAPEUTICS INC  COM",
+      "weightClose": 1.84871605758681
+    },
+    {
+      "securityTicker": "NKTR-US",
+      "securityName": "NEKTAR THERAPEUTICS  COM",
+      "weightClose": 1.83167646911398
+    },
+    {
+      "securityTicker": "MRK-US",
+      "securityName": "MERCK & CO INC  COM",
+      "weightClose": 1.80801657948111
+    },
+    {
+      "securityTicker": "TRVI-US",
+      "securityName": "TREVI THERAPEUTICS INC  COM",
+      "weightClose": 1.80497405005787
+    },
+    {
+      "securityTicker": "TARS-US",
+      "securityName": "TARSUS PHARMACEUTICALS INC  COM",
+      "weightClose": 1.76544712498106
+    },
+    {
+      "securityTicker": "BMY-US",
+      "securityName": "BRISTOL MYERS SQUIBB CO  COM",
+      "weightClose": 1.75083552763939
+    },
+    {
+      "securityTicker": "OCUL-US",
+      "securityName": "OCULAR THERAPEUTIX INC  COM",
+      "weightClose": 1.74876781684113
+    },
+    {
+      "securityTicker": "LGND-US",
+      "securityName": "LIGAND PHARMACEUTICALS INC  CL B",
+      "weightClose": 1.66807959518926
+    },
+    {
+      "securityTicker": "AMRX-US",
+      "securityName": "AMNEAL PHARMACEUTICALS INC  CL A",
+      "weightClose": 1.66150005114256
+    },
+    {
+      "securityTicker": "RPRX-US",
+      "securityName": "ROYALTY PHARMA PLC  CL A",
+      "weightClose": 1.64112134272332
+    },
+    {
+      "securityTicker": "JNJ-US",
+      "securityName": "JOHNSON & JOHNSON  COM",
+      "weightClose": 1.62411325132858
+    },
+    {
+      "securityTicker": "PFE-US",
+      "securityName": "PFIZER INC  COM",
+      "weightClose": 1.61980177823518
+    },
+    {
+      "securityTicker": "HRMY-US",
+      "securityName": "HARMONY BIOSCIENCES HOLDINGS  COM",
+      "weightClose": 1.61718836815481
+    },
+    {
+      "securityTicker": "PCRX-US",
+      "securityName": "PACIRA BIOSCIENCES INC  COM",
+      "weightClose": 1.61132761665451
+    },
+    {
+      "securityTicker": "RAPP-US",
+      "securityName": "RAPPORT THERAPEUTICS INC  COM",
+      "weightClose": 1.60366512930319
+    },
+    {
+      "securityTicker": "JAZZ-US",
+      "securityName": "JAZZ PHARMACEUTICALS PLC  ORD",
+      "weightClose": 1.59012214275717
+    },
+    {
+      "securityTicker": "ALMS-US",
+      "securityName": "ALUMIS INC  CL A",
+      "weightClose": 1.58411566036519
+    },
+    {
+      "securityTicker": "MAZE-US",
+      "securityName": "MAZE THERAPEUTICS INC  COM",
+      "weightClose": 1.57407965939811
+    },
+    {
+      "securityTicker": "MANE-US",
+      "securityName": "VERADERMICS INC  COM",
+      "weightClose": 1.54202816418653
+    },
+    {
+      "securityTicker": "PBH-US",
+      "securityName": "PRESTIGE CONSUMER HEALTHCARE  COM",
+      "weightClose": 1.53563978505089
+    },
+    {
+      "securityTicker": "VTRS-US",
+      "securityName": "VIATRIS INC  COM",
+      "weightClose": 1.52539187744402
+    },
+    {
+      "securityTicker": "ELAN-US",
+      "securityName": "ELANCO ANIMAL HEALTH INC  COM",
+      "weightClose": 1.52391703396599
+    },
+    {
+      "securityTicker": "LQDA-US",
+      "securityName": "LIQUIDIA CORP  COM",
+      "weightClose": 1.5223036002753
+    },
+    {
+      "securityTicker": "ANRO-US",
+      "securityName": "ALTO NEUROSCIENCE INC  COM",
+      "weightClose": 1.49972284149285
+    },
+    {
+      "securityTicker": "OGN-US",
+      "securityName": "ORGANON & CO  COM",
+      "weightClose": 1.49840711853213
+    },
+    {
+      "securityTicker": "HROW-US",
+      "securityName": "HARROW INC  COM",
+      "weightClose": 1.49802030958784
+    },
+    {
+      "securityTicker": "LLY-US",
+      "securityName": "ELI LILLY & CO  COM",
+      "weightClose": 1.48116954331045
+    },
+    {
+      "securityTicker": "PAHC-US",
+      "securityName": "PHIBRO ANIMAL HEALTH CORP  CL A",
+      "weightClose": 1.47363889594541
+    },
+    {
+      "securityTicker": "SUPN-US",
+      "securityName": "SUPERNUS PHARMACEUTICALS INC  COM",
+      "weightClose": 1.42861522519872
+    },
+    {
+      "securityTicker": "XERS-US",
+      "securityName": "XERIS BIOPHARMA HOLDINGS INC  COM",
+      "weightClose": 1.41693416047026
+    },
+    {
+      "securityTicker": "ZTS-US",
+      "securityName": "ZOETIS INC  CL A",
+      "weightClose": 1.3819659894502
+    },
+    {
+      "securityTicker": "INDV-US",
+      "securityName": "INDIVIOR PHARMACEUTICALS INC  COM",
+      "weightClose": 1.33616892758435
+    },
+    {
+      "securityTicker": "AMPH-US",
+      "securityName": "AMPHASTAR PHARMACEUTICALS INC  COM",
+      "weightClose": 1.33371331662056
+    },
+    {
+      "securityTicker": "ARVN-US",
+      "securityName": "ARVINAS INC  COM",
+      "weightClose": 1.31822062973837
+    },
+    {
+      "securityTicker": "INVA-US",
+      "securityName": "INNOVIVA INC  COM",
+      "weightClose": 1.31577234700722
+    },
+    {
+      "securityTicker": "ANIP-US",
+      "securityName": "ANI PHARMACEUTICALS INC  COM",
+      "weightClose": 1.30392749849568
+    },
+    {
+      "securityTicker": "WVE-US",
+      "securityName": "WAVE LIFE SCIENCES INC  COM",
+      "weightClose": 1.26138195026598
+    },
+    {
+      "securityTicker": "AXSM-US",
+      "securityName": "AXSOME THERAPEUTICS INC  COM",
+      "weightClose": 1.17402893972811
+    },
+    {
+      "securityTicker": "LBRX-US",
+      "securityName": "LB PHARMACEUTICALS INC  COM",
+      "weightClose": 1.10769116230452
+    },
+    {
+      "securityTicker": "SEPN-US",
+      "securityName": "SEPTERNA INC  COM",
+      "weightClose": 1.07715256861677
+    },
+    {
+      "securityTicker": "COLL-US",
+      "securityName": "COLLEGIUM PHARMACEUTICAL INC  COM",
+      "weightClose": 1.03039104449754
+    },
+    {
+      "securityTicker": "CRMD-US",
+      "securityName": "CORMEDIX INC  COM",
+      "weightClose": 1.01210338025574
+    },
+    {
+      "securityTicker": "ACRS-US",
+      "securityName": "ACLARIS THERAPEUTICS INC  COM",
+      "weightClose": 0.976106751971627
+    },
+    {
+      "securityTicker": "ZVRA-US",
+      "securityName": "ZEVRA THERAPEUTICS INC  COM",
+      "weightClose": 0.966437097845534
+    },
+    {
+      "securityTicker": "TBPH-US",
+      "securityName": "THERAVANCE BIOPHARMA INC  COM",
+      "weightClose": 0.915591650952207
+    },
+    {
+      "securityTicker": "AQST-US",
+      "securityName": "AQUESTIVE THERAPEUTICS INC  COM",
+      "weightClose": 0.896990165121832
+    },
+    {
+      "securityTicker": "PHAT-US",
+      "securityName": "PHATHOM PHARMACEUTICALS INC  COM",
+      "weightClose": 0.895308301629138
+    },
+    {
+      "securityTicker": "FULC-US",
+      "securityName": "FULCRUM THERAPEUTICS INC  COM",
+      "weightClose": 0.700120458547037
+    },
+    {
+      "securityTicker": "EOLS-US",
+      "securityName": "EVOLUS INC  COM",
+      "weightClose": 0.659068916663361
+    },
+    {
+      "securityTicker": "RLMD-US",
+      "securityName": "RELMADA THERAPEUTICS INC  COM",
+      "weightClose": 0.63650400957447
+    },
+    {
+      "securityTicker": "LXRX-US",
+      "securityName": "LEXICON PHARMACEUTICALS INC  COM",
+      "weightClose": 0.562607755234136
+    },
+    {
+      "securityTicker": "BIOA-US",
+      "securityName": "BIOAGE LABS INC  COM",
+      "weightClose": 0.555040817942703
+    },
+    {
+      "securityTicker": "EYPT-US",
+      "securityName": "EYEPOINT (PHARMACEUTICALS) INC  COM",
+      "weightClose": 0.531761403055823
+    },
+    {
+      "securityTicker": "GVMXX-US",
+      "securityName": "STATE STREET INST US GOV MMKT  PREM",
+      "weightClose": 0.0829513991599218
+    }
+  ]
+}

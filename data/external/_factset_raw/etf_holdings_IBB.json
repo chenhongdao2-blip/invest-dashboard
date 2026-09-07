@@ -1,0 +1,1198 @@
+{
+  "etf_ticker": "IBB",
+  "as_of": "2026-08-31",
+  "currency": "USD",
+  "source": "FactSet_Ownership.fund_holdings topn=ALL",
+  "holdings": [
+    {
+      "securityTicker": "AMGN-US",
+      "securityName": "AMGEN INC  COM",
+      "weightClose": 8.47245484279249
+    },
+    {
+      "securityTicker": "VRTX-US",
+      "securityName": "VERTEX PHARMACEUTICALS INC  COM",
+      "weightClose": 8.07607615306349
+    },
+    {
+      "securityTicker": "GILD-US",
+      "securityName": "GILEAD SCIENCES INC  COM",
+      "weightClose": 7.22585915321858
+    },
+    {
+      "securityTicker": "REGN-US",
+      "securityName": "REGENERON PHARMACEUTICALS  COM",
+      "weightClose": 5.73269685782516
+    },
+    {
+      "securityTicker": "ARGX-US",
+      "securityName": "ARGENX SE  SPONSORED ADR",
+      "weightClose": 3.8108213062902
+    },
+    {
+      "securityTicker": "MRNA-US",
+      "securityName": "MODERNA INC  COM",
+      "weightClose": 3.62522610661024
+    },
+    {
+      "securityTicker": "NTRA-US",
+      "securityName": "NATERA INC  COM",
+      "weightClose": 3.12582160299464
+    },
+    {
+      "securityTicker": "RVMD-US",
+      "securityName": "REVOLUTION MEDICINES INC  COM",
+      "weightClose": 2.78251208532029
+    },
+    {
+      "securityTicker": "ILMN-US",
+      "securityName": "ILLUMINA INC  COM",
+      "weightClose": 2.29198227414301
+    },
+    {
+      "securityTicker": "ALNY-US",
+      "securityName": "ALNYLAM PHARMACEUTICALS INC  COM",
+      "weightClose": 2.2751508069764
+    },
+    {
+      "securityTicker": "BIIB-US",
+      "securityName": "BIOGEN INC  COM",
+      "weightClose": 2.25441109846233
+    },
+    {
+      "securityTicker": "ONC-US",
+      "securityName": "BEONE MEDICINES LTD  UNSP ADR",
+      "weightClose": 2.03537204092292
+    },
+    {
+      "securityTicker": "INSM-US",
+      "securityName": "INSMED INC  COM",
+      "weightClose": 1.85938309871166
+    },
+    {
+      "securityTicker": "INCY-US",
+      "securityName": "INCYTE CORP  COM",
+      "weightClose": 1.73400724406976
+    },
+    {
+      "securityTicker": "UTHR-US",
+      "securityName": "UNITED THERAPEUTICS CORP  COM",
+      "weightClose": 1.48908828297535
+    },
+    {
+      "securityTicker": "ROIV-US",
+      "securityName": "ROIVANT SCIENCES LTD  COM",
+      "weightClose": 1.27154759149013
+    },
+    {
+      "securityTicker": "GMAB-US",
+      "securityName": "GENMAB AS  SPONSORED ADR",
+      "weightClose": 1.23132576299391
+    },
+    {
+      "securityTicker": "ASND-US",
+      "securityName": "ASCENDIS PHARMA AS  ORD",
+      "weightClose": 1.15629880172332
+    },
+    {
+      "securityTicker": "NBIX-US",
+      "securityName": "NEUROCRINE BIOSCIENCES INC  COM",
+      "weightClose": 1.08183913084889
+    },
+    {
+      "securityTicker": "CRL-US",
+      "securityName": "CHARLES RIVER LABS INTL INC  COM",
+      "weightClose": 0.975340516456429
+    },
+    {
+      "securityTicker": "MEDP-US",
+      "securityName": "MEDPACE HOLDINGS INC  COM",
+      "weightClose": 0.971596793755416
+    },
+    {
+      "securityTicker": "EXEL-US",
+      "securityName": "EXELIXIS INC  COM",
+      "weightClose": 0.94620977959307
+    },
+    {
+      "securityTicker": "BBIO-US",
+      "securityName": "BRIDGEBIO PHARMA INC  COM",
+      "weightClose": 0.920623316951725
+    },
+    {
+      "securityTicker": "HALO-US",
+      "securityName": "HALOZYME THERAPEUTICS INC  COM",
+      "weightClose": 0.888789987803433
+    },
+    {
+      "securityTicker": "BMRN-US",
+      "securityName": "BIOMARIN PHARMACEUTICAL INC  COM",
+      "weightClose": 0.882592400402709
+    },
+    {
+      "securityTicker": "MDGL-US",
+      "securityName": "MADRIGAL PHARMACEUTICALS INC  COM",
+      "weightClose": 0.832923529541818
+    },
+    {
+      "securityTicker": "TECH-US",
+      "securityName": "BIO TECHNE CORP  COM",
+      "weightClose": 0.801958758041794
+    },
+    {
+      "securityTicker": "ARWR-US",
+      "securityName": "ARROWHEAD PHARMACEUTICALS INC  COM",
+      "weightClose": 0.775102910271908
+    },
+    {
+      "securityTicker": "IONS-US",
+      "securityName": "IONIS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.695423942585708
+    },
+    {
+      "securityTicker": "RGEN-US",
+      "securityName": "REPLIGEN CORP  COM",
+      "weightClose": 0.686401142372304
+    },
+    {
+      "securityTicker": "BNTX-US",
+      "securityName": "BIONTECH SE  ADR",
+      "weightClose": 0.660610928293272
+    },
+    {
+      "securityTicker": "KRYS-US",
+      "securityName": "KRYSTAL BIOTECH INC  COM",
+      "weightClose": 0.657222585225337
+    },
+    {
+      "securityTicker": "PRAX-US",
+      "securityName": "PRAXIS PRECISION MEDICINES INC  COM",
+      "weightClose": 0.650083640240447
+    },
+    {
+      "securityTicker": "PTGX-US",
+      "securityName": "PROTAGONIST THERAPEUTICS INC  COM",
+      "weightClose": 0.640801922163465
+    },
+    {
+      "securityTicker": "PCVX-US",
+      "securityName": "VAXCYTE INC  COM",
+      "weightClose": 0.609518495345529
+    },
+    {
+      "securityTicker": "AXSM-US",
+      "securityName": "AXSOME THERAPEUTICS INC  COM",
+      "weightClose": 0.607781066537217
+    },
+    {
+      "securityTicker": "CYTK-US",
+      "securityName": "CYTOKINETICS INC  COM",
+      "weightClose": 0.600726972216496
+    },
+    {
+      "securityTicker": "KYMR-US",
+      "securityName": "KYMERA THERAPEUTICS INC  COM",
+      "weightClose": 0.600683833225066
+    },
+    {
+      "securityTicker": "CRNX-US",
+      "securityName": "CRINETICS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.590805115501444
+    },
+    {
+      "securityTicker": "TWST-US",
+      "securityName": "TWIST BIOSCIENCE CORP  COM",
+      "weightClose": 0.588323427777098
+    },
+    {
+      "securityTicker": "APGE-US",
+      "securityName": "APOGEE THERAPEUTICS INC  COM",
+      "weightClose": 0.546900081242004
+    },
+    {
+      "securityTicker": "ALKS-US",
+      "securityName": "ALKERMES PLC  COM",
+      "weightClose": 0.544377581520616
+    },
+    {
+      "securityTicker": "ABVX-US",
+      "securityName": "ABIVAX SA  SPONSORED ADR",
+      "weightClose": 0.515029193115492
+    },
+    {
+      "securityTicker": "RYTM-US",
+      "securityName": "RHYTHM PHARMACEUTICALS INC  COM",
+      "weightClose": 0.500544941942051
+    },
+    {
+      "securityTicker": "TXG-US",
+      "securityName": "10X GENOMICS INC  CL A",
+      "weightClose": 0.500357249390969
+    },
+    {
+      "securityTicker": "SYRE-US",
+      "securityName": "SPYRE THERAPEUTICS INC  COM",
+      "weightClose": 0.490719140786812
+    },
+    {
+      "securityTicker": "TEM-US",
+      "securityName": "TEMPUS AI INC  CL A",
+      "weightClose": 0.474220029326397
+    },
+    {
+      "securityTicker": "BRKR-US",
+      "securityName": "BRUKER CORP  COM",
+      "weightClose": 0.45815829238025
+    },
+    {
+      "securityTicker": "TVTX-US",
+      "securityName": "TRAVERE THERAPEUTICS INC  COM",
+      "weightClose": 0.425322930617587
+    },
+    {
+      "securityTicker": "PTCT-US",
+      "securityName": "PTC THERAPEUTICS INC  COM",
+      "weightClose": 0.395899029120441
+    },
+    {
+      "securityTicker": "SRRK-US",
+      "securityName": "SCHOLAR ROCK HOLDING CORP  COM",
+      "weightClose": 0.388746156919006
+    },
+    {
+      "securityTicker": "XENE-US",
+      "securityName": "XENON PHARMACEUTICALS INC  COM",
+      "weightClose": 0.388118258319151
+    },
+    {
+      "securityTicker": "COGT-US",
+      "securityName": "COGENT BIOSCIENCES INC  COM",
+      "weightClose": 0.365763517369324
+    },
+    {
+      "securityTicker": "CRSP-US",
+      "securityName": "CRISPR THERAPEUTICS AG  COM",
+      "weightClose": 0.363302464237882
+    },
+    {
+      "securityTicker": "DFTX-US",
+      "securityName": "DEFINIUM THERAPEUTIC INC  COM",
+      "weightClose": 0.359563776150327
+    },
+    {
+      "securityTicker": "ACAD-US",
+      "securityName": "ACADIA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.346841266890831
+    },
+    {
+      "securityTicker": "MIRM-US",
+      "securityName": "MIRUM PHARMACEUTICALS INC  COM",
+      "weightClose": 0.345394374620777
+    },
+    {
+      "securityTicker": "ORKA-US",
+      "securityName": "ORUKA THERAPEUTICS INC  COM",
+      "weightClose": 0.333839725657865
+    },
+    {
+      "securityTicker": "CGON-US",
+      "securityName": "CG ONCOLOGY INC  COM",
+      "weightClose": 0.30760400065112
+    },
+    {
+      "securityTicker": "ADPT-US",
+      "securityName": "ADAPTIVE BIOTECHNOLOGIES CORP  COM",
+      "weightClose": 0.274072796443926
+    },
+    {
+      "securityTicker": "DYN-US",
+      "securityName": "DYNE THERAPEUTICS INC  COM",
+      "weightClose": 0.27076096180108
+    },
+    {
+      "securityTicker": "ERAS-US",
+      "securityName": "ERASCA INC  COM",
+      "weightClose": 0.264877298210744
+    },
+    {
+      "securityTicker": "DNLI-US",
+      "securityName": "DENALI THERAPEUTICS INC  COM",
+      "weightClose": 0.251652110143805
+    },
+    {
+      "securityTicker": "VCYT-US",
+      "securityName": "VERACYTE INC  COM",
+      "weightClose": 0.238325229033048
+    },
+    {
+      "securityTicker": "IDYA-US",
+      "securityName": "IDEAYA BIOSCIENCES INC  COM",
+      "weightClose": 0.237231128396447
+    },
+    {
+      "securityTicker": "IMVT-US",
+      "securityName": "IMMUNOVANT INC  COM",
+      "weightClose": 0.235294505431723
+    },
+    {
+      "securityTicker": "EWTX-US",
+      "securityName": "EDGEWISE THERAPEUTICS INC  COM",
+      "weightClose": 0.233404137673848
+    },
+    {
+      "securityTicker": "ELVN-US",
+      "securityName": "ENLIVEN THERAPEUTICS INC  COM",
+      "weightClose": 0.228608034314553
+    },
+    {
+      "securityTicker": "IOVA-US",
+      "securityName": "IOVANCE BIOTHERAPEUTICS INC  COM",
+      "weightClose": 0.225653808732475
+    },
+    {
+      "securityTicker": "GRAL-US",
+      "securityName": "GRAIL INC  COM",
+      "weightClose": 0.224113019303269
+    },
+    {
+      "securityTicker": "AMLX-US",
+      "securityName": "AMYLYX PHARMACEUTICALS INC  COM",
+      "weightClose": 0.222373848709824
+    },
+    {
+      "securityTicker": "CAI-US",
+      "securityName": "CARIS LIFE SCIENCES INC  COM",
+      "weightClose": 0.221586807560434
+    },
+    {
+      "securityTicker": "LEGN-US",
+      "securityName": "LEGEND BIOTECH CORP  ADR",
+      "weightClose": 0.218703209575492
+    },
+    {
+      "securityTicker": "RLAY-US",
+      "securityName": "RELAY THERAPEUTICS INC  COM",
+      "weightClose": 0.214467551859793
+    },
+    {
+      "securityTicker": "IBRX-US",
+      "securityName": "IMMUNITYBIO INC  COM",
+      "weightClose": 0.212993717147515
+    },
+    {
+      "securityTicker": "TARS-US",
+      "securityName": "TARSUS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.212517244545138
+    },
+    {
+      "securityTicker": "BEAM-US",
+      "securityName": "BEAM THERAPEUTICS INC  COM",
+      "weightClose": 0.196595109028187
+    },
+    {
+      "securityTicker": "QURE-US",
+      "securityName": "UNIQURE NV  COM",
+      "weightClose": 0.196097729276231
+    },
+    {
+      "securityTicker": "TNGX-US",
+      "securityName": "TANGO THERAPEUTICS INC  COM",
+      "weightClose": 0.194043345789106
+    },
+    {
+      "securityTicker": "ABCL-US",
+      "securityName": "ABCELLERA BIOLOGICS INC  COM",
+      "weightClose": 0.1919120778346
+    },
+    {
+      "securityTicker": "GPCR-US",
+      "securityName": "STRUCTURE THERAPEUTICS  SPONS ADR",
+      "weightClose": 0.191187544480062
+    },
+    {
+      "securityTicker": "ARQT-US",
+      "securityName": "ARCUTIS BIOTHERAPEUTICS INC  COM",
+      "weightClose": 0.188478111261228
+    },
+    {
+      "securityTicker": "NRIX-US",
+      "securityName": "NURIX THERAPEUTICS INC  COM",
+      "weightClose": 0.179346343079684
+    },
+    {
+      "securityTicker": "RCUS-US",
+      "securityName": "ARCUS BIOSCIENCES INC  COM",
+      "weightClose": 0.173845714221598
+    },
+    {
+      "securityTicker": "CDNA-US",
+      "securityName": "CAREDX INC  COM",
+      "weightClose": 0.166379933304392
+    },
+    {
+      "securityTicker": "ZLAB-US",
+      "securityName": "ZAI LAB LTD  UNSPONSORED ADR",
+      "weightClose": 0.162543519376253
+    },
+    {
+      "securityTicker": "RARE-US",
+      "securityName": "ULTRAGENYX PHARMACEUTICAL INC  COM",
+      "weightClose": 0.161018209065983
+    },
+    {
+      "securityTicker": "IRON-US",
+      "securityName": "DISC MEDICINE INC  COM",
+      "weightClose": 0.154404212821495
+    },
+    {
+      "securityTicker": "ATAI-US",
+      "securityName": "ATAIBECKLEY INC  COM",
+      "weightClose": 0.15358811178432
+    },
+    {
+      "securityTicker": "KOD-US",
+      "securityName": "KODIAK SCIENCES INC  COM",
+      "weightClose": 0.153408020079973
+    },
+    {
+      "securityTicker": "SRPT-US",
+      "securityName": "SAREPTA THERAPEUTICS INC  COM",
+      "weightClose": 0.15127551144366
+    },
+    {
+      "securityTicker": "ADMA-US",
+      "securityName": "ADMA BIOLOGICS INC  COM VTG",
+      "weightClose": 0.150212955113384
+    },
+    {
+      "securityTicker": "BCRX-US",
+      "securityName": "BIOCRYST PHARMACEUTICALS  COM",
+      "weightClose": 0.148394582032016
+    },
+    {
+      "securityTicker": "ZYME-US",
+      "securityName": "ZYMEWORKS INC  COM",
+      "weightClose": 0.147308226873802
+    },
+    {
+      "securityTicker": "NAMS-US",
+      "securityName": "NEWAMSTERDAM PHARMA CO NV  COM",
+      "weightClose": 0.144747531413063
+    },
+    {
+      "securityTicker": "VCEL-US",
+      "securityName": "VERICEL CORP  COM",
+      "weightClose": 0.142920504108299
+    },
+    {
+      "securityTicker": "VERA-US",
+      "securityName": "VERA THERAPEUTICS INC  CL A",
+      "weightClose": 0.141189044434391
+    },
+    {
+      "securityTicker": "BHVN-US",
+      "securityName": "BIOHAVEN LTD  COM",
+      "weightClose": 0.136029123831967
+    },
+    {
+      "securityTicker": "XNCR-US",
+      "securityName": "XENCOR INC  COM",
+      "weightClose": 0.134954244025812
+    },
+    {
+      "securityTicker": "AGIO-US",
+      "securityName": "AGIOS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.133279405018021
+    },
+    {
+      "securityTicker": "NVCR-US",
+      "securityName": "NOVOCURE LTD  COM",
+      "weightClose": 0.130862825880656
+    },
+    {
+      "securityTicker": "SMMT-US",
+      "securityName": "SUMMIT THERAPEUTICS INC  COM",
+      "weightClose": 0.130273894770824
+    },
+    {
+      "securityTicker": "AUPH-US",
+      "securityName": "AURINIA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.130227280132843
+    },
+    {
+      "securityTicker": "ALMS-US",
+      "securityName": "ALUMIS INC  CL A",
+      "weightClose": 0.129651923968406
+    },
+    {
+      "securityTicker": "MBX-US",
+      "securityName": "MBX BIOSCIENCES INC  COM",
+      "weightClose": 0.129155587187269
+    },
+    {
+      "securityTicker": "FTRE-US",
+      "securityName": "FORTREA HLDIGS INC  COM WI",
+      "weightClose": 0.123018788708208
+    },
+    {
+      "securityTicker": "GRFS-US",
+      "securityName": "GRIFOLS SA  SPONSORED ADR B",
+      "weightClose": 0.120984960481378
+    },
+    {
+      "securityTicker": "NTLA-US",
+      "securityName": "INTELLIA THERAPEUTICS IN  COM",
+      "weightClose": 0.119570580451849
+    },
+    {
+      "securityTicker": "URGN-US",
+      "securityName": "UROGEN PHARMA LTD  COM",
+      "weightClose": 0.117441380777688
+    },
+    {
+      "securityTicker": "NUVB-US",
+      "securityName": "NUVATION BIO INC  CL A",
+      "weightClose": 0.117237562418029
+    },
+    {
+      "securityTicker": "RXRX-US",
+      "securityName": "RECURSION PHARMACEUTICALS INC  CL A",
+      "weightClose": 0.113531605571004
+    },
+    {
+      "securityTicker": "MLYS-US",
+      "securityName": "MINERALYS THERAPEUTICS INC  COM",
+      "weightClose": 0.110771609604244
+    },
+    {
+      "securityTicker": "ANAB-US",
+      "securityName": "ANAPTYSBIO INC  COM",
+      "weightClose": 0.110424352541976
+    },
+    {
+      "securityTicker": "SNDX-US",
+      "securityName": "SYNDAX PHARMACEUTICALS INC  COM",
+      "weightClose": 0.110341478319441
+    },
+    {
+      "securityTicker": "IMCR-US",
+      "securityName": "IMMUNOCORE HOLDINGS PLC  ADR",
+      "weightClose": 0.109708748736036
+    },
+    {
+      "securityTicker": "TRVI-US",
+      "securityName": "TREVI THERAPEUTICS INC  COM",
+      "weightClose": 0.109316670754662
+    },
+    {
+      "securityTicker": "STOK-US",
+      "securityName": "STOKE THERAPEUTICS INC  COM",
+      "weightClose": 0.109252721607552
+    },
+    {
+      "securityTicker": "TSHA-US",
+      "securityName": "TAYSHA GENE THERAPIES INC  COM",
+      "weightClose": 0.107396813128173
+    },
+    {
+      "securityTicker": "CMPS-US",
+      "securityName": "COMPASS PATHWAYS PLC  ADR",
+      "weightClose": 0.104377787793036
+    },
+    {
+      "securityTicker": "NVAX-US",
+      "securityName": "NOVAVAX INC  COM",
+      "weightClose": 0.104135426196197
+    },
+    {
+      "securityTicker": "VIR-US",
+      "securityName": "VIR BIOTECHNOLOGY INC  COM",
+      "weightClose": 0.103900951845403
+    },
+    {
+      "securityTicker": "RAPP-US",
+      "securityName": "RAPPORT THERAPEUTICS INC  COM",
+      "weightClose": 0.0987939772150238
+    },
+    {
+      "securityTicker": "INBX-US",
+      "securityName": "INHIBRX BIOSCIENCES INC  COM",
+      "weightClose": 0.0984073621095414
+    },
+    {
+      "securityTicker": "GHRS-US",
+      "securityName": "GH RESEARCH PLC  COM",
+      "weightClose": 0.0933798945050186
+    },
+    {
+      "securityTicker": "ANRO-US",
+      "securityName": "ALTO NEUROSCIENCE INC  COM",
+      "weightClose": 0.0885266243161242
+    },
+    {
+      "securityTicker": "ABSI-US",
+      "securityName": "ABSCI CORP  COM",
+      "weightClose": 0.086240556962142
+    },
+    {
+      "securityTicker": "LKFT-US",
+      "securityName": "LAKEFRONT (GALAPAGOS) BIOTHE  ADR",
+      "weightClose": 0.0842967106249723
+    },
+    {
+      "securityTicker": "MNKD-US",
+      "securityName": "MANNKIND CORP  COM",
+      "weightClose": 0.0842542167002532
+    },
+    {
+      "securityTicker": "MESO-US",
+      "securityName": "MESOBLAST LTD  SPONSORED ADR",
+      "weightClose": 0.0839181965148864
+    },
+    {
+      "securityTicker": "REPL-US",
+      "securityName": "REPLIMUNE GROUP INC  COM",
+      "weightClose": 0.0837752433545742
+    },
+    {
+      "securityTicker": "TYRA-US",
+      "securityName": "TYRA BIOSCIENCES INC  COM",
+      "weightClose": 0.0787723611259598
+    },
+    {
+      "securityTicker": "KURA-US",
+      "securityName": "KURA ONCOLOGY INC  COM",
+      "weightClose": 0.0777589198905691
+    },
+    {
+      "securityTicker": "PGEN-US",
+      "securityName": "PRECIGEN INC  COM",
+      "weightClose": 0.0774448362693654
+    },
+    {
+      "securityTicker": "STVN-US",
+      "securityName": "STEVANATO GROUP SPA  COM",
+      "weightClose": 0.0754974359077002
+    },
+    {
+      "securityTicker": "SEPN-US",
+      "securityName": "SEPTERNA INC  COM",
+      "weightClose": 0.0746331411222189
+    },
+    {
+      "securityTicker": "JANX-US",
+      "securityName": "JANUX THERAPEUTICS INC  COM",
+      "weightClose": 0.0746207162609834
+    },
+    {
+      "securityTicker": "PSNL-US",
+      "securityName": "PERSONALIS INC  COM",
+      "weightClose": 0.0743598402853277
+    },
+    {
+      "securityTicker": "ZBIO-US",
+      "securityName": "ZENAS BIOPHARMA INC  COM",
+      "weightClose": 0.0736120337410497
+    },
+    {
+      "securityTicker": "PHVS-US",
+      "securityName": "PHARVARIS NV  COM",
+      "weightClose": 0.0717926622716889
+    },
+    {
+      "securityTicker": "CGEM-US",
+      "securityName": "CULLINAN THERAPEUTICS INC  COM",
+      "weightClose": 0.0704918231480709
+    },
+    {
+      "securityTicker": "AVBP-US",
+      "securityName": "ARRIVENT BIOPHARMA INC  COM",
+      "weightClose": 0.0701226918612235
+    },
+    {
+      "securityTicker": "CSTL-US",
+      "securityName": "CASTLE BIOSCIENCES INC  COM",
+      "weightClose": 0.0700543207087782
+    },
+    {
+      "securityTicker": "MGTX-US",
+      "securityName": "MEIRAGTX HOLDINGS PLC  COM",
+      "weightClose": 0.0693559617689827
+    },
+    {
+      "securityTicker": "GERN-US",
+      "securityName": "GERON CORP  COM",
+      "weightClose": 0.0669391411015331
+    },
+    {
+      "securityTicker": "MAZE-US",
+      "securityName": "MAZE THERAPEUTICS INC  COM",
+      "weightClose": 0.0654171958876812
+    },
+    {
+      "securityTicker": "CRVS-US",
+      "securityName": "CORVUS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.06348950638568
+    },
+    {
+      "securityTicker": "BCAX-US",
+      "securityName": "BICARA THERAPEUTICS INC  COM",
+      "weightClose": 0.0620452668414952
+    },
+    {
+      "securityTicker": "RIGL-US",
+      "securityName": "RIGEL PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0592882729122945
+    },
+    {
+      "securityTicker": "GLUE-US",
+      "securityName": "MONTE ROSA THERAPEUTICS INC  COM",
+      "weightClose": 0.0584022512069445
+    },
+    {
+      "securityTicker": "TBPH-US",
+      "securityName": "THERAVANCE BIOPHARMA INC  COM",
+      "weightClose": 0.0580422087067114
+    },
+    {
+      "securityTicker": "MRVI-US",
+      "securityName": "MARAVAI LIFESCIENCES HOLDINGS  CL A",
+      "weightClose": 0.0576263595826649
+    },
+    {
+      "securityTicker": "ABUS-US",
+      "securityName": "ARBUTUS BIOPHARMA CORP  COM",
+      "weightClose": 0.0572648587371488
+    },
+    {
+      "securityTicker": "ORIC-US",
+      "securityName": "ORIC PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0570695685851889
+    },
+    {
+      "securityTicker": "WVE-US",
+      "securityName": "WAVE LIFE SCIENCES INC  COM",
+      "weightClose": 0.0549817813919557
+    },
+    {
+      "securityTicker": "SLDB-US",
+      "securityName": "SOLID BIOSCIENCES INC  COM",
+      "weightClose": 0.053821622277332
+    },
+    {
+      "securityTicker": "CADL-US",
+      "securityName": "CANDEL THERAPEUTICS INC  COM",
+      "weightClose": 0.0536825387535542
+    },
+    {
+      "securityTicker": "OLMA-US",
+      "securityName": "OLEMA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0520444263521248
+    },
+    {
+      "securityTicker": "ALVO-US",
+      "securityName": "ALVOTECH  COM",
+      "weightClose": 0.0518064273804975
+    },
+    {
+      "securityTicker": "ANNX-US",
+      "securityName": "ANNEXON INC  COM",
+      "weightClose": 0.0506451973233899
+    },
+    {
+      "securityTicker": "SANA-US",
+      "securityName": "SANA BIOTECHNOLOGY INC  COM",
+      "weightClose": 0.0494324285649761
+    },
+    {
+      "securityTicker": "ZVRA-US",
+      "securityName": "ZEVRA THERAPEUTICS INC  COM",
+      "weightClose": 0.0483630519215493
+    },
+    {
+      "securityTicker": "IRWD-US",
+      "securityName": "IRONWOOD PHARMACEUTICALS INC  CL A",
+      "weightClose": 0.0474807882524695
+    },
+    {
+      "securityTicker": "ACRS-US",
+      "securityName": "ACLARIS THERAPEUTICS INC  COM",
+      "weightClose": 0.0471055545600723
+    },
+    {
+      "securityTicker": "FDMT-US",
+      "securityName": "4D MOLECULAR THERAPEUTICS INC  COM",
+      "weightClose": 0.0464511661243683
+    },
+    {
+      "securityTicker": "CASH_USD",
+      "securityName": "CASH/SHORT-TERM INVESTMENTS",
+      "weightClose": 0.0432315938734161
+    },
+    {
+      "securityTicker": "SGMT-US",
+      "securityName": "SAGIMET BIOSCIENCES INC  CL A",
+      "weightClose": 0.0424313178300767
+    },
+    {
+      "securityTicker": "NGNE-US",
+      "securityName": "NEUROGENE INC  COM",
+      "weightClose": 0.0408248491155335
+    },
+    {
+      "securityTicker": "SVRA-US",
+      "securityName": "SAVARA INC  COM",
+      "weightClose": 0.0405775981096856
+    },
+    {
+      "securityTicker": "ALT-US",
+      "securityName": "ALTIMMUNE INC  COM",
+      "weightClose": 0.0403203805033404
+    },
+    {
+      "securityTicker": "DSGN-US",
+      "securityName": "DESIGN THERAPEUTICS INC  COM",
+      "weightClose": 0.0401242800322681
+    },
+    {
+      "securityTicker": "CTKB-US",
+      "securityName": "CYTEK BIOSCIENCES INC  COM",
+      "weightClose": 0.0398544096863037
+    },
+    {
+      "securityTicker": "RGNX-US",
+      "securityName": "REGENXBIO INC  COM",
+      "weightClose": 0.0397181426133335
+    },
+    {
+      "securityTicker": "CTMX-US",
+      "securityName": "CYTOMX THERAPEUTICS INC  COM",
+      "weightClose": 0.0396246641699718
+    },
+    {
+      "securityTicker": "OPK-US",
+      "securityName": "OPKO HEALTH INC  COM",
+      "weightClose": 0.0391469695972088
+    },
+    {
+      "securityTicker": "PHAT-US",
+      "securityName": "PHATHOM PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0384387473516003
+    },
+    {
+      "securityTicker": "OABI-US",
+      "securityName": "OMNIAB INC  COM",
+      "weightClose": 0.0362920937397995
+    },
+    {
+      "securityTicker": "ALLO-US",
+      "securityName": "ALLOGENE THERAPEUTICS INC  COM",
+      "weightClose": 0.0360962032948874
+    },
+    {
+      "securityTicker": "ARVN-US",
+      "securityName": "ARVINAS INC  COM",
+      "weightClose": 0.0353126644271836
+    },
+    {
+      "securityTicker": "AUTL-US",
+      "securityName": "AUTOLUS THERAPEUTICS LTD  SPONS ADR",
+      "weightClose": 0.0336002967994992
+    },
+    {
+      "securityTicker": "CTNM-US",
+      "securityName": "CONTINEUM THERAPEUTICS INC  CL A",
+      "weightClose": 0.0333412779324314
+    },
+    {
+      "securityTicker": "AURA-US",
+      "securityName": "AURA BIOSCIENCES INC  COM",
+      "weightClose": 0.0327585679883965
+    },
+    {
+      "securityTicker": "CABA-US",
+      "securityName": "CABALETTA BIO INC  COM",
+      "weightClose": 0.0313466781053952
+    },
+    {
+      "securityTicker": "PRTA-US",
+      "securityName": "PROTHENA CORP PLC  COM",
+      "weightClose": 0.0308345391469004
+    },
+    {
+      "securityTicker": "EDIT-US",
+      "securityName": "EDITAS MEDICINE INC  COM",
+      "weightClose": 0.0306657415038496
+    },
+    {
+      "securityTicker": "PACB-US",
+      "securityName": "PACIFIC BIOSCIENCES OF CA INC  COM",
+      "weightClose": 0.0278865926787458
+    },
+    {
+      "securityTicker": "RCKT-US",
+      "securityName": "ROCKET PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0271872288592404
+    },
+    {
+      "securityTicker": "ARCT-US",
+      "securityName": "ARCTURUS THERAPEUTICS HOLDINGS  COM",
+      "weightClose": 0.0271369967115832
+    },
+    {
+      "securityTicker": "BBOT-US",
+      "securityName": "BRIDGEBIO ONCOLOGY THERAPEUTIC  CL A",
+      "weightClose": 0.026945852285092
+    },
+    {
+      "securityTicker": "SPRY-US",
+      "securityName": "ARS PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0265415977506833
+    },
+    {
+      "securityTicker": "CCCC-US",
+      "securityName": "C4 THERAPEUTICS INC  COM",
+      "weightClose": 0.0262613137348998
+    },
+    {
+      "securityTicker": "ENTA-US",
+      "securityName": "ENANTA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0259711958169656
+    },
+    {
+      "securityTicker": "SLN-US",
+      "securityName": "SILENCE THERAPEUTICS PLC  ADR",
+      "weightClose": 0.0251487665961188
+    },
+    {
+      "securityTicker": "FLGT-US",
+      "securityName": "FULGENT GENETICS INC  COM",
+      "weightClose": 0.0249876653617069
+    },
+    {
+      "securityTicker": "AVIR-US",
+      "securityName": "ATEA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0244595478038804
+    },
+    {
+      "securityTicker": "DNA-US",
+      "securityName": "GINKGO BIOWORKS HOLDINGS INC  CL A",
+      "weightClose": 0.0242750058361329
+    },
+    {
+      "securityTicker": "PRME-US",
+      "securityName": "PRIME MEDICINE INC  COM",
+      "weightClose": 0.0240684111215692
+    },
+    {
+      "securityTicker": "KYTX-US",
+      "securityName": "KYVERNA THERAPEUTICS INC  COM",
+      "weightClose": 0.0225731966053853
+    },
+    {
+      "securityTicker": "VNDA-US",
+      "securityName": "VANDA PHARMACEUTICALS INC  COM",
+      "weightClose": 0.0217486022057602
+    },
+    {
+      "securityTicker": "BIOA-US",
+      "securityName": "BIOAGE LABS INC  COM",
+      "weightClose": 0.0212320743687832
+    },
+    {
+      "securityTicker": "EBS-US",
+      "securityName": "EMERGENT BIOSOLUTIONS INC  COM",
+      "weightClose": 0.0209693793756476
+    },
+    {
+      "securityTicker": "LXEO-US",
+      "securityName": "LEXEO THERAPEUTICS INC  COM",
+      "weightClose": 0.0207207903122266
+    },
+    {
+      "securityTicker": "IMRX-US",
+      "securityName": "IMMUNEERING CORP  CL A",
+      "weightClose": 0.0202851551009641
+    },
+    {
+      "securityTicker": "CATX-US",
+      "securityName": "PERSPECTIVE THERAPEUTICS INC  COM",
+      "weightClose": 0.0201178204810517
+    },
+    {
+      "securityTicker": "MYGN-US",
+      "securityName": "MYRIAD GENETICS INC  COM",
+      "weightClose": 0.0201011041170992
+    },
+    {
+      "securityTicker": "TECX-US",
+      "securityName": "TECTONIC THERAPEUTIC INC  COM",
+      "weightClose": 0.0199429731299241
+    },
+    {
+      "securityTicker": "AVXL-US",
+      "securityName": "ANAVEX LIFE SCIENCES CORP  COM",
+      "weightClose": 0.0176997751701555
+    },
+    {
+      "securityTicker": "LAB-US",
+      "securityName": "STANDARD BIOTOOLS INC  COM",
+      "weightClose": 0.0174663078947992
+    },
+    {
+      "securityTicker": "UPB-US",
+      "securityName": "UPSTREAM BIO INC  COM",
+      "weightClose": 0.0169662183280454
+    },
+    {
+      "securityTicker": "FULC-US",
+      "securityName": "FULCRUM THERAPEUTICS INC  COM",
+      "weightClose": 0.0154936214335821
+    },
+    {
+      "securityTicker": "LCTX-US",
+      "securityName": "LINEAGE CELL THERAPEUTICS INC  COM",
+      "weightClose": 0.0145511584435493
+    },
+    {
+      "securityTicker": "KROS-US",
+      "securityName": "KEROS THERAPEUTICS INC  COM",
+      "weightClose": 0.0142447516603651
+    },
+    {
+      "securityTicker": "LRMR-US",
+      "securityName": "LARIMAR THERAPEUTICS INC  COM",
+      "weightClose": 0.0141629642277419
+    },
+    {
+      "securityTicker": "PEPG-US",
+      "securityName": "PEPGEN INC  COM",
+      "weightClose": 0.0134185529472757
+    },
+    {
+      "securityTicker": "FHTX-US",
+      "securityName": "FOGHORN THERAPEUTICS INC  COM",
+      "weightClose": 0.0127388293422714
+    },
+    {
+      "securityTicker": "PYXS-US",
+      "securityName": "PYXIS ONCOLOGY INC  COM",
+      "weightClose": 0.0121470241199046
+    },
+    {
+      "securityTicker": "VYGR-US",
+      "securityName": "VOYAGER THERAPEUTICS INC  COM",
+      "weightClose": 0.0120265184601233
+    },
+    {
+      "securityTicker": "ACIU-US",
+      "securityName": "AC IMMUNE SA  COM",
+      "weightClose": 0.0114348154823098
+    },
+    {
+      "securityTicker": "SION-US",
+      "securityName": "SIONNA THERAPEUTICS INC  COM",
+      "weightClose": 0.0113225352106917
+    },
+    {
+      "securityTicker": "BCYC-US",
+      "securityName": "BICYCLE THERAPEUTICS PLC  SPONS ADR",
+      "weightClose": 0.0109091937989974
+    },
+    {
+      "securityTicker": "NBP-US",
+      "securityName": "NOVABRIDGE BIOSCIENCES  SPON ADR",
+      "weightClose": 0.0107699133279613
+    },
+    {
+      "securityTicker": "TRDA-US",
+      "securityName": "ENTRADA THERAPEUTICS INC  COM",
+      "weightClose": 0.0106439673223669
+    },
+    {
+      "securityTicker": "HUMA-US",
+      "securityName": "HUMACYTE INC  COM",
+      "weightClose": 0.0104415524147896
+    },
+    {
+      "securityTicker": "TNYA-US",
+      "securityName": "TENAYA THERAPEUTICS INC  COM",
+      "weightClose": 0.0102613414728638
+    },
+    {
+      "securityTicker": "CDXS-US",
+      "securityName": "CODEXIS INC  COM",
+      "weightClose": 0.0100982725797306
+    },
+    {
+      "securityTicker": "LENZ-US",
+      "securityName": "LENZ THERAPEUTICS INC  COM",
+      "weightClose": 0.0100622487972744
+    },
+    {
+      "securityTicker": "CRBU-US",
+      "securityName": "CARIBOU BIOSCIENCES INC  COM",
+      "weightClose": 0.00968653672256425
+    },
+    {
+      "securityTicker": "QSI-US",
+      "securityName": "QUANTUM SI INC  CL A",
+      "weightClose": 0.00918113864914604
+    },
+    {
+      "securityTicker": "ADCT-US",
+      "securityName": "ADC THERAPEUTICS SA  COM",
+      "weightClose": 0.00783145679638681
+    },
+    {
+      "securityTicker": "LYEL-US",
+      "securityName": "LYELL IMMUNOPHARMA INC  COM",
+      "weightClose": 0.00775038307084242
+    },
+    {
+      "securityTicker": "QTRX-US",
+      "securityName": "QUANTERIX CORP  COM",
+      "weightClose": 0.00749178320596411
+    },
+    {
+      "securityTicker": "CLLS-US",
+      "securityName": "CELLECTIS SA  SPONSORED ADR",
+      "weightClose": 0.00747824110102306
+    },
+    {
+      "securityTicker": "BDTX-US",
+      "securityName": "BLACK DIAMOND THERAPEUTICS INC  COM",
+      "weightClose": 0.00729372548201205
+    },
+    {
+      "securityTicker": "NMRA-US",
+      "securityName": "NEUMORA THERAPEUTICS INC  COM",
+      "weightClose": 0.00723402201372987
+    },
+    {
+      "securityTicker": "TKNO-US",
+      "securityName": "ALPHA TEKNOVA INC  COM",
+      "weightClose": 0.00554466561588357
+    },
+    {
+      "securityTicker": "AARD-US",
+      "securityName": "AARDVARK THERAPEUTICS INC  COM",
+      "weightClose": 0.0054392212184463
+    },
+    {
+      "securityTicker": "GOSS-US",
+      "securityName": "GOSSAMER BIO INC  COM",
+      "weightClose": 0.00540375772850552
+    },
+    {
+      "securityTicker": "MENS-US",
+      "securityName": "JYONG BIOTECH LTD  COM",
+      "weightClose": 0.00457924590734792
+    },
+    {
+      "securityTicker": "IMMP-US",
+      "securityName": "IMMUTEP LTD  SPONSORED ADR",
+      "weightClose": 0.00268616881200674
+    }
+  ]
+}

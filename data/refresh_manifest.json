@@ -103,12 +103,13 @@
     "status": "ok"
   },
   "etf_hc_holdings": {
-    "refreshed_at": null,
+    "refreshed_at": "2026-09-07T11:32:31+00:00",
     "label": "ETF 持仓/画像(HC篮)",
-    "source": "etf-data CLI(本地)",
+    "source": "FactSet fund_holdings(权重)+etf-data CLI(画像)",
     "max_age_days": 45,
-    "source_date": "2026-06-29",
-    "status": "stale"
+    "source_date": "2026-08-31",
+    "status": "ok",
+    "note": "holdings 源切至 FactSet fund_holdings(stockanalysis 404 已死); 画像仍走 yfinance"
   },
   "china_fund_hc_positioning": {
     "refreshed_at": null,

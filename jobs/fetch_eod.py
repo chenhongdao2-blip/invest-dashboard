@@ -129,8 +129,10 @@ def _has_column(conn: sqlite3.Connection, table: str, col: str) -> bool:
 
 def get_tickers(conn: sqlite3.Connection, limit: int = 0, only: str = "") -> list[str]:
     # R3 audit (Medium): without the status filter this job spent 4 `.info`
-    # retries/day plus a slice of the >10% failure budget on 18 delisted names
-    # that can never return data.
+    # retries/day plus a slice of the >10% failure budget on names that can never
+    # return data. The count is whatever `universe_member.status` says today, not
+    # a constant — measured 2026-09-07: 508 tickers → 494 active, 14 excluded
+    # (13 delisted + 1 renamed). Quote the column, not a remembered number.
     active = " WHERE status IS NULL" if _has_column(conn, "universe_member", "status") else ""
     if only:
         want = [t.strip() for t in only.split(",") if t.strip()]

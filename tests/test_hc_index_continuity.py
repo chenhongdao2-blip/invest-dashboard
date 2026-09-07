@@ -12,6 +12,19 @@ The gate's contract, in one line: a hole longer than MAX_GAP_TRADING_DAYS is
 REFUSED (exit non-zero, message naming the series and both dates), and can only be
 persisted via --allow-gaps, which labels it degraded in the sibling meta json.
 
+HOW IT WAS RESOLVED (2026-09-07). The gate cannot conjure the missing bars, and no
+source we can reach serves the index: FactSet GlobalPrices returns fsymId: null for
+every ^SP500-35 candidate id (the XLV control resolves, so index ids are simply
+unsupported), FactSet Macroeconomics' 715-row US catalogue has no equity-index
+category, Bigdata has no such entity (its "Health Care" row IS XLV, fixed windows
+only), Quartr is subscription_required. Worse, the surviving prints are unstable —
+the 2026-09-04 point sat in the committed CSV while yfinance, re-probed the same
+day, returned nothing after 2026-07-17. So ^SP500-35 was RETIRED and the XLV ETF
+took its place on a PRICE-return basis (^GSPC beside it is a price index; total
+return would have added 1.14pp of dividend as fake health-care alpha). The tests
+below now pin BOTH halves: the gate still works, AND the panel is clean because the
+series was replaced rather than because the threshold was loosened.
+
 Run: pytest tests/test_hc_index_continuity.py -v  (from repo root)
 """
 
@@ -67,29 +80,81 @@ def test_continuous_series_passes():
     assert JOB.enforce_continuity(closes) == []
 
 
-def test_real_baked_csv_has_exactly_one_break_and_it_is_sphc():
-    """The committed CSV must reproduce the observed defect: ^SP500-35 and nothing else.
+BAKED_CSV = REPO_ROOT / "data" / "external" / "hc_index_comparison.csv"
 
-    Pins BOTH directions at once — that the gate catches the real hole, and that the
-    other 10 baked series (HK iFind + US yfinance, 13 months, two holiday calendars)
-    are clean at a threshold of 5. If a future change makes this report extra series,
-    the threshold has drifted into false positives.
-    """
-    csv = REPO_ROOT / "data" / "external" / "hc_index_comparison.csv"
-    if not csv.exists():                      # pragma: no cover - baked file is committed
+
+def _baked_closes() -> dict[str, pd.DataFrame]:
+    """The committed CSV as the job's own per-series closes map (one entry per series,
+    de-duplicated across panels — ^NBI / XBI live in two panels each)."""
+    if not BAKED_CSV.exists():                # pragma: no cover - baked file is committed
         pytest.skip("baked hc_index_comparison.csv not present")
-    df = pd.read_csv(csv)
-    closes = {
-        sid: g[["date", "close"]].assign(date=pd.to_datetime(g["date"]))
-                                 .sort_values("date").reset_index(drop=True)
+    df = pd.read_csv(BAKED_CSV)
+    return {
+        sid: (g[["date", "close"]].assign(date=pd.to_datetime(g["date"]))
+              .drop_duplicates(subset=["date"]).sort_values("date").reset_index(drop=True))
         for sid, g in df.groupby("series_id")
     }
-    breaks = JOB.find_continuity_breaks(closes)
-    assert [b["series_id"] for b in breaks] == ["^SP500-35"], (
-        f"expected the ^SP500-35 hole and nothing else, got {breaks}"
+
+
+def test_real_baked_csv_is_clean():
+    """The committed CSV must now pass the gate with ZERO breaks.
+
+    This assertion used to read "exactly one break, and it is ^SP500-35" — that was the
+    defect being recorded. It is inverted deliberately: the hole is gone because the
+    series was REPLACED (XLV, price basis), not because the threshold was relaxed. If
+    this ever reports a break again, a source has started dropping sessions and the
+    page must not be rebuilt until it is understood.
+    """
+    breaks = JOB.find_continuity_breaks(_baked_closes())
+    assert breaks == [], f"baked CSV is no longer continuous: {breaks}"
+
+
+def test_sphc_panel_no_longer_carries_the_retired_index():
+    """^SP500-35 must be gone from the job config AND from the baked CSV.
+
+    Pins the retirement itself. The index is not merely sparse — yfinance retracted
+    prints it had already served (the 2026-09-04 point vanished between the bake and
+    the next probe), so a series that reappears here is a regression, not a recovery.
+    """
+    assert "^SP500-35" not in JOB.SERIES_META
+    assert "^SP500-35" not in JOB.PANEL_SERIES["sphc"]
+    assert JOB.PANEL_SERIES["sphc"] == ["XLV", "^GSPC"]
+    assert "^SP500-35" not in {sid for sids in JOB.PANEL_SERIES.values() for sid in sids}
+
+    df = pd.read_csv(BAKED_CSV) if BAKED_CSV.exists() else pytest.skip("no baked CSV")
+    assert "^SP500-35" not in set(df["series_id"]), "the retired index is back in the CSV"
+    assert set(df[df["panel"] == "sphc"]["series_id"]) == {"XLV", "^GSPC"}
+
+
+def test_xlv_is_continuous_across_the_full_window():
+    """XLV must be gap-free AND cover exactly the sessions ^GSPC covers in its panel.
+
+    Two assertions, because "continuous" alone is not enough: a series can be
+    internally gap-free and still be short at the tail (^SP500-35 was gap-free right
+    up to 2026-07-17). Sharing ^GSPC's session set is what makes the comparison a
+    comparison — the panel inner-joins on common dates, so a short leg silently
+    truncates the chart instead of holing it.
+    """
+    closes = _baked_closes()
+    assert "XLV" in closes, "sphc hero missing from the baked CSV"
+    assert JOB.find_continuity_breaks({"XLV": closes["XLV"]}) == []
+
+    xlv, gspc = set(closes["XLV"]["date"]), set(closes["^GSPC"]["date"])
+    assert xlv == gspc, (
+        f"XLV and ^GSPC do not cover the same sessions "
+        f"(XLV-only {sorted(xlv - gspc)[:5]}, ^GSPC-only {sorted(gspc - xlv)[:5]})"
     )
-    assert breaks[0]["prev_date"] == HOLE_PREV
-    assert breaks[0]["next_date"] == HOLE_NEXT
+    assert closes["XLV"]["date"].min() == pd.Timestamp(JOB.ANCHOR)
+
+
+def test_baked_meta_records_a_clean_build():
+    """The sibling meta must positively assert degraded=false — absent is not clean."""
+    meta_path = REPO_ROOT / "data" / "external" / "hc_index_comparison_meta.json"
+    if not meta_path.exists():                # pragma: no cover - committed alongside the CSV
+        pytest.skip("meta json not present")
+    meta = json.loads(meta_path.read_text())
+    assert meta["degraded"] is False
+    assert meta["continuity_breaks"] == []
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -244,3 +309,56 @@ def test_clean_build_writes_meta_marked_not_degraded(monkeypatch, tmp_path):
     assert meta["degraded"] is False
     assert meta["continuity_breaks"] == []
     assert meta["anchor"] == JOB.ANCHOR
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 5. The replacement series' BASIS — price, not total return
+# ──────────────────────────────────────────────────────────────────────────────
+
+def test_price_basis_tickers_names_xlv_only():
+    """XLV is the one series that must come back on a price basis.
+
+    ^GSPC beside it in the sphc panel is a PRICE index and ^SP500-35 was one too, so
+    the proxy has to be quoted the same way. The other ETFs (XBI / KURE / MCHI) stay
+    total-return on purpose — their panels compare them against other total-return
+    ETFs or against indices where the mismatch is already disclosed in the title.
+    """
+    assert JOB.PRICE_BASIS_TICKERS == {"XLV"}
+    assert "XLV" in JOB.US_TICKERS
+    assert "price" in JOB.SERIES_META["XLV"][2].lower(), (
+        "the CSV's own source column must state the basis — it is the provenance a "
+        "downstream reader sees without opening this job"
+    )
+
+
+def test_xlv_is_fetched_with_auto_adjust_false_and_the_rest_with_true(monkeypatch):
+    """Pins the actual yfinance call, not just the constant.
+
+    This is the assertion that stops the 1.14pp regression: over 2026-01-02 ->
+    2026-09-04, XLV total return was +11.19% against the index's +10.05%, while XLV
+    price return was +10.25%. A single auto_adjust=True fetch would therefore paint
+    ~1.1pp of dividend as health-care outperformance versus the S&P — a difference
+    large enough to flip the read of the panel, and invisible in the chart.
+    """
+    calls: list[tuple[tuple[str, ...], bool]] = []
+
+    def _fake_download(tickers, *, start, end, auto_adjust, progress, threads, group_by):
+        tickers = list(tickers)
+        calls.append((tuple(sorted(tickers)), auto_adjust))
+        idx = pd.bdate_range(start, "2026-09-04", name="Date")
+        cols = pd.MultiIndex.from_product([tickers, ["Close"]])
+        return pd.DataFrame(
+            [[100.0 + i] * len(cols) for i in range(len(idx))], index=idx, columns=cols
+        )
+
+    fake_yf = type("_FakeYF", (), {"download": staticmethod(_fake_download)})
+    monkeypatch.setitem(__import__("sys").modules, "yfinance", fake_yf)
+
+    df, breaks = JOB.build_index_comparison()
+    assert breaks == []
+
+    by_flag = {flag: set(tk) for tk, flag in calls}
+    assert by_flag[False] == {"XLV"}, f"only XLV may be price-basis, got {by_flag[False]}"
+    assert "XLV" not in by_flag[True], "XLV must not also be pulled total-return"
+    assert by_flag[True] == set(JOB.US_TICKERS) - {"XLV"}
+    assert set(df[df["panel"] == "sphc"]["series_id"]) == {"XLV", "^GSPC"}

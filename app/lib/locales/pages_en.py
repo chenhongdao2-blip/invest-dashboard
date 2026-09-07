@@ -214,6 +214,11 @@ STRINGS = {
         "5D = last 5 common sessions; 1M / 6M by calendar lookback."
     ),
     "hc.rs.hk.title": "Hang Seng Healthcare vs Hang Seng vs Hang Seng TECH",
+    # Per-panel provenance: only the HK leg comes from the iFind provenance CSV; every
+    # other panel is yfinance. The old shared default "iFind · yfinance" was wrong for
+    # each of them (HK is iFind-only, the rest yfinance-only), and iFind was retired
+    # 2026-08-21 — it can no longer be named on a pure-yfinance panel.
+    "hc.rs.hk.src": "iFind",
     "hc.rs.msci.title": "MSCI China Health Care vs MSCI China (ETF proxy: KURE / MCHI)",
     "hc.rs.msci.src": "yfinance · ETF proxy (total return · USD)",
     # GLOSSARY structured card (zip4 design; replaces the old hc_indices_note prose)
@@ -247,7 +252,10 @@ STRINGS = {
         "'JetBrains Mono',monospace;font-size:11px;font-weight:700;color:#1a1a1a;\">MSCI (KURE)</span>"
     ),
     "hc.rs.nbi.title": "Nasdaq Biotech (NBI) · S&P Biotech (XBI) vs Nasdaq Composite",
-    "hc.rs.sphc.title": "S&P 500 Health Care vs S&P 500",
+    # The ^SP500-35 index itself has no source we can reach; XLV ETF stands in, on a
+    # PRICE-return basis so it matches the price index S&P 500 it is drawn against.
+    "hc.rs.sphc.title": "S&P 500 Health Care vs S&P 500 (ETF proxy: XLV, price return)",
+    "hc.rs.sphc.src": "yfinance · ETF proxy (price return · USD)",
     "hc.rs.aibio.title": "Biotech (NBI large-cap · XBI equal-weight) vs AI Hardware (PHLX Semis, SOX)",
     "hc.rs.aibio.note": (
         "**How to read it.**　The two hottest themes on one anchor (last Aug): **red = biotech** "

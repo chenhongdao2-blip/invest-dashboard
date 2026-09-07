@@ -35,7 +35,7 @@ ANCHOR = "2025-08-01"
 PANELS = {
     "hk":   ("恒生医疗保健 vs 恒生 vs 恒生科技", "HSHCI.HK",  ["HSHCI.HK", "HSI.HK", "HSTECH.HK"]),
     "nbi":  ("纳斯达克生物科技 (NBI) vs 纳斯达克综合", "^NBI",  ["^NBI", "^IXIC"]),
-    "sphc": ("标普 500 医疗保健 vs 标普 500", "^SP500-35", ["^SP500-35", "^GSPC"]),
+    "sphc": ("标普 500 医疗保健 (XLV ETF 代理·价格) vs 标普 500", "XLV", ["XLV", "^GSPC"]),
 }
 
 # colours mirror the dashboard: hero = red, peers = grey

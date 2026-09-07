@@ -39,7 +39,10 @@ PANELS = [
     ("hk",     "HSHCI.HK",  ["HSI.HK", "HSTECH.HK"]),
     ("msci",   "KURE",      ["MCHI"]),       # MSCI 口径 ETF 代理 — 全中国医疗 vs 全中国宽基
     ("nbi",    "^NBI",      ["^IXIC", "XBI"]),  # +XBI 等权生科(SMID breadth) vs ^NBI 大盘
-    ("sphc",   "^SP500-35", ["^GSPC"]),
+    # XLV ETF stands in for the S&P 500 Health Care index (^SP500-35), which no
+    # source available to us can serve any more; pulled PRICE-basis so it sits beside
+    # the price index ^GSPC. See jobs/build_hc_overview_data.py PRICE_BASIS_TICKERS.
+    ("sphc",   "XLV",       ["^GSPC"]),
     # 跨板块主题对比：生物科技(NBI 大盘 + XBI 等权) vs AI 硬件(^SOX 费城半导体)。
     ("ai_bio", "^NBI",      ["XBI", "^SOX"]),
 ]

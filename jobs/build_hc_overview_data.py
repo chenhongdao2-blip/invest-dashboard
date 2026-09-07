@@ -7,7 +7,7 @@ Two committed outputs the Streamlit app reads (cloud can't fetch these live):
      panel "hk"     : HSHCI.HK / HSI.HK / HSTECH.HK (恒生医疗 vs 恒生 vs 恒科) — iFind
      panel "msci"   : KURE / MCHI                    (MSCI 中国医疗 vs MSCI 中国, ETF 代理) — yfinance
      panel "nbi"    : ^NBI / ^IXIC / XBI             (NBI 大盘生科 + XBI 等权生科 vs 纳指) — yfinance
-     panel "sphc"   : ^SP500-35 / ^GSPC              (S&P 500 Health Care vs S&P 500) — yfinance
+     panel "sphc"   : XLV / ^GSPC                    (S&P 500 Health Care, XLV proxy, vs S&P 500) — yfinance
      panel "ai_bio" : ^NBI / XBI / ^SOX             (生物科技 NBI+XBI vs AI 硬件 ^SOX 半导体) — yfinance
 
    A series may belong to MORE THAN ONE panel (^NBI / XBI appear in both "nbi" and
@@ -24,6 +24,10 @@ Two committed outputs the Streamlit app reads (cloud can't fetch these live):
    2026-09-04 and the page drew a straight line across the hole. Pass --allow-gaps
    to persist such a fetch deliberately; it is then recorded with degraded=true in
    data/external/hc_index_comparison_meta.json, not written silently.
+
+   ^SP500-35 was RETIRED from this job on 2026-09-07 and replaced by the XLV ETF
+   on a PRICE-return basis — see PRICE_BASIS_TICKERS for why the basis is not a
+   detail, and SERIES_META["XLV"] for why a proxy is the only option left.
 
 2. data/external/china_fund_hc_positioning.csv
    12 offshore China-equity funds' healthcare over/underweight vs their own
@@ -85,7 +89,12 @@ SERIES_META = {
     # ^SOX = PHLX Semiconductor — the US "AI hardware" anchor (ai-researcher reviewed,
     # see benchmarks.py). An index (not an ETF), same quote convention as ^NBI / ^IXIC.
     "^SOX":      ("PHLX Semiconductor (SOX)", "费城半导体 (SOX)", "yfinance"),
-    "^SP500-35": ("S&P 500 Health Care",  "标普500医疗保健", "yfinance"),
+    # XLV = the Health Care Select Sector SPDR, standing in for the S&P 500 Health
+    # Care index (^SP500-35), which we can no longer source — see PRICE_BASIS_TICKERS
+    # for the two reasons and the basis. The labels say "代理 / proxy" and carry the
+    # ticker so a reader of the legend or the CSV cannot mistake the ETF for the index.
+    "XLV":       ("S&P 500 Health Care proxy (XLV ETF, price)",
+                  "标普500医疗保健 代理 (XLV ETF·价格回报)", "yfinance · ETF (price)"),
     "^GSPC":     ("S&P 500",              "标普500",      "yfinance"),
     # MSCI 口径 — investable ETF proxies (the MSCI index levels themselves aren't free /
     # daily-available; iFind doesn't carry them either). KURE tracks MSCI China All Shares
@@ -100,12 +109,40 @@ PANEL_SERIES = {
     "hk":     ["HSHCI.HK", "HSI.HK", "HSTECH.HK"],
     "msci":   ["KURE", "MCHI"],
     "nbi":    ["^NBI", "^IXIC", "XBI"],
-    "sphc":   ["^SP500-35", "^GSPC"],
+    "sphc":   ["XLV", "^GSPC"],
     "ai_bio": ["^NBI", "XBI", "^SOX"],
 }
 # Unique Yahoo-sourced series across ALL panels — startswith so "yfinance · ETF" matches.
 US_TICKERS = sorted({sid for sids in PANEL_SERIES.values()
                      for sid in sids if SERIES_META[sid][2].startswith("yfinance")})
+
+# Tickers pulled with auto_adjust=FALSE, i.e. PRICE return, not total return.
+#
+# WHY XLV REPLACED ^SP500-35 AT ALL (2026-09-07). Two reasons, and the second is the
+# one that settles it:
+#   1. No source available to us can serve the index itself. FactSet GlobalPrices
+#      returns fsymId: null for all seven ^SP500-35 / S&P-500-Health-Care candidate
+#      identifiers while the XLV control resolves fine (so: index identifiers
+#      unsupported, not a broken call); FactSet Macroeconomics' full 715-row US
+#      catalogue has no equity-index category at all; Bigdata has no such index
+#      entity and its own "Health Care" sector row IS XLV, on fixed windows with no
+#      daily series; Quartr is subscription_required on this account.
+#   2. The surviving ^SP500-35 prints are not merely sparse, they are UNSTABLE. The
+#      2026-09-04 point sits in the committed CSV, yet yfinance re-probed on
+#      2026-09-07 returns nothing at all after 2026-07-17 — the print did not go
+#      stale, it disappeared. A benchmark whose history rewrites itself cannot be a
+#      benchmark, and no continuity gate can rescue that: the gate catches a hole,
+#      it cannot catch a source that retracts data it already served.
+#
+# WHY PRICE BASIS, NOT TOTAL RETURN. ^GSPC in the same panel is a PRICE index, and
+# ^SP500-35 was one too. yfinance's default auto_adjust=True reinvests dividends, so
+# pulling XLV that way would put a total-return line against a price line and the
+# ~1.4-1.5%/yr XLV dividend would read as health-care alpha. Measured over
+# 2026-01-02 -> 2026-09-04: ^SP500-35 +10.05% (committed CSV), XLV total return
+# +11.19%, XLV price return +10.25%. Total return overstates the index by 1.14pp of
+# pure dividend; price return tracks it to 0.20pp. That 1.14pp is the fake
+# outperformance this flag exists to prevent.
+PRICE_BASIS_TICKERS = {"XLV"}
 
 
 def _trading_day_gap(d0: pd.Timestamp, d1: pd.Timestamp) -> int:
@@ -215,15 +252,26 @@ def build_index_comparison(*, allow_gaps: bool = False) -> tuple[pd.DataFrame, l
         closes[sid] = g[["date", "close"]].sort_values("date").reset_index(drop=True)
 
     # --- US from yfinance (per-series close) ---
+    # TWO calls, not one: auto_adjust is a per-download flag, and PRICE_BASIS_TICKERS
+    # must come back on a price basis to sit beside the price index ^GSPC in its panel
+    # (see that constant for the 1.14pp of dividend a single auto_adjust=True call
+    # would have silently turned into health-care outperformance).
     import yfinance as yf
 
-    d = yf.download(US_TICKERS, start=ANCHOR, end=END, auto_adjust=True,
-                    progress=False, threads=True, group_by="ticker")
-    for t in US_TICKERS:
-        ser = d[t]["Close"].dropna() if t in d.columns.get_level_values(0) else pd.Series(dtype=float)
-        if ser.empty:
-            raise RuntimeError(f"yfinance returned empty for {t}")
-        closes[t] = pd.DataFrame({"date": ser.index, "close": ser.values})
+    def _fetch(tickers: list[str], *, auto_adjust: bool) -> None:
+        if not tickers:
+            return
+        d = yf.download(tickers, start=ANCHOR, end=END, auto_adjust=auto_adjust,
+                        progress=False, threads=True, group_by="ticker")
+        for t in tickers:
+            ser = (d[t]["Close"].dropna()
+                   if t in d.columns.get_level_values(0) else pd.Series(dtype=float))
+            if ser.empty:
+                raise RuntimeError(f"yfinance returned empty for {t}")
+            closes[t] = pd.DataFrame({"date": ser.index, "close": ser.values})
+
+    _fetch([t for t in US_TICKERS if t not in PRICE_BASIS_TICKERS], auto_adjust=True)
+    _fetch([t for t in US_TICKERS if t in PRICE_BASIS_TICKERS], auto_adjust=False)
 
     # --- continuity gate: a hole is not data (see enforce_continuity) ---
     breaks = enforce_continuity(closes, allow_gaps=allow_gaps)

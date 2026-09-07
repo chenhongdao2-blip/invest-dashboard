@@ -208,6 +208,10 @@ STRINGS = {
         "5D = 近 5 个共同交易日；1M / 6M 按日历回溯。"
     ),
     "hc.rs.hk.title": "恒生医疗保健 vs 恒生 vs 恒生科技",
+    # 面板级来源标注：hk 腿来自 iFind provenance CSV，其余面板全部 yfinance。
+    # 旧的共用默认 "iFind · yfinance" 对每个面板都是错的（hk 只有 iFind，其余只有 yfinance），
+    # 且 iFind 已于 2026-08-21 停用——不能再挂在纯 yfinance 的面板上。
+    "hc.rs.hk.src": "iFind",
     "hc.rs.msci.title": "MSCI 中国医疗保健 vs MSCI 中国（ETF 代理：KURE / MCHI）",
     "hc.rs.msci.src": "yfinance · ETF 代理（含息·USD）",
     # 释义 GLOSSARY 结构化卡（zip4 设计；旧 hc_indices_note 长段落已被替换）
@@ -241,7 +245,9 @@ STRINGS = {
         'monospace;font-size:11px;font-weight:700;color:#1a1a1a;">MSCI（KURE）</span>'
     ),
     "hc.rs.nbi.title": "纳指生科 NBI · 标普生科 XBI vs 纳斯达克综合",
-    "hc.rs.sphc.title": "标普 500 医疗保健 vs 标普 500",
+    # ^SP500-35 指数本体已无可用数据源，改用 XLV ETF 代理、价格口径（与标普500同为价格指数）。
+    "hc.rs.sphc.title": "标普 500 医疗保健 vs 标普 500（ETF 代理：XLV·价格回报）",
+    "hc.rs.sphc.src": "yfinance · ETF 代理（价格回报·USD）",
     "hc.rs.aibio.title": "生物科技（NBI 大盘 · XBI 等权）vs AI 硬件（费城半导体 SOX）",
     "hc.rs.aibio.note": (
         "**怎么读这张图？**　把两大热门主题放在同一锚点（去年 8 月）同框：**红＝生物科技**"

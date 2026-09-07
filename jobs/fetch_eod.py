@@ -351,16 +351,65 @@ def fetch_info_for(ticker: str) -> dict | None:
     return None
 
 
+def latest_bar_close(conn: sqlite3.Connection, ticker: str) -> float | None:
+    """Most recent `prices_daily` close (LOCAL currency) for `ticker`, or None.
+
+    Deliberately the LATEST bar rather than the snapshot date's: prices and the
+    `.info` snapshot are written on different calendars (audit H5 — the snapshot
+    stamp is the runner's UTC `date.today()`, the bar carries the exchange date),
+    so requiring an exact date match would silently disable the cross-check on
+    every non-US ticker.
+    """
+    try:
+        r = conn.execute(
+            "SELECT close FROM prices_daily WHERE ticker = ? AND close IS NOT NULL "
+            "ORDER BY date DESC LIMIT 1", (ticker,)
+        ).fetchone()
+    except sqlite3.Error:
+        return None
+    return _safe_float(r[0]) if r else None
+
+
+# A frozen `.info` payload can disagree wildly with the day's real bar. Measured
+# 2026-09-07: 108320.KQ carried a constant multiples price of 78,000 across 27-64
+# snapshots while prices_daily moved 36,550 → 37,800 — a 2.06× divergence rendered
+# as a valuation time series. Beyond this ratio the traded bar wins.
+INFO_PRICE_MAX_DIVERGENCE = 0.5
+
+
 def info_to_multiple_row(
-    ticker: str, info: dict, snapshot_date: str, fx: dict[str, float]
+    ticker: str, info: dict, snapshot_date: str, fx: dict[str, float],
+    bar_close: float | None = None,
 ) -> tuple | None:
-    """Convert yfinance.info dict → multiples_daily row tuple."""
+    """Convert yfinance.info dict → multiples_daily row tuple, or None if unusable.
+
+    R3 audit C5 — this returned a tuple unconditionally, so the `if row:` guard at
+    the call site was tautologically true and a payload with no price at all still
+    produced a `multiples_daily` row (10 tickers ended up with a single constant
+    "price" spanning 27-64 snapshots).
+
+    `bar_close` is the same-day `prices_daily` close in LOCAL currency when one
+    exists; it cross-checks the `.info` price and supersedes it on a gross
+    divergence (see INFO_PRICE_MAX_DIVERGENCE).
+    """
     ccy = (info.get("currency") or info.get("financialCurrency") or "USD").upper()
     fx_to_usd = fx.get(ccy, 1.0)
     mcap_local = _safe_float(info.get("marketCap"))
     mcap_usd = mcap_local * fx_to_usd if mcap_local is not None else None
     last_price = _safe_float(info.get("regularMarketPrice") or info.get("currentPrice"))
-    last_price_usd = last_price * fx_to_usd if last_price is not None else None
+    if last_price is None:
+        # No usable price → not a valuation snapshot. Dropping the row is right:
+        # the multiples are keyed to a price the payload does not carry.
+        print(f"[mult] {ticker}: no regularMarketPrice/currentPrice in .info — row skipped")
+        return None
+    bar = _safe_float(bar_close)
+    if bar is not None and bar > 0:
+        if abs(last_price / bar - 1) > INFO_PRICE_MAX_DIVERGENCE:
+            print(f"[mult] WARN {ticker} {snapshot_date}: .info price {last_price} vs "
+                  f"prices_daily close {bar} "
+                  f"({last_price / bar:.2f}×) — using the bar close (audit C5)")
+            last_price = bar
+    last_price_usd = last_price * fx_to_usd
     # FCF Yield: explicit guard (M1 audit nit — `a and b and a/b` is dangerous if 0)
     fcf = _safe_float(info.get("freeCashflow"))
     fcf_yield = (fcf / mcap_local) if (fcf is not None and mcap_local and mcap_local > 0) else None
@@ -528,7 +577,8 @@ def main() -> None:
             if not info:
                 fail_list.append(t)
                 continue
-            row = info_to_multiple_row(t, info, snapshot_date, fx)
+            row = info_to_multiple_row(t, info, snapshot_date, fx,
+                                       bar_close=latest_bar_close(conn, t))
             if row:
                 total_mult += upsert_multiples(conn, [row])
                 ok += 1

@@ -9,16 +9,23 @@ Why a job (not a runtime fetch): the deployed app cannot call the etf-data MCP
 (it is session-bound), so — exactly like jobs/build_hk_ipo_tracker.py — a build
 step bakes the data into CSV/JSON and the app stays a pure reader.
 
-Data source: the etf-data-mcp repo's own CLI (`cli.py profile|performance|holdings
-<ticker>`), invoked through its pinned .venv so we reuse the identical fetch +
-merge logic the MCP tools use (stockanalysis + barchart for holdings, yfinance for
-profile/perf). Override the repo path with $ETF_DATA_MCP if it lives elsewhere.
+Data sources, after the 2026-09-07 swap:
+  * profile + performance — the etf-data-mcp repo's own CLI (`cli.py profile|
+    performance <ticker>`) through its pinned .venv, i.e. yfinance. Still healthy.
+    Override the repo path with $ETF_DATA_MCP if it lives elsewhere.
+  * holdings — FactSet Ownership `fund_holdings`, read from
+    `data/external/_factset_raw/etf_holdings_<T>.json` with --from-factset-json.
+    The CLI's own holdings path (stockanalysis → barchart) is DEAD: stockanalysis
+    404s on every ETF and barchart returns "No Constituents" (both re-verified
+    2026-09-07). Run without the flag and the job will simply refuse to write.
 
-Holdings caveat (baked into meta.holdings_cap_note): the upstream caps weighted
-rows at the top ~25; the long tail comes back symbol-only (rank/name/weight = None).
-We persist the tail rows as-is so the UI can show "+N more constituents". We never
-fill an unknown weight as 0.0 (that would turn "unknown" into "zero" — the exact
-bug Codex caught in the etf-data-mcp audit).
+Holdings shape differs by source, and meta.holdings_cap_note records which one
+produced the file. stockanalysis weighted only the top ~25 and returned the rest
+symbol-only (rank/name/weight = None), so the UI's "+N more constituents" line was
+literally all that was known about them. FactSet weights every constituent, so
+there is no weightless tail at all and the page caps the table for readability
+instead. Either way an unknown weight stays None — never 0.0, which would turn
+"unknown" into "zero" (the bug Codex caught in the etf-data-mcp audit).
 
 DEGRADATION GATE (R3 audit item 7). etf-data-mcp resolves holdings as
 stockanalysis (weights) → barchart (symbols only, every row numbered 1..N, no
@@ -33,7 +40,8 @@ meta.json either way. Pass --allow-unweighted to persist a degraded fetch
 deliberately; it is then labelled as degraded in meta, not silently.
 
 Run:
-    python jobs/build_etf_panel.py
+    python jobs/build_etf_panel.py --from-factset-json    # the live path
+    python jobs/build_etf_panel.py                        # legacy CLI holdings (dead)
     python jobs/build_etf_panel.py --tickers XLV,VHT   # subset
     python jobs/build_etf_panel.py --allow-unweighted  # persist a degraded fetch
 
@@ -125,19 +133,147 @@ def _atomic_write(path: Path, write_fn) -> None:
     tmp.replace(path)
 
 
-def build(tickers: list[tuple[str, str]], *, allow_unweighted: bool = False) -> None:
+# ---- FactSet holdings adapter (R3 follow-up: stockanalysis died) ------------
+# stockanalysis returns 404 for every ETF (verified 2026-09-07) and barchart
+# comes back empty, so the only holdings source left is FactSet Ownership's
+# `fund_holdings`. FactSet is a SESSION MCP: a local job cannot call it. So the
+# split is the research-data Data-Fetcher pattern — a Claude session fetches and
+# writes one JSON per ETF under `data/external/_factset_raw/`, and this job reads
+# those files instead of calling the etf-data-mcp holdings tool. Profile and
+# performance still come from that CLI: only stockanalysis broke, yfinance is fine.
+#
+# The raw files carry ONLY securityTicker / securityName / weightClose plus the
+# holdings date. FactSet's internal identifiers (fsymId, fsymSecurityId,
+# fsymRegionalId) and the position sizes (adjHolding, adjMarketValue) are
+# licensed data and must never land in this public repo.
+FACTSET_RAW_DIR = OUT_DIR / "_factset_raw"
+_FACTSET_BANNED_KEYS = {"fsymId", "fsymSecurityId", "fsymRegionalId",
+                        "adjHolding", "adjMarketValue"}
+
+# Words FactSet writes in caps that title() would mangle back into caps-lite.
+_NAME_KEEP_CAPS = {"ADR", "GDR", "REIT", "PLC", "NV", "SA", "AG", "AB", "USA",
+                   "US", "UK", "II", "III", "AI"}
+_NAME_FIXUPS = {"Abbvie": "AbbVie", "Biontech": "BioNTech", "Crispr": "CRISPR",
+                "Genedx": "GeneDx", "Iqvia": "IQVIA", "Ge": "GE",
+                "Cvs": "CVS", "Hca": "HCA", "Unitedhealth": "UnitedHealth",
+                "Bioxcel": "BioXcel", "Biomarin": "BioMarin",
+                "Incyte": "Incyte", "Idexx": "IDEXX", "Dexcom": "DexCom"}
+
+
+def _factset_name(raw: str | None) -> str | None:
+    """`ELI LILLY & CO  COM` → `Eli Lilly & Co Com`.
+
+    FactSet ships security names in caps with doubled spaces. The old
+    stockanalysis names were already mixed-case marketing names ("Eli Lilly and
+    Company"); those cannot be refreshed any more, so the panel takes FactSet's
+    and normalises it rather than blending two sources in one display column.
+    Share-class suffixes (COM, CL A) are kept — they distinguish real rows.
+    """
+    if not raw:
+        return None
+    words = " ".join(str(raw).split()).split(" ")
+    out = []
+    for w in words:
+        if w in _NAME_KEEP_CAPS or not w.isalpha():
+            out.append(w)
+            continue
+        t = w.capitalize()
+        out.append(_NAME_FIXUPS.get(t, t))
+    return " ".join(out)
+
+
+def _factset_symbol(raw: str | None) -> str | None:
+    """`LLY-US` → `LLY`; a non-US line keeps its region (`AZN-GB`) so the symbol
+    stays honest — the Ticker-Drill deep link would not resolve it either way."""
+    if not raw:
+        return None
+    s = str(raw).strip()
+    return s[:-3] if s.upper().endswith("-US") else s
+
+
+def _read_factset_holdings(ticker: str, raw_dir: Path) -> dict:
+    """Read one `etf_holdings_<TICKER>.json` and return the SAME envelope shape
+    `_run_cli("holdings", …)` produces, so `build()` does not care which source
+    it got. Raises on anything that would silently degrade the panel."""
+    path = raw_dir / f"etf_holdings_{ticker.upper()}.json"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"no FactSet holdings file for {ticker}: {path}\n"
+            f"  A Claude session must fetch it first:\n"
+            f"    FactSet_Ownership(data_type='fund_holdings', ids=['{ticker}-US'], topn='ALL')\n"
+            f"  and write securityTicker / securityName / weightClose to that path."
+        )
+    doc = json.loads(path.read_text(encoding="utf-8"))
+
+    rows_in = doc.get("holdings") or []
+    if not rows_in:
+        raise ValueError(f"{path.name}: 'holdings' is empty — refusing to build a weightless panel")
+    leaked = _FACTSET_BANNED_KEYS.intersection(rows_in[0])
+    if leaked:
+        raise ValueError(
+            f"{path.name}: licensed FactSet fields present ({', '.join(sorted(leaked))}). "
+            "This repo is public — the raw files may carry ticker / name / weight only."
+        )
+
+    as_of = str(doc.get("as_of") or "")[:10]
+    if len(as_of) != 10:
+        raise ValueError(f"{path.name}: missing or malformed 'as_of' (got {doc.get('as_of')!r})")
+
+    parsed: list[dict] = []
+    seen: set[str] = set()
+    for i, h in enumerate(rows_in):
+        w = h.get("weightClose")
+        sym = _factset_symbol(h.get("securityTicker"))
+        if w is None or sym is None:
+            raise ValueError(
+                f"{path.name}: row {i} has no {'weight' if w is None else 'ticker'} "
+                f"({h!r}). FactSet weights every line; a hole means a bad transcription."
+            )
+        if sym in seen:          # same security on two lines would double-count the weight
+            raise ValueError(f"{path.name}: duplicate symbol {sym!r} at row {i}")
+        seen.add(sym)
+        parsed.append({"symbol": sym, "name": _factset_name(h.get("securityName")),
+                       "weight_pct": round(float(w), 4)})
+
+    parsed.sort(key=lambda r: r["weight_pct"], reverse=True)
+    for i, r in enumerate(parsed, start=1):
+        r["rank"] = i
+
+    wsum = sum(r["weight_pct"] for r in parsed)
+    if not 50.0 <= wsum <= 101.5:
+        raise ValueError(
+            f"{path.name}: weights sum to {wsum:.2f}% over {len(parsed)} rows — outside "
+            "[50, 101.5]. Under 50 means the fetch was truncated (topn not ALL); over "
+            "101.5 means rows were duplicated. Either way the panel would be wrong."
+        )
+
+    return {
+        "holdings": parsed,
+        "_source": "factset:fund_holdings",
+        "_as_of": as_of,
+        "_reliability": "HIGH",
+        "_partial": False,
+        "_error": None,
+    }
+
+
+def build(tickers: list[tuple[str, str]], *, allow_unweighted: bool = False,
+          factset_dir: Path | None = None) -> None:
     universe_rows: list[dict] = []
     holdings_rows: list[dict] = []
     weight_sum_by_etf: dict[str, float] = {}
     weighted_rows_by_etf: dict[str, int] = {}
     provenance_by_etf: dict[str, dict] = {}
+    holdings_as_of_by_etf: dict[str, str] = {}
     as_of_dates: list[str] = []
 
     for ticker, sub_sector in tickers:
-        print(f"[{ticker}] fetching profile / performance / holdings …")
+        src = "FactSet json" if factset_dir else "etf-data-mcp"
+        print(f"[{ticker}] profile / performance via etf-data-mcp; holdings via {src} …")
         prof = _run_cli("profile", ticker)
         perf = _run_cli("performance", ticker)
-        hold = _run_cli("holdings", ticker)
+        hold = (_read_factset_holdings(ticker, factset_dir) if factset_dir
+                else _run_cli("holdings", ticker))
 
         rets = perf.get("returns_pct", {}) or {}
         row = {
@@ -186,6 +322,8 @@ def build(tickers: list[tuple[str, str]], *, allow_unweighted: bool = False) -> 
         # row-sum is internally consistent with the CSV and with the table the UI renders.
         weight_sum_by_etf[ticker] = round(wsum, 2)
 
+        if hold.get("_as_of"):
+            holdings_as_of_by_etf[ticker] = str(hold["_as_of"])[:10]
         for d in (perf.get("_as_of"), hold.get("_as_of")):
             if d:
                 as_of_dates.append(str(d)[:10])
@@ -233,14 +371,37 @@ def build(tickers: list[tuple[str, str]], *, allow_unweighted: bool = False) -> 
     _atomic_write(HOLDINGS_CSV, _w_hold)
     print(f"wrote {HOLDINGS_CSV.name}: {len(holdings_rows)} holding rows")
 
-    as_of = max(as_of_dates) if as_of_dates else datetime.now().strftime("%Y-%m-%d")
+    # `as_of` is what jobs/update_manifest.py stamps on the `etf_hc_holdings` feed
+    # and ages against its 45-day gate, so it must be the HOLDINGS date. Mixing in
+    # the yfinance performance date (which is always ~today) made the feed look
+    # fresh whatever state the holdings were in — the 2026-08-29 failure mode in
+    # miniature. Keep the perf date, but as its own field.
+    perf_as_of = max(as_of_dates) if as_of_dates else None
+    if holdings_as_of_by_etf:
+        as_of = max(holdings_as_of_by_etf.values())
+    else:
+        as_of = perf_as_of or datetime.now().strftime("%Y-%m-%d")
     meta = {
         "as_of": as_of,
-        "source": "etf-data-mcp CLI (stockanalysis+barchart for holdings, yfinance for profile/perf)",
+        "holdings_as_of_oldest": (min(holdings_as_of_by_etf.values())
+                                  if holdings_as_of_by_etf else None),
+        "perf_as_of": perf_as_of,
+        "source": (
+            "holdings: FactSet Ownership fund_holdings (via a Claude session, baked to\n"
+            "data/external/_factset_raw/); profile+perf: etf-data-mcp CLI (yfinance)"
+            if factset_dir else
+            "etf-data-mcp CLI (stockanalysis+barchart for holdings, yfinance for profile/perf)"
+        ),
+        "holdings_as_of_by_etf": holdings_as_of_by_etf,
         "n_etfs": len(universe_rows),
-        "holdings_cap_note": "Upstream caps weighted rows at top ~25; tail is symbol-only "
-                             "(rank/name/weight=None). Tail kept for '+N more'; unknown weight "
-                             "is None, never 0.",
+        "holdings_cap_note": (
+            "FactSet weights EVERY constituent, so there is no symbol-only tail: "
+            "weighted_rows == total rows. The page shows the top rows and lists the "
+            "rest as '+N more'. Unknown weight is still None, never 0."
+            if factset_dir else
+            "Upstream caps weighted rows at top ~25; tail is symbol-only "
+            "(rank/name/weight=None). Tail kept for '+N more'; unknown weight is None, never 0."
+        ),
         "weight_sum_pct_by_etf": weight_sum_by_etf,
         "weighted_rows_by_etf": weighted_rows_by_etf,
         "upstream_by_etf": provenance_by_etf,
@@ -259,6 +420,12 @@ def main() -> None:
         "--allow-unweighted", action="store_true",
         help="persist a fetch in which some ETF has zero weighted rows (default: refuse)",
     )
+    ap.add_argument(
+        "--from-factset-json", nargs="?", const=str(FACTSET_RAW_DIR), default=None,
+        metavar="DIR",
+        help=f"read holdings from FactSet json files instead of the etf-data-mcp "
+             f"holdings tool (default dir: {FACTSET_RAW_DIR})",
+    )
     args = ap.parse_args()
     if args.tickers:
         want = {t.strip().upper() for t in args.tickers.split(",")}
@@ -267,7 +434,8 @@ def main() -> None:
         sel += [(t, "Other") for t in want if t not in {x for x, _ in ETF_LIST}]
     else:
         sel = ETF_LIST
-    build(sel, allow_unweighted=args.allow_unweighted)
+    build(sel, allow_unweighted=args.allow_unweighted,
+          factset_dir=Path(args.from_factset_json) if args.from_factset_json else None)
 
 
 if __name__ == "__main__":

@@ -125,46 +125,77 @@ def test_a3_weighted_rows_sum_matches_meta_within_tolerance_per_etf():
     assert not failures, "Weight sum mismatches:\n" + "\n".join(failures)
 
 
-def test_a4_tail_rows_have_null_weight_pct_and_empty_name():
-    """A4: tail rows (rank is null) have weight_pct NaN/empty (NOT 0) AND name empty — 'unknown ≠ zero'."""
-    holdings = _load_holdings_raw()
-    tail = holdings[holdings["rank"].isna()]
+def test_a4_factset_weights_every_row_and_no_weight_is_ever_zero():
+    """A4: under the FactSet source there is no symbol-only tail — every persisted
+    row carries a real weight.
 
-    assert len(tail) > 0, "No tail rows found; expected symbol-only rows with null rank"
-
-    # weight_pct must be NaN — explicitly not zero
-    zero_weight_tail = tail[tail["weight_pct"] == 0.0]
-    assert len(zero_weight_tail) == 0, (
-        f"{len(zero_weight_tail)} tail rows have weight_pct==0.0 (must be NaN, not zero)"
-    )
-
-    non_nan_weight = tail[tail["weight_pct"].notna()]
-    assert len(non_nan_weight) == 0, (
-        f"{len(non_nan_weight)} tail rows have a non-null weight_pct"
-    )
-
-    # name must be empty/NaN — not a real name
-    non_empty_name = tail[tail["name"].notna() & (tail["name"].astype(str).str.strip() != "")]
-    assert len(non_empty_name) == 0, (
-        f"{len(non_empty_name)} tail rows have a non-empty name field"
-    )
-
-
-def test_a5_xlv_rank1_is_lly_with_expected_weight_and_25_weighted_rows():
-    """A5: XLV rank-1 symbol == 'LLY' with weight 16.0–16.8; XLV weighted-row count == 25."""
+    This flipped on 2026-09-07. stockanalysis weighted only the top ~25 and the
+    rest arrived symbol-only, so the invariant then was "a tail row's weight is
+    NaN, never 0". stockanalysis now 404s and FactSet weights the whole book, so
+    the invariant becomes "there is no unweighted row at all". The half that did
+    NOT change is the one that matters: an unknown weight must never be written
+    as 0.0, because zero is a claim and unknown is not.
+    """
     holdings = _load_holdings_raw()
 
-    xlv_weighted = holdings[(holdings["etf_ticker"] == "XLV") & holdings["rank"].notna()]
-    assert len(xlv_weighted) == 25, f"XLV weighted rows: {len(xlv_weighted)} (expected 25)"
+    unweighted = holdings[holdings["weight_pct"].isna()]
+    assert len(unweighted) == 0, (
+        f"{len(unweighted)} rows have no weight; FactSet weights every constituent, "
+        "so this means the panel was built from the dead stockanalysis path"
+    )
+    assert (holdings["weight_pct"] != 0.0).all(), (
+        "a 0.0 weight would turn 'unknown' into 'zero'"
+    )
+    assert holdings["rank"].notna().all(), "every weighted row is ranked"
+    assert holdings["name"].notna().all(), "FactSet names every line it weights"
 
-    rank1 = xlv_weighted[xlv_weighted["rank"] == 1]
+
+def test_a4b_a_weightless_tail_is_still_split_off_if_one_ever_returns():
+    """The loader's degradation handling must survive the source swap.
+
+    No committed row exercises it any more, so the protection added after the
+    2026-08-29 incident would rot silently. Feed it a frame shaped like the old
+    upstream and check the split still keys on the weight, not on the rank.
+    """
+    from lib import etf_panel  # noqa: PLC0415
+
+    frame = pd.DataFrame([
+        {"etf_ticker": "ZZZ", "rank": 1, "symbol": "AAA", "name": "A", "weight_pct": 60.0},
+        {"etf_ticker": "ZZZ", "rank": 2, "symbol": "BBB", "name": "B", "weight_pct": 40.0},
+        # the shape barchart returned: numbered, but weightless
+        {"etf_ticker": "ZZZ", "rank": 3, "symbol": "CCC", "name": None, "weight_pct": None},
+    ])
+    weighted, tail = etf_panel.holdings_for(frame, "ZZZ")
+    assert list(weighted["symbol"]) == ["AAA", "BBB"]
+    assert tail == ["CCC"], "a ranked-but-weightless row is still tail"
+    assert etf_panel.degraded_etfs(frame) == [], "2 of 3 weighted is not fully degraded"
+
+
+def test_a5_xlv_rank1_is_lly_and_every_xlv_row_is_weighted():
+    """A5: XLV's top line is Eli Lilly, and the whole XLV book is weighted.
+
+    The row count is no longer pinned at 25 (that was stockanalysis's cap, not a
+    property of the fund). The band on LLY is wide on purpose: it is a
+    "did the mapping put the right number on the right symbol" check, not a
+    market call.
+    """
+    holdings = _load_holdings_raw()
+
+    xlv = holdings[holdings["etf_ticker"] == "XLV"]
+    assert len(xlv) > 25, "FactSet returns the whole book, not a top-25 cap"
+    assert xlv["weight_pct"].notna().all(), "every XLV row must carry a weight"
+
+    rank1 = xlv[xlv["rank"] == 1]
     assert len(rank1) == 1, "Expected exactly one XLV rank-1 row"
-
-    symbol = rank1.iloc[0]["symbol"]
-    assert symbol == "LLY", f"XLV rank-1 symbol: '{symbol}' (expected 'LLY')"
-
+    assert rank1.iloc[0]["symbol"] == "LLY"
     weight = float(rank1.iloc[0]["weight_pct"])
-    assert 16.0 <= weight <= 16.8, f"XLV LLY weight: {weight}% (expected 16.0–16.8)"
+    assert 10.0 <= weight <= 20.0, f"XLV LLY weight: {weight}% (expected 10–20)"
+
+    ranks = xlv.sort_values("rank")["weight_pct"].tolist()
+    assert ranks == sorted(ranks, reverse=True), "rank must follow weight, descending"
+
+    total = float(xlv["weight_pct"].sum())
+    assert 95.0 <= total <= 101.0, f"XLV weights sum to {total}% — the book is incomplete"
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -185,7 +216,7 @@ def test_b1_load_etf_universe_returns_10_rows_with_expected_columns():
 
 
 def test_b2_load_etf_holdings_returns_non_empty_with_weighted_and_tail_rows():
-    """B2: load_etf_holdings() returns non-empty DataFrame containing both weighted and tail rows."""
+    """B2: load_etf_holdings() returns a non-empty, fully weighted DataFrame."""
     from lib import etf_panel  # noqa: PLC0415
 
     df = etf_panel.load_etf_holdings()
@@ -196,17 +227,20 @@ def test_b2_load_etf_holdings_returns_non_empty_with_weighted_and_tail_rows():
     missing = EXPECTED_HOLDINGS_COLS - set(df.columns)
     assert not missing, f"Missing columns: {missing}"
 
-    weighted = df[df["rank"].notna()]
-    tail = df[df["rank"].isna()]
-    assert len(weighted) > 0, "No weighted rows found (rank not null)"
-    assert len(tail) > 0, "No tail rows found (rank null)"
+    assert df["weight_pct"].notna().all(), (
+        "FactSet weights every constituent — an unweighted row means the panel was "
+        "rebuilt from the dead stockanalysis/barchart path"
+    )
+    assert df["rank"].notna().all()
+    assert df["etf_ticker"].nunique() == 10
 
 
 def test_b3_holdings_for_xlv_returns_sorted_weighted_df_and_tail_list():
     """B3: holdings_for(df, 'XLV') -> (weighted_df, tail_symbols).
 
-    weighted_df: ≤25 rows, all rank not-null, monotonically increasing rank, all weight_pct not-null.
-    tail_symbols: non-empty list[str].
+    weighted_df: every row ranked and weighted, sorted by rank ascending.
+    tail_symbols: a list[str], now EMPTY — FactSet leaves nothing unweighted.
+    The page caps what it draws (e1_etf_overview.HEAD_CAP); the loader does not.
     """
     from lib import etf_panel  # noqa: PLC0415
 
@@ -215,7 +249,7 @@ def test_b3_holdings_for_xlv_returns_sorted_weighted_df_and_tail_list():
 
     # weighted_df contract
     assert isinstance(weighted_df, pd.DataFrame)
-    assert len(weighted_df) <= 25, f"weighted_df has {len(weighted_df)} rows (max 25)"
+    assert len(weighted_df) > 25, "the loader returns the whole book, uncapped"
     assert weighted_df["rank"].notna().all(), "weighted_df contains null-rank rows"
     assert weighted_df["weight_pct"].notna().all(), "weighted_df contains null weight_pct"
 
@@ -224,8 +258,7 @@ def test_b3_holdings_for_xlv_returns_sorted_weighted_df_and_tail_list():
 
     # tail_symbols contract
     assert isinstance(tail_symbols, list), f"tail_symbols must be list, got {type(tail_symbols)}"
-    assert len(tail_symbols) > 0, "tail_symbols is empty for XLV"
-    assert all(isinstance(s, str) for s in tail_symbols), "tail_symbols must be list[str]"
+    assert tail_symbols == [], "nothing is unweighted under the FactSet source"
 
 
 def test_b4_missing_files_return_empty_dataframe_and_empty_dict(tmp_path, monkeypatch):
@@ -277,15 +310,25 @@ def test_b5_no_fabricated_zero_weight_in_tail():
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def test_e1_xbi_tail_symbols_count_exceeds_100():
-    """E: holdings_for(..., 'XBI') tail_symbols length > 100 — equal-weight tail surfaced."""
+def test_e1_xbi_surfaces_its_whole_equal_weight_book():
+    """E: XBI's long equal-weight book must all be there — and now WITH weights.
+
+    This used to assert >100 *tail* symbols, i.e. >100 constituents whose weight
+    stockanalysis never told us. The same 100+ names are still surfaced; the
+    difference is that every one of them now carries a number.
+    """
     from lib import etf_panel  # noqa: PLC0415
 
     holdings = etf_panel.load_etf_holdings()
-    _weighted_df, tail_symbols = etf_panel.holdings_for(holdings, "XBI")
+    weighted_df, tail_symbols = etf_panel.holdings_for(holdings, "XBI")
 
-    assert len(tail_symbols) > 100, (
-        f"XBI tail_symbols has {len(tail_symbols)} entries; expected >100 for an equal-weight ETF"
+    assert len(weighted_df) > 100, (
+        f"XBI has {len(weighted_df)} weighted rows; expected >100 for an equal-weight ETF"
+    )
+    assert tail_symbols == []
+    assert float(weighted_df["weight_pct"].max()) < 5.0, (
+        "an equal-weight fund should have no dominant line — a big top weight would "
+        "mean the weights were mapped to the wrong fund"
     )
 
 
@@ -301,6 +344,8 @@ REQUIRED_ETF_I18N_KEYS = {
     "hc_etf.col.name",
     "hc_etf.col.weight",
     "hc_etf.tail_more",
+    "hc_etf.rest_more",
+    "hc_etf.rest_more_trunc",
     "hc_etf.coverage",
 }
 

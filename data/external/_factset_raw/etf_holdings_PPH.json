@@ -1,0 +1,33 @@
+{
+  "etf_ticker": "PPH",
+  "as_of": "2026-08-31",
+  "currency": "USD",
+  "source": "FactSet_Ownership.fund_holdings topn=ALL",
+  "holdings": [
+    {"securityTicker": "LLY-US", "securityName": "ELI LILLY & CO  COM", "weightClose": 18.9237630744472},
+    {"securityTicker": "MRK-US", "securityName": "MERCK & CO INC  COM", "weightClose": 10.9803733821382},
+    {"securityTicker": "NVS-US", "securityName": "NOVARTIS AG  SPONSORED ADR", "weightClose": 9.99935705581196},
+    {"securityTicker": "PFE-US", "securityName": "PFIZER INC  COM", "weightClose": 5.16666885927978},
+    {"securityTicker": "BMY-US", "securityName": "BRISTOL MYERS SQUIBB CO  COM", "weightClose": 5.02601608572984},
+    {"securityTicker": "NVO-US", "securityName": "NOVO NORDISK AS  SPONSORED ADR", "weightClose": 4.9211096036237},
+    {"securityTicker": "MCK-US", "securityName": "MCKESSON CORP  COM", "weightClose": 4.68465787156851},
+    {"securityTicker": "ABBV-US", "securityName": "ABBVIE INC  COM", "weightClose": 4.52145766604301},
+    {"securityTicker": "JNJ-US", "securityName": "JOHNSON & JOHNSON  COM", "weightClose": 4.42122040576294},
+    {"securityTicker": "GSK-US", "securityName": "GSK PLC  SPONSORED ADR", "weightClose": 4.1075250135684},
+    {"securityTicker": "SNY-US", "securityName": "SANOFI AVENTIS  SPONSORED ADR", "weightClose": 4.03821208892621},
+    {"securityTicker": "COR-US", "securityName": "CENCORA INC  COM", "weightClose": 3.72222525445037},
+    {"securityTicker": "AZN-GB", "securityName": "ASTRAZENECA PLC  ORD", "weightClose": 3.60141754828491},
+    {"securityTicker": "HLN-US", "securityName": "HALEON PLC  SPONSORED ADR", "weightClose": 3.2226811379461},
+    {"securityTicker": "TEVA-US", "securityName": "TEVA PHARMACEUTICAL INDUSTRIES  ADR", "weightClose": 3.15589255329956},
+    {"securityTicker": "TAK-US", "securityName": "TAKEDA PHARMACEUTICAL CO LTD  ADR", "weightClose": 3.12418842772288},
+    {"securityTicker": "ZTS-US", "securityName": "ZOETIS INC  CL A", "weightClose": 2.18397001653326},
+    {"securityTicker": "VTRS-US", "securityName": "VIATRIS INC  COM", "weightClose": 1.10420685367102},
+    {"securityTicker": "JAZZ-US", "securityName": "JAZZ PHARMACEUTICALS PLC  ORD", "weightClose": 1.09035720434687},
+    {"securityTicker": "CORT-US", "securityName": "CORCEPT THERAPEUTICS INC  COM", "weightClose": 0.637180541622141},
+    {"securityTicker": "AXSM-US", "securityName": "AXSOME THERAPEUTICS INC  COM", "weightClose": 0.603908016702184},
+    {"securityTicker": "ELAN-US", "securityName": "ELANCO ANIMAL HEALTH INC  COM", "weightClose": 0.33297506325625},
+    {"securityTicker": "OGN-US", "securityName": "ORGANON & CO  COM", "weightClose": 0.225840923595636},
+    {"securityTicker": "BHC-CA", "securityName": "BAUSCH HEALTH COS INC  COM", "weightClose": 0.122674795680461},
+    {"securityTicker": "PRGO-US", "securityName": "PERRIGO CO PLC  COM", "weightClose": 0.0821205559885474}
+  ]
+}

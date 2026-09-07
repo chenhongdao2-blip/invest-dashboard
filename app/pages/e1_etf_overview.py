@@ -43,6 +43,12 @@ prefer_cn = i18n.get_lang() == "zh"
 SUBSECTOR_ORDER = ["etf_broad", "etf_biotech", "etf_pharma", "etf_devices",
                    "etf_providers", "etf_genomics"]
 TAIL_CAP = 40
+# FactSet weights EVERY constituent (jobs/build_etf_panel.py --from-factset-json),
+# so `weighted` is now the whole book — 412 rows for VHT. Rendering all of them
+# would put a 10,000px table inside the expander and run the per-constituent
+# 1M/YTD lookup 412 times. Show the head; spill the rest into the same "+N more"
+# caption the symbol-only tail already used.
+HEAD_CAP = 25
 CARD_H = 188   # iframe height — fixed doc (header + KPI row + top-5 holdings strip)
 
 t = theme
@@ -250,7 +256,9 @@ def _render_full_holdings(tkr: str) -> None:
         if weighted.empty:
             st.caption("—")
             return
-        hd = weighted[["rank", "symbol", "name", "weight_pct"]].copy()
+        shown = weighted.head(HEAD_CAP)
+        rest = [str(x) for x in weighted["symbol"].iloc[HEAD_CAP:].dropna().tolist()]
+        hd = shown[["rank", "symbol", "name", "weight_pct"]].copy()
         hd["m1"] = [_crow(str(s))[0] if pd.notna(s) else pd.NA for s in hd["symbol"]]
         hd["ytd"] = [_crow(str(s))[1] if pd.notna(s) else pd.NA for s in hd["symbol"]]
         hd["nav"] = [
@@ -283,6 +291,15 @@ def _render_full_holdings(tkr: str) -> None:
         if cov is not None:
             notes.append(i18n.t("hc_etf.coverage", n=int(weighted["weight_pct"].notna().sum()),
                                 cov=f"{cov:.1f}"))
+        # Two different "+N more" sets, kept apart because they mean different
+        # things: `rest` are weighted holdings we simply did not draw, `tail` are
+        # holdings whose weight the source never gave us.
+        if rest:
+            if len(rest) <= TAIL_CAP:
+                notes.append(i18n.t("hc_etf.rest_more", n=len(rest), syms=", ".join(rest)))
+            else:
+                notes.append(i18n.t("hc_etf.rest_more_trunc", n=len(rest),
+                                    shown=TAIL_CAP, syms=", ".join(rest[:TAIL_CAP])))
         if tail:
             if len(tail) <= TAIL_CAP:
                 notes.append(i18n.t("hc_etf.tail_more", n=len(tail), syms=", ".join(tail)))

@@ -18,6 +18,9 @@ from lib import format as fmt
 def _ticker_roster() -> pd.DataFrame:
     """一行一票 (sectors 用 GROUP_CONCAT 拼成 csv)。
 
+    DEPRECATED — `db.market_frame(None).meta` is the same roster (plus `status`
+    and `secondary_listing`) off the shared per-domain cache.
+
     R3 审查 H3：这里原来**没有** status 过滤，而 db.all_tickers() / sector_tickers()
     / top_movers() 三处都有 —— 全市场行情表因此把已退市票混进活跃 universe
     (DAWN 价格冻在 2026-04-24、APLS 冻在 05-15)，用户看到的是一张没有任何标记的

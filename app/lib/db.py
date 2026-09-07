@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 
 import numpy as np
@@ -134,10 +135,180 @@ def ticker_to_name(prefer_cn: bool = True) -> dict[str, str]:
     return dict(zip(df["ticker"], df["display_name"]))
 
 
+# ---------- per-domain market frame ----------
+@dataclass(frozen=True)
+class MarketFrame:
+    """Everything a domain page needs off ONE cached read.
+
+    R3 audit §4/§8.3: the heatmap issued `sector_tickers` once per sub-sector and
+    then pulled the wide close frame twice (local + USD), 16 queries where 3 do.
+    `close`/`close_usd`/`multiples` cover the domain's ACTIVE members only, which
+    is what every scan path already filtered to.
+
+    `meta` is deliberately NOT status-filtered — same reason `ticker_to_name` is
+    not (see its NOTE above): a delisted or renamed pick must still resolve to a
+    name. It carries a `status` column so callers that need the active set can
+    filter, and `members` is pre-filtered for them.
+    """
+
+    close: pd.DataFrame                      # index=date, columns=ticker, local ccy
+    close_usd: pd.DataFrame                  # same shape, COALESCE(close_usd, close)
+    multiples: pd.DataFrame                  # index=ticker, latest multiples_daily row
+    meta: pd.DataFrame                       # index=ticker, universe_member one row per ticker
+    members: dict[str, tuple[str, ...]]      # sector -> ACTIVE tickers, ordered by ticker
+    as_of: str | None                        # max(prices_daily.date) inside this frame
+
+
+def _universe_subquery(domain: str | None) -> str:
+    """`SELECT DISTINCT ticker …` for the domain's ACTIVE members.
+
+    Used as a sub-select so neither price nor multiples query has to interpolate a
+    500-placeholder `IN (?,?,…)` list — the SQL text stays constant.
+    """
+    return ("SELECT DISTINCT ticker FROM universe_member WHERE 1=1"
+            + (" AND domain = ?" if domain else "") + _active_clause())
+
+
+@st.cache_data(ttl=300)
+def _frame_prices(domain: str | None) -> tuple[pd.DataFrame, pd.DataFrame, str | None]:
+    """Local AND USD wide closes in ONE pass (audit §4: the double pull)."""
+    args: tuple = (domain,) if domain else ()
+    px = query(
+        f"SELECT p.ticker, p.date, p.close, "
+        f"       COALESCE(p.close_usd, p.close) AS close_usd "
+        f"FROM prices_daily p JOIN ({_universe_subquery(domain)}) u ON u.ticker = p.ticker "
+        f"ORDER BY p.ticker, p.date",
+        args,
+    )
+    if px.empty:
+        return pd.DataFrame(), pd.DataFrame(), None
+    as_of = str(px["date"].max())
+    px["date"] = pd.to_datetime(px["date"])
+    return (px.pivot(index="date", columns="ticker", values="close").sort_index(),
+            px.pivot(index="date", columns="ticker", values="close_usd").sort_index(),
+            as_of)
+
+
+@st.cache_data(ttl=300)
+def _frame_multiples(domain: str | None) -> pd.DataFrame:
+    df = query(
+        f"SELECT m.* FROM multiples_daily m JOIN ("
+        f"  SELECT ticker, MAX(date) AS d FROM multiples_daily "
+        f"  WHERE ticker IN ({_universe_subquery(domain)}) GROUP BY ticker"
+        f") l ON l.ticker = m.ticker AND m.date = l.d",
+        (domain,) if domain else (),
+    )
+    return df.set_index("ticker") if not df.empty else df
+
+
+@st.cache_data(ttl=300)
+def _frame_meta(domain: str | None) -> pd.DataFrame:
+    status_col = ("MAX(status)" if _has_column("universe_member", "status") else "NULL")
+    sec_col = ("MAX(COALESCE(secondary_listing, 0))"
+               if _has_column("universe_member", "secondary_listing") else "0")
+    df = query(
+        f"SELECT ticker, MAX(name_cn) AS name_cn, MAX(name_en) AS name_en, "
+        f"       MAX(region) AS region, MAX(domain) AS domain, "
+        f"       GROUP_CONCAT(DISTINCT sector) AS sectors, "
+        f"       {status_col} AS status, {sec_col} AS secondary_listing "
+        f"FROM universe_member{' WHERE domain = ?' if domain else ''} "
+        f"GROUP BY ticker ORDER BY ticker",
+        (domain,) if domain else (),
+    )
+    return df.set_index("ticker") if not df.empty else df
+
+
+@st.cache_data(ttl=300)
+def _frame_members(domain: str | None) -> dict[str, tuple[str, ...]]:
+    """sector -> ACTIVE tickers, ordered by ticker (i.e. `sector_tickers`'s roster).
+
+    First-wins assignment across sectors stays the CALLER's business — `heatmap.py`
+    walks its configured sector order and keeps a ticker's first appearance.
+    """
+    meta = _frame_meta(domain)
+    out: dict[str, list[str]] = {}
+    if meta.empty:
+        return {}
+    for tkr, sectors, status in zip(meta.index, meta["sectors"], meta["status"]):
+        if pd.notna(status):
+            continue
+        for sec in str(sectors or "").split(","):
+            if sec:
+                out.setdefault(sec, []).append(tkr)
+    return {k: tuple(v) for k, v in out.items()}
+
+
+def market_frame(domain: str | None = None) -> MarketFrame:
+    """One domain's whole cross-section: three queries, four cache buckets.
+
+    `domain=None` is the entire universe — what `quote_table`, `top_movers` and
+    `returns_for` want. The argument is HASHED by each `_frame_*` helper, so
+    healthcare / ai / etf / None land in distinct buckets; this is the same
+    discipline `load_domain_cfg` documents above, and for the same reason.
+
+    NOT itself `@st.cache_data` — deviation from design A.1, which asserted "a
+    dataclass of DataFrames pickles fine". It does not, reliably: `cache_data`
+    pickles the return value, and pickling a value by class reference fails with
+    `PicklingError: it's not the same object as lib.db.MarketFrame` the moment
+    `lib.db` is imported twice. `tests/test_hc_overview_cache_key.py` reproduces
+    that by clearing `lib.*` out of `sys.modules` and re-importing — which is
+    precisely what a Streamlit hot reload does, so the failure mode is a 500 on
+    the deployed app, not a test artifact. Caching the DataFrames/tuple/dict
+    pieces instead keeps every cached value a builtin container and makes this
+    assembler free.
+    """
+    close, close_usd, as_of = _frame_prices(domain)
+    return MarketFrame(
+        close=close,
+        close_usd=close_usd,
+        multiples=_frame_multiples(domain),
+        meta=_frame_meta(domain),
+        members=_frame_members(domain),
+        as_of=as_of,
+    )
+
+
+@st.cache_data(ttl=300)
+def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
+                basis: str = "usd") -> pd.DataFrame:
+    """Cached `compute_returns` over a slice of the universe frame.
+
+    `compute_returns` takes a DataFrame, which Streamlit cannot hash, so the cache
+    lives on this keyed shell instead. `as_of` (pass `market_frame(...).as_of`) is
+    not read — it is in the signature so the key MOVES when new prices land and
+    stays PUT across the re-runs a slider triggers, which is exactly the 258 ms
+    recompute audit §5 measured on `3_Sector_Heatmap.py`'s min-mcap slider.
+
+    Per-ticker results are independent, so `returns_for(all).loc[subset]` equals
+    `returns_for(subset)` — call it once per domain and slice, do not call it once
+    per sub-sector.
+    """
+    mf = market_frame(None)
+    src = mf.close_usd if basis == "usd" else mf.close
+    if src.empty:
+        return pd.DataFrame()
+    cols = [t for t in tickers if t in src.columns]
+    if not cols:
+        return pd.DataFrame()
+    return compute_returns(src[cols])
+
+
 # ---------- prices & returns ----------
 @st.cache_data(ttl=300)
 def get_close_series(tickers: tuple[str, ...]) -> pd.DataFrame:
-    """Wide-format close prices: index=date, columns=ticker. Tuple for cache."""
+    """Wide-format close prices: index=date, columns=ticker. Tuple for cache.
+
+    DEPRECATED for multi-ticker use — prefer `market_frame(domain).close`, which
+    fetches local and USD closes in ONE pass instead of two (audit §4).
+
+    Deliberately NOT a wrapper over the frame, despite the "thin wrapper" plan:
+    it is still the right call for a SINGLE ticker (a 1-column pull beats
+    materialising a domain frame) and it is the ONLY correct call for tickers the
+    frame does not carry — Ticker Drill on a DELISTED name, and `ipo_tracker`'s
+    yfinance symbols, which are not universe members at all. Serving those from
+    the frame would hand back an empty column, and slicing the frame would widen
+    every caller's date index to the union of the whole universe.
+    """
     if not tickers:
         return pd.DataFrame()
     placeholders = ",".join("?" * len(tickers))
@@ -258,7 +429,13 @@ def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
 # ---------- multiples ----------
 @st.cache_data(ttl=300)
 def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
-    """Latest multiples_daily snapshot per ticker. Includes M1 close_usd + M11 mcap_tier."""
+    """Latest multiples_daily snapshot per ticker. Includes M1 close_usd + M11 mcap_tier.
+
+    DEPRECATED for domain-wide use — prefer `market_frame(domain).multiples`,
+    which runs the same query once per domain instead of once per sub-sector and
+    without a 500-placeholder `IN` list. Kept for single-ticker callers
+    (`6_Ticker_Drill.py`) and comp sets that are not a domain.
+    """
     if not tickers:
         return pd.DataFrame()
     placeholders = ",".join("?" * len(tickers))
@@ -361,6 +538,10 @@ def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
     """M1 audit fix: USD-converted close series (so cross-region returns are comparable).
 
     Falls back to local close × FX if close_usd is null (legacy rows pre-M1 fix).
+
+    DEPRECATED for multi-ticker use — prefer `market_frame(domain).close_usd`.
+    Kept for single-ticker and non-universe callers; see `get_close_series` for
+    why it is not a wrapper over the frame.
     """
     if not tickers:
         return pd.DataFrame()

@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-05T00:22:30+00:00",
-    "source_date": "2026-09-04"
+    "refreshed_at": "2026-09-07T15:03:37+00:00",
+    "source_date": "2026-09-07"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-05T00:24:49+00:00",
-    "source_date": "2026-09-05"
+    "source_date": "2026-09-07"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -46,7 +46,7 @@
     "label": "MNC M&A / BD 交易",
     "source": "M&A:FactSet(本地) / BD:PatSnap(本地)",
     "max_age_days": 7,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T06:12:59+00:00",
     "source_date": "2026-08-29",
     "note": "M&A:FactSet / BD:PatSnap 双源切换完成(2026-08-29)"
@@ -84,7 +84,7 @@
     "source": "minodata API(GH手动dispatch)",
     "max_age_days": 7,
     "source_date": "2026-08-29",
-    "status": "ok"
+    "status": "stale"
   },
   "sw_industry_daily": {
     "refreshed_at": "2026-08-29T06:03:19+00:00",

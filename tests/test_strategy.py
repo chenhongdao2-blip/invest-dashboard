@@ -340,3 +340,40 @@ def test_strategy_page_uses_a_lazy_selector_not_st_tabs():
     assert "st.segmented_control(" in src
     assert "st.tabs(" not in src
     assert "TODO(George)" in src, "the HD universe decision must stay documented"
+
+
+def test_fetch_picks_closes_never_extends_past_the_snapshot(monkeypatch):
+    """`_apply_delisted_overrides` synthesizes a business-day index out to TODAY, and
+    it runs AFTER the `merged.index <= db_last` truncation — so a delisted pick
+    reintroduced rows beyond the snapshot's own last bar (measured on v4: 2 rows
+    where only FOLD is non-NaN). Those rows carry one synthetic name against NaN for
+    every real pick, which is precisely the mixed-vintage tail the truncation exists
+    to prevent, and the page still renders `db_last` as its as-of.
+    """
+    if not db.DB_PATH.exists():
+        pytest.skip("data/snapshots.db not present")
+    cfg = strat.STRATEGIES["v4_biotech"]
+    syms = tuple(sorted(set(cfg["loader"]()["yf_sym"].dropna())))
+    overrides = strat._delisted_overrides(strat._delisted_mtime())
+    if not set(syms) & set(overrides):
+        pytest.skip("v4 has no delisted overrides; nothing to over-extend")
+
+    have = strat.picks_closes_db(syms, cfg["pick_date"])
+    if have.empty or len(have.columns) < len(syms):
+        pytest.skip("snapshot does not fully cover v4")
+    db_last = have.dropna(how="all").index.max()
+
+    def _boom(*a, **kw):
+        raise AssertionError("yfinance was called for a fully covered book")
+
+    monkeypatch.setattr(strat.yf, "download", _boom)
+    strat.fetch_picks_closes.clear()
+    got = strat.fetch_picks_closes(syms, cfg["pick_date"], strat._delisted_mtime())
+
+    assert got.index.max() <= db_last, (
+        f"{(got.index > db_last).sum()} rows past the snapshot's last bar "
+        f"({db_last.date()}): {list(got.index[got.index > db_last])}"
+    )
+    # the override itself must survive the clamp — this is a truncation, not a drop
+    sym = next(iter(set(syms) & set(overrides)))
+    assert sym in got.columns and got[sym].notna().any()

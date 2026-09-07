@@ -473,8 +473,14 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
     else:
         # snapshot absent or stale → fetch the lot, exactly as before
         have, wanted = pd.DataFrame(), tuple(yf_syms)
+    # The snapshot's own last bar. Every exit clamps to it: `_apply_delisted_overrides`
+    # synthesizes a business-day index out to TODAY, so without this a delisted pick
+    # reintroduces rows past the snapshot carrying one synthetic name against NaN for
+    # every real pick. NaT when `have` is empty — the live fetch then defines the tail.
+    db_last = have.dropna(how="all").index.max() if len(have) else pd.NaT
+
     if not wanted:
-        return _apply_delisted_overrides(have, yf_syms, start, ovr_mtime)
+        return _clip(_apply_delisted_overrides(have, yf_syms, start, ovr_mtime), db_last)
 
     end = (date.today() + timedelta(days=1)).isoformat()
 
@@ -532,15 +538,21 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
         # onto stale pick prices and quietly move the curve's last point; cut back
         # to the snapshot's own last bar so the whole row is one vintage. The page
         # already renders that date as its as-of.
-        db_last = have.dropna(how="all").index.max()
-        if pd.notna(db_last):
-            merged = merged.loc[merged.index <= db_last]
-    merged = _apply_delisted_overrides(merged, yf_syms, start, ovr_mtime)
+        merged = _clip(merged, db_last)
+    # Clamp AGAIN after the overrides: they are applied last and extend to today.
+    merged = _clip(_apply_delisted_overrides(merged, yf_syms, start, ovr_mtime), db_last)
 
     still = [s for s in yf_syms if s not in merged.columns]
     if still:
         st.warning(f"Price fetch incomplete after retry: {', '.join(still)}")
     return merged
+
+
+def _clip(df: pd.DataFrame, last: pd.Timestamp) -> pd.DataFrame:
+    """Cut a close frame back to `last` so the whole tail is one vintage. NaT = no-op."""
+    if df.empty or pd.isna(last):
+        return df
+    return df.loc[df.index <= last]
 
 
 def _apply_delisted_overrides(closes: pd.DataFrame, yf_syms: tuple[str, ...],

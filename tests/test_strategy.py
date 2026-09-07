@@ -19,7 +19,11 @@ import pytest
 APP_DIR = Path(__file__).resolve().parent.parent / "app"
 sys.path.insert(0, str(APP_DIR))
 
+from datetime import date  # noqa: E402
+
+from lib import db  # noqa: E402
 from lib import portfolio_math as pm  # noqa: E402
+from lib import strategy as strat  # noqa: E402
 
 
 def _df(rows: dict[str, list[float]], dates: list[str]) -> pd.DataFrame:
@@ -234,3 +238,105 @@ def test_weighted_rounding_absorbed_starts_at_100():
     assert port.iloc[0] == pytest.approx(100.0)
     rb = pm.weighted_rebalanced_portfolio(sub, w, cash_weight=0.12, freq="M")
     assert rb.iloc[0] == pytest.approx(100.0)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# PR 2 — Strategy Picks reads the snapshot before it reaches for the network
+# ══════════════════════════════════════════════════════════════════════════
+def test_picks_closes_db_covers_the_biotech_books_and_not_the_hd_ones():
+    """Design A.3's measured coverage, as an assertion rather than a note.
+
+    The three HD books are 0/74 on purpose — onboarding those symbols to
+    `universe_member` is a universe decision (see the TODO in
+    4_Strategy_Picks.py), so their yfinance path must stay reachable.
+    """
+    if not db.DB_PATH.exists():
+        pytest.skip("data/snapshots.db not present")
+    biotech, hd = 0, 0
+    for sid, cfg in strat.STRATEGIES.items():
+        picks = cfg["loader"]()
+        if picks.empty or "yf_sym" not in picks.columns:
+            continue
+        syms = tuple(sorted(set(picks["yf_sym"].dropna())))
+        got = strat.picks_closes_db(syms, cfg["pick_date"])
+        n = 0 if got.empty else len(got.columns)
+        if sid.endswith("biotech"):
+            assert n >= len(syms) * 0.9, f"{sid}: only {n}/{len(syms)} in prices_daily"
+            biotech += 1
+        else:
+            assert n == 0, f"{sid}: {n} HD symbols unexpectedly in prices_daily"
+            hd += 1
+    assert biotech == 3 and hd == 3
+
+
+def test_picks_closes_db_does_not_read_benchmarks_daily():
+    """`benchmarks_daily` stores a RAW close. Sourcing XBI / ^HSI from it turns a
+    total-return benchmark into a price one and understates the hurdle by the
+    dividend yield — audit H1's defect, which design A.3 would have introduced."""
+    import inspect
+
+    src = inspect.getsource(strat.picks_closes_db)
+    assert "benchmarks_daily" not in src.split('"""')[2], src
+    if not db.DB_PATH.exists():
+        pytest.skip("data/snapshots.db not present")
+    # A symbol that lives ONLY in benchmarks_daily must not be served at all.
+    # `XBI` is also a `prices_daily` universe member, where `adj_close` IS the
+    # total-return series, so serving it from THERE is correct and expected.
+    only_bench = db.query(
+        "SELECT DISTINCT ticker FROM benchmarks_daily WHERE ticker NOT IN "
+        "(SELECT DISTINCT ticker FROM prices_daily) LIMIT 5"
+    )["ticker"].tolist()
+    assert only_bench, "expected ^HSI-style benchmark-only symbols in the DB"
+    got = strat.picks_closes_db(tuple(only_bench), "2026-01-01")
+    assert got.empty or not set(only_bench) & set(got.columns)
+
+
+def test_fetch_picks_closes_serves_covered_symbols_without_yfinance(monkeypatch):
+    """The whole point: a fully covered, fresh book must not touch the network."""
+    if not db.DB_PATH.exists():
+        pytest.skip("data/snapshots.db not present")
+    cfg = strat.STRATEGIES["v6_biotech"]
+    syms = tuple(sorted(set(cfg["loader"]()["yf_sym"].dropna())))
+    have = strat.picks_closes_db(syms, cfg["pick_date"])
+    if have.empty or len(have.columns) < len(syms):
+        pytest.skip("snapshot does not fully cover v6")
+    if have.index.max() < pd.Timestamp(date.today()) - pd.Timedelta(days=strat._DB_STALE_DAYS):
+        pytest.skip("committed snapshot is stale; the live path is correct there")
+
+    called: list = []
+
+    def _boom(*a, **kw):
+        called.append(a)
+        raise AssertionError("yfinance was called for a fully covered book")
+
+    monkeypatch.setattr(strat.yf, "download", _boom)
+    strat.fetch_picks_closes.clear()
+    got = strat.fetch_picks_closes(syms, cfg["pick_date"], 0.0)
+    assert not called
+    assert set(syms) <= set(got.columns)
+    cols = list(have.columns)
+    pd.testing.assert_frame_equal(got[cols], have[cols], check_names=False)
+
+
+def test_fetch_picks_closes_falls_back_when_the_snapshot_is_stale(monkeypatch):
+    monkeypatch.setattr(strat, "_DB_STALE_DAYS", -10_000)  # force "stale"
+    strat.fetch_picks_closes.clear()
+    seen: list = []
+
+    def _fake(syms, **kw):
+        seen.append(tuple(syms))
+        raise RuntimeError("stop here — reaching the network is the assertion")
+
+    monkeypatch.setattr(strat.yf, "download", _fake)
+    monkeypatch.setattr(strat.st, "warning", lambda *a, **k: None)
+    strat.fetch_picks_closes(("AAPL", "MSFT"), "2026-01-01", 0.0)
+    assert seen and set(seen[0]) == {"AAPL", "MSFT"}
+
+
+def test_strategy_page_uses_a_lazy_selector_not_st_tabs():
+    """`st.tabs` executes EVERY tab body on every run (audit §5's 9.46 s)."""
+    src = (Path(__file__).resolve().parent.parent
+           / "app" / "pages" / "4_Strategy_Picks.py").read_text()
+    assert "st.segmented_control(" in src
+    assert "st.tabs(" not in src
+    assert "TODO(George)" in src, "the HD universe decision must stay documented"

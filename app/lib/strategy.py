@@ -25,6 +25,7 @@ import pandas as pd
 import streamlit as st
 import yfinance as yf
 
+from lib import db
 from lib import portfolio_math as pm
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
@@ -407,10 +408,53 @@ STRATEGIES = {
 }
 
 
+# A pick's price is stale enough to re-fetch if the newest DB bar is older than
+# this. Four days clears a long weekend without triggering on a normal Monday.
+_DB_STALE_DAYS = 4
+
+
+@st.cache_data(ttl=3600)
+def picks_closes_db(yf_syms: tuple[str, ...], start: str) -> pd.DataFrame:
+    """TOTAL-RETURN closes for picks already in the committed snapshot.
+
+    R3 audit §5: `4_Strategy_Picks` cost 9.07 s cold, ALL of it yfinance, while
+    `prices_daily` already held the same bars for the biotech books. Measured
+    coverage of the pick symbols against the snapshot: v4 27/27, v5 62/66,
+    v6 22/22, and 0/74 for the three HK high-dividend books (design A.3). Where
+    both sources have a bar the values agree to a median relative difference of
+    0.000000 (max 0.00117 across 26-62 symbols per book).
+
+    `COALESCE(adj_close, close)` matches yfinance's `auto_adjust=True`, which is
+    what the book's total-return maths assumes.
+
+    `benchmarks_daily` is deliberately NOT read here, though design A.3 has it:
+    that table stores a RAW close, so sourcing XBI or ^HSI from it silently turns
+    a total-return benchmark into a price benchmark and understates the hurdle by
+    the dividend yield — the exact defect audit H1 raises against the HD book's
+    benchmark. Benchmarks stay on the live `auto_adjust=True` fetch.
+    """
+    if not yf_syms:
+        return pd.DataFrame()
+    ph = ",".join("?" * len(yf_syms))
+    df = db.query(
+        f"SELECT ticker, date, COALESCE(adj_close, close) AS c FROM prices_daily "
+        f"WHERE ticker IN ({ph}) AND date >= ? AND c IS NOT NULL",
+        (*yf_syms, start))
+    if df.empty:
+        return pd.DataFrame()
+    df["date"] = pd.to_datetime(df["date"])
+    return df.pivot(index="date", columns="ticker", values="c").sort_index()
+
+
 @st.cache_data(ttl=3600, show_spinner="Fetching picks prices…")
 def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
                        ovr_mtime: float = 0.0) -> pd.DataFrame:
-    """Wide-format close DataFrame for picks. Live yfinance, cached 1h.
+    """Wide-format close DataFrame for picks. Snapshot first, yfinance for the rest.
+
+    The DB covers the three biotech books completely and the HK high-dividend books
+    not at all, so this still goes to the network for HD — see the TODO in
+    `4_Strategy_Picks.py` about onboarding those 74 symbols, which is a universe
+    decision, not a code one.
 
     yfinance occasionally fails a whole burst of symbols in one batch
     ("possibly delisted" on clearly-listed names = rate-limit artifact, seen
@@ -421,6 +465,17 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
     """
     if not yf_syms:
         return pd.DataFrame()
+
+    have = picks_closes_db(tuple(yf_syms), start)
+    fresh_cut = pd.Timestamp(date.today()) - pd.Timedelta(f"{_DB_STALE_DAYS}D")
+    if len(have) and have.index.max() >= fresh_cut:
+        wanted = tuple(s for s in yf_syms if s not in have.columns)
+    else:
+        # snapshot absent or stale → fetch the lot, exactly as before
+        have, wanted = pd.DataFrame(), tuple(yf_syms)
+    if not wanted:
+        return _apply_delisted_overrides(have, yf_syms, start, ovr_mtime)
+
     end = (date.today() + timedelta(days=1)).isoformat()
 
     def _download(syms: tuple[str, ...]) -> dict[str, pd.Series]:
@@ -454,8 +509,8 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
                 pass
         return out
 
-    out = _download(tuple(yf_syms))
-    missing = tuple(s for s in yf_syms if s not in out)
+    out = _download(tuple(wanted))
+    missing = tuple(s for s in wanted if s not in out)
     if missing:
         time.sleep(2)  # rate-limit pause before the retry batch
         out.update(_download(missing))
@@ -465,22 +520,55 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
     # the book books the REALIZED return (final/entry) instead of dropping the name.
     # entry defaults to final (flat) for merger-arb picks. Done BEFORE the missing-
     # warning so a known cash-out is never flagged as a fetch failure.
-    overrides = _delisted_overrides(ovr_mtime)
-    idx = pd.bdate_range(start=start, end=date.today())
-    for sym in yf_syms:
-        if sym in overrides and len(idx):
-            entry, final, delist_ts = overrides[sym]
-            ser = pd.Series(final, index=idx, name=sym, dtype="float64")
-            if delist_ts is not None and entry != final:
-                ser[idx < delist_ts] = entry  # held at entry until cash-out step
-            out[sym] = ser
+    fetched = pd.DataFrame(out).sort_index() if out else pd.DataFrame()
+    if have.empty:
+        merged = fetched
+    elif fetched.empty:
+        merged = have
+    else:
+        merged = have.join(fetched, how="outer")
+        # The live half (a benchmark, or an uncovered pick) can carry a bar the
+        # snapshot has not got yet. Keeping it would splice a live benchmark point
+        # onto stale pick prices and quietly move the curve's last point; cut back
+        # to the snapshot's own last bar so the whole row is one vintage. The page
+        # already renders that date as its as-of.
+        db_last = have.dropna(how="all").index.max()
+        if pd.notna(db_last):
+            merged = merged.loc[merged.index <= db_last]
+    merged = _apply_delisted_overrides(merged, yf_syms, start, ovr_mtime)
 
-    still = [s for s in yf_syms if s not in out]
+    still = [s for s in yf_syms if s not in merged.columns]
     if still:
         st.warning(f"Price fetch incomplete after retry: {', '.join(still)}")
-    if not out:
+    return merged
+
+
+def _apply_delisted_overrides(closes: pd.DataFrame, yf_syms: tuple[str, ...],
+                              start: str, ovr_mtime: float) -> pd.DataFrame:
+    """Acquired/delisted picks (yfinance returns nothing): synthesize a held-then-
+    cashed-out series — entry_price until delist_date, then final cash price — so the
+    book books the REALIZED return (final/entry) instead of dropping the name. entry
+    defaults to final (flat) for merger-arb picks. Applied BEFORE the missing-warning
+    so a known cash-out is never flagged as a fetch failure.
+    """
+    overrides = _delisted_overrides(ovr_mtime)
+    if not any(sym in overrides for sym in yf_syms):
+        return closes
+    idx = pd.bdate_range(start=start, end=date.today())
+    if not len(idx):
+        return closes
+    cols = dict(closes.items()) if not closes.empty else {}
+    for sym in yf_syms:
+        if sym not in overrides:
+            continue
+        entry, final, delist_ts = overrides[sym]
+        ser = pd.Series(final, index=idx, name=sym, dtype="float64")
+        if delist_ts is not None and entry != final:
+            ser[idx < delist_ts] = entry  # held at entry until cash-out step
+        cols[sym] = ser
+    if not cols:
         return pd.DataFrame()
-    return pd.DataFrame(out).sort_index()
+    return pd.DataFrame(cols).sort_index()
 
 
 def compute_strategy_returns(

@@ -1313,22 +1313,42 @@ sb.dual_track(
            "结论可操作。后续将扩展至更多行业 domain。",
 )
 
-# --- Tabs: 3 time-series strategies + 1 independent static IPO backtest ---
-# Strategies with "version_of" render INSIDE their group's tab (version toggle),
-# not as their own tab — hk_hd_v2 lives in the hk_hd tab.
+# --- Views: 3 time-series strategies + 1 independent static IPO backtest ---
+# Strategies with "version_of" render INSIDE their group's view (version toggle),
+# not as their own view — hk_hd_v2 lives in the hk_hd view.
+#
+# R3 audit §5: this was `st.tabs`, which EXECUTES every tab body on every run —
+# Streamlit only hides the non-selected ones client-side. Five `fetch_picks_closes`
+# calls therefore ran on every load and the page cost 9.07 s cold. Streamlit 1.58
+# has no lazy tab, so the working pattern is a selector that re-runs the script:
+# `st.segmented_control`, already used at home.py:144 and themed at theme.py:236.
+# Only the chosen view's body runs.
+#
+# TODO(George): the three HK high-dividend books still hit yfinance because their
+# 74 symbols (and the 3466.HK benchmark) are NOT in `universe_member` — measured
+# coverage against `prices_daily` is 0/74, against 27/27, 62/66 and 22/22 for the
+# biotech books, which now read from the snapshot. Onboarding them under a
+# dedicated `domain='strategy'` would make `jobs/fetch_eod.py` pick them up with no
+# code change (+~24.5k rows), but that is a UNIVERSE decision — it changes the
+# denominator of fetch_eod's >10% missing-ticker abort — and is yours to make, not
+# this PR's. Until then the HD path stays live, just lazy.
 _ts_ids = [k for k, c in strat.STRATEGIES.items() if not c.get("version_of")]
-_tab_labels = [i18n.t(f"strategy.name.{sid}") for sid in _ts_ids]
-_tab_labels.append(i18n.t("strategy.name.ipo"))
-strategy_tabs = st.tabs(_tab_labels)
-for tab, sid in zip(strategy_tabs[:-1], _ts_ids):
-    with tab:
-        if sid == "hk_hd":
-            render_hd_versions()
-        elif sid == "v4_biotech":
-            render_biotech_versions()
-        else:
-            render_strategy(sid)
-with strategy_tabs[-1]:
+_view_labels = [i18n.t(f"strategy.name.{sid}") for sid in _ts_ids]
+_view_labels.append(i18n.t("strategy.name.ipo"))
+_choice = st.segmented_control(
+    i18n.t("strategy.name.ipo"), _view_labels, default=_view_labels[0],
+    key="strategy_view", label_visibility="collapsed",
+) or _view_labels[0]
+_idx = _view_labels.index(_choice)
+if _idx < len(_ts_ids):
+    _sid = _ts_ids[_idx]
+    if _sid == "hk_hd":
+        render_hd_versions()
+    elif _sid == "v4_biotech":
+        render_biotech_versions()
+    else:
+        render_strategy(_sid)
+else:
     render_ipo_strategy()
 
 st.divider()

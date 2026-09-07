@@ -27,14 +27,14 @@ git stores it once, forever.
 ```
 data/
   parquet/
-    prices_daily/      month=YYYY-MM.parquet    17 files   4.82 MB
-    multiples_daily/   month=YYYY-MM.parquet     5 files   2.06 MB
-    benchmarks_daily/  month=YYYY-MM.parquet    28 files   0.14 MB
+    prices_daily/      month=YYYY-MM.parquet    17 files   4.75 MB
+    multiples_daily/   month=YYYY-MM.parquet     5 files   2.02 MB
+    benchmarks_daily/  month=YYYY-MM.parquet    28 files   0.10 MB
     sw_industry_daily/ year=YYYY.parquet         2 files   0.04 MB
-    sec_fact/          <TICKER>.parquet        284 files   8.72 MB
+    sec_fact/          <TICKER>.parquet        284 files   7.25 MB
   snapshots.db          still the source of truth; unchanged
 ```
-Measured 2026-09-07: **336 files, 15.78 MB**, 173,971 time-series rows + 1,146,728
+Measured 2026-09-07: **336 files, 14.16 MB**, 173,971 time-series rows + 1,146,728
 SEC fact rows.
 
 **Month, not year, for the three daily tables.** `fetch_eod.py` fetches a
@@ -57,6 +57,7 @@ could churn:
 * `index=False` (a RangeIndex would serialize positions that shift on merge);
 * fixed `compression="zstd"`, `write_statistics=False` (min/max stats churn the footer
   on append even when the rest is identical);
+* `store_schema=False` — see below;
 * a schema coercion, so a column that happens to be all-NULL this month does not
   serialize as a different arrow type than the same column next month;
 * Parquet embeds no write timestamp — but it does embed the WRITER VERSION in
@@ -65,6 +66,27 @@ could churn:
 > ⚠️ **Bumping pyarrow re-churns every committed partition.** That is a deliberate,
 > reviewable act with a one-off rewrite, not a routine dependency bump.
 > `tests/test_parquet_store.py` fails loudly if determinism breaks.
+
+**No pandas metadata in the footer.** `store_schema=True` writes an `ARROW:schema` key
+and a `pandas` key, and the `pandas` one records `pandas_version` verbatim — 2.3.3 in
+every file the first export produced. `requirements.txt` allows `pandas>=2.2,<3`, so an
+ordinary minor bump would have changed the bytes of every partition a job rewrote while
+every untouched partition kept the old string: churn with no data change, arriving
+through the one dependency the file does not pin exactly, and enough to break the
+byte-determinism tests.
+
+Dropping the metadata is safe because `coerce()` reimposes the declared dtypes on every
+read — the footer was never what restored them, and DuckDB never looked at it. The two
+cases where it would otherwise matter are pinned:
+`test_dtypes_survive_the_round_trip_without_the_metadata` and
+`test_an_all_null_string_column_reads_back_as_string_not_object` (an all-NULL string
+column arrives as `object`/`None` and only `coerce()` puts it back to `string`/`pd.NA`).
+`test_the_footer_carries_no_pandas_metadata` keeps the key out.
+
+It also made the store smaller: **15.78 MB → 14.16 MB** across the same 336 files,
+content identical row for row. The schema blob is a fixed ~1–3 KB per file, so the
+saving lands hardest where files are small — `sec_fact` 8.72 → 7.25 MB over 284 files,
+`benchmarks_daily` 0.14 → 0.10 MB over 28.
 
 Verified two ways on real data: the migration exporter re-runs byte-identical
 (`--verify`, 52/52 partitions), and `jobs/load_sw_industry.py` — a completely

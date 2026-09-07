@@ -12,9 +12,10 @@ Three properties this module exists to guarantee, in priority order:
    byte for byte, or git dedupes nothing and the whole exercise is pointless. The
    recipe is in `write_partition`: stable sort on the declared key, `index=False`,
    fixed `compression="zstd"`, `write_statistics=False` (min/max stats churn the
-   footer when a row is appended even if the rest is identical), and a schema
-   coercion so a partition whose column happens to be all-NaN today does not
-   serialize as a different arrow type than the same column tomorrow.
+   footer when a row is appended even if the rest is identical), `store_schema=False`
+   (the `pandas` footer key records `pandas_version`, and pandas is NOT pinned
+   exactly), and a schema coercion so a partition whose column happens to be all-NaN
+   today does not serialize as a different arrow type than the same column tomorrow.
    Parquet embeds no write timestamp, so nothing else leaks — but the writer
    VERSION is embedded in `created_by`, which is why `requirements.txt` pins
    pyarrow exactly. An unpinned bump silently re-churns every partition.
@@ -71,7 +72,14 @@ _WRITE_KWARGS = dict(
     compression=COMPRESSION,
     index=False,             # a RangeIndex would serialize positions that shift on merge
     write_statistics=False,  # min/max stats churn the footer on append
-    store_schema=True,
+    # No `ARROW:schema` / `pandas` footer keys. The `pandas` one records
+    # `pandas_version` verbatim, and requirements.txt allows pandas >=2.2,<3 — so a
+    # routine minor bump would change the bytes of every partition a job rewrites
+    # while untouched partitions kept the old string. That is churn with no data
+    # change, arriving through the one dependency the file does not pin exactly.
+    # Safe to drop because `coerce()` reimposes the declared dtypes on every read;
+    # nothing downstream consults the footer, and DuckDB never did.
+    store_schema=False,
 )
 
 # Partition keys are used as filenames. Tickers legitimately carry '.', '^', '=' and

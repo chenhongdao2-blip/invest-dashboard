@@ -86,6 +86,52 @@ def test_all_null_column_serializes_like_a_typed_column(store):
     assert store.read_partition("prices_daily", "2026-08")["volume"].dtype == "Int64"
 
 
+def test_the_footer_carries_no_pandas_metadata(store):
+    """`requirements.txt` allows pandas >=2.2,<3, so its version cannot be in the file.
+
+    `store_schema=True` embeds an `ARROW:schema` and a `pandas` key, and the latter
+    records `pandas_version` verbatim. A routine 2.3.3 → 2.4.0 bump would then change
+    the bytes of every partition a job rewrites, while every untouched partition kept
+    the old string — churn with no data change, which is the exact thing the split
+    exists to stop, arriving through the one pin the file does NOT hold exactly.
+
+    Dropping the metadata is safe because `coerce()` reimposes the declared dtypes on
+    every read; nothing downstream consults the footer. The two tests below prove that
+    for the cases where the metadata would otherwise be load-bearing.
+    """
+    import pyarrow.parquet as pyq
+
+    p = store.write_partition("prices_daily", "2026-08", _prices(AUG))
+    md = pyq.ParquetFile(p).metadata.metadata or {}
+    assert b"pandas" not in md, "a pandas bump would re-churn every partition"
+    assert b"ARROW:schema" not in md
+
+
+def test_dtypes_survive_the_round_trip_without_the_metadata(store):
+    """`coerce()` on read, not the footer, is what restores the declared dtypes."""
+    df = _prices(AUG)
+    df["volume"] = pd.array([1, None, 3], dtype="Int64")
+    df["currency"] = ["USD", None, "HKD"]
+    store.write_partition("prices_daily", "2026-08", df)
+
+    got = store.read_partition("prices_daily", "2026-08")
+    assert dict(got.dtypes.astype(str)) == dict(ps.TABLES["prices_daily"].dtypes)
+    assert got["currency"].isna().sum() == 1
+    assert got["volume"].isna().sum() == 1
+
+
+def test_an_all_null_string_column_reads_back_as_string_not_object(store):
+    """The nastiest case: with no metadata an all-NULL string column arrives as
+    object/None, and only `coerce()` puts it back to string/pd.NA."""
+    df = _prices(AUG)
+    df["currency"] = None
+    store.write_partition("prices_daily", "2026-08", df)
+
+    got = store.read_partition("prices_daily", "2026-08")
+    assert got["currency"].dtype == "string"
+    assert got["currency"].isna().all()
+
+
 # ══════════════════════════════════════════════════════════════════════════
 # 2. idempotent upsert
 # ══════════════════════════════════════════════════════════════════════════

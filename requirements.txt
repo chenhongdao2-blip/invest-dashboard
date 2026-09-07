@@ -15,5 +15,11 @@ openpyxl>=3.1,<4             # in-app .xlsx download builders (app/lib/hc_export
 #     accompanied by a deliberate one-off rewrite of the store.
 #   duckdb  — a minor bump can change ORDER BY / aggregate edge behaviour, which is
 #     what the read-side cutover (a later PR) will be diffed against.
+# pandas is deliberately NOT pinned here. It used to reach the footer too — pyarrow's
+#   `store_schema=True` writes a `pandas` key carrying `pandas_version` verbatim, so a
+#   2.3 → 2.4 bump would have re-churned every rewritten partition while untouched ones
+#   kept the old string. `jobs/parquet_store.py` now writes `store_schema=False`, and
+#   `tests/test_parquet_store.py::test_the_footer_carries_no_pandas_metadata` keeps it
+#   that way, so the version range below is free to move again.
 pyarrow==24.0.0              # jobs/parquet_store.py writer — see determinism note above
 duckdb==1.5.5                # jobs/parquet_store.read_table + jobs/parity_check.py

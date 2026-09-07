@@ -112,13 +112,31 @@ def parse_args() -> argparse.Namespace:
 
 
 # ----- DB helpers -----
+def _has_column(conn: sqlite3.Connection, table: str, col: str) -> bool:
+    """Does `table` have `col` in the DB this process opened?
+
+    Mirrors app/lib/db.py:_has_column. `universe_member.status` is added by
+    jobs/load_universe.py's idempotent migration, and this job can run either
+    side of it (fresh CI checkout runs load_universe first; a local invocation
+    may not) — so ask before filtering rather than crash on a pre-migration DB.
+    """
+    try:
+        return col in {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
+    except sqlite3.Error:
+        return False
+
+
 def get_tickers(conn: sqlite3.Connection, limit: int = 0, only: str = "") -> list[str]:
+    # R3 audit (Medium): without the status filter this job spent 4 `.info`
+    # retries/day plus a slice of the >10% failure budget on 18 delisted names
+    # that can never return data.
+    active = " WHERE status IS NULL" if _has_column(conn, "universe_member", "status") else ""
     if only:
         want = [t.strip() for t in only.split(",") if t.strip()]
         have = {row[0] for row in conn.execute(
-            "SELECT DISTINCT ticker FROM universe_member").fetchall()}
+            f"SELECT DISTINCT ticker FROM universe_member{active}").fetchall()}
         return [t for t in want if t in have]
-    q = "SELECT DISTINCT ticker FROM universe_member ORDER BY ticker"
+    q = f"SELECT DISTINCT ticker FROM universe_member{active} ORDER BY ticker"
     if limit > 0:
         q += f" LIMIT {limit}"
     return [row[0] for row in conn.execute(q).fetchall()]

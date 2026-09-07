@@ -6,3 +6,14 @@ plotly>=5.22,<6
 numpy>=1.26,<3
 requests>=2.31,<3            # SEC companyfacts fetch (jobs/fetch_sec_facts.py); also a yfinance transitive dep
 openpyxl>=3.1,<4             # in-app .xlsx download builders (app/lib/hc_exports.py) — Healthcare section exports
+# ── PR4 storage split (audit R3 §6/§8.2) ─────────────────────────────────
+# BOTH pinned EXACTLY, and the pins are load-bearing:
+#   pyarrow — the writer version is embedded in every parquet footer's `created_by`,
+#     and a minor bump can change dictionary encoding. An unpinned bump silently
+#     re-churns every committed partition, which is the exact churn this split exists
+#     to stop. tests/test_parquet_store.py asserts byte-determinism; a bump must be
+#     accompanied by a deliberate one-off rewrite of the store.
+#   duckdb  — a minor bump can change ORDER BY / aggregate edge behaviour, which is
+#     what the read-side cutover (a later PR) will be diffed against.
+pyarrow==24.0.0              # jobs/parquet_store.py writer — see determinism note above
+duckdb==1.5.5                # jobs/parquet_store.read_table + jobs/parity_check.py

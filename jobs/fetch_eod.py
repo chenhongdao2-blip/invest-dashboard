@@ -15,6 +15,7 @@ import sqlite3
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from typing import NamedTuple
 
 import pandas as pd
 import yfinance as yf
@@ -351,35 +352,43 @@ def fetch_info_for(ticker: str) -> dict | None:
     return None
 
 
-def latest_bar_close(conn: sqlite3.Connection, ticker: str) -> float | None:
-    """Most recent `prices_daily` close (LOCAL currency) for `ticker`, or None.
+def latest_bar(conn: sqlite3.Connection, ticker: str) -> tuple[float, str] | None:
+    """Most recent `prices_daily` (close in LOCAL ccy, date) for `ticker`, or None.
 
     Deliberately the LATEST bar rather than the snapshot date's: prices and the
     `.info` snapshot are written on different calendars (audit H5 — the snapshot
     stamp is the runner's UTC `date.today()`, the bar carries the exchange date),
     so requiring an exact date match would silently disable the cross-check on
     every non-US ticker.
+
+    The DATE comes back with the close because the two are not separable
+    evidence: a 2× gap against yesterday's bar is a frozen payload, the same gap
+    against a bar three weeks old is just an unpriced ticker. Callers must be
+    able to say which they saw, so `info_to_multiple_row` logs the date.
     """
     try:
         r = conn.execute(
-            "SELECT close FROM prices_daily WHERE ticker = ? AND close IS NOT NULL "
+            "SELECT close, date FROM prices_daily WHERE ticker = ? AND close IS NOT NULL "
             "ORDER BY date DESC LIMIT 1", (ticker,)
         ).fetchone()
     except sqlite3.Error:
         return None
-    return _safe_float(r[0]) if r else None
+    if not r:
+        return None
+    close = _safe_float(r[0])
+    return (close, str(r[1])) if close is not None else None
 
 
 # A frozen `.info` payload can disagree wildly with the day's real bar. Measured
 # 2026-09-07: 108320.KQ carried a constant multiples price of 78,000 across 27-64
 # snapshots while prices_daily moved 36,550 → 37,800 — a 2.06× divergence rendered
-# as a valuation time series. Beyond this ratio the traded bar wins.
+# as a valuation time series. Beyond this ratio the row is not trustworthy.
 INFO_PRICE_MAX_DIVERGENCE = 0.5
 
 
 def info_to_multiple_row(
     ticker: str, info: dict, snapshot_date: str, fx: dict[str, float],
-    bar_close: float | None = None,
+    bar_close: float | None = None, bar_date: str | None = None,
 ) -> tuple | None:
     """Convert yfinance.info dict → multiples_daily row tuple, or None if unusable.
 
@@ -388,9 +397,22 @@ def info_to_multiple_row(
     produced a `multiples_daily` row (10 tickers ended up with a single constant
     "price" spanning 27-64 snapshots).
 
-    `bar_close` is the same-day `prices_daily` close in LOCAL currency when one
-    exists; it cross-checks the `.info` price and supersedes it on a gross
-    divergence (see INFO_PRICE_MAX_DIVERGENCE).
+    `bar_close` / `bar_date` are the newest `prices_daily` close (LOCAL currency)
+    and its exchange date, when one exists.
+
+    A gross divergence between the two prices DROPS THE WHOLE ROW. The first cut
+    of this fix overwrote `last_price` with the bar close and kept everything
+    else — which shipped a row whose price said 50 while its market_cap implied
+    110 and its trailing_pe implied 110. Every derived multiple in that row is
+    keyed to the `.info` price; substituting one field does not re-derive the
+    rest, it just makes the inconsistency undetectable downstream. The two
+    sources disagree about what this instrument is worth and NEITHER can key the
+    other's multiples, so the row is dropped and the ticker is counted as a
+    failure by `run_multiples` (a systematic mismatch must show up in the failure
+    rate, not vanish). Dropping is also the only safe answer to the ambiguity in
+    the comparison itself: `bar_date` may be weeks stale, so a 2× gap is equally
+    consistent with a frozen payload and with a legitimate pop or a split on a
+    ticker whose today-bar is missing — we log both sides and refuse to guess.
     """
     ccy = (info.get("currency") or info.get("financialCurrency") or "USD").upper()
     fx_to_usd = fx.get(ccy, 1.0)
@@ -403,12 +425,11 @@ def info_to_multiple_row(
         print(f"[mult] {ticker}: no regularMarketPrice/currentPrice in .info — row skipped")
         return None
     bar = _safe_float(bar_close)
-    if bar is not None and bar > 0:
-        if abs(last_price / bar - 1) > INFO_PRICE_MAX_DIVERGENCE:
-            print(f"[mult] WARN {ticker} {snapshot_date}: .info price {last_price} vs "
-                  f"prices_daily close {bar} "
-                  f"({last_price / bar:.2f}×) — using the bar close (audit C5)")
-            last_price = bar
+    if bar is not None and bar > 0 and abs(last_price / bar - 1) > INFO_PRICE_MAX_DIVERGENCE:
+        print(f"[mult] DROP {ticker} {snapshot_date}: .info price {last_price} vs "
+              f"prices_daily close {bar} (bar_date={bar_date or '?'}) — "
+              f"{last_price / bar:.2f}× divergence, row dropped (audit C5)")
+        return None
     last_price_usd = last_price * fx_to_usd
     # FCF Yield: explicit guard (M1 audit nit — `a and b and a/b` is dangerous if 0)
     fcf = _safe_float(info.get("freeCashflow"))
@@ -495,6 +516,88 @@ def upsert_profile(conn: sqlite3.Connection, ticker: str, info: dict) -> None:
     )
 
 
+# ----- multiples pass -----
+class MultiplesResult(NamedTuple):
+    """Outcome of one `.info` pass. Every ticker lands in exactly one bucket."""
+    ok: int                 # rows written
+    priceless: list[str]    # fetched fine, but the payload could not be trusted
+    failed: list[str]       # `.info` fetch itself failed (network / delisted)
+    rows: int               # upsert row count
+
+
+def run_multiples(
+    conn: sqlite3.Connection,
+    tickers: list[str],
+    snapshot_date: str,
+    fx: dict[str, float],
+    sleep_s: float = SLEEP_BETWEEN_INFO,
+) -> MultiplesResult:
+    """Fetch `.info` for every ticker, write multiples, and police the outcome.
+
+    REVIEW FIXUP — the accounting is the point of this function existing.
+    `info_to_multiple_row` can return None (no price, or a gross divergence from
+    the tape). The previous call site only ever incremented `ok` on a truthy row,
+    so a dropped ticker was neither ok NOR failed: it fell out of the arithmetic
+    entirely. A metadata-only yfinance outage — every `.info` request succeeds,
+    none carries a price — therefore produced ok=0, fail=0, fail_rate=0.0, no
+    exception, zero rows written, and a workflow that stamped `eod_prices ok`.
+    The guard existed and could not fire, because the thing it measured was
+    "requests that errored", not "tickers we got usable data for".
+
+    Both drop reasons are folded into ONE rate against INFO_FAIL_THRESHOLD rather
+    than given a second threshold: from the dashboard's point of view a ticker
+    with no valuation row today is the same event however the payload failed, and
+    a single number cannot be gamed by an outage that shifts tickers from one
+    bucket to the other.
+    """
+    total_rows = 0
+    ok = 0
+    failed: list[str] = []
+    priceless: list[str] = []
+
+    for idx, t in enumerate(tickers, 1):
+        info = fetch_info_for(t)
+        if not info:
+            failed.append(t)
+            continue
+        bar = latest_bar(conn, t)
+        row = info_to_multiple_row(
+            t, info, snapshot_date, fx,
+            bar_close=bar[0] if bar else None,
+            bar_date=bar[1] if bar else None,
+        )
+        if row:
+            total_rows += upsert_multiples(conn, [row])
+            ok += 1
+        else:
+            priceless.append(t)
+        upsert_profile(conn, t, info)   # piggyback profile from same .info dict
+        if idx % 20 == 0:
+            conn.commit()
+            print(f"[mult] progress {idx}/{len(tickers)} "
+                  f"(ok={ok}, priceless={len(priceless)}, failed={len(failed)})")
+        if sleep_s:
+            time.sleep(sleep_s)
+    conn.commit()
+
+    unusable = len(priceless) + len(failed)
+    fail_rate = unusable / max(len(tickers), 1)
+    print(f"[mult] done. ok={ok} priceless={len(priceless)} failed={len(failed)} "
+          f"unusable={unusable}/{len(tickers)} ({fail_rate:.1%}) rows={total_rows}")
+    if failed:
+        print(f"[mult] .info fetch failed: {failed}")
+    if priceless:
+        print(f"[mult] dropped (no usable price / tape divergence): {priceless}")
+    if fail_rate > INFO_FAIL_THRESHOLD:
+        raise RuntimeError(
+            f"[mult] FAIL: {unusable}/{len(tickers)} tickers produced no usable "
+            f"multiples row (>{INFO_FAIL_THRESHOLD:.0%}) — "
+            f"{len(failed)} .info fetch failures + {len(priceless)} unusable payloads. "
+            f"Treat as a data outage."
+        )
+    return MultiplesResult(ok=ok, priceless=priceless, failed=failed, rows=total_rows)
+
+
 # ----- main -----
 def main() -> None:
     args = parse_args()
@@ -567,36 +670,11 @@ def main() -> None:
     n_bench = fetch_benchmarks(conn, start=bench_start, end=end)
     print(f"[bench] total benchmark rows upserted: {n_bench}")
 
-    # 4. Multiples (.info) — M4 audit: track failure rate and raise if > threshold
+    # 4. Multiples (.info) — M4 audit + C5 review fixup: see run_multiples(). It
+    #    raises when too many tickers yield no usable row, which is what stops the
+    #    workflow stamping `eod_prices ok` over an outage.
     if not args.skip_multiples:
-        total_mult = 0
-        ok = 0
-        fail_list: list[str] = []
-        for idx, t in enumerate(tickers, 1):
-            info = fetch_info_for(t)
-            if not info:
-                fail_list.append(t)
-                continue
-            row = info_to_multiple_row(t, info, snapshot_date, fx,
-                                       bar_close=latest_bar_close(conn, t))
-            if row:
-                total_mult += upsert_multiples(conn, [row])
-                ok += 1
-            upsert_profile(conn, t, info)   # piggyback profile from same .info dict
-            if idx % 20 == 0:
-                conn.commit()
-                print(f"[mult] progress {idx}/{len(tickers)} (ok={ok}, fail={len(fail_list)})")
-            time.sleep(SLEEP_BETWEEN_INFO)
-        conn.commit()
-        fail_rate = len(fail_list) / max(len(tickers), 1)
-        print(f"[mult] done. ok={ok} fail={len(fail_list)} ({fail_rate:.1%}) rows={total_mult}")
-        if fail_list:
-            print(f"[mult] failed tickers: {fail_list}")
-        if fail_rate > INFO_FAIL_THRESHOLD:
-            raise RuntimeError(
-                f"[mult] FAIL: {len(fail_list)}/{len(tickers)} (>{INFO_FAIL_THRESHOLD:.0%}) "
-                f".info fetches failed — treat as data outage."
-            )
+        run_multiples(conn, tickers, snapshot_date, fx)
     else:
         print("[mult] skipped (--skip-multiples)")
 

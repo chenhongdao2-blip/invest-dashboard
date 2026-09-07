@@ -370,11 +370,17 @@ def test_c5_info_to_multiple_row_keeps_valid_price():
     assert row[14] == pytest.approx(12.5)  # last_price (local ccy)
 
 
-def test_c5_info_price_diverging_from_bar_close_prefers_the_bar():
+def test_c5_info_price_diverging_from_bar_close_drops_the_row():
     """108320.KQ shipped a frozen `.info` price 2.06× the same-day bar close.
 
-    When `prices_daily` has a close for the same (ticker, date) and the info
-    price differs by more than 50%, the bar close is authoritative.
+    Review fixup: the first cut kept the row and overwrote `last_price` with the
+    bar close, leaving market_cap_usd / trailing_pe / pb on the `.info` basis —
+    a row whose price says 37,800 while its market cap and P/E still imply
+    78,000. That is a WORSE artifact than either input, because it looks
+    internally sourced. A gross divergence means the payload and the tape
+    disagree about what this instrument is worth; neither side can be trusted to
+    key the other's multiples, so the whole row goes (same as the no-price
+    branch) and the ticker counts as a failure.
     """
     sys.path.insert(0, str(_REPO / "jobs"))
     import fetch_eod  # noqa: PLC0415
@@ -382,11 +388,29 @@ def test_c5_info_price_diverging_from_bar_close_prefers_the_bar():
     info = {"currency": "KRW", "marketCap": 1e12, "regularMarketPrice": 78_000.0}
     row = fetch_eod.info_to_multiple_row(
         "108320.KQ", info, "2026-09-05", {"KRW": 0.00072},
-        bar_close=37_800.0,
+        bar_close=37_800.0, bar_date="2026-09-04",
     )
-    assert row is not None
-    assert row[14] == pytest.approx(37_800.0)
-    assert row[15] == pytest.approx(37_800.0 * 0.00072)
+    assert row is None
+
+
+def test_c5_divergence_never_partially_overwrites():
+    """No output shape may mix a bar price with `.info` mcap/PE.
+
+    The reviewer's proof: price 50 stored while market_cap implies 110 and
+    trailing_pe implies 110. Whatever the drop policy, this combination must be
+    unreachable — assert on the whole row, not just on `last_price`.
+    """
+    sys.path.insert(0, str(_REPO / "jobs"))
+    import fetch_eod  # noqa: PLC0415
+
+    info = {"currency": "USD", "marketCap": 110e6, "trailingPE": 11.0,
+            "priceToBook": 5.0, "regularMarketPrice": 110.0}
+    row = fetch_eod.info_to_multiple_row(
+        "X", info, "2026-09-05", {"USD": 1.0}, bar_close=50.0, bar_date="2026-09-04"
+    )
+    if row is not None:                      # a future policy may keep the row —
+        assert row[14] == pytest.approx(110.0)   # …but then it must not have
+        assert row[2] == pytest.approx(110e6)    # rewritten the price alone.
 
 
 def test_c5_info_price_close_to_bar_close_is_kept():
@@ -399,6 +423,142 @@ def test_c5_info_price_close_to_bar_close_is_kept():
         "X", info, "2026-09-05", {"USD": 1.0}, bar_close=100.0
     )
     assert row[14] == pytest.approx(101.0)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# C5 review fixup — a dropped multiples row must be ACCOUNTED FOR
+#
+# The first cut of the C5 fix made `info_to_multiple_row` able to return None,
+# but the caller only ever incremented `ok` on a truthy row. A ticker whose
+# payload was dropped fell through both counters: not ok, not failed. A
+# metadata-only yfinance outage (every `.info` fetch succeeds, none carries a
+# price) therefore produced fail_rate=0.0 and total_mult=0 — and the workflow
+# stamped `eod_prices ok` over a day with zero valuation rows.
+# ══════════════════════════════════════════════════════════════════════════
+def _fetch_eod():
+    sys.path.insert(0, str(_REPO / "jobs"))
+    import fetch_eod  # noqa: PLC0415
+    return fetch_eod
+
+
+def _mem_db():
+    """In-memory DB carrying the real schema (jobs/init_db.py is the source)."""
+    import re  # noqa: PLC0415
+    import sqlite3  # noqa: PLC0415
+
+    sys.path.insert(0, str(_REPO / "jobs"))
+    import init_db  # noqa: PLC0415
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(init_db.SCHEMA)
+    # init_db.main() applies idempotent ALTERs *after* the schema string (the
+    # m8 analyst columns live only there). Replay them from the source so this
+    # fixture cannot drift behind a newly added column.
+    for stmt in re.findall(r'_safe_alter\(conn, "([^"]+)"\)',
+                           Path(init_db.__file__).read_text(encoding="utf-8")):
+        init_db._safe_alter(conn, stmt)
+    return conn
+
+
+def test_r1_all_priceless_trips_the_info_failure_guard(monkeypatch):
+    """10 tickers, every `.info` fetch succeeds, none carries a price → raise.
+
+    This is the metadata-only outage. Before the fixup it was indistinguishable
+    from a perfect run: ok=0, fail=0, fail_rate=0.0, no exception.
+    """
+    fetch_eod = _fetch_eod()
+    conn = _mem_db()
+    tickers = [f"T{i}" for i in range(10)]
+    # Priceless: real metadata, no regularMarketPrice / currentPrice.
+    monkeypatch.setattr(fetch_eod, "fetch_info_for",
+                        lambda t: {"currency": "USD", "marketCap": 1e9, "trailingPE": 20.0})
+
+    with pytest.raises(RuntimeError, match="mult"):
+        fetch_eod.run_multiples(conn, tickers, "2026-09-05", {"USD": 1.0}, sleep_s=0)
+
+
+def test_r1_priceless_are_not_counted_as_ok(monkeypatch, capsys):
+    """8 good + 2 priceless: ok=8, priceless=2, and the summary says all three."""
+    fetch_eod = _fetch_eod()
+    conn = _mem_db()
+    tickers = [f"T{i}" for i in range(10)]
+    good = {"currency": "USD", "marketCap": 1e9, "regularMarketPrice": 10.0}
+    bad = {"currency": "USD", "marketCap": 1e9}          # no price at all
+
+    monkeypatch.setattr(fetch_eod, "fetch_info_for",
+                        lambda t: bad if t in ("T8", "T9") else good)
+
+    res = fetch_eod.run_multiples(conn, tickers, "2026-09-05", {"USD": 1.0}, sleep_s=0)
+    assert res.ok == 8
+    assert sorted(res.priceless) == ["T8", "T9"]
+    assert res.failed == []
+
+    summary = [ln for ln in capsys.readouterr().out.splitlines() if "[mult] done." in ln]
+    assert len(summary) == 1, "expected exactly one summary line"
+    for field in ("ok=", "priceless=", "failed="):
+        assert field in summary[0], f"summary line does not report {field!r}: {summary[0]}"
+
+
+def test_r2_gross_divergence_counts_as_unusable(monkeypatch):
+    """A dropped-for-divergence row must land in the same accounting bucket.
+
+    Otherwise a systematic `.info`/tape mismatch (a whole exchange's payloads
+    going stale) is silently invisible for exactly the same reason item 1 was.
+    """
+    fetch_eod = _fetch_eod()
+    conn = _mem_db()
+    conn.execute(
+        "INSERT INTO prices_daily (ticker, date, close, currency) VALUES (?,?,?,?)",
+        ("108320.KQ", "2026-09-04", 37_800.0, "KRW"),
+    )
+    conn.commit()
+
+    # 9 clean tickers alongside it → 10% unusable, below the guard, so the test
+    # measures the ACCOUNTING rather than the raise.
+    monkeypatch.setattr(
+        fetch_eod, "fetch_info_for",
+        lambda t: {"currency": "KRW", "marketCap": 1e12, "regularMarketPrice": 78_000.0}
+        if t == "108320.KQ"
+        else {"currency": "USD", "marketCap": 1e9, "regularMarketPrice": 10.0},
+    )
+    res = fetch_eod.run_multiples(
+        conn, ["108320.KQ", *[f"T{i}" for i in range(9)]], "2026-09-05",
+        {"KRW": 0.00072, "USD": 1.0}, sleep_s=0,
+    )
+    assert res.ok == 9
+    assert res.priceless == ["108320.KQ"]
+    assert res.failed == []
+    assert res.rows == 9
+
+
+def test_r2_divergence_log_names_the_bar_and_its_date(capsys):
+    """The log must carry ticker / info price / bar close / BAR DATE.
+
+    Without the date you cannot tell a frozen payload from a legitimate +120%
+    pop measured against a stale bar — the two are the same number.
+    """
+    fetch_eod = _fetch_eod()
+    fetch_eod.info_to_multiple_row(
+        "108320.KQ", {"currency": "KRW", "regularMarketPrice": 78_000.0},
+        "2026-09-05", {"KRW": 0.00072}, bar_close=37_800.0, bar_date="2026-08-11",
+    )
+    out = capsys.readouterr().out
+    for token in ("108320.KQ", "78", "37", "2026-08-11"):
+        assert token in out, f"divergence log omits {token!r}: {out}"
+
+
+def test_r2_latest_bar_returns_the_bars_date(monkeypatch):
+    """The bar lookup must surface WHICH bar it compared against."""
+    fetch_eod = _fetch_eod()
+    conn = _mem_db()
+    for d, c in (("2026-08-11", 10.0), ("2026-09-04", 12.0)):
+        conn.execute(
+            "INSERT INTO prices_daily (ticker, date, close, currency) VALUES (?,?,?,?)",
+            ("X", d, c, "USD"),
+        )
+    conn.commit()
+    assert fetch_eod.latest_bar(conn, "X") == (12.0, "2026-09-04")
+    assert fetch_eod.latest_bar(conn, "NOPE") is None
 
 
 # ══════════════════════════════════════════════════════════════════════════

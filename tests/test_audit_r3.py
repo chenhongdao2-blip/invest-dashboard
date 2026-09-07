@@ -680,6 +680,43 @@ def test_c4_workflow_stamps_failure_in_manifest(wf):
 
 
 @pytest.mark.parametrize("wf", _WORKFLOWS, ids=lambda p: p.name)
+def test_c4_failure_stamp_runs_after_install_deps(wf):
+    """The stamp step needs a checkout AND pandas (update_manifest imports it).
+
+    `if: failure()` does not skip setup — a step that runs after a failure still
+    runs in the same job, on the same runner, with whatever setup already
+    happened. So the stamp is only survivable where the checkout and the deps
+    install are ALREADY behind it. Moving it above `Install deps` (e.g. to make
+    it fire "earlier") would make it die on `import pandas` in exactly the runs
+    it exists to record.
+    """
+    src = wf.read_text(encoding="utf-8")
+    lines = src.splitlines()
+    deps = next(i for i, ln in enumerate(lines) if "name: Install deps" in ln)
+    checkout = next(i for i, ln in enumerate(lines) if "actions/checkout" in ln)
+    stamp = next(i for i, ln in enumerate(lines) if "Stamp failure in refresh manifest" in ln)
+    assert checkout < deps < stamp, (
+        f"{wf.name}: failure stamp must come after checkout+Install deps "
+        f"(checkout={checkout}, deps={deps}, stamp={stamp})"
+    )
+
+
+@pytest.mark.parametrize("wf", _WORKFLOWS, ids=lambda p: p.name)
+def test_c4_failure_stamp_documents_its_own_blind_spot(wf):
+    """The stamp cannot record a failure OF THE PUSH — say so in the file.
+
+    If the thing that failed is commit_data.sh itself, the stamp step runs, calls
+    the same commit_data.sh, and fails the same way. There is no manifest row for
+    that case and there cannot be one; the GitHub run status is the only signal.
+    A reader who does not know this will trust a green manifest over a red run.
+    """
+    src = wf.read_text(encoding="utf-8")
+    assert "run status" in src, (
+        f"{wf.name} does not document that a push failure leaves no manifest trace"
+    )
+
+
+@pytest.mark.parametrize("wf", _WORKFLOWS, ids=lambda p: p.name)
 def test_h10_workflows_push_via_commit_data(wf):
     """Naive `git add/commit/push` races the other lanes on main (H10)."""
     src = wf.read_text(encoding="utf-8")

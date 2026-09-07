@@ -94,6 +94,18 @@ jobs:
       # job died the audit died with it and the dashboard kept showing green.
       # This step runs on ANY prior-step failure and stamps `failed` (which does
       # NOT bump source_date), then pushes ONLY the manifest.
+      #
+      # ⚠ BLIND SPOT — if the step that failed is the PUSH itself, this stamp
+      #   cannot land either: it calls the same commit_data.sh and fails the same
+      #   way. There is no manifest row for that case and there cannot be one, so
+      #   the GitHub run status is then the ONLY signal that the run died. Do not
+      #   read a green manifest as proof the lane ran; read it as proof the lane
+      #   ran AND could reach main.
+      #
+      #   Ordering matters for the same reason: `if: failure()` does not re-run
+      #   setup, so this step only works because checkout and `Install deps` are
+      #   already behind it (jobs/update_manifest.py imports pandas). Moving it
+      #   earlier would make it die in exactly the runs it exists to record.
       - name: Stamp failure in refresh manifest
         if: failure()
         run: |

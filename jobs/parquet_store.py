@@ -179,7 +179,10 @@ def partition_key(table: str, value: str) -> str:
     v = str(value)
     if spec.part_kind == "month":
         key = v[:7]
-        if not re.fullmatch(r"\d{4}-\d{2}", key):
+        # 01..12, not \d{2}: a `month=2026-13.parquet` reads fine and sorts after
+        # every real December, so a corrupt date would land in a file nothing ever
+        # scans again rather than failing where it was introduced.
+        if not re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", key):
             raise ValueError(f"{table}: cannot derive month partition from {value!r}")
     elif spec.part_kind == "year":
         key = v[:4]

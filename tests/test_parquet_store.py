@@ -162,6 +162,23 @@ def test_bad_date_is_a_loud_error_not_a_silent_partition(store):
         store.partition_key("prices_daily", "not-a-date")
 
 
+@pytest.mark.parametrize("bad", ["2026-13-01", "2026-00-01", "2026-99-01"])
+def test_an_impossible_month_is_rejected(store, bad):
+    """A month outside 01..12 is a corrupt date, not a partition.
+
+    `\\d{4}-\\d{2}` matched it happily and wrote `month=2026-13.parquet`, which
+    then sorts after every real December and is invisible to any month-range
+    scan — the file exists, reads fine, and nothing ever looks at it again.
+    """
+    with pytest.raises(ValueError, match="cannot derive month partition"):
+        store.partition_key("prices_daily", bad)
+
+
+@pytest.mark.parametrize("good", ["2026-01-31", "2026-09-04", "2026-12-31"])
+def test_the_real_months_still_resolve(store, good):
+    assert store.partition_key("prices_daily", good) == good[:7]
+
+
 def test_sec_fact_has_no_merge_key(store):
     """sec_fact is rewritten whole from the payload; upsert_rows must refuse it."""
     with pytest.raises(ValueError, match="no merge key"):

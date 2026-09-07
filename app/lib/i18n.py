@@ -57,6 +57,28 @@ def get_lang() -> str:
     return st.session_state.get("lang", DEFAULT_LANG)
 
 
+def set_lang(lang: str, *, rerun: bool = True) -> None:
+    """Switch language in place: session_state + URL, then rerun.
+
+    R3 audit §8.4 — this replaces the `<a href="?lang=…">` full-page reload for
+    the page-level toggle. session_state is the source of truth `t()` reads; the
+    query param is written so the URL stays shareable and `init_lang()` agrees on
+    the next run. Assigning one key leaves every sibling param (`?ticker=…`)
+    untouched, which is what the anchor needed `doseq` gymnastics to achieve.
+
+    A rerun preserves session_state — a full reload did not, which is the whole
+    reason to stop doing it. Pass `rerun=False` from a widget callback: the widget
+    interaction already schedules the rerun, and calling `st.rerun()` inside a
+    callback would queue a second one.
+    """
+    if lang not in _TABLES:
+        return
+    st.session_state["lang"] = lang
+    st.query_params["lang"] = lang
+    if rerun:
+        st.rerun()
+
+
 def _cur_qp() -> dict:
     """Current query params as {key: [values]} — preserves repeated / list-valued
     params (Codex M4: `to_dict()` collapses multiplicity). Empty when there is
@@ -84,11 +106,20 @@ def _lang_href(code_lang: str) -> str:
 
 
 def lang_toggle_html() -> str:
-    """The outlined 中|EN segmented language switch (shared HTML).
+    """The outlined 中|EN segmented language switch, as an HTML fragment.
 
-    Single source for BOTH the strategy-banner toggle and the page-level
-    toggle (strategy_banner.live_title calls this too), so the two skins can
-    never drift (C05 / BANR2). Segment tokens mirror the frozen banner spec:
+    ONLY REMAINING CALLER: `strategy_banner.live_title`, which composes one
+    self-contained HTML string (title + toggle + EOD badge + timestamp in a
+    single flex row). A Streamlit widget cannot be spliced into the middle of
+    that string, so this anchor pair — and its full-page reload — survives
+    there. `render_lang_toggle()`, the toggle on the other 16 page surfaces, is
+    now a real widget (R3 audit §8.4); see `set_lang()`.
+
+    Removing this one too means either giving the banner a widget beside it
+    instead of inside it, or rebuilding the banner row — a visible layout change
+    to a frozen design spec, and George's call, not this PR's.
+
+    Segment tokens mirror the frozen banner spec:
     mono 11px / 600 / .08em, padding 5px 12px, active bg CMSI_RED + PAPER
     text, inactive transparent + INK_3, container 1px solid PAPER_EDGE
     radius 3, real `<a target="_self">` anchors (full-page reload — accepted
@@ -300,23 +331,54 @@ def domain_name(d: str) -> str:
     return m["zh"] if get_lang() == "zh" else m["en"]
 
 
-def render_lang_toggle(anchor_cols: tuple[float, float] = (9.0, 1.0)) -> None:
-    """Render the language switch as the outlined 中|EN segmented control pinned
-    to the top-right of the content area (the user-visible "top bar"). Call it
-    as the FIRST element on a page, before the page header.
+_LANG_WIDGET_KEY = "_lang_toggle"
+_LANG_LABEL = {"zh": "中", "en": "EN"}
+_LANG_OF_LABEL = {v: k for k, v in _LANG_LABEL.items()}
 
-    wave-3 F1: same skin AND same helper as the strategy-banner toggle
-    (`lang_toggle_html()`). Segments are real `<a href="?…lang=…" target=_self>`
-    anchors: clicking navigates with the lang query param (sibling params such
-    as `?ticker=` preserved), and `init_lang()` adopts it into session_state on
-    the next run — so subsequent `t()` calls already see the chosen language.
-    `anchor_cols` is retained for signature compatibility with the 19 existing
-    call sites but is ignored (a right-aligned flex row needs no column grid).
+
+def _apply_lang_widget() -> None:
+    """on_change for the toggle: adopt the clicked segment as the language.
+
+    Runs BEFORE the script body reruns, so `t()` calls in that same run already
+    see the new language. No `st.rerun()` — the widget interaction is the rerun.
+    A deselect (segmented_control allows clicking the active segment off) leaves
+    the language alone rather than blanking the UI.
     """
-    del anchor_cols  # kept for call-site compatibility; unused
+    lang = _LANG_OF_LABEL.get(st.session_state.get(_LANG_WIDGET_KEY))
+    if lang:
+        set_lang(lang, rerun=False)
+
+
+def render_lang_toggle(anchor_cols: tuple[float, float] = (9.0, 1.0)) -> None:
+    """Render the 中|EN language switch at the top-right of the content area.
+    Call it as the FIRST element on a page, before the page header.
+
+    R3 audit §8.4: this was a pair of `<a href="?…lang=…" target="_self">`
+    anchors, so switching language navigated the browser — a full app reload that
+    threw away every unrelated `st.session_state` entry (an open expander, a
+    picked ticker, a slider) as collateral. It is now a real widget:
+    `set_lang()` writes session_state + the query param and reruns, so the URL
+    still carries `?lang=` and everything else in session_state survives.
+
+    `anchor_cols` is retained for signature compatibility with the existing call
+    sites and is used for the right-alignment grid.
+    """
     init_lang()
-    st.markdown(
-        f'<div style="display:flex;justify-content:flex-end;margin:0 0 6px">'
-        f'{lang_toggle_html()}</div>',
-        unsafe_allow_html=True,
-    )
+    cur = get_lang()
+    # Keep the widget in step with a `?lang=` deep link, or with the toggle on the
+    # page we navigated from, so it never renders a stale selection. Safe to do
+    # unconditionally: a user click is applied by `_apply_lang_widget` BEFORE this
+    # body runs, so by now the two always agree and this is a no-op. (Writing the
+    # key here without the callback would clobber the click.)
+    if st.session_state.get(_LANG_WIDGET_KEY) != _LANG_LABEL[cur]:
+        st.session_state[_LANG_WIDGET_KEY] = _LANG_LABEL[cur]
+
+    _, right = st.columns(anchor_cols)
+    with right:
+        st.segmented_control(
+            "language",
+            options=list(_LANG_LABEL.values()),
+            key=_LANG_WIDGET_KEY,
+            on_change=_apply_lang_widget,
+            label_visibility="collapsed",
+        )

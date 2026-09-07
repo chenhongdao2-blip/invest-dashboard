@@ -5,6 +5,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 import yaml
@@ -151,84 +152,107 @@ def get_close_series(tickers: tuple[str, ...]) -> pd.DataFrame:
     return df.pivot(index="date", columns="ticker", values="close").sort_index()
 
 
+# Split / bad-tick guard: a single-day DROP beyond this is almost never a real
+# return — it's an un-back-adjusted forward split (yfinance sometimes MISSES the
+# split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB mixes pre- and
+# post-split closes) or a bad tick. Any window spanning such a drop is suppressed
+# (NaN) so the heatmap drops the tile rather than printing a fake -90%.
+# DOWNWARD-only + 0.75 by design: real biotech catalysts pop UP big (e.g. 2565.HK
+# +66% on 2026-05-18, no split — must NOT be suppressed), and genuine one-day
+# crashes rarely exceed -75% (2617.HK -60% real distress stays), while
+# forward-split jumps are -80/-90%.
+SPLIT_GUARD = 0.75
+
+# window label -> lookback in VALID observations (not calendar days)
+_RET_WINDOWS = {"1d_%": 1, "5d_%": 5, "1m_%": 21, "3m_%": 63, "6m_%": 126, "60d_%": 60}
+_RET_COLS = ["last", "1d_%", "5d_%", "1m_%", "3m_%", "6m_%", "ytd_%", "60d_%"]
+
+
 def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
     """Per-ticker return windows. Each ticker uses its OWN last valid close —
-    avoids ragged-tail bug across markets (JP closes earlier than US).
-    Output index=ticker, columns=[last, 1d_%, 5d_%, 1m_%, ytd_%, 60d_%]."""
+    avoids the ragged-tail bug across markets (JP closes earlier than US).
+    Output index=ticker, columns=`_RET_COLS`.
+
+    R3 audit §5 / PR 2: this used to be a per-ticker Python loop costing 258 ms
+    on 494 tickers and re-running on every slider tick. It is now column-wise;
+    `tests/test_compute_returns_equiv.py` pins it against a verbatim copy of the
+    loop over the whole committed DB, so the numbers are byte-identical.
+
+    The trick is `rev`: the 1-based rank of each VALID observation counted from
+    the end of its own column (1 = last valid bar). Every per-ticker `.dropna()`
+    positional index in the old loop becomes a mask on `rev`, so the ragged tails
+    stay per-ticker without ever leaving vectorized land.
+    """
     if closes.empty:
         return pd.DataFrame()
 
-    closes = closes.sort_index()
-    out: dict[str, dict[str, float | None]] = {}
+    C = closes.sort_index()
+    valid = C.notna()
+    n_valid = valid.sum()                                # Series[ticker]
+    rev = valid[::-1].cumsum()[::-1].where(valid)        # 1 = last valid, 2 = prior, …
 
-    NAN = float("nan")
-    for ticker in closes.columns:
-        ser = closes[ticker].dropna()
-        if ser.empty:
-            out[ticker] = {k: NAN for k in ("last", "1d_%", "5d_%", "1m_%", "ytd_%", "60d_%")}
-            continue
+    # One gather instead of a full-frame mask per window: `back[k]` is the close
+    # k valid observations back, per column (NaN where the column is too short).
+    # Doing this as 7 separate `C.where(rev == k+1).max()` passes cost 38 of the
+    # function's 75 ms.
+    _depth = max(_RET_WINDOWS.values()) + 1
+    _rv, _cv = rev.to_numpy(), C.to_numpy(dtype="float64")
+    _sel = np.isfinite(_rv) & (_rv <= _depth)
+    _r, _c = np.nonzero(_sel)
+    back = np.full((_depth, C.shape[1]), np.nan)
+    back[_rv[_r, _c].astype(np.intp) - 1, _c] = _cv[_r, _c]
 
-        last = float(ser.iloc[-1])
+    def at(k: int) -> pd.Series:
+        """Close k VALID observations back, per column."""
+        return pd.Series(back[k], index=C.columns)
 
-        # Split / bad-tick guard: a single-day DROP beyond this is almost never a
-        # real return — it's an un-back-adjusted forward split (yfinance sometimes
-        # MISSES the split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB
-        # mixes pre- and post-split closes) or a bad tick. Any window spanning such
-        # a drop is suppressed (NaN) so the heatmap drops the tile rather than
-        # printing a fake -90%. DOWNWARD-only + 0.75 by design: real biotech
-        # catalysts pop UP big (e.g. 2565.HK +66% on 2026-05-18, no split — must
-        # NOT be suppressed), and genuine one-day crashes rarely exceed -75%
-        # (2617.HK -60% real distress stays), while forward-split jumps are -80/-90%.
-        SPLIT_GUARD = 0.75
+    last = at(0)
 
-        def ret_back(n: int) -> float:
-            if len(ser) <= n:
-                return NAN
-            seg = ser.iloc[-n - 1:]
-            if (seg.pct_change() < -SPLIT_GUARD).any():
-                return NAN  # window crosses a split/bad-tick down-discontinuity
-            prev = seg.iloc[0]
-            if pd.isna(prev) or prev == 0:
-                return NAN
-            return float((ser.iloc[-1] / prev - 1) * 100)
+    # `C.ffill().shift(1)` is the previous VALID close, so this equals the old
+    # `ser.dropna().pct_change()` on every valid row. `min_bad` = the smallest
+    # `rev` carrying a guard-tripping drop, i.e. the most RECENT one; a window
+    # reaching n bars back crosses it iff min_bad <= n.
+    pc = C / C.ffill().shift(1) - 1.0
+    bad = (pc < -SPLIT_GUARD) & valid
+    min_bad = rev.where(bad).min()                       # NaN when the column is clean
 
-        # YTD: anchor on the LAST close STRICTLY BEFORE Jan 1 of the series' own
-        # latest year (each ticker uses its own year so cross-year DB rows work).
-        #
-        # R3 audit C1 — anchoring on the FIRST close *of* the year silently drops
-        # the Jan-1 gap: shown = (1+true)/(1+jan_gap) − 1. Measured across 490
-        # tickers: median |error| 2.40pp, p90 10.6pp, max 86.0pp (SNDK showed
-        # +439.5% against a true +525.6%). The prior-year close is the standard
-        # YTD base — a stock that gapped +10% on the first trading day of January
-        # has earned that 10%.
-        #
-        # Fallback: a ticker listed mid-year (or backfilled only from January) has
-        # no prior-year bar; keep the old first-close-of-year behaviour there, as
-        # there is no better base and the gap does not exist.
-        year = ser.index.max().year
-        jan1 = pd.Timestamp(f"{year}-01-01")
-        prior = ser[ser.index < jan1]
-        anchor_pos = len(prior) - 1 if len(prior) else 0
-        window = ser.iloc[anchor_pos:]          # anchor bar .. last bar (inclusive)
-        base = window.iloc[0] if len(window) else NAN
-        if (len(window) and not pd.isna(base) and base != 0
-                and not (window.pct_change() < -SPLIT_GUARD).any()):
-            ytd = float((ser.iloc[-1] / base - 1) * 100)
-        else:
-            ytd = NAN
+    out: dict[str, pd.Series] = {"last": last}
+    for col, n in _RET_WINDOWS.items():
+        prev = at(n).replace(0.0, np.nan)                # anchor of 0 → undefined
+        ok = (n_valid > n) & (min_bad.isna() | (min_bad > n))
+        out[col] = ((last / prev - 1.0) * 100.0).where(ok)
 
-        out[ticker] = {
-            "last": last,
-            "1d_%": ret_back(1),
-            "5d_%": ret_back(5),
-            "1m_%": ret_back(21),
-            "3m_%": ret_back(63),    # M14 audit: 3-month
-            "6m_%": ret_back(126),   # M14 audit: 6-month
-            "ytd_%": ytd,
-            "60d_%": ret_back(60),
-        }
+    # YTD: anchor on the LAST close STRICTLY BEFORE Jan 1 of the series' own
+    # latest year (each ticker uses its own year so cross-year DB rows work).
+    #
+    # R3 audit C1 — anchoring on the FIRST close *of* the year silently drops the
+    # Jan-1 gap: shown = (1+true)/(1+jan_gap) − 1. Measured across 490 tickers:
+    # median |error| 2.40pp, p90 10.6pp, max 86.0pp. The prior-year close is the
+    # standard YTD base — a stock that gapped +10% on the first trading day of
+    # January has earned that 10%.
+    #
+    # Fallback: a ticker listed mid-year (or backfilled only from January) has no
+    # prior-year bar; keep the first-close-of-year behaviour there, as there is no
+    # better base and the gap does not exist.
+    pos = len(C) - 1 - np.argmax(valid.to_numpy()[::-1], axis=0)
+    years = pd.Series(C.index[pos].year, index=C.columns).where(n_valid > 0)
+    ytd = pd.Series(np.nan, index=C.columns, dtype="float64")
+    for y in years.dropna().unique():
+        cols = years.index[years == y]
+        cut = pd.Timestamp(f"{int(y)}-01-01")
+        pre, post = C.loc[C.index < cut, cols], C.loc[C.index >= cut, cols]
+        anchor = pre.ffill().iloc[-1] if len(pre) else pd.Series(np.nan, index=cols)
+        if len(post):                                    # no prior-year bar → fallback
+            anchor = anchor.fillna(post.bfill().iloc[0])
+        anchor = anchor.replace(0.0, np.nan)
+        # bars from the anchor to the last one = 1 + n_ytd, so the guard window
+        # spans rev 1..n_ytd — identical to the loop's `window.pct_change()`.
+        n_ytd = valid.loc[C.index >= cut, cols].sum()
+        clean = min_bad[cols].isna() | (min_bad[cols] > n_ytd)
+        ytd.loc[cols] = ((last[cols] / anchor - 1.0) * 100.0).where(clean)
+    out["ytd_%"] = ytd
 
-    return pd.DataFrame.from_dict(out, orient="index")
+    return pd.DataFrame(out).reindex(columns=_RET_COLS)
 
 
 # ---------- multiples ----------

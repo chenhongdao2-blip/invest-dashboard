@@ -168,3 +168,90 @@ def test_set_lang_ignores_a_code_with_no_locale_table(tmp_path):
     assert not at.exception, "set_lang must not raise on an unknown code"
     assert at.text[0].value == "zh", "language must be unchanged"
     assert at.text[1].value != "common.col.ticker", "strings must still resolve"
+
+
+# --- the strategy banner, the last surface still on the anchor ---------------
+
+_BANNER_SCRIPT = textwrap.dedent(
+    """
+    import sys
+    sys.path.insert(0, {app!r})
+    import streamlit as st
+    from lib import i18n, strategy_banner as sb
+
+    st.session_state.setdefault("unrelated_state", "keep-me")
+
+    sb.live_title("AI Agent 选股 · 策略表现", as_of="2026-06-29",
+                  lang=("中" if i18n.get_lang() == "zh" else "EN"))
+    st.text(i18n.get_lang())
+    """
+).format(app=str(_APP))
+
+
+@pytest.fixture()
+def banner(tmp_path):
+    from streamlit.testing.v1 import AppTest  # noqa: PLC0415
+
+    script = tmp_path / "banner_app.py"
+    script.write_text(_BANNER_SCRIPT, encoding="utf-8")
+    return lambda **qp: _run(AppTest, script, qp)
+
+
+def test_banner_switch_is_a_widget_not_an_anchor(banner):
+    """`live_title` composed title+toggle+badge into one HTML string, so its
+    toggle stayed a reloading `<a href="?lang=">` after every other page moved
+    to a widget. The row is `st.columns` now and the toggle is the shared one."""
+    at = banner()
+    assert not at.exception
+    assert len(at.segmented_control) == 1
+    assert list(at.segmented_control[0].options) == ["中", "EN"]
+    banner_html = "".join(m.value for m in at.markdown)
+    assert "lang=" not in banner_html, "no language anchor may survive in the banner"
+    assert "target=\"_self\"" not in banner_html
+
+
+def test_banner_switch_preserves_unrelated_session_state(banner):
+    at = banner()
+    at.session_state["picked_ticker"] = "NVDA"
+
+    at.segmented_control[0].set_value("EN").run()
+
+    assert not at.exception
+    assert at.session_state["lang"] == "en"
+    assert at.text[0].value == "en"
+    assert at.session_state["unrelated_state"] == "keep-me"
+    assert at.session_state["picked_ticker"] == "NVDA"
+
+
+def test_banner_keeps_its_rule_and_badge(banner):
+    """The 2px rule under the row and the EOD badge are frozen design; the
+    columns rewrite must not drop either."""
+    at = banner()
+    html = "".join(m.value for m in at.markdown)
+    assert "EOD 跟踪 · DAILY" in html
+    assert "更新 2026-06-29 HKT" in html
+    assert "border-bottom:2px solid" in html
+    assert "cmsi-live-dot" in html
+
+
+def test_banner_without_a_toggle_still_renders(tmp_path):
+    """`lang=None` is the documented way to hide the switch; the row must still
+    lay out (two columns, not three) and keep the badge."""
+    from streamlit.testing.v1 import AppTest  # noqa: PLC0415
+
+    script = tmp_path / "banner_no_toggle.py"
+    script.write_text(textwrap.dedent(
+        """
+        import sys
+        sys.path.insert(0, {app!r})
+        from lib import strategy_banner as sb
+        sb.live_title("T", as_of="2026-06-29", lang=None)
+        """
+    ).format(app=str(_APP)), encoding="utf-8")
+
+    at = AppTest.from_file(str(script), default_timeout=60)
+    at.run()
+
+    assert not at.exception
+    assert len(at.segmented_control) == 0
+    assert "EOD 跟踪 · DAILY" in "".join(m.value for m in at.markdown)

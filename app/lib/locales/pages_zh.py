@@ -1332,4 +1332,5 @@ STRINGS = {
     "picks.sc.bio.sum_n_suffix": "支",
     "picks.sc.bio.brand": "CMSI",
     "picks.sc.bio.footnote": "Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) + 0.025MSO · ● = 进入建仓组合（前 20）· 评分为建仓时点快照（v4 04-22 / v5 05-15）· 段区间 v4=04-22→05-15 / v5=05-15→07-09 · † = 未建仓票段收益为事后回补（yfinance 复权价；FOLD 按收购现金价 ≈0%），非当时跟踪值，仅作对照 · 来源: L6 归因附表 2026-07-10",
+    "etf.degraded": "{tickers} 的持仓本次仅返回成分代码、无权重（上游降级为 symbols-only）——下方成分表只有名称，没有权重。等加权数据源恢复后重跑 jobs/build_etf_panel.py。",
 }

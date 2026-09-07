@@ -119,3 +119,43 @@ def test_weight_coverage_flags_a_degraded_etf():
     assert cov["XLV"] == (1, 2)
     assert cov["XBI"] == (0, 1)
     assert etf_panel.degraded_etfs(df) == ["XBI"]
+
+
+def test_the_etf_page_stays_quiet_when_every_etf_has_weights(monkeypatch):
+    """No false alarm on the committed (weighted) artifact."""
+    from streamlit.testing.v1 import AppTest  # noqa: PLC0415
+    from lib import etf_panel  # noqa: PLC0415
+
+    at = AppTest.from_file(str(REPO_ROOT / "app" / "pages" / "e1_etf_overview.py"),
+                           default_timeout=240)
+    at.run()
+    assert not at.exception
+    assert not any("weight" in w.value.lower() or "权重" in w.value for w in at.warning), (
+        f"degradation notice fired on healthy data: {[w.value for w in at.warning]}"
+    )
+    assert etf_panel.degraded_etfs(etf_panel.load_etf_holdings()) == []
+
+
+def test_the_etf_page_says_so_when_holdings_arrive_unweighted(monkeypatch):
+    """The wiring, not just the helper: a weightless fetch must be visible.
+
+    Silence is what let the 2026-08-29 rebuild ship — the tables rendered as if
+    the weights merely happened to be missing.
+    """
+    from streamlit.testing.v1 import AppTest  # noqa: PLC0415
+    from lib import etf_panel  # noqa: PLC0415
+
+    good = etf_panel.load_etf_holdings()
+    degraded = good.copy()
+    degraded.loc[degraded["etf_ticker"] == "XLV", "weight_pct"] = None
+    monkeypatch.setattr(etf_panel, "load_etf_holdings", lambda: degraded)
+
+    at = AppTest.from_file(str(REPO_ROOT / "app" / "pages" / "e1_etf_overview.py"),
+                           default_timeout=240)
+    at.run()
+
+    assert not at.exception
+    assert any("XLV" in w.value for w in at.warning), (
+        "the page rendered a weightless XLV without saying so; "
+        f"warnings were {[w.value for w in at.warning]}"
+    )

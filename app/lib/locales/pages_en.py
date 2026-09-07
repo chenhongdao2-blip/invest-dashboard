@@ -1363,4 +1363,5 @@ STRINGS = {
     "picks.sc.bio.sum_n_suffix": "",
     "picks.sc.bio.brand": "CMSI",
     "picks.sc.bio.footnote": "Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) + 0.025MSO · ● = in the top-20 book · scores frozen at inception (v4 Apr-22 / v5 May-15) · segments v4 = 04-22→05-15 / v5 = 05-15→07-09 · † = unheld segment returns backfilled ex-post (yfinance adjusted close; FOLD pinned ≈0% at cash deal price), not live-tracked, for reference only · source: L6 attribution appendix 2026-07-10",
+    "etf.degraded": "Holdings for {tickers} came back with no weights (upstream symbols-only fallback) — the constituent tables below list names, not weights. Re-run jobs/build_etf_panel.py once the weighted source is back.",
 }

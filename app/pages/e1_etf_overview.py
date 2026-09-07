@@ -166,6 +166,13 @@ if roster.empty:
     st.warning(i18n.t("etf.empty"))
     st.stop()
 
+# R3 audit item 7: say so when an ETF's holdings arrived with no weights at all
+# (the upstream symbols-only fallback). Silence here is how a weightless 2026-08-29
+# rebuild went unnoticed — the tables rendered as if the weights were simply absent.
+_degraded = etf_panel.degraded_etfs(hold)
+if _degraded:
+    st.warning(i18n.t("etf.degraded", tickers=", ".join(_degraded)))
+
 sub_of = dict(zip(roster["ticker"], roster["sector"]))
 
 # ETF-level returns + closes (closes reused for the card sparkline) + AUM.

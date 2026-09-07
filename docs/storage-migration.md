@@ -119,7 +119,7 @@ Current state:
 **`sec_fact` is not parity-checkable.** It shadows a BLOB, not a table, so there is no
 SQLite side to anti-join against. Its guarantee is different: it is fully re-derivable
 from `payload_gzip` in seconds, and `tests/test_sec_fact_normalize.py` pins its output
-against the real `_load_facts` for three tickers, whole-frame and in row order.
+against the real `_load_facts` for five tickers, whole-frame and in row order.
 
 What it gets instead is an anti-join on **filenames**, at the end of
 `jobs/fetch_sec_facts.py`: every ticker whose row says `sec_status='ok'` must have a

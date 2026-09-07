@@ -16,7 +16,7 @@ app/lib/sec_facts.py, with one added `if concept not in KEEP: continue`.** That 
 deliberate, and the duplication is the point: the output must be substitutable for
 what `_load_facts` returns today so the read shim in a later PR is a drop-in.
 tests/test_sec_fact_normalize.py pins the equivalence against the real function for
-three tickers, so the copy cannot drift unnoticed.
+five tickers, so the copy cannot drift unnoticed.
 
 What this does NOT do, deliberately:
   • It does not dedupe. Design B.2 measured a 2.0× collapse on

@@ -4,7 +4,7 @@ jobs/normalize_sec_facts.py carries a verbatim copy of the row-building loop in
 app/lib/sec_facts.py `_load_facts`, plus one concept filter. That duplication is
 only safe if something proves the two stay in step — this is that something.
 
-The strong test is the last one: for three real tickers, the parquet file filtered
+The strong test is the last one: for five real tickers, the parquet file filtered
 to one concept must equal, cell for cell and IN THE SAME ORDER, what `_load_facts`
 returns for that concept. Order matters and is asserted, not sorted away:
 `_dedupe_by_end_date` and `_rank` in app/lib/sec_facts.py are stable sorts, so rows
@@ -42,9 +42,12 @@ _DB = _REPO / "data" / "snapshots.db"
 # data/parquet/sec_fact/ files. They never write to it.
 USES_COMMITTED_PARQUET_STORE = True
 
-# Three tickers with big, differently-shaped payloads: a US pharma major, a big-tech
-# filer, and a foreign filer that reports under ifrs-full rather than us-gaap.
-_TICKERS = ["LLY", "MSFT", "AZN"]
+# Five tickers with big, differently-shaped payloads: three US pharma majors whose
+# statements differ in shape, a big-tech filer from another sector entirely, and a
+# foreign filer that reports under ifrs-full rather than us-gaap. The us-gaap side
+# is deliberately more than one company: a single filer's quirks cannot tell a
+# faithful copy of `_load_facts` apart from one that happens to suit that filer.
+_TICKERS = ["LLY", "JNJ", "PFE", "MSFT", "AZN"]
 
 
 def _norm(df: pd.DataFrame) -> pd.DataFrame:

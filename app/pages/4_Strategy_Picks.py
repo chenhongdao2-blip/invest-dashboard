@@ -230,6 +230,29 @@ if _ov_cards:
 
 # ── Method-card config per strategy book ─────────────────────────────────────
 
+# ── Table label blocks ────────────────────────────────────────────────────────
+# R3 audit §7: these were 145 lines of hand-written `X if _prefer_cn else Y`
+# dicts inline in this file — the biggest single bypass of the locale tables. The
+# field names are the keys `lib/picks_table.py` and `lib/scorecard_table.py` read;
+# the strings live in lib/locales/pages_{en,zh}.py under `picks.tbl.*`,
+# `picks.sc.hd.*` and `picks.sc.bio.*`.
+_TBL_FIELDS = (
+    "col_rank", "col_tick", "col_name", "col_score", "col_weight", "col_price",
+    "col_d1", "col_d5", "col_m1", "col_ytd", "col_since", "col_spark",
+    "nm_label", "footnote", "brand",
+)
+_SC_FIELDS = (
+    "col_num", "col_held", "col_tick", "col_name", "col_ta", "col_final",
+    "col_seg", "col_driver", "nm_label", "sum_top20", "sum_pool", "sum_unheld",
+    "sum_diff", "sum_diff_note", "sum_n_suffix", "footnote", "brand",
+)
+
+
+def _label_block(prefix: str, fields: tuple[str, ...]) -> dict[str, str]:
+    """`{field: t(f"{prefix}.{field}")}` for the current language."""
+    return {f: i18n.t(f"{prefix}.{f}") for f in fields}
+
+
 _BIOTECH_DIMS = [
     {"name": "管线",   "pct": 40, "color": "#c8102e", "fg": "#fff1e5"},
     {"name": "催化事件", "pct": 25, "color": "#0d7680", "fg": "#fff1e5"},
@@ -550,44 +573,7 @@ def render_strategy(strat_id: str) -> None:
     # Sort by rank
     _payload_rows.sort(key=lambda r: (r["rank"] == 0, r["rank"]))
 
-    # i18n labels for holdings table (inline — new picks.tbl.* keys not yet in locales)
-    _prefer_cn2 = i18n.get_lang() == "zh"
-    if _prefer_cn2:
-        _tbl_labels = {
-            "col_rank":  "名次",
-            "col_tick":  "代码",
-            "col_name":  "名称",
-            "col_score": "评分",
-            "col_weight": "权重",
-            "col_price": "现价",
-            "col_d1":    "1日",
-            "col_d5":    "5日",
-            "col_m1":    "1月",
-            "col_ytd":   "年初至今",
-            "col_since": "建仓来",
-            "col_spark": "20日走势",
-            "nm_label":  "NM",
-            "footnote":  "含息复权总回报（yfinance auto_adjust=True）· 建仓来=入选日至今 · 年初至今=当年首个交易日至今 · 走势=近 20 个交易日收盘",
-            "brand":     "CMSI",
-        }
-    else:
-        _tbl_labels = {
-            "col_rank":  "Rank",
-            "col_tick":  "Ticker",
-            "col_name":  "Name",
-            "col_score": "Score",
-            "col_weight": "Weight",
-            "col_price": "Price",
-            "col_d1":    "1D",
-            "col_d5":    "5D",
-            "col_m1":    "1M",
-            "col_ytd":   "YTD",
-            "col_since": "Since",
-            "col_spark": "20D trend",
-            "nm_label":  "NM",
-            "footnote":  "Total return incl. dividends (yfinance auto_adjust=True) · Since = pick date to today · YTD = first trading day of current year to today · Trend = last 20 trading-day closes",
-            "brand":     "CMSI",
-        }
+    _tbl_labels = _label_block("picks.tbl", _TBL_FIELDS)
 
     def _render_picks_table(rows: list[dict], height: int = 560) -> None:
         _doc, _h = picks_table.render_holdings(rows, _tbl_labels, height=height)
@@ -618,87 +604,13 @@ def render_strategy(strat_id: str) -> None:
             _sc_rows = [{**r, "ta": r.get("sector", ""), "driver": r.get("status", "")}
                         for r in _sc.to_dict("records")]
             _sc_kw = dict(
-                sub_cols=([("gov", "治理55"), ("fin", "财务25"), ("moat", "护城河20")]
-                          if _prefer_cn2 else
-                          [("gov", "Gov55"), ("fin", "Fin25"), ("moat", "Moat20")]),
+                sub_cols=[(c, i18n.t(f"picks.sc.hd.sub_{c}")) for c in ("gov", "fin", "moat")],
                 sub_dp=0, final_dp=0, tag_w=92, min_width=980)
-            if _prefer_cn2:
-                _sc_labels = {
-                    "col_num": "#", "col_held": "建", "col_tick": "代码",
-                    "col_name": "名称", "col_ta": "行业", "col_final": "总分",
-                    "col_seg": "段收益", "col_driver": "评级 / 状态",
-                    "nm_label": "—",
-                    "sum_top20": "Top20 等权", "sum_pool": "全池等权",
-                    "sum_unheld": "仅未建仓", "sum_diff": "Top20 − 全池",
-                    "sum_diff_note": "选中效果", "sum_n_suffix": "支",
-                    "footnote": ("总分 = 治理55 + 财务25 + 护城河20（愿意分 / 分得出 / "
-                                 "分得久）· ● = 进入建仓组合（前 20）· 评分为建仓时点快照"
-                                 "（v1 2026-03-19 / v2 2026-06-10 评分底稿）· 段区间 "
-                                 "v1=03-20→06-11 / v2=06-11→07-07 · 段收益 = yfinance "
-                                 "含息复权（归因正式口径 Wind TR，等权对账一致）· "
-                                 "† = 未建仓票为事后对照 · 选中效果条为等权口径"
-                                 "（v2 实盘为评分定权 + 12% 现金）"),
-                    "brand": "CMSI",
-                }
-            else:
-                _sc_labels = {
-                    "col_num": "#", "col_held": "Held", "col_tick": "Ticker",
-                    "col_name": "Name", "col_ta": "Sector", "col_final": "Total",
-                    "col_seg": "Seg Ret", "col_driver": "Grade / status",
-                    "nm_label": "—",
-                    "sum_top20": "Top20 EW", "sum_pool": "Full pool EW",
-                    "sum_unheld": "Unheld only", "sum_diff": "Top20 − pool",
-                    "sum_diff_note": "selection effect", "sum_n_suffix": "",
-                    "footnote": ("Total = Gov 55 + Fin 25 + Moat 20 · ● = in the "
-                                 "top-20 book · scores frozen at inception (v1 "
-                                 "2026-03-19 / v2 2026-06-10 scoring worksheets) · "
-                                 "segments v1 = 03-20→06-11 / v2 = 06-11→07-07 · "
-                                 "segment returns = yfinance total return (reconciled "
-                                 "with Wind TR attribution on equal-weight legs) · "
-                                 "† = unheld names shown ex-post for reference · "
-                                 "selection-effect strip is equal-weight (live v2 book "
-                                 "is score-weighted + 12% cash)"),
-                    "brand": "CMSI",
-                }
+            _sc_labels = _label_block("picks.sc.hd", _SC_FIELDS)
         else:
             _sc_rows = _sc.to_dict("records")
             _sc_kw = {}
-            if _prefer_cn2:
-                _sc_labels = {
-                    "col_num": "#", "col_held": "建", "col_tick": "代码",
-                    "col_name": "公司", "col_ta": "TA", "col_final": "Final",
-                    "col_seg": "段收益", "col_driver": "股价驱动 / 状态",
-                    "nm_label": "—",
-                    "sum_top20": "Top20 等权", "sum_pool": "全池等权",
-                    "sum_unheld": "仅未建仓", "sum_diff": "Top20 − 全池",
-                    "sum_diff_note": "选中效果", "sum_n_suffix": "支",
-                    "footnote": ("Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) "
-                                 "+ 0.025MSO · ● = 进入建仓组合（前 20）· 评分为建仓时点"
-                                 "快照（v4 04-22 / v5 05-15）· 段区间 v4=04-22→05-15 / "
-                                 "v5=05-15→07-09 · † = 未建仓票段收益为事后回补"
-                                 "（yfinance 复权价；FOLD 按收购现金价 ≈0%），非当时跟踪值，"
-                                 "仅作对照 · 来源: L6 归因附表 2026-07-10"),
-                    "brand": "CMSI",
-                }
-            else:
-                _sc_labels = {
-                    "col_num": "#", "col_held": "Held", "col_tick": "Ticker",
-                    "col_name": "Company", "col_ta": "TA", "col_final": "Final",
-                    "col_seg": "Seg Ret", "col_driver": "Price driver / status",
-                    "nm_label": "—",
-                    "sum_top20": "Top20 EW", "sum_pool": "Full pool EW",
-                    "sum_unheld": "Unheld only", "sum_diff": "Top20 − pool",
-                    "sum_diff_note": "selection effect", "sum_n_suffix": "",
-                    "footnote": ("Final = 0.40P + 0.25E + 0.20M + 0.10F + 0.025(10−R) "
-                                 "+ 0.025MSO · ● = in the top-20 book · scores frozen "
-                                 "at inception (v4 Apr-22 / v5 May-15) · segments "
-                                 "v4 = 04-22→05-15 / v5 = 05-15→07-09 · † = unheld "
-                                 "segment returns backfilled ex-post (yfinance adjusted "
-                                 "close; FOLD pinned ≈0% at cash deal price), not live-"
-                                 "tracked, for reference only · source: L6 attribution "
-                                 "appendix 2026-07-10"),
-                    "brand": "CMSI",
-                }
+            _sc_labels = _label_block("picks.sc.bio", _SC_FIELDS)
         _sc_title_key = ("strategy.scorecard.all_hd" if _is_hd_sc
                          else "strategy.scorecard.all")
         with st.expander(i18n.t(_sc_title_key, n=len(_sc_rows)), expanded=True):

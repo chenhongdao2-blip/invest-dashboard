@@ -227,3 +227,43 @@ def test_returns_for_matches_the_old_pull_on_arbitrary_subsets():
         old = db.compute_returns(db.get_close_series_usd(sub))
         new = db.returns_for(sub, mf.as_of, "usd")
         pd.testing.assert_frame_equal(new, old.reindex(new.index), obj=f"k={k}")
+
+
+def test_returns_for_key_is_order_insensitive(monkeypatch):
+    """The docstring's promise — "two callers with the same SET share a cache bucket"
+    — has to hold at the CACHE KEY, not inside the cached body. Normalising the
+    tickers after `@st.cache_data` has already hashed them means `(A, B)` and
+    `(B, A)` are two buckets and the frame is recomputed; the ordering the callers
+    happen to collect their tickers in is exactly what varies.
+    """
+    mf = db.market_frame(None)
+    allt = list(mf.close_usd.columns)
+    if len(allt) < 5:
+        pytest.skip("prices_daily is empty")
+    sub = tuple(allt[:5])
+
+    calls: list[tuple] = []
+    inner = db._returns_for_sorted
+    real = getattr(inner, "__wrapped__", inner)
+
+    def _counting(cols, as_of=None, basis="usd", domain=None):
+        calls.append(cols)
+        return real(cols, as_of, basis, domain)
+
+    monkeypatch.setattr(db, "_returns_for_sorted", _counting)
+
+    a = db.returns_for(sub, mf.as_of, "usd")
+    b = db.returns_for(tuple(reversed(sub)), mf.as_of, "usd")
+    c = db.returns_for(sub + sub, mf.as_of, "usd")  # duplicates collapse too
+
+    assert len(set(calls)) == 1, f"cache key is order-sensitive: {set(calls)}"
+    assert calls[0] == tuple(sorted(set(sub)))
+    pd.testing.assert_frame_equal(a, b)
+    pd.testing.assert_frame_equal(a, c)
+
+
+def test_returns_for_is_a_thin_uncached_wrapper():
+    """`returns_for` itself must NOT be cached — a cached shell would hash the raw
+    argument and reintroduce the order-sensitive key this normalisation removes."""
+    assert not hasattr(db.returns_for, "clear"), "returns_for must not be @st.cache_data"
+    assert hasattr(db._returns_for_sorted, "clear"), "_returns_for_sorted must be cached"

@@ -268,10 +268,30 @@ def market_frame(domain: str | None = None) -> MarketFrame:
     )
 
 
-@st.cache_data(ttl=300)
 def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
                 basis: str = "usd", domain: str | None = None) -> pd.DataFrame:
     """Cached `compute_returns` over a slice of a market frame.
+
+    UNCACHED on purpose, and deliberately thin: it only normalises the ticker
+    argument to `tuple(sorted(set(...)))` and hands it to the cached
+    `_returns_for_sorted`. Normalising INSIDE the cached body would not work —
+    `@st.cache_data` hashes the argument it is given, so `("A","B")` and `("B","A")`
+    would be two buckets recomputing the same answer, and the order a caller happens
+    to collect its tickers in is precisely what varies (`quote_table` filters a
+    roster, the heatmap walks sectors). Normalising HERE is what actually makes two
+    callers with the same SET share one bucket.
+
+    Sorting also matches the row order the pivot in `get_close_series_usd` always
+    produced, which is what `tests/test_market_frame.py` pins the output against.
+    """
+    return _returns_for_sorted(tuple(sorted(set(tickers))), as_of, basis, domain)
+
+
+@st.cache_data(ttl=300)
+def _returns_for_sorted(tickers: tuple[str, ...], as_of: str | None = None,
+                        basis: str = "usd", domain: str | None = None) -> pd.DataFrame:
+    """`compute_returns` over a market-frame slice. `tickers` MUST already be
+    sorted+deduped — `returns_for` is the entry point that guarantees it.
 
     `compute_returns` takes a DataFrame, which Streamlit cannot hash, so the cache
     lives on this keyed shell instead. `as_of` (pass `market_frame(...).as_of`) is
@@ -294,10 +314,7 @@ def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
     src = mf.close_usd if basis == "usd" else mf.close
     if src.empty:
         return pd.DataFrame()
-    # Sorted+deduped so the row order matches what the pivot in
-    # `get_close_series_usd` always produced, whatever order the caller collected
-    # its tickers in — and so two callers with the same SET share a cache bucket.
-    cols = sorted(set(tickers) & set(src.columns))
+    cols = [t for t in tickers if t in src.columns]
     if not cols:
         return pd.DataFrame()
     return compute_returns(src[cols])

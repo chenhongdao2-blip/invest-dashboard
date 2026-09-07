@@ -18,6 +18,7 @@ from lib import ui
 from lib import theme
 from lib import i18n
 from lib import section_header
+from lib import valuation
 
 st.set_page_config(
     page_title="AI Valuation Scanner · invest-dashboard",
@@ -126,38 +127,11 @@ for c in ["1d_%", "5d_%", "1m_%", "ytd_%"]:
         merged[c] = pd.NA
 
 
-# Sector-internal P/E percentile
-@st.cache_data(ttl=300)
-def sector_pe_percentile(_mults_df: pd.DataFrame, _sector_map: dict[str, list[str]], pe_col: str):
-    """For each ticker, rank P/E within its sector (excluding NaN and negative).
-    Returns (percentile [0,100] where 0 = cheapest, per-sector eligible-N dict,
-    per-sector neg/missing-N dict)."""
-    result: dict[str, float] = {}
-    sector_n_eligible: dict[str, int] = {}
-    sector_n_excluded: dict[str, int] = {}
-    if _mults_df.empty or pe_col not in _mults_df.columns:
-        return pd.Series(dtype=float, name="pe_percentile"), sector_n_eligible, sector_n_excluded
-    sector_tickers: dict[str, list[str]] = {}
-    for t, secs in _sector_map.items():
-        for s in secs:
-            sector_tickers.setdefault(s, []).append(t)
-
-    for sec, t_list in sector_tickers.items():
-        in_sec_all = _mults_df.loc[_mults_df.index.intersection(t_list), pe_col]
-        in_sec = in_sec_all[in_sec_all > 0].dropna()
-        sector_n_eligible[sec] = len(in_sec)
-        sector_n_excluded[sec] = len(t_list) - len(in_sec)
-        if in_sec.empty:
-            continue
-        ranks = in_sec.rank(pct=True) * 100
-        for t in t_list:
-            if t in ranks.index:
-                if t not in result or ranks[t] < result[t]:
-                    result[t] = float(ranks[t])
-    return pd.Series(result, name="pe_percentile"), sector_n_eligible, sector_n_excluded
-
-
-pe_pct, sec_n_elig, sec_n_excl = sector_pe_percentile(mults, all_tickers_by_sec, pe_metric)
+# Sector-internal P/E percentile — single definition in lib.valuation (audit C3:
+# the page-local copies took `_`-prefixed args, which Streamlit EXCLUDES from the
+# cache key, so switching sectors served the previous sector's percentiles).
+pe_pct, sec_n_elig, sec_n_excl = valuation.sector_pe_percentile(
+    mults, all_tickers_by_sec, pe_metric)
 merged["pe_percentile"] = pe_pct
 
 # surface small-N + negative-excluded caveats

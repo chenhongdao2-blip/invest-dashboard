@@ -16,8 +16,15 @@ _PATH = Path(__file__).resolve().parent.parent.parent / "data" / "external" / "e
 
 
 @st.cache_data(ttl=300)
-def load_calendar(_mtime: float | None = None) -> dict | None:
-    """Parsed calendar envelope, or None when absent/corrupt (page shows empty state)."""
+def load_calendar(mtime: float | None = None) -> dict | None:
+    """Parsed calendar envelope, or None when absent/corrupt (page shows empty state).
+
+    `mtime` is a cache KEY, not data — it must NOT start with an underscore:
+    Streamlit EXCLUDES `_`-prefixed parameters from the cache key
+    (streamlit/runtime/caching/cache_utils.py), so the old `_mtime` name made
+    this invalidation a silent no-op (R3 audit H2). See lib/hc_overview.py:66
+    for the same idiom done right.
+    """
     try:
         d = json.loads(_PATH.read_text(encoding="utf-8"))
         if d.get("schema_version") != 1:
@@ -57,10 +64,16 @@ def _norm_speeches(items: list) -> list[dict]:
 
 
 @st.cache_data(ttl=300)
-def local_transcript(ticker: str, _sig: str = "") -> dict | None:
+def local_transcript(ticker: str, sig: str = "") -> dict | None:
     """Latest local transcript wrapper for `ticker`, normalized, or None
     (always None on Cloud where the gitignored dir doesn't exist).
-    Language-agnostic: returns both EN text and CN ts; caller picks."""
+    Language-agnostic: returns both EN text and CN ts; caller picks.
+
+    `sig` is a cache KEY (the local file listing + mtimes, see transcript_for),
+    not data — it must NOT start with an underscore: Streamlit EXCLUDES
+    `_`-prefixed parameters from the cache key, so the old `_sig` name made this
+    invalidation a silent no-op (R3 audit H2).
+    """
     try:
         stem = ticker.replace(".", "_")
         files = sorted(_LOCAL_DIR.glob(f"{stem}_*.json"))

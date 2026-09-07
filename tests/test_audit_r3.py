@@ -239,13 +239,29 @@ def test_c3_sector_pe_percentile_reacts_to_sector_map():
 
 
 def test_c3_pages_import_the_single_percentile_definition():
-    """Both valuation pages must use lib.valuation, not a local copy."""
-    for page in ("5_Valuation_Scanner.py", "a4_ai_valuation.py"):
-        src = (_REPO / "app" / "pages" / page).read_text(encoding="utf-8")
+    """The valuation screen must use lib.valuation, not a local copy.
+
+    The HC and AI pages were merged into one domain-parameterized body
+    (lib/views/valuation.py, audit §7), so the page files are shims now — the
+    check has to cover the shared body too, or it passes vacuously.
+    """
+    srcs = [
+        (page, (_REPO / "app" / "pages" / page).read_text(encoding="utf-8"))
+        for page in ("5_Valuation_Scanner.py", "a4_ai_valuation.py")
+    ]
+    srcs.append(
+        ("lib/views/valuation.py",
+         (_REPO / "app" / "lib" / "views" / "valuation.py").read_text(encoding="utf-8"))
+    )
+    for name, src in srcs:
         assert "def sector_pe_percentile(" not in src, (
-            f"{page} still defines its own sector_pe_percentile — "
+            f"{name} still defines its own sector_pe_percentile — "
             "two copies drift apart (audit §6 duplication)"
         )
+    view = srcs[-1][1]
+    assert "valuation.sector_pe_percentile(" in view, (
+        "the shared valuation body no longer calls lib.valuation.sector_pe_percentile"
+    )
 
 
 @pytest.mark.parametrize(

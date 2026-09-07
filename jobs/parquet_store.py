@@ -293,6 +293,21 @@ def upsert_rows(table: str, df: pd.DataFrame) -> dict[str, int]:
         return {}
 
     rows = coerce(table, df)
+
+    # SQLite declares every PK column NOT NULL and would reject these outright.
+    # Parquet declares nothing, so they would land — and then `drop_duplicates`
+    # below treats two NAs as equal, so a second null-keyed row silently replaces
+    # the first. Checked after `coerce` so every flavour of null (None, NaN, pd.NA)
+    # has already collapsed to one. Nothing is written: the whole frame is refused,
+    # not partially applied.
+    null_pk = [c for c in spec.pk if rows[c].isna().any()]
+    if null_pk:
+        n = int(rows[list(spec.pk)].isna().any(axis=1).sum())
+        raise ValueError(
+            f"{table}: {n} row(s) with NULL in primary key column(s) "
+            f"{null_pk} — SQLite would reject these; refusing the whole frame"
+        )
+
     keys = rows[spec.part_column].map(lambda v: partition_key(table, v))
 
     written: dict[str, int] = {}

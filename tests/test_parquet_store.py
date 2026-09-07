@@ -179,6 +179,30 @@ def test_the_real_months_still_resolve(store, good):
     assert store.partition_key("prices_daily", good) == good[:7]
 
 
+@pytest.mark.parametrize("null", [None, float("nan"), pd.NA])
+def test_a_null_primary_key_is_refused(store, null):
+    """SQLite declares `ticker TEXT NOT NULL` and would reject the row outright.
+
+    Parquet has no such declaration, so the row would land — and then
+    `drop_duplicates` treats two NAs as equal, so a second null-keyed row for
+    another date silently replaces the first. The shadow store must not accept
+    what the source of truth refuses.
+    """
+    df = _prices([("AAA", "2026-08-28", 10.0)])
+    df.loc[0, "ticker"] = null
+    with pytest.raises(ValueError, match="NULL in primary key"):
+        store.upsert_rows("prices_daily", df)
+    assert store.partitions("prices_daily") == [], "nothing may be written"
+
+
+def test_a_null_in_a_non_key_column_is_fine(store):
+    """Only the key is constrained — a missing close is ordinary data."""
+    df = _prices([("AAA", "2026-08-28", 10.0)])
+    df.loc[0, "close"] = None
+    store.upsert_rows("prices_daily", df)
+    assert len(store.read_partition("prices_daily", "2026-08")) == 1
+
+
 def test_sec_fact_has_no_merge_key(store):
     """sec_fact is rewritten whole from the payload; upsert_rows must refuse it."""
     with pytest.raises(ValueError, match="no merge key"):

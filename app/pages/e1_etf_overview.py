@@ -189,7 +189,7 @@ cov_map = meta.get("weight_sum_pct_by_etf", {}) or {}
 # pre-filter on universe_member.all_tickers.
 _csyms = []
 if not hold.empty:
-    _csyms = sorted({str(s) for s in hold[hold["rank"].notna()]["symbol"].dropna()})
+    _csyms = sorted({str(s) for s in hold[hold["weight_pct"].notna()]["symbol"].dropna()})
 _cret = db.compute_returns(db.get_close_series_usd(tuple(_csyms)))
 
 
@@ -245,7 +245,7 @@ def _render_full_holdings(tkr: str) -> None:
     """Full holdings table inside the per-ETF expander (rank · ticker · name · weight
     bar · per-constituent 1M / YTD + Ticker-Drill deep-link + "+N more" tail)."""
     weighted, tail = etf_panel.holdings_for(hold, tkr)
-    n_total = (0 if weighted.empty else int(weighted["rank"].notna().sum())) + len(tail)
+    n_total = (0 if weighted.empty else int(weighted["weight_pct"].notna().sum())) + len(tail)
     with st.expander(i18n.t("etf.card.expand", n=n_total)):
         if weighted.empty:
             st.caption("—")
@@ -281,7 +281,7 @@ def _render_full_holdings(tkr: str) -> None:
         notes = []
         cov = cov_map.get(tkr)
         if cov is not None:
-            notes.append(i18n.t("hc_etf.coverage", n=int(weighted["rank"].notna().sum()),
+            notes.append(i18n.t("hc_etf.coverage", n=int(weighted["weight_pct"].notna().sum()),
                                 cov=f"{cov:.1f}"))
         if tail:
             if len(tail) <= TAIL_CAP:

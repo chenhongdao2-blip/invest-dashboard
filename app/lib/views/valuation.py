@@ -90,7 +90,7 @@ def render(domain: str) -> None:
 
         st.subheader(i18n.t("scan.filters.header"))
         selected_sectors = st.multiselect(
-            i18n.t("scan.filters.sectors"),
+            i18n.t("scan.filters.sector"),
             options=all_sector_ids,
             default=all_sector_ids,
             format_func=lambda x: i18n.sector_name(x),

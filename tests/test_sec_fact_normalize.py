@@ -38,6 +38,10 @@ from jobs import normalize_sec_facts as nsf, parquet_store as ps, sec_concepts  
 
 _DB = _REPO / "data" / "snapshots.db"
 
+# Opt out of tests/conftest.py's temp-store isolation: these tests READ the committed
+# data/parquet/sec_fact/ files. They never write to it.
+USES_COMMITTED_PARQUET_STORE = True
+
 # Three tickers with big, differently-shaped payloads: a US pharma major, a big-tech
 # filer, and a foreign filer that reports under ifrs-full rather than us-gaap.
 _TICKERS = ["LLY", "MSFT", "AZN"]

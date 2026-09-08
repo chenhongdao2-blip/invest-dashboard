@@ -492,6 +492,15 @@ def main() -> None:
             f"{price_fails[:20]}"
         )
 
+    # 3a. 拆股回溯复权 (jobs/fix_splits.py): 增量抓取永远不回调拆股前已入库的行 (CRWD 2026-06-29
+    #     4:1 后库里 −51.8% 假断崖)。全表扫断崖 → Yahoo 当前收盘确认因子 → 回调。永不阻断 cron。
+    try:
+        from fix_splits import run_split_fix
+        sp = run_split_fix(conn, apply=True)
+        print(f"[splits] fixed={len(sp['fixed'])} unexplained={len(sp['unexplained'])}")
+    except Exception as e:  # noqa: BLE001
+        print(f"[splits] skipped: {e}")
+
     # 3b. Benchmark indices (cron-cached so home page never calls live yfinance).
     #     Needs a longer window than prices for 1M/YTD returns. Respect a deeper
     #     --backfill-days too（曾硬编码 200 天 → JP 面板基准比 40 支价格短 2 个月，

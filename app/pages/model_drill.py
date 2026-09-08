@@ -23,8 +23,6 @@ from lib import ui
 from lib import wiki
 from lib import section_header
 
-st.set_page_config(page_title="Model Drill · invest-dashboard", page_icon="📊", layout="wide")
-
 i18n.init_lang()
 i18n.render_lang_toggle()
 prefer_cn = i18n.get_lang() == "zh"

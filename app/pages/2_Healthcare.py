@@ -24,8 +24,6 @@ from lib import section_header
 from lib import sector_overview as so
 
 
-st.set_page_config(page_title="Healthcare · invest-dashboard", page_icon="🏥", layout="wide")
-
 # --- Sidebar global search ---
 with st.sidebar:
     ui.sidebar_search(key_prefix="hc_overview")
@@ -525,7 +523,7 @@ else:
                 lambda s: i18n.t(_stance_key.get(str(s).strip(), "hc.pos.stance.Neutral"))),
             c_chg: _pos["change_dev"],
         })
-        ui.render_styled_table(
+        ui.render_html_table(
             _disp,
             pct_decimal_cols=[c_dev, c_chg],
             text_cols=[c_fund, c_aum, c_fhc, c_bhc, c_st],
@@ -712,7 +710,7 @@ else:
             c_d: _hc["delta"],
             c_p: _hc["pct"],
         })
-        ui.render_styled_table(
+        ui.render_html_table(
             _disp,
             int_cols=[c_a, c_b, c_d],
             pct_decimal_cols=[c_p],

@@ -212,21 +212,23 @@ def _ipo_card(it: dict) -> str:
 # ── Public API ─────────────────────────────────────────────────────────────
 
 def live_title(title: str, *, as_of: str | None = None, lang: str | None = "中") -> None:
-    """H1 + 左侧红导色块 + 右侧: 中/EN 描边分段切换 + EOD 跟踪徽标 + 更新时间戳。
+    """H1 + 左侧红导色块 + 右侧: 中/EN 分段切换 + EOD 跟踪徽标 + 更新时间戳。
 
-    lang 形参仅控显隐:None 不显示切换钮,任意非 None 值显示。active 高亮
-    不再依赖传入值 —— 切换钮 HTML 统一出自 i18n.lang_toggle_html()(wave-3 F1
-    单一 helper,页级 toggle 同源,防两处发散),active 态由 i18n.get_lang()
-    内部判定,href 保留 sibling query params。
-    呼吸点恢复(wave-2 D3):teal 8px cmsiPulse(theme._CSS .cmsi-live-dot),
+    lang 形参仅控显隐:None 不显示切换钮,任意非 None 值显示。active 高亮由
+    i18n 内部按 get_lang() 判定,不依赖传入值。
+
+    R3 audit §8.4 后续:切换钮曾是 `<a href="?lang=">` 真锚点,点它等于浏览器
+    导航 —— Streamlit 换新 session,整页 session_state(展开的 expander、选中的
+    ticker、滑块位置)全部陪葬。其余 16 个页面已换成 widget,这里因为标题+切换钮
+    +徽标+时间戳被拼成同一个 HTML flex 串、widget 塞不进字符串而滞留。现在这一行
+    改由 st.columns 排版(vertical_alignment="bottom" 还原原先的 flex-end 基线
+    对齐),切换钮走 i18n.lang_toggle_widget() —— 与页级 toggle 同一个 helper、
+    同一个 widget key,行为不会两处发散。底部那条 2px INK 横线随之独立成一个满宽
+    的 div,因为列容器切断了原来横跨整行的 border-bottom。
+
+    呼吸点(wave-2 D3):teal 8px cmsiPulse(theme._CSS .cmsi-live-dot),
     措辞诚实「EOD 跟踪 · DAILY」(非假实时);零「实时跟踪·TRACKING」字样。
-    切换交互:<a href="?…lang=zh|en" target="_self"> 真锚点,
-    i18n.init_lang() 读 st.query_params 切 session_state(机制不变,只换产源)。
     """
-    toggle = ""
-    if lang is not None:
-        toggle = i18n.lang_toggle_html()
-
     # EOD tracking badge (D3: visual restored, honest wording, NOT "实时跟踪")
     # .cmsi-live-dot styled by theme._CSS (background:UP teal + cmsiPulse animation)
     dot_label = (
@@ -240,19 +242,16 @@ def live_title(title: str, *, as_of: str | None = None, lang: str | None = "中"
         f'<div style="font-family:{t.FONT_MONO};font-size:11px;'
         f'color:{t.INK_3};margin-top:5px">更新 {_esc(as_of)} HKT</div>'
     ) if as_of else ""
+    # Right-align the block itself, but keep its two lines flush-left to each
+    # other — that is what the old `justify-content:space-between` row produced:
+    # the timestamp started under the dot, not under the end of the label.
     dot_block = (
+        f'<div style="display:flex;justify-content:flex-end">'
         f'<div style="display:flex;flex-direction:column;align-items:flex-start">'
-        f'{dot_label}{timestamp}</div>'
+        f'{dot_label}{timestamp}</div></div>'
     )
 
-    right = (
-        f'<div style="display:flex;align-items:center;gap:18px;flex:none">'
-        f'{toggle}{dot_block}</div>'
-    )
-    st.markdown(
-        f'<div style="display:flex;align-items:flex-end;'
-        f'justify-content:space-between;gap:20px;'
-        f'border-bottom:2px solid {t.INK};padding-bottom:14px;margin-bottom:4px">'
+    title_html = (
         f'<div style="display:flex;align-items:center;gap:14px;min-width:0">'
         f'<span style="width:5px;height:34px;background:{t.CMSI_RED};'
         f'display:inline-block;flex:none;border-radius:1px"></span>'
@@ -261,7 +260,33 @@ def live_title(title: str, *, as_of: str | None = None, lang: str | None = "中"
         # gets replaced by Inter at 600). A <div> bypasses that cascade entirely.
         f'<div style="font-family:{t.FONT_DISPLAY};font-size:32px;line-height:36px;'
         f'font-weight:700;letter-spacing:-.01em;margin:0;color:{t.INK}">'
-        f'{_esc(title)}</div></div>{right}</div>',
+        f'{_esc(title)}</div></div>'
+    )
+
+    if lang is None:
+        c_title, c_badge = st.columns([8.0, 3.0], vertical_alignment="bottom")
+        c_toggle = None
+    else:
+        c_title, c_toggle, c_badge = st.columns(
+            [7.0, 1.3, 2.7], vertical_alignment="bottom")
+
+    with c_title:
+        st.markdown(title_html, unsafe_allow_html=True)
+    if c_toggle is not None:
+        # The container key becomes a `.st-key-banner_lang_toggle` DOM class,
+        # which is how theme._CSS nudges these pills onto the title's baseline
+        # without touching the same widget on the 16 pages that render it alone.
+        with c_toggle, st.container(key="banner_lang_toggle"):
+            i18n.lang_toggle_widget()
+    with c_badge:
+        st.markdown(dot_block, unsafe_allow_html=True)
+
+    # The rule the columns cut in half. 13px reproduces the row's old
+    # `padding-bottom:14px` once Streamlit's own inter-block gap is counted
+    # (measured in Chrome: 1px of gap per 1px of margin here).
+    st.markdown(
+        f'<div style="border-bottom:2px solid {t.INK};'
+        f'margin-top:14px;margin-bottom:4px"></div>',
         unsafe_allow_html=True,
     )
 

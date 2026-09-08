@@ -22,12 +22,6 @@ from lib import theme
 from lib import i18n
 from lib import section_header
 
-st.set_page_config(
-    page_title="AI Universe · invest-dashboard",
-    page_icon="💎",
-    layout="wide",
-)
-
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DOMAIN_CFG = REPO_ROOT / "config" / "domains" / "ai.yml"
 

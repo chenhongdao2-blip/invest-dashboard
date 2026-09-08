@@ -17,8 +17,6 @@ from lib import db, i18n, theme, ui
 from lib import rrg, crowding, regime
 from lib import section_header
 
-st.set_page_config(page_title="Sector Rotation · invest-dashboard", page_icon="🧭", layout="wide")
-
 i18n.init_lang()
 i18n.render_lang_toggle()
 

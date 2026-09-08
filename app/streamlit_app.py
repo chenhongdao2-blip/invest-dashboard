@@ -33,6 +33,22 @@ import streamlit as st
 
 from lib import i18n
 
+# R3 audit §8.4: ONE set_page_config, here at the entry point, instead of the 19
+# per-page copies. Widest settings any page used — every page was `layout="wide"`,
+# and only home.py pinned `initial_sidebar_state`, so both are adopted globally.
+#
+# The per-page `page_title` / `page_icon` arguments were redundant: `st.Page` below
+# already takes `title=` for the browser tab, and Streamlit applies it during
+# `st.navigation`, i.e. AFTER this call. So each page's tab now reads its nav title
+# ("HC Valuation 估值扫描器") instead of a separately-maintained string. The values
+# here are the app-level fallback, carried over from home.py.
+st.set_page_config(
+    page_title="invest-dashboard",
+    page_icon="📊",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
 # 品牌 lockup(「Sidebar 导航 美化」设计):红 C 方块 + CMSI / AI 投研平台,
 # 渲染在 sidebar 顶部(st.logo)。SVG 自托管,不走外链。
 _BRAND_SVG = Path(__file__).resolve().parent / "static" / "cmsi_brand.svg"

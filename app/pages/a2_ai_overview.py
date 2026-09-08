@@ -31,7 +31,7 @@ def _render_pct_table(
     """Sort-bug-safe: numeric DataFrame + column_config + Styler color (delegates to ui)."""
     text_cols = [c for c in df.columns if c not in pct_cols and (num_cols is None or c not in num_cols)]
     extra_formats = {c: "%.2f" for c in (num_cols or []) if c in df.columns}
-    ui.render_styled_table(
+    ui.render_html_table(
         df,
         pct_cols=pct_cols,
         text_cols=text_cols,
@@ -41,8 +41,6 @@ def _render_pct_table(
         column_labels=column_labels,
     )
 
-
-st.set_page_config(page_title="AI Overview · invest-dashboard", page_icon="🏥", layout="wide")
 
 # --- Sidebar global search ---
 with st.sidebar:

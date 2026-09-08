@@ -815,6 +815,19 @@ pre code {{
 }}
 @keyframes cmsiPulse {{ 0%,100% {{ opacity:1; transform:scale(1); }} 50% {{ opacity:.35; transform:scale(.82); }} }}
 
+/* Strategy banner language switch (lib/strategy_banner.live_title).
+   That row is st.columns(vertical_alignment="bottom"), which bottom-aligns the
+   COLUMN boxes. The two HTML columns (title, EOD badge) render markdown whose
+   content sits 15px BELOW its container box, so their visible baselines land
+   15px lower than the widget's — measured in Chrome: title/timestamp bottom 134,
+   pills bottom 119. Nudge the pills down to restore the flex-end alignment the
+   frozen banner spec had when the switch was still an inline <a> pair.
+   Scoped to the banner's own container key, so the 16 page-level toggles
+   (i18n.render_lang_toggle) keep their normal position. */
+.st-key-banner_lang_toggle [data-testid="stButtonGroup"] {{
+  position: relative; top: 15px;
+}}
+
 /* Page hero header — [NN/07] code + title + 4px red bar */
 .cmsi-page-hero {{
   display: flex;

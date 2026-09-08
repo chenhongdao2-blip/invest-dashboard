@@ -150,9 +150,21 @@ def test_comp_table_is_cached_and_matches_pick_kpi_fact(kpi_keys):
 
 
 def test_comp_table_call_sites_pass_tuples():
+    """comp_table is @st.cache_data, so a list arg is unhashable at the call site.
+
+    The HC and AI SEC pages were merged into one domain-parameterized body
+    (lib/views/sec_facts.py, R3 audit §7); app/pages/{8_SEC_Facts,a5_ai_sec}.py
+    are now shims. Assert the shims really are shims, and that the single
+    surviving call site still passes tuples.
+    """
+    root = Path(__file__).resolve().parent.parent
     for page in ("8_SEC_Facts.py", "a5_ai_sec.py"):
-        src = (Path(__file__).resolve().parent.parent / "app" / "pages" / page).read_text()
-        assert "sf.comp_table(tuple(comp_tickers), tuple(comp_kpis)" in src, page
+        src = (root / "app" / "pages" / page).read_text()
+        assert "sec_facts_view.render(" in src, f"{page} no longer delegates to the shared view"
+        assert "sf.comp_table" not in src, f"{page} grew its own comp_table call site"
+
+    view = (root / "app" / "lib" / "views" / "sec_facts.py").read_text()
+    assert "sf.comp_table(tuple(comp_tickers), tuple(comp_kpis)" in view
 
 
 # ──────────────────────────────────────────────────────────────────────────

@@ -32,7 +32,6 @@ RS-Ratio / RS-Momentum 框架 (Julius de Kempenaer)；本模块是其可复现�
 from __future__ import annotations
 
 import json
-import math
 from dataclasses import dataclass
 
 import numpy as np
@@ -108,10 +107,6 @@ def quadrant_of(rs_ratio: float, rs_momentum: float) -> str:
     if rs_ratio < 100 and rs_momentum < 100:
         return "Lagging"
     return "Improving"
-
-
-def quadrant_label(q: str, *, prefer_cn: bool) -> str:
-    return f"{_QUAD_CN[q]}({_QUAD_DESC_CN[q]})" if prefer_cn else q
 
 
 def equal_weight_composite(closes: pd.DataFrame, *, min_names: int = 3) -> pd.Series:

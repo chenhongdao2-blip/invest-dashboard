@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-07T15:03:37+00:00",
-    "source_date": "2026-09-07"
+    "refreshed_at": "2026-09-08T00:43:59+00:00",
+    "source_date": "2026-09-08"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-05T00:24:49+00:00",
-    "source_date": "2026-09-07"
+    "source_date": "2026-09-08"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -37,7 +37,7 @@
     "label": "港股 IPO 散点/破发",
     "source": "Wind+Futu(本地)",
     "max_age_days": 9,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T05:54:14+00:00",
     "source_date": "2026-08-29",
     "note": "Wind (price/mktcap/20d turnover) + Futu OpenD cross-check"
@@ -100,7 +100,7 @@
     "source": "PatSnap(本地)",
     "max_age_days": 7,
     "source_date": "2026-08-31",
-    "status": "ok"
+    "status": "stale"
   },
   "etf_hc_holdings": {
     "refreshed_at": "2026-08-29T06:16:14+00:00",

@@ -18,6 +18,7 @@ Run:  HTTPS_PROXY=http://127.0.0.1:7897 HTTP_PROXY=http://127.0.0.1:7897 \
 from __future__ import annotations
 
 import sqlite3
+import sys
 import time
 from pathlib import Path
 
@@ -25,6 +26,11 @@ import pandas as pd
 import yfinance as yf
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from jobs import parquet_store as pq  # noqa: E402
+
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
 
 # ticker → role (doc only). All quoted in their native unit; conversion happens in-app.
@@ -45,12 +51,20 @@ def _close_series(tk: str) -> pd.Series:
     return s
 
 
+# PR4 dual write. Staged rather than written per ticker: this job re-fetches a
+# 2-year window for EACH of the three tickers, so a per-ticker write would rewrite
+# the same ~25 month partitions three times over. One flush at the end of main().
+_PQ_BENCH: list[tuple[str, str, float]] = []
+
+
 def _upsert(conn: sqlite3.Connection, rows: list[tuple[str, str, float]]) -> int:
     conn.executemany(
         "INSERT OR REPLACE INTO benchmarks_daily (ticker, date, close) VALUES (?, ?, ?)",
         rows,
     )
     conn.commit()
+    if rows and pq.dual_write_enabled():
+        _PQ_BENCH.extend(rows)
     return len(rows)
 
 
@@ -74,6 +88,11 @@ def main() -> None:
             time.sleep(1.0)                       # rate-limit (skills INVARIANT)
     finally:
         conn.close()
+    if _PQ_BENCH:
+        parts = pq.dual_write("benchmarks_daily", _PQ_BENCH, ["ticker", "date", "close"])
+        if parts:
+            print(f"[parquet] benchmarks_daily: {len(_PQ_BENCH)} rows → "
+                  f"{len(parts)} partitions ({min(parts)}..{max(parts)})")
     print(f"[fx-world] done — {total} rows upserted into benchmarks_daily")
 
 

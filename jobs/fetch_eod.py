@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sqlite3
+import sys
 import time
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -21,7 +22,48 @@ import pandas as pd
 import yfinance as yf
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from jobs import parquet_store as pq  # noqa: E402
+
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
+
+# ── PR4 dual write ────────────────────────────────────────────────────────
+# Every row committed to SQLite is also staged for the Parquet store and flushed
+# at the same three commit boundaries the SQLite path already has. Staged rather
+# than written row-by-row because `upsert_multiples` is called once PER TICKER
+# (~500×/run) and each call would otherwise re-read and rewrite the whole month
+# partition. Column tuples mirror the INSERT statements below — they are the same
+# order, and they must stay that way.
+_PQ_COLS = {
+    "prices_daily": ["ticker", "date", "open", "high", "low", "close", "adj_close",
+                     "volume", "currency", "close_usd", "adj_close_usd"],
+    "multiples_daily": ["ticker", "date", "market_cap_usd", "mcap_tier", "trailing_pe",
+                        "forward_pe", "trailing_eps", "forward_eps", "ev_ebitda",
+                        "ev_sales", "fcf_yield", "peg", "pb", "ytd_return",
+                        "last_price", "last_price_usd", "currency",
+                        "target_price_mean", "recommendation_mean", "n_analysts"],
+    "benchmarks_daily": ["ticker", "date", "close"],
+}
+_PQ_BUF: dict[str, list[tuple]] = {t: [] for t in _PQ_COLS}
+
+
+def _pq_stage(table: str, rows: list[tuple]) -> None:
+    if rows and pq.dual_write_enabled():
+        _PQ_BUF[table].extend(rows)
+
+
+def _pq_flush(table: str) -> None:
+    """Write one staged table to Parquet. Mirrors a `conn.commit()` boundary."""
+    rows, _PQ_BUF[table] = _PQ_BUF[table], []
+    if not rows:
+        return
+    parts = pq.dual_write(table, rows, _PQ_COLS[table])
+    if parts:
+        print(f"[parquet] {table}: {len(rows)} rows → "
+              f"{', '.join(f'{k}({v})' for k, v in sorted(parts.items()))}")
+
 
 # FX 转 USD（local ccy → USD）
 FX_PAIRS = {
@@ -155,6 +197,7 @@ def upsert_prices(conn: sqlite3.Connection, rows: list[tuple]) -> int:
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
+    _pq_stage("prices_daily", rows)      # PR4 dual write (flushed at the commit boundary)
     return len(rows)
 
 
@@ -170,6 +213,7 @@ def upsert_multiples(conn: sqlite3.Connection, rows: list[tuple]) -> int:
            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         rows,
     )
+    _pq_stage("multiples_daily", rows)   # PR4 dual write (flushed at the commit boundary)
     return len(rows)
 
 
@@ -479,6 +523,7 @@ def upsert_benchmarks(conn: sqlite3.Connection, rows: list[tuple]) -> int:
         "INSERT OR REPLACE INTO benchmarks_daily (ticker, date, close) VALUES (?, ?, ?)",
         rows,
     )
+    _pq_stage("benchmarks_daily", rows)  # PR4 dual write (flushed at the commit boundary)
     return len(rows)
 
 
@@ -507,6 +552,7 @@ def fetch_benchmarks(conn: sqlite3.Connection, start: str, end: str) -> int:
         except Exception as e:  # noqa: BLE001
             print(f"[bench] {t}: parse failed ({e})")
     conn.commit()
+    _pq_flush("benchmarks_daily")
     return total
 
 
@@ -590,6 +636,7 @@ def run_multiples(
         if sleep_s:
             time.sleep(sleep_s)
     conn.commit()
+    _pq_flush("multiples_daily")
 
     unusable = len(priceless) + len(failed)
     fail_rate = unusable / max(len(tickers), 1)
@@ -665,6 +712,7 @@ def main() -> None:
             total_prices += upsert_prices(conn, rows)
         conn.commit()
         time.sleep(0.5)
+    _pq_flush("prices_daily")
     print(f"[prices] total upserted rows: {total_prices}, missing={len(price_fails)}")
     # m2 audit: fail loudly if too many missing
     if len(tickers) > 0 and len(price_fails) / len(tickers) > 0.10:

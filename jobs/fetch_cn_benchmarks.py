@@ -21,9 +21,15 @@ from __future__ import annotations
 import csv
 import os
 import sqlite3
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from jobs import parquet_store as pq  # noqa: E402
+
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
 SEED_CSV = REPO_ROOT / "data" / "external" / "hk_cn_benchmarks_seed.csv"
 
@@ -39,6 +45,13 @@ def _upsert(conn: sqlite3.Connection, rows: list[tuple[str, str, float]]) -> int
         rows,
     )
     conn.commit()
+    # PR4 dual write. This job is LOCAL-ONLY (iFind cannot run on the CI runner), and
+    # that is exactly why it needs the shadow write: rows it adds to SQLite by hand
+    # would otherwise show up as a Parquet divergence on the next CI run, i.e. a red
+    # parity check caused by a healthy local refresh.
+    parts = pq.dual_write("benchmarks_daily", rows, ["ticker", "date", "close"])
+    if parts:
+        print(f"[parquet] benchmarks_daily: {len(rows)} rows → {len(parts)} partitions")
     return len(rows)
 
 

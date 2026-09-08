@@ -1,0 +1,6 @@
+# Parquet partitions are binary and are the point of the storage split: git must
+# store them whole and never try to reconstruct one. A textual diff of a zstd
+# frame is noise, and a merge that "succeeds" line-wise produces a file that no
+# longer parses — with no error until something reads it.
+# See docs/storage-migration.md.
+*.parquet binary -diff -merge

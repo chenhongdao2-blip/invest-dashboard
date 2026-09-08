@@ -48,12 +48,19 @@ jobs:
           # 让 manifest JSON 对直接读它的消费者(hook/人)也说真话
           python jobs/update_manifest.py --audit
 
+      # PR4 dual-write gate. Runs AFTER the fetch and BEFORE the commit so a
+      # SQLite/Parquet divergence fails the run loudly instead of being committed
+      # and found later (audit §8.1). Delete this step when the read side has cut
+      # over and SQLite is gone — not before.
+      - name: Parity check (SQLite vs Parquet)
+        run: python jobs/parity_check.py
+
       - name: Commit data
         # H10 audit: a naive `git add/commit/push` raced the other data lanes on
         # main; commit_data.sh does fetch → rebase → push with conflict-aware retry.
         run: |
           ./scripts/commit_data.sh "data: EOD snapshot $(date -u +%Y-%m-%d) [skip ci]" \
-            data/snapshots.db data/refresh_manifest.json
+            data/snapshots.db data/parquet data/refresh_manifest.json
 
       # C4 audit: three runs died (08-29 ×2, 09-01) leaving NO trace in the
       # manifest — the freshness audit lived INSIDE the monitored job, so when the

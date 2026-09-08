@@ -1,0 +1,472 @@
+"""The normalized sec_fact parquet must be substitutable for `_load_facts`.
+
+jobs/normalize_sec_facts.py carries a verbatim copy of the row-building loop in
+app/lib/sec_facts.py `_parse_facts`, plus one concept filter. That duplication is
+only safe if something proves the two stay in step — this is that something.
+
+Substitutable, NOT identical. The store writes all 15 `_FACT_COLS`; since PR #57
+`_load_facts` returns 13 of them (it drops `value_text` and `frame` to keep the
+Streamlit cache small — a RAM decision, not a durability one). The store stays wide
+because it is on its way to REPLACING `sec_company.payload_gzip`, and a read shim
+can narrow a frame in one line while nothing can widen a column that was never
+written. So the guarantee asserted here is a superset in both directions:
+
+  (i)   every column `_load_facts` returns exists in the parquet;
+  (ii)  on those shared columns the two frames are equal cell for cell and IN THE
+        SAME ORDER, whole frame;
+  (iii) the extra columns are exactly `value_text` and `frame` — named, so a third
+        one arriving is a failure, and justified in jobs/parquet_store.py.
+
+Order matters in (ii) and is asserted, not sorted away: `_dedupe_by_end_date` and
+`_rank` in app/lib/sec_facts.py are stable sorts, so rows tying on all their keys
+resolve by input order. A read shim that changed the order would silently change
+which fact the app shows.
+
+Reads the committed data/snapshots.db and data/parquet/sec_fact/ — no network.
+Skips (rather than fails) when either is absent, so a checkout without data still
+runs the rest of the suite.
+
+Run: `PYTHONPATH=app pytest tests/test_sec_fact_normalize.py -q` from the repo root.
+"""
+
+from __future__ import annotations
+
+import sqlite3
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import pytest
+
+_REPO = Path(__file__).resolve().parent.parent
+_APP = _REPO / "app"
+for p in (str(_REPO), str(_APP)):
+    if p not in sys.path:
+        sys.path.insert(0, p)
+
+from jobs import normalize_sec_facts as nsf, parquet_store as ps, sec_concepts  # noqa: E402
+
+_DB = _REPO / "data" / "snapshots.db"
+
+# Opt out of tests/conftest.py's temp-store isolation: these tests READ the committed
+# data/parquet/sec_fact/ files. They never write to it.
+USES_COMMITTED_PARQUET_STORE = True
+
+# Five tickers with big, differently-shaped payloads: three US pharma majors whose
+# statements differ in shape, a big-tech filer from another sector entirely, and a
+# foreign filer that reports under ifrs-full rather than us-gaap. The us-gaap side
+# is deliberately more than one company: a single filer's quirks cannot tell a
+# faithful copy of `_load_facts` apart from one that happens to suit that filer.
+_TICKERS = ["LLY", "JNJ", "PFE", "MSFT", "AZN"]
+
+
+def _norm(df: pd.DataFrame) -> pd.DataFrame:
+    """Object dtype with a single null sentinel, so two frames compare on VALUES.
+
+    The parquet round-trip returns pandas extension dtypes (string, Int64) where
+    `_load_facts` builds numpy object/float64 columns. That difference is real but
+    uninteresting — `int(r["fy"])` behind a `pd.isna` guard, which is what the app
+    does, reads both the same. What must not differ is the content, so both sides
+    are flattened here rather than one being coerced into the other's shape.
+    """
+    out = df.reset_index(drop=True).astype(object)
+    return out.where(pd.notna(out), None)
+
+
+@pytest.fixture(scope="module")
+def conn():
+    if not _DB.exists():
+        pytest.skip("data/snapshots.db not present")
+    c = sqlite3.connect(f"file:{_DB}?mode=ro", uri=True)
+    yield c
+    c.close()
+
+
+@pytest.fixture(scope="module")
+def keep():
+    return sec_concepts.used_concepts(_DB)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the concept set
+# ══════════════════════════════════════════════════════════════════════════
+def test_concept_set_is_both_sources_and_neither_is_empty(conn, keep):
+    tags = sec_concepts.statement_tags()
+    kpi = sec_concepts.kpi_concepts(conn)
+    assert len(tags) > 50, "statement tag parse collapsed"
+    assert len(kpi) > 10, "sec_kpi_map concepts collapsed"
+    assert keep == tags | kpi
+    # spot-check one concept from each source so a parse that returns the wrong
+    # literals cannot pass on counts alone
+    assert "Revenues" in keep                    # INCOME_ROWS
+    assert "NetCashProvidedByUsedInOperatingActivities" in keep   # CASHFLOW_ROWS
+
+
+def test_a_broken_statements_parse_raises_instead_of_returning_a_short_set(tmp_path):
+    """A silently short set would drop financial line items from every file."""
+    stub = tmp_path / "sec_statements.py"
+    stub.write_text("INCOME_ROWS = []\n", encoding="utf-8")
+    with pytest.raises(RuntimeError, match="silently drop"):
+        sec_concepts.statement_tags(stub)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# projection
+# ══════════════════════════════════════════════════════════════════════════
+def test_projection_keeps_only_wanted_concepts_and_all_of_them(conn, keep):
+    """`facts_frame` narrows a RAW payload, so the baseline is the unprojected parse.
+
+    `_load_facts_full` is that parse on the app side — every concept the filer
+    reports, all 15 columns. It is deliberately NOT `_load_facts`: since PR #57 that
+    one applies the same concept filter itself, so comparing against it would assert
+    6796 < 6796 and the projection would look like a no-op when it is a 3.4x cut.
+    """
+    row = conn.execute(
+        "SELECT payload_gzip FROM sec_company WHERE ticker = 'LLY' AND sec_status = 'ok'"
+    ).fetchone()
+    if not row or row[0] is None:
+        pytest.skip("no LLY payload")
+    from lib import sec_facts
+
+    full = sec_facts._load_facts_full("LLY")
+    proj = nsf.facts_frame(row[0], keep)
+
+    assert set(proj["concept"]) <= keep
+    # nothing the app can use was dropped
+    assert set(proj["concept"]) == set(full["concept"]) & keep
+    assert len(proj) < len(full), "projection should be a strict subset for LLY"
+    # the projection cuts ROWS, never columns
+    assert list(proj.columns) == list(full.columns) == sec_facts._FACT_COLS
+
+
+def test_the_two_concept_sets_are_computed_twice_and_must_agree():
+    """jobs/sec_concepts.py and app/lib/sec_concepts.py answer the same question apart.
+
+    The store is projected by the jobs one (raw sqlite3 + an `ast` parse of
+    sec_statements.py, because a batch job must not boot streamlit); the app reads
+    through the lib one (`db.query` + a real import, under `@st.cache_data`). Two
+    implementations, one contract — and if they ever disagree the store silently
+    stops holding a concept the app asks for, which surfaces as a blank KPI card and
+    nothing else. PR #57 introduced the second one; this is what keeps them in step.
+    """
+    from lib import sec_concepts as app_sec_concepts
+
+    jobs_keep = sec_concepts.used_concepts(_DB)
+    app_keep = app_sec_concepts.used_concepts()
+    assert jobs_keep == app_keep, (
+        f"concept sets diverged: jobs-only={sorted(jobs_keep - app_keep)}, "
+        f"app-only={sorted(app_keep - jobs_keep)}"
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the drop-in guarantee
+# ══════════════════════════════════════════════════════════════════════════
+@pytest.mark.parametrize("ticker", _TICKERS)
+def test_normalized_parquet_matches_load_facts_for_one_concept(ticker):
+    """The written file, filtered to one concept, == `_load_facts` on the shared columns."""
+    path = ps.partition_path("sec_fact", ticker)
+    if not path.exists():
+        pytest.skip(f"{path.name} not generated — run jobs/normalize_sec_facts.py")
+    from lib import sec_facts
+
+    expected_all = sec_facts._load_facts(ticker)
+    if expected_all.empty:
+        pytest.skip(f"no payload for {ticker}")
+
+    actual_all = ps.read_partition("sec_fact", ticker)
+    shared = list(expected_all.columns)          # the 13; see the module docstring
+    concepts = [c for c in ("Revenues", "Assets", "NetIncomeLoss",
+                            "ResearchAndDevelopmentExpense", "StockholdersEquity")
+                if c in set(actual_all["concept"])]
+    assert concepts, f"{ticker}: none of the probe concepts survived the projection"
+
+    for concept in concepts:
+        exp = _norm(expected_all[expected_all["concept"] == concept])
+        act = _norm(actual_all[actual_all["concept"] == concept][shared])
+        assert len(act) == len(exp), f"{ticker}/{concept}: row count"
+        pd.testing.assert_frame_equal(act, exp, check_dtype=False,
+                                      obj=f"{ticker}/{concept}")
+
+
+@pytest.mark.parametrize("ticker", _TICKERS)
+def test_the_store_is_a_superset_of_load_facts_row_for_row(ticker):
+    """The drop-in guarantee in both directions: nothing missing, nothing reordered.
+
+    (i)  every column `_load_facts` returns exists in the parquet — the shim can
+         narrow, so a wider store is substitutable; a narrower one is not.
+    (ii) on those shared columns the two frames are equal row for row IN PAYLOAD
+         ORDER, whole frame, not one concept.
+    (iii) the extra columns are exactly the two named ones. Asserted as an equality
+         rather than a subset so that a THIRD column appearing — a stray index, a
+         half-finished schema change — is a failure and not a shrug.
+    """
+    path = ps.partition_path("sec_fact", ticker)
+    if not path.exists():
+        pytest.skip(f"{path.name} not generated")
+    from lib import sec_facts
+
+    expected = sec_facts._load_facts(ticker)
+    if expected.empty:
+        pytest.skip(f"no payload for {ticker}")
+    keep = sec_concepts.used_concepts(_DB)
+    expected = expected[expected["concept"].isin(keep)]
+
+    actual = ps.read_partition("sec_fact", ticker)
+    missing = [c for c in expected.columns if c not in actual.columns]
+    assert not missing, f"the store dropped columns the app reads: {missing}"
+    extra = [c for c in actual.columns if c not in expected.columns]
+    assert extra == ["value_text", "frame"], (
+        f"unexpected extra store columns {extra}; the deliberate two are documented "
+        f"in jobs/parquet_store.py `_SEC_FACT_DTYPES`"
+    )
+    # order too: the shim slices by name, but a reorder means the copy has drifted
+    assert [c for c in actual.columns if c in set(expected.columns)] == list(expected.columns)
+
+    assert len(actual) == len(expected), "row count drifted"
+    pd.testing.assert_frame_equal(_norm(actual[list(expected.columns)]), _norm(expected),
+                                  check_dtype=False)
+
+
+@pytest.mark.parametrize("ticker", _TICKERS)
+def test_the_extra_store_columns_carry_what_they_claim_to(ticker):
+    """`frame` is filed content, not padding — the reason the store stays wide.
+
+    If this ever went all-empty the justification in jobs/parquet_store.py would be
+    stale and the column should be reconsidered, not silently carried.
+    """
+    path = ps.partition_path("sec_fact", ticker)
+    if not path.exists():
+        pytest.skip(f"{path.name} not generated")
+    df = ps.read_partition("sec_fact", ticker)
+    assert (df["frame"].fillna("") != "").any(), (
+        f"{ticker}: `frame` is empty on every row — re-check whether the store still "
+        f"needs it (jobs/parquet_store.py `_SEC_FACT_DTYPES`)"
+    )
+    # `value_text` is a slot, not content: it is empty today by construction, since
+    # `_parse_facts` only fills it for a NON-numeric fact value and no kept concept
+    # currently has one. Assert the invariant that pairs them instead.
+    text_rows = df[df["value_text"].fillna("") != ""]
+    assert text_rows["value"].isna().all(), (
+        "a row carries both a numeric value and a value_text; `_parse_facts` writes "
+        "one or the other, so the copy in normalize_sec_facts.py has drifted"
+    )
+
+
+def test_numeric_values_are_exact_not_merely_close():
+    """float64 through parquet must be bit-exact; a rounded value is a wrong value."""
+    ticker = _TICKERS[0]
+    if not ps.partition_path("sec_fact", ticker).exists():
+        pytest.skip("not generated")
+    from lib import sec_facts
+
+    exp = sec_facts._load_facts(ticker)
+    exp = exp[exp["concept"].isin(sec_concepts.used_concepts(_DB))].reset_index(drop=True)
+    act = ps.read_partition("sec_fact", ticker)
+    a = act["value"].astype("Float64").to_numpy(dtype="float64", na_value=np.nan)
+    b = exp["value"].to_numpy(dtype="float64", na_value=np.nan) if hasattr(
+        exp["value"], "to_numpy") else np.asarray(exp["value"], dtype="float64")
+    assert np.array_equal(a, b, equal_nan=True)
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the re-fetch gate — filings first, clock second
+# ══════════════════════════════════════════════════════════════════════════
+class _Resp:
+    def __init__(self, payload, status=200):
+        self._p, self.status_code = payload, status
+
+    def json(self):
+        return self._p
+
+
+class _Session:
+    """Minimal stand-in for requests.Session — no network, records the calls."""
+
+    def __init__(self, payload, status=200):
+        self._r = _Resp(payload, status)
+        self.calls: list[str] = []
+
+    def get(self, url, timeout=None):
+        self.calls.append(url)
+        return self._r
+
+
+_SEC_SCHEMA = """
+CREATE TABLE sec_company (
+    ticker TEXT PRIMARY KEY, cik INTEGER, cik10 TEXT, entity_name TEXT,
+    taxonomy_primary TEXT, sec_status TEXT NOT NULL, fetched_at TEXT,
+    latest_filed TEXT, facts_count INTEGER, last_error TEXT, payload_gzip BLOB);
+"""
+
+
+def _sec_conn(status="ok", fetched_at=None, latest_filed="2026-08-01"):
+    from datetime import datetime, timedelta, timezone
+
+    c = sqlite3.connect(":memory:")
+    c.executescript(_SEC_SCHEMA)
+    if fetched_at is None:
+        fetched_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    elif fetched_at == "stale":
+        fetched_at = (datetime.now(timezone.utc) - timedelta(days=9)).isoformat(
+            timespec="seconds")
+    c.execute("INSERT INTO sec_company (ticker, sec_status, fetched_at, latest_filed) "
+              "VALUES ('LLY', ?, ?, ?)", (status, fetched_at, latest_filed))
+    c.commit()
+    return c
+
+
+def _subs(dates, xbrl=None):
+    recent = {"filingDate": dates}
+    if xbrl is not None:
+        recent["isXBRL"] = xbrl
+    return {"filings": {"recent": recent}}
+
+
+def test_a_new_filing_triggers_a_refetch():
+    from jobs import fetch_sec_facts as fsf
+
+    conn = _sec_conn(latest_filed="2026-08-01")
+    s = _Session(_subs(["2026-09-05", "2026-07-01"], [1, 1]))
+    fetch, why = fsf.should_refetch(conn, s, "LLY", "0000059478")
+    assert fetch is True
+    assert "2026-09-05" in why
+
+
+def test_no_new_filing_skips_the_multi_mb_download():
+    """The point of the gate: a fresh clock is not what decides this, the filings are."""
+    from jobs import fetch_sec_facts as fsf
+
+    conn = _sec_conn(fetched_at="stale", latest_filed="2026-08-01")
+    s = _Session(_subs(["2026-08-01", "2026-05-01"], [1, 1]))
+    fetch, why = fsf.should_refetch(conn, s, "LLY", "0000059478")
+    assert fetch is False, "an 9-day-old snapshot with no new filing must NOT re-download"
+    assert "no XBRL filing since 2026-08-01" in why
+
+
+def test_non_xbrl_filings_do_not_trigger_a_refetch():
+    """An 8-K cannot change companyfacts; treating it as a reason would re-fetch weekly."""
+    from jobs import fetch_sec_facts as fsf
+
+    conn = _sec_conn(latest_filed="2026-08-01")
+    s = _Session(_subs(["2026-09-06", "2026-08-01"], [0, 1]))   # newest is non-XBRL
+    fetch, why = fsf.should_refetch(conn, s, "LLY", "0000059478")
+    assert fetch is False, why
+
+
+def test_a_failed_probe_falls_back_to_the_clock():
+    from jobs import fetch_sec_facts as fsf
+
+    conn_stale = _sec_conn(fetched_at="stale")
+    assert fsf.should_refetch(conn_stale, _Session({}, status=503), "LLY", "0")[0] is True
+    conn_fresh = _sec_conn()
+    ok, why = fsf.should_refetch(conn_fresh, _Session({}, status=503), "LLY", "0")
+    assert ok is False and "clock" in why
+
+
+def test_no_prior_snapshot_always_fetches():
+    from jobs import fetch_sec_facts as fsf
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(_SEC_SCHEMA)
+    fetch, why = fsf.should_refetch(conn, _Session({}), "LLY", "0")
+    assert fetch is True and "no usable prior snapshot" in why
+
+
+def test_a_failed_prior_status_is_not_treated_as_a_snapshot():
+    from jobs import fetch_sec_facts as fsf
+
+    conn = _sec_conn(status="failed")
+    assert fsf.should_refetch(conn, _Session({}), "LLY", "0")[0] is True
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# the gate must also notice a MISSING shadow file
+# ══════════════════════════════════════════════════════════════════════════
+def test_a_missing_parquet_file_forces_a_refetch(tmp_path, monkeypatch):
+    """`write_sec_fact_parquet` swallows its exceptions, so a transient write
+    failure leaves no file — and the filing check would then answer "no XBRL
+    filing since ..." every week until the company next files, which for a
+    10-K-only filer is a quarter. The gap has to be its own reason to re-fetch."""
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))     # nothing in it
+    conn = _sec_conn(latest_filed="2026-08-01")
+    s = _Session(_subs(["2026-08-01"], [1]))                    # no new filing
+    fetch, why = fsf.should_refetch(conn, s, "LLY", "0000059478")
+    assert fetch is True, "a missing shadow file must re-fetch on its own"
+    assert why == "parquet missing"
+
+
+def test_the_missing_file_check_is_off_when_dual_write_is(tmp_path, monkeypatch):
+    """With the rollback lever pulled there is no shadow store to be short of."""
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    conn = _sec_conn(latest_filed="2026-08-01")
+    fetch, why = fsf.should_refetch(conn, _Session(_subs(["2026-08-01"], [1])),
+                                    "LLY", "0000059478")
+    assert fetch is False and "no XBRL filing since" in why
+
+
+def test_a_present_parquet_file_does_not_disturb_the_filing_gate(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    ps.write_partition("sec_fact", "LLY", ps.empty_frame("sec_fact"))
+    conn = _sec_conn(latest_filed="2026-08-01")
+    fetch, why = fsf.should_refetch(conn, _Session(_subs(["2026-08-01"], [1])),
+                                    "LLY", "0000059478")
+    assert fetch is False and "no XBRL filing since" in why
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# post-run completeness — the backstop for a swallowed write
+# ══════════════════════════════════════════════════════════════════════════
+def _ok_conn(*tickers: str):
+    c = sqlite3.connect(":memory:")
+    c.executescript(_SEC_SCHEMA)
+    c.executemany("INSERT INTO sec_company (ticker, sec_status, fetched_at) "
+                  "VALUES (?, 'ok', '2026-09-07T00:00:00+00:00')",
+                  [(t,) for t in tickers])
+    c.commit()
+    return c
+
+
+def test_completeness_names_the_ticker_whose_write_was_swallowed(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    for t in ("LLY", "MSFT"):
+        ps.write_partition("sec_fact", t, ps.empty_frame("sec_fact"))
+    conn = _ok_conn("LLY", "MSFT", "AZN")           # AZN's write "failed"
+    assert fsf.missing_sec_fact_files(conn) == ["AZN"]
+
+
+def test_completeness_is_empty_when_every_ok_ticker_has_a_file(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    for t in ("LLY", "MSFT"):
+        ps.write_partition("sec_fact", t, ps.empty_frame("sec_fact"))
+    conn = _ok_conn("LLY", "MSFT")
+    conn.execute("INSERT INTO sec_company (ticker, sec_status) VALUES ('RHHBY', 'not_mapped')")
+    conn.commit()
+    assert fsf.missing_sec_fact_files(conn) == []   # not_mapped has no file to miss
+
+
+def test_completeness_is_silent_when_dual_write_is_disabled(tmp_path, monkeypatch):
+    from jobs import fetch_sec_facts as fsf
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path))
+    monkeypatch.setenv(ps.DUAL_WRITE_ENV, "0")
+    assert fsf.missing_sec_fact_files(_ok_conn("LLY")) == []
+
+
+def test_the_committed_store_is_complete(conn):
+    """The invariant on real data, not a fixture: every ok ticker has its file."""
+    from jobs import fetch_sec_facts as fsf
+
+    assert fsf.missing_sec_fact_files(conn) == []

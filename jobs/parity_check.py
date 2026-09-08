@@ -24,6 +24,14 @@ here as a value mismatch against the raw SQLite value. What this cannot see is a
 coercion that is symmetric and lossless in both directions — which is the
 definition of one that does not matter.
 
+`sec_fact` is checked differently, because there is no `sec_fact` SQLite table to
+join against: the authority is `sec_company.payload_gzip`, so `check_sec_fact`
+re-derives what the normalizer would write today, per ticker, and diffs that. It
+looks for a missing file, a row-count delta, and a cellwise difference — the last
+because a SEC refresh REPLACES a payload rather than appending rows, so a stale
+partition stays present and well-formed while being wrong, which the row-count
+signal that finds the EOD tables' drift would sail straight past.
+
 Exit code 0 = every table matches. Non-zero = at least one did not, with a summary.
 
 `PARQUET_DUAL_WRITE=0` short-circuits the whole check to a SKIP and exit 0: that flag
@@ -31,8 +39,9 @@ is the rollback lever, and with the shadow write off the two stores are SUPPOSED
 drift apart. See `main()`.
 
 Usage:
-    python jobs/parity_check.py                      # all four tables
+    python jobs/parity_check.py                      # all five tables
     python jobs/parity_check.py --table prices_daily
+    python jobs/parity_check.py --table sec_fact
     python jobs/parity_check.py --max-samples 20
 """
 
@@ -53,7 +62,9 @@ if str(REPO_ROOT) not in sys.path:
 from jobs import parquet_store as ps  # noqa: E402
 
 DB_PATH = REPO_ROOT / "data" / "snapshots.db"
-TABLES = ["prices_daily", "multiples_daily", "benchmarks_daily", "sw_industry_daily"]
+_EOD_TABLES = ["prices_daily", "multiples_daily", "benchmarks_daily", "sw_industry_daily"]
+SEC_TABLE = "sec_fact"
+TABLES = [*_EOD_TABLES, SEC_TABLE]
 
 _NUMERIC = {"float64", "Int64"}
 _SEP = "\x1f"          # PK joiner: a byte that cannot occur in a ticker or a date
@@ -73,7 +84,7 @@ def _val(v) -> str:
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument("--table", action="append", default=None,
-                   help="Check only this table (repeatable). Default: all four.")
+                   help="Check only this table (repeatable). Default: all five.")
     p.add_argument("--db", type=Path, default=DB_PATH)
     p.add_argument("--max-samples", type=int, default=5,
                    help="Sample keys / values printed per failing check.")
@@ -158,6 +169,69 @@ def check_table(conn: sqlite3.Connection, table: str, max_samples: int) -> list[
     return problems
 
 
+def check_sec_fact(conn: sqlite3.Connection, max_samples: int) -> tuple[list[str], int, int]:
+    """Compare the sec_fact store against the payloads it was derived from.
+
+    Needs its own function because there is no `sec_fact` SQLite table to read: the
+    authority is `sec_company.payload_gzip`, and the comparable frame only exists
+    once that blob is decompressed, parsed and projected. So this re-derives what
+    the normalizer would write today and diffs it against what is on disk —
+    which also means it catches a stale file, not just a missing one.
+
+    That distinction is why this exists. The four EOD tables desync by GAINING rows
+    in SQLite, so a row-count check finds them. A SEC refresh instead REPLACES one
+    ticker's payload, and if that ticker's parquet is not rewritten the file is
+    still present, still well-formed, and simply wrong. Nothing here saw that until
+    a merge landed nine such files (A, CIEN, CRDO, HPE, MDB, MDT, PHR, SMCI, SNOW)
+    with the suite green — tests/test_sec_fact_normalize.py pins five named tickers
+    and none of the nine was among them.
+
+    Costs one gzip+parse per ok ticker: ~4.5s for 284, against a fetch measured in
+    minutes.
+
+    → (problems, sqlite_rows, parquet_rows).
+    """
+    from jobs import normalize_sec_facts as nsf, sec_concepts  # noqa: PLC0415
+
+    problems: list[str] = []
+    keep = sec_concepts.used_concepts()
+    rows = conn.execute(
+        "SELECT ticker, payload_gzip FROM sec_company "
+        "WHERE sec_status = 'ok' AND payload_gzip IS NOT NULL ORDER BY ticker"
+    ).fetchall()
+
+    missing: list[str] = []
+    counts: list[str] = []
+    drifted: list[str] = []
+    n_sq = n_pq = 0
+    for ticker, blob in rows:
+        want = nsf.facts_frame(blob, keep)
+        n_sq += len(want)
+        if not ps.partition_path(SEC_TABLE, ticker).exists():
+            missing.append(ticker)
+            continue
+        got = ps.read_partition(SEC_TABLE, ticker)
+        n_pq += len(got)
+        if len(got) != len(want):
+            counts.append(f"{ticker}: parquet={len(got):,} payload={len(want):,}")
+            continue
+        a = got.reset_index(drop=True).astype(object)
+        b = want.reset_index(drop=True).astype(object)
+        if not a.where(pd.notna(a), None).equals(b.where(pd.notna(b), None)):
+            drifted.append(ticker)
+
+    if missing:
+        problems.append(f"{len(missing):,} ok ticker(s) have NO parquet file "
+                        f"(a dual-write did not fire), e.g. {missing[:max_samples]}")
+    if counts:
+        problems.append(f"{len(counts):,} ticker(s) differ in row count from their "
+                        f"payload (a stale file), e.g. {counts[:max_samples]}")
+    if drifted:
+        problems.append(f"{len(drifted):,} ticker(s) match on row count but differ "
+                        f"cell for cell, e.g. {drifted[:max_samples]}")
+    return problems, n_sq, n_pq
+
+
 def main() -> None:
     args = parse_args()
 
@@ -185,9 +259,12 @@ def main() -> None:
     failed: dict[str, list[str]] = {}
     try:
         for t in tables:
-            problems = check_table(conn, t, args.max_samples)
-            n_sq = conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]  # noqa: S608
-            n_pq = len(ps.read_table(t))
+            if t == SEC_TABLE:
+                problems, n_sq, n_pq = check_sec_fact(conn, args.max_samples)
+            else:
+                problems = check_table(conn, t, args.max_samples)
+                n_sq = conn.execute(f"SELECT COUNT(*) FROM {t}").fetchone()[0]  # noqa: S608
+                n_pq = len(ps.read_table(t))
             if problems:
                 failed[t] = problems
                 print(f"[parity] {t:<18} MISMATCH  sqlite={n_sq:,} parquet={n_pq:,}")

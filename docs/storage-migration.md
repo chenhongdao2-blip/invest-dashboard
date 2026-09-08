@@ -132,18 +132,34 @@ Current state:
 
 ```
 [parity] prices_daily       OK        120,223 rows match on 11 columns
-[parity] multiples_daily    OK         33,946 rows match on 20 columns
-[parity] benchmarks_daily   OK         16,926 rows match on  3 columns
+[parity] multiples_daily    OK         34,938 rows match on 20 columns
+[parity] benchmarks_daily   OK         16,971 rows match on  3 columns
 [parity] sw_industry_daily  OK          2,876 rows match on  6 columns
-[parity] PASS — 4 table(s) identical across both stores
+[parity] sec_fact           OK      1,147,729 rows match on 15 columns
+[parity] PASS — 5 table(s) identical across both stores
 ```
 
-**`sec_fact` is not parity-checkable.** It shadows a BLOB, not a table, so there is no
-SQLite side to anti-join against. Its guarantee is different: it is fully re-derivable
-from `payload_gzip` in seconds, and `tests/test_sec_fact_normalize.py` pins its output
-against the real `_load_facts` for five tickers, whole-frame and in row order.
+**`sec_fact` is checked differently, not less.** It shadows a BLOB, not a table, so
+there is no SQLite side to anti-join against — but the blob is the authority, and
+`check_sec_fact` simply re-derives per ticker what the normalizer would write today and
+diffs that against the file on disk. ~4.5s for 284 tickers.
 
-What it gets instead is an anti-join on **filenames**, at the end of
+An earlier draft of this runbook called it "not parity-checkable" and leaned on the
+filename anti-join below plus five pinned tickers in the test suite. That was too weak,
+and it failed in practice: merging PRs #56/#57/#59 brought a newer `snapshots.db` whose
+2026-09-07 SEC refresh had restated nine tickers (A, CIEN, CRDO, HPE, MDB, MDT, PHR,
+SMCI, SNOW). All nine files were present, so the filename check was green; none of the
+nine was one of the five pinned tickers, so the suite was green; and all nine were
+stale. **The EOD tables desync by GAINING rows, which a count finds. A SEC refresh
+REPLACES a payload, so a stale partition keeps its row count and only a cellwise
+comparison sees it.** That asymmetry is why the check is now cellwise and covers every
+ok ticker rather than five.
+
+`tests/test_sec_fact_normalize.py` still pins the drop-in guarantee against the real
+`_load_facts` for those five, whole-frame and in row order — that is a different
+question (does the copied parse still match the app's?) and both are wanted.
+
+It also keeps a cheaper anti-join on **filenames**, at the end of
 `jobs/fetch_sec_facts.py`: every ticker whose row says `sec_status='ok'` must have a
 `data/parquet/sec_fact/<TICKER>.parquet`, or the run prints the missing list and exits
 non-zero (so the workflow's `if: failure()` stamp fires and the manifest does not go

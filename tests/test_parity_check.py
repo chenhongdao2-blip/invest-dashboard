@@ -130,3 +130,96 @@ def test_main_skips_when_dual_write_is_disabled(tmp_path, monkeypatch, capsys):
     parity_check.main()          # no SystemExit == exit 0
     out = capsys.readouterr().out
     assert "[parity] SKIP — dual write disabled (PARQUET_DUAL_WRITE=0)" in out
+
+
+# ══════════════════════════════════════════════════════════════════════════
+# sec_fact — the payload is the authority, so the check has a different shape
+# ══════════════════════════════════════════════════════════════════════════
+_SEC_SCHEMA = """
+CREATE TABLE sec_company (
+    ticker TEXT PRIMARY KEY, sec_status TEXT NOT NULL, payload_gzip BLOB);
+"""
+
+
+def _payload(*revenues: float) -> bytes:
+    """A minimal companyfacts blob using one concept that survives the projection."""
+    import gzip
+    import json
+
+    items = [{"start": "2026-01-01", "end": f"2026-03-3{i}", "val": v,
+              "fy": 2026, "fp": "Q1", "form": "10-Q", "filed": "2026-04-01",
+              "accn": f"0000-{i}", "frame": "CY2026Q1"}
+             for i, v in enumerate(revenues)]
+    return gzip.compress(json.dumps(
+        {"facts": {"us-gaap": {"Revenues": {"label": "Revenues",
+                                            "units": {"USD": items}}}}}).encode())
+
+
+@pytest.fixture()
+def sec_stores(tmp_path, monkeypatch):
+    """One ok ticker whose parquet file matches the payload it was derived from."""
+    from jobs import normalize_sec_facts as nsf, sec_concepts
+
+    monkeypatch.setenv("PARQUET_STORE_ROOT", str(tmp_path / "parquet"))
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(_SEC_SCHEMA)
+    blob = _payload(100.0, 200.0)
+    conn.execute("INSERT INTO sec_company VALUES ('LLY', 'ok', ?)", (blob,))
+    conn.commit()
+    nsf.write_ticker("LLY", nsf.facts_frame(blob, sec_concepts.used_concepts()))
+    yield conn
+    conn.close()
+
+
+def _sec_check(conn) -> list[str]:
+    return parity_check.check_sec_fact(conn, max_samples=5)[0]
+
+
+def test_a_matching_sec_store_reports_no_problems(sec_stores):
+    assert _sec_check(sec_stores) == []
+
+
+def test_a_ticker_with_no_parquet_file_is_caught(sec_stores):
+    """The dual-write never fired for this ticker — `write_sec_fact_parquet` swallows."""
+    sec_stores.execute("INSERT INTO sec_company VALUES ('MSFT', 'ok', ?)",
+                       (_payload(5.0),))
+    sec_stores.commit()
+
+    problems = _sec_check(sec_stores)
+    assert any("have NO parquet file" in p and "MSFT" in p for p in problems), problems
+
+
+def test_a_stale_file_with_fewer_rows_is_caught(sec_stores):
+    """The payload gained a fact and the partition was not rewritten."""
+    sec_stores.execute("UPDATE sec_company SET payload_gzip = ? WHERE ticker = 'LLY'",
+                       (_payload(100.0, 200.0, 300.0),))
+    sec_stores.commit()
+
+    problems = _sec_check(sec_stores)
+    assert any("differ in row count" in p and "parquet=2" in p and "payload=3" in p
+               for p in problems), problems
+
+
+def test_a_stale_file_the_row_COUNT_cannot_see_is_caught(sec_stores):
+    """The case that motivated this check, and the one the EOD tables never hit.
+
+    A SEC refresh REPLACES a payload rather than appending to it, so a restated
+    figure leaves the row count untouched. The file stays present and well-formed
+    and is simply wrong; only a cellwise comparison finds it. Nine real files were
+    in this state after PRs #56/#57/#59 merged, with the suite green.
+    """
+    sec_stores.execute("UPDATE sec_company SET payload_gzip = ? WHERE ticker = 'LLY'",
+                       (_payload(100.0, 999.0),))          # same 2 rows, one restated
+    sec_stores.commit()
+
+    problems = _sec_check(sec_stores)
+    assert not any("differ in row count" in p for p in problems), \
+        f"row count must NOT be the signal here: {problems}"
+    assert any("differ cell for cell" in p and "LLY" in p for p in problems), problems
+
+
+def test_a_not_ok_ticker_is_not_expected_to_have_a_file(sec_stores):
+    """`sec_status != 'ok'` never gets normalized, so its absence is not a divergence."""
+    sec_stores.execute("INSERT INTO sec_company VALUES ('RHHBY', 'not_mapped', NULL)")
+    sec_stores.commit()
+    assert _sec_check(sec_stores) == []

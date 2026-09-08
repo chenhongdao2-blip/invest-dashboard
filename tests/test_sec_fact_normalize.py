@@ -1,15 +1,26 @@
 """The normalized sec_fact parquet must be substitutable for `_load_facts`.
 
 jobs/normalize_sec_facts.py carries a verbatim copy of the row-building loop in
-app/lib/sec_facts.py `_load_facts`, plus one concept filter. That duplication is
+app/lib/sec_facts.py `_parse_facts`, plus one concept filter. That duplication is
 only safe if something proves the two stay in step — this is that something.
 
-The strong test is the last one: for five real tickers, the parquet file filtered
-to one concept must equal, cell for cell and IN THE SAME ORDER, what `_load_facts`
-returns for that concept. Order matters and is asserted, not sorted away:
-`_dedupe_by_end_date` and `_rank` in app/lib/sec_facts.py are stable sorts, so rows
-tying on all their keys resolve by input order. A read shim that changed the order
-would silently change which fact the app shows.
+Substitutable, NOT identical. The store writes all 15 `_FACT_COLS`; since PR #57
+`_load_facts` returns 13 of them (it drops `value_text` and `frame` to keep the
+Streamlit cache small — a RAM decision, not a durability one). The store stays wide
+because it is on its way to REPLACING `sec_company.payload_gzip`, and a read shim
+can narrow a frame in one line while nothing can widen a column that was never
+written. So the guarantee asserted here is a superset in both directions:
+
+  (i)   every column `_load_facts` returns exists in the parquet;
+  (ii)  on those shared columns the two frames are equal cell for cell and IN THE
+        SAME ORDER, whole frame;
+  (iii) the extra columns are exactly `value_text` and `frame` — named, so a third
+        one arriving is a failure, and justified in jobs/parquet_store.py.
+
+Order matters in (ii) and is asserted, not sorted away: `_dedupe_by_end_date` and
+`_rank` in app/lib/sec_facts.py are stable sorts, so rows tying on all their keys
+resolve by input order. A read shim that changed the order would silently change
+which fact the app shows.
 
 Reads the committed data/snapshots.db and data/parquet/sec_fact/ — no network.
 Skips (rather than fails) when either is absent, so a checkout without data still
@@ -104,6 +115,13 @@ def test_a_broken_statements_parse_raises_instead_of_returning_a_short_set(tmp_p
 # projection
 # ══════════════════════════════════════════════════════════════════════════
 def test_projection_keeps_only_wanted_concepts_and_all_of_them(conn, keep):
+    """`facts_frame` narrows a RAW payload, so the baseline is the unprojected parse.
+
+    `_load_facts_full` is that parse on the app side — every concept the filer
+    reports, all 15 columns. It is deliberately NOT `_load_facts`: since PR #57 that
+    one applies the same concept filter itself, so comparing against it would assert
+    6796 < 6796 and the projection would look like a no-op when it is a 3.4x cut.
+    """
     row = conn.execute(
         "SELECT payload_gzip FROM sec_company WHERE ticker = 'LLY' AND sec_status = 'ok'"
     ).fetchone()
@@ -111,13 +129,35 @@ def test_projection_keeps_only_wanted_concepts_and_all_of_them(conn, keep):
         pytest.skip("no LLY payload")
     from lib import sec_facts
 
-    full = sec_facts._load_facts("LLY")
+    full = sec_facts._load_facts_full("LLY")
     proj = nsf.facts_frame(row[0], keep)
 
     assert set(proj["concept"]) <= keep
     # nothing the app can use was dropped
     assert set(proj["concept"]) == set(full["concept"]) & keep
     assert len(proj) < len(full), "projection should be a strict subset for LLY"
+    # the projection cuts ROWS, never columns
+    assert list(proj.columns) == list(full.columns) == sec_facts._FACT_COLS
+
+
+def test_the_two_concept_sets_are_computed_twice_and_must_agree():
+    """jobs/sec_concepts.py and app/lib/sec_concepts.py answer the same question apart.
+
+    The store is projected by the jobs one (raw sqlite3 + an `ast` parse of
+    sec_statements.py, because a batch job must not boot streamlit); the app reads
+    through the lib one (`db.query` + a real import, under `@st.cache_data`). Two
+    implementations, one contract — and if they ever disagree the store silently
+    stops holding a concept the app asks for, which surfaces as a blank KPI card and
+    nothing else. PR #57 introduced the second one; this is what keeps them in step.
+    """
+    from lib import sec_concepts as app_sec_concepts
+
+    jobs_keep = sec_concepts.used_concepts(_DB)
+    app_keep = app_sec_concepts.used_concepts()
+    assert jobs_keep == app_keep, (
+        f"concept sets diverged: jobs-only={sorted(jobs_keep - app_keep)}, "
+        f"app-only={sorted(app_keep - jobs_keep)}"
+    )
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -125,7 +165,7 @@ def test_projection_keeps_only_wanted_concepts_and_all_of_them(conn, keep):
 # ══════════════════════════════════════════════════════════════════════════
 @pytest.mark.parametrize("ticker", _TICKERS)
 def test_normalized_parquet_matches_load_facts_for_one_concept(ticker):
-    """The written file, filtered to one concept, == `_load_facts` for that concept."""
+    """The written file, filtered to one concept, == `_load_facts` on the shared columns."""
     path = ps.partition_path("sec_fact", ticker)
     if not path.exists():
         pytest.skip(f"{path.name} not generated — run jobs/normalize_sec_facts.py")
@@ -136,6 +176,7 @@ def test_normalized_parquet_matches_load_facts_for_one_concept(ticker):
         pytest.skip(f"no payload for {ticker}")
 
     actual_all = ps.read_partition("sec_fact", ticker)
+    shared = list(expected_all.columns)          # the 13; see the module docstring
     concepts = [c for c in ("Revenues", "Assets", "NetIncomeLoss",
                             "ResearchAndDevelopmentExpense", "StockholdersEquity")
                 if c in set(actual_all["concept"])]
@@ -143,14 +184,24 @@ def test_normalized_parquet_matches_load_facts_for_one_concept(ticker):
 
     for concept in concepts:
         exp = _norm(expected_all[expected_all["concept"] == concept])
-        act = _norm(actual_all[actual_all["concept"] == concept])
+        act = _norm(actual_all[actual_all["concept"] == concept][shared])
         assert len(act) == len(exp), f"{ticker}/{concept}: row count"
         pd.testing.assert_frame_equal(act, exp, check_dtype=False,
                                       obj=f"{ticker}/{concept}")
 
 
 @pytest.mark.parametrize("ticker", _TICKERS)
-def test_columns_and_row_order_survive_the_round_trip(ticker):
+def test_the_store_is_a_superset_of_load_facts_row_for_row(ticker):
+    """The drop-in guarantee in both directions: nothing missing, nothing reordered.
+
+    (i)  every column `_load_facts` returns exists in the parquet — the shim can
+         narrow, so a wider store is substitutable; a narrower one is not.
+    (ii) on those shared columns the two frames are equal row for row IN PAYLOAD
+         ORDER, whole frame, not one concept.
+    (iii) the extra columns are exactly the two named ones. Asserted as an equality
+         rather than a subset so that a THIRD column appearing — a stray index, a
+         half-finished schema change — is a failure and not a shrug.
+    """
     path = ps.partition_path("sec_fact", ticker)
     if not path.exists():
         pytest.skip(f"{path.name} not generated")
@@ -163,10 +214,44 @@ def test_columns_and_row_order_survive_the_round_trip(ticker):
     expected = expected[expected["concept"].isin(keep)]
 
     actual = ps.read_partition("sec_fact", ticker)
-    assert list(actual.columns) == list(expected.columns), "column names/order drifted"
+    missing = [c for c in expected.columns if c not in actual.columns]
+    assert not missing, f"the store dropped columns the app reads: {missing}"
+    extra = [c for c in actual.columns if c not in expected.columns]
+    assert extra == ["value_text", "frame"], (
+        f"unexpected extra store columns {extra}; the deliberate two are documented "
+        f"in jobs/parquet_store.py `_SEC_FACT_DTYPES`"
+    )
+    # order too: the shim slices by name, but a reorder means the copy has drifted
+    assert [c for c in actual.columns if c in set(expected.columns)] == list(expected.columns)
+
     assert len(actual) == len(expected), "row count drifted"
-    # the WHOLE frame, in payload order — not just one concept
-    pd.testing.assert_frame_equal(_norm(actual), _norm(expected), check_dtype=False)
+    pd.testing.assert_frame_equal(_norm(actual[list(expected.columns)]), _norm(expected),
+                                  check_dtype=False)
+
+
+@pytest.mark.parametrize("ticker", _TICKERS)
+def test_the_extra_store_columns_carry_what_they_claim_to(ticker):
+    """`frame` is filed content, not padding — the reason the store stays wide.
+
+    If this ever went all-empty the justification in jobs/parquet_store.py would be
+    stale and the column should be reconsidered, not silently carried.
+    """
+    path = ps.partition_path("sec_fact", ticker)
+    if not path.exists():
+        pytest.skip(f"{path.name} not generated")
+    df = ps.read_partition("sec_fact", ticker)
+    assert (df["frame"].fillna("") != "").any(), (
+        f"{ticker}: `frame` is empty on every row — re-check whether the store still "
+        f"needs it (jobs/parquet_store.py `_SEC_FACT_DTYPES`)"
+    )
+    # `value_text` is a slot, not content: it is empty today by construction, since
+    # `_parse_facts` only fills it for a NON-numeric fact value and no kept concept
+    # currently has one. Assert the invariant that pairs them instead.
+    text_rows = df[df["value_text"].fillna("") != ""]
+    assert text_rows["value"].isna().all(), (
+        "a row carries both a numeric value and a value_text; `_parse_facts` writes "
+        "one or the other, so the copy in normalize_sec_facts.py has drifted"
+    )
 
 
 def test_numeric_values_are_exact_not_merely_close():

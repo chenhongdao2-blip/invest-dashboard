@@ -102,8 +102,29 @@ _TEXT = "string"
 _F64 = "float64"
 _I64 = "Int64"
 
-# `_FACT_COLS` in app/lib/sec_facts.py — kept verbatim (name AND order) so a future
-# read shim can drop straight into `_load_facts`. See jobs/normalize_sec_facts.py.
+# `_FACT_COLS` in app/lib/sec_facts.py — kept verbatim (name AND order), the FULL
+# 15, deliberately WIDER than the 13 `_load_facts` returns. See jobs/normalize_sec_facts.py.
+#
+# PR #57 narrowed the read path to `_KPI_FACT_COLS` (= `_FACT_COLS` minus `value_text`
+# and `frame`) because the unprojected frame plus its `@st.cache_data` pickle was the
+# 1 GB Streamlit Cloud OOM path. That is a statement about what to hold in RAM, not
+# about what belongs at rest, and the store does not follow it. The two are kept here
+# on purpose:
+#
+#   • `frame` — the SEC's own calendar-period label ("CY2009Q2I"). Non-empty on
+#     419,022 of the store's 1,146,728 rows (36.5%): filed content, not padding.
+#     `_load_facts_full` still returns it, and it is the only place the canonical
+#     period id survives without re-deriving it from start_date/end_date/fp.
+#   • `value_text` — where `_parse_facts` puts a non-numeric fact value, NULLing
+#     `value`. Empty across all 1.15M kept rows today, so it costs nothing; the day a
+#     filer tags a kept concept with a string, a store without this column would
+#     record a NULL and no way to tell why.
+#
+# The asymmetry is the whole argument: a read shim narrows the store in one line
+# (`df[_KPI_FACT_COLS]`), but nothing can widen a column that was never written — and
+# this store's destiny is to REPLACE `sec_company.payload_gzip` (audit §6), after which
+# whatever it omits is gone. Measured cost of carrying both: 0.417 MB on 7.25 MB (6.1%).
+# tests/test_sec_fact_normalize.py pins the superset relation in both directions.
 _SEC_FACT_DTYPES = {
     "taxonomy": _TEXT, "concept": _TEXT, "label": _TEXT, "unit": _TEXT,
     "value": _F64, "value_text": _TEXT, "start_date": _TEXT, "end_date": _TEXT,

@@ -11,12 +11,23 @@ of that need correcting, and design B.2 measures why: the projected facts are
 millions of rows, and as a SQLite table they occupy **58 MB — worse than today's
 40 MB blob**. Parquet, per ticker, is the representation that pays.
 
-**The row construction below is a verbatim copy of `_load_facts` in
-app/lib/sec_facts.py, with one added `if concept not in KEEP: continue`.** That is
-deliberate, and the duplication is the point: the output must be substitutable for
-what `_load_facts` returns today so the read shim in a later PR is a drop-in.
-tests/test_sec_fact_normalize.py pins the equivalence against the real function for
-five tickers, so the copy cannot drift unnoticed.
+**The row construction below is a verbatim copy of `_parse_facts` in
+app/lib/sec_facts.py**, which is the shared walk behind both `_load_facts`
+(projected, for KPIs and statements) and `_load_facts_full` (everything, for the
+XBRL browser). The duplication is the point: the output must be substitutable for
+what the app builds so the read shim in a later PR is a drop-in. It is a copy
+rather than an import because importing `lib.sec_facts` boots streamlit and the
+app's db module inside a batch job that has no business booting either.
+
+Substitutable does not mean identical in width. This writes all 15 `_FACT_COLS`;
+`_load_facts` returns 13 of them (PR #57 dropped `value_text` and `frame` to keep
+the Streamlit cache small). The store stays wide on purpose — see the
+`_SEC_FACT_DTYPES` comment in jobs/parquet_store.py for why, and because a shim can
+narrow a frame but cannot invent a column. So the guarantee is a superset, pinned
+by tests/test_sec_fact_normalize.py for five tickers: every column `_load_facts`
+returns exists here, and on those shared columns the two frames are equal row for
+row in payload order. Both halves matter — the first stops the store from going
+narrow, the second stops the copy from drifting.
 
 What this does NOT do, deliberately:
   • It does not dedupe. Design B.2 measured a 2.0× collapse on
@@ -79,9 +90,9 @@ def facts_frame(payload: bytes, keep: frozenset[str]) -> pd.DataFrame:
 def frame_from_companyfacts(cf: dict, keep: frozenset[str]) -> pd.DataFrame:
     """Parsed companyfacts dict → the `_FACT_COLS` frame, projected to `keep`.
 
-    Mirrors app/lib/sec_facts.py `_load_facts` exactly apart from the projection.
-    Takes the parsed object so jobs/fetch_sec_facts.py can reuse the payload it
-    just downloaded instead of re-compressing and re-parsing it.
+    Mirrors app/lib/sec_facts.py `_parse_facts(ticker, keep)` exactly, minus the DB
+    read it opens with. Takes the parsed object so jobs/fetch_sec_facts.py can reuse
+    the payload it just downloaded instead of re-compressing and re-parsing it.
     """
     rows: list[tuple] = []
     for taxonomy, concepts in (cf.get("facts") or {}).items():

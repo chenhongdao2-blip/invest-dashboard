@@ -23,7 +23,7 @@ import json
 import pandas as pd
 import streamlit as st
 
-from lib import db
+from lib import db, sec_concepts
 
 _FACT_COLS = [
     "taxonomy", "concept", "label", "unit", "value", "value_text",
@@ -112,13 +112,22 @@ def concept_cn(concept: str) -> str:
     return _CONCEPT_CN.get(concept, "")
 
 
-@st.cache_data(ttl=300)
-def _load_facts(ticker: str) -> pd.DataFrame:
-    """Parse a company's gzip'd companyfacts JSON into a flat fact DataFrame.
+# Columns the KPI / statement path reads. `frame` and `value_text` are read by
+# NOTHING on it (the full browser keeps them, see `_load_facts_full`).
+_KPI_FACT_COLS = [c for c in _FACT_COLS if c not in ("value_text", "frame")]
+# Low-cardinality strings repeated across tens of thousands of rows. `label` is
+# constant per (taxonomy, concept) and `accession`/`filed` are constant per filing,
+# so these all collapse to a few hundred categories. `start_date` / `end_date` stay
+# object: `_rank` and `_dedupe_by_end_date` sort on them.
+_CATEGORICAL = ("taxonomy", "concept", "label", "unit", "fp", "form", "accession", "filed")
 
-    Columns match the old sec_fact schema so downstream logic is unchanged.
-    Cached per ticker — decompress+parse (~1MB JSON → ~20k rows) runs once.
-    Returns an empty (typed) frame if the payload is missing/unparseable.
+
+def _parse_facts(ticker: str, keep: frozenset[str] | None) -> pd.DataFrame:
+    """Walk a company's gzip'd companyfacts JSON into a flat fact frame.
+
+    `keep=None` materialises every concept the filer reports; a frozenset projects
+    to those concepts while building the rows, so the discarded ones never become
+    Python tuples in the first place.
     """
     df0 = db.query(
         "SELECT payload_gzip FROM sec_company WHERE ticker = ? AND sec_status = 'ok'",
@@ -134,6 +143,8 @@ def _load_facts(ticker: str) -> pd.DataFrame:
     rows: list[tuple] = []
     for taxonomy, concepts in (cf.get("facts") or {}).items():
         for concept, cdata in concepts.items():
+            if keep is not None and concept not in keep:
+                continue
             label = cdata.get("label")
             for unit, items in (cdata.get("units") or {}).items():
                 for it in items:
@@ -154,6 +165,41 @@ def _load_facts(ticker: str) -> pd.DataFrame:
     if not rows:
         return pd.DataFrame(columns=_FACT_COLS)
     return pd.DataFrame(rows, columns=_FACT_COLS)
+
+
+@st.cache_data(ttl=300)
+def _load_facts(ticker: str) -> pd.DataFrame:
+    """Facts for the KPI / statement path: PROJECTED to `sec_concepts.used_concepts()`
+    and dtype-downcast.
+
+    R3 audit §5: the unprojected frame is 784 concepts / 40,102 rows / 30.55 MB for
+    ELV, and `@st.cache_data` keeps a pickled copy beside it — a 10-ticker comp table
+    was the documented 1 GB OOM path on Streamlit Cloud. This covers the KPI cards
+    (`_facts` looks up the KPI chains) and `sec_statements` (its own `tags`), which
+    is where the volume is.
+
+    It is NOT the only reachable set. `concept_timeseries` doubles as the SEC pages'
+    concept-browser chart, and that picker is built from `all_facts`, so it offers
+    every tag the filer reports; `_facts` routes those to `_load_facts_full`. Nor is
+    it used by the browser table itself or `dominant_monetary_unit`, which histogram
+    every concept — both read `_load_facts_full` directly.
+    """
+    df = _parse_facts(ticker, sec_concepts.used_concepts())
+    if df.empty:
+        return pd.DataFrame(columns=_KPI_FACT_COLS)
+    df = df[_KPI_FACT_COLS]
+    for c in _CATEGORICAL:
+        df[c] = df[c].astype("category")
+    return df
+
+
+@st.cache_data(ttl=300)
+def _load_facts_full(ticker: str) -> pd.DataFrame:
+    """Every concept, every column — the full XBRL browser and the reporting-currency
+    histogram. Its own cache bucket, so the cost is only paid when one of those runs.
+    """
+    return _parse_facts(ticker, None)
+
 
 # Form families
 _ANNUAL_FORMS = ("10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A")
@@ -358,8 +404,18 @@ def peer_medians(ticker: str, domain: str) -> dict:
 # Fact selection
 # ──────────────────────────────────────────────────────────────────────────
 def _facts(ticker: str, taxonomy: str, concept: str, unit: str | None) -> pd.DataFrame:
-    """Facts for one (taxonomy, concept[, unit]) — filtered from the parsed payload."""
-    df = _load_facts(ticker)
+    """Facts for one (taxonomy, concept[, unit]) — filtered from the parsed payload.
+
+    Reads the PROJECTED frame for the ~90 concepts the KPI and statement paths use,
+    and falls back to the unprojected parse for anything else. That fallback is not
+    defensive: `concept_timeseries` is also the SEC pages' concept-browser chart, and
+    those pages populate their picker from `all_facts` — every tag the filer reports,
+    784 for ELV. Serving that picker off the projected frame would render ~694 of
+    them as an empty chart. `_load_facts_full` has its own cache bucket, so the cost
+    is only paid when someone actually picks a long-tail tag.
+    """
+    df = (_load_facts(ticker) if concept in sec_concepts.used_concepts()
+          else _load_facts_full(ticker)[_KPI_FACT_COLS])
     if df.empty:
         return df
     m = (df["taxonomy"] == taxonomy) & (df["concept"] == concept)
@@ -496,14 +552,20 @@ def pick_kpi_fact(ticker: str, kpi_key: str, period: str = "annual") -> dict | N
     # latest end_date, then canonical concept (lower rank), then latest filed
     candidates.sort(key=lambda c: (c[0], -c[1], c[2]), reverse=True)
     end_date, rank, _, r = candidates[0]
+    # `astype("category")` in `_load_facts` renders a missing string as NaN where the
+    # object frame had None. Normalise back so callers keep seeing None — an
+    # un-normalised NaN prints as "nan" in the KPI cards.
+    def _s(v):
+        return None if v is None or (isinstance(v, float) and pd.isna(v)) else v
+
     return {
         "kpi_key": kpi_key,
         "value": None if pd.isna(r["value"]) else float(r["value"]),
-        "taxonomy": r["taxonomy"], "concept": r["concept"], "label": r["label"],
-        "unit": r["unit"], "form": r["form"],
-        "fy": None if pd.isna(r["fy"]) else int(r["fy"]), "fp": r["fp"],
-        "start_date": r["start_date"], "end_date": r["end_date"],
-        "filed": r["filed"], "accession": r["accession"],
+        "taxonomy": _s(r["taxonomy"]), "concept": _s(r["concept"]), "label": _s(r["label"]),
+        "unit": _s(r["unit"]), "form": _s(r["form"]),
+        "fy": None if pd.isna(r["fy"]) else int(r["fy"]), "fp": _s(r["fp"]),
+        "start_date": _s(r["start_date"]), "end_date": _s(r["end_date"]),
+        "filed": _s(r["filed"]), "accession": _s(r["accession"]),
         "fallback_rank": rank, "is_fallback": rank > 0,
     }
 
@@ -534,6 +596,11 @@ def concept_timeseries(
     # longest span breaks a same-day tie (audit C2 — see _dedupe_by_end_date)
     df = _dedupe_by_end_date(df)
     df = df[["end_date", "value", "fy", "fp", "form", "unit"]].copy()
+    # Category dtypes are an internal storage detail of `_load_facts`; hand renderers
+    # the same object columns they got before the projection landed.
+    for _c in ("fp", "form", "unit"):
+        if isinstance(df[_c].dtype, pd.CategoricalDtype):
+            df[_c] = df[_c].astype(object).where(df[_c].notna(), None)
     df["yoy"] = df["value"].pct_change(4 if freq == "quarterly" else 1) * 100
     if freq == "quarterly":
         df["qoq"] = df["value"].pct_change(1) * 100
@@ -573,8 +640,13 @@ def kpi_timeseries(ticker: str, kpi_key: str, freq: str = "annual") -> tuple[pd.
 # Full fact browser
 # ──────────────────────────────────────────────────────────────────────────
 def all_facts(ticker: str) -> pd.DataFrame:
-    """All facts for a ticker (drives the filterable browser table)."""
-    df = _load_facts(ticker)
+    """All facts for a ticker (drives the filterable browser table).
+
+    Reads the UNPROJECTED parse on purpose — the browser's whole point is showing
+    every tag the filer reports, and `sec_statements.dominant_monetary_unit`
+    histograms units across all of them.
+    """
+    df = _load_facts_full(ticker)
     if df.empty:
         return df
     return df.sort_values(["filed", "concept"], ascending=[False, True]).reset_index(drop=True)
@@ -583,11 +655,18 @@ def all_facts(ticker: str) -> pd.DataFrame:
 # ──────────────────────────────────────────────────────────────────────────
 # Comp table (multi-ticker × KPI, latest annual per ticker)
 # ──────────────────────────────────────────────────────────────────────────
-def comp_table(tickers: list[str], kpi_keys: list[str], lang: str = "en") -> pd.DataFrame:
+@st.cache_data(ttl=300)
+def comp_table(tickers: tuple[str, ...], kpi_keys: tuple[str, ...],
+               lang: str = "en") -> pd.DataFrame:
     """Multi-ticker comparable table: rows = tickers, cols = KPIs (latest annual).
 
     Period ends differ across filers, so a 'FY End' column is included for honesty.
     Values are returned numeric (formatting is the caller's job). lang picks label.
+
+    R3 audit §5 measured this at 1010 ms cold / 838 ms WARM — warm too, because it
+    took lists, which Streamlit cannot hash, so it was never cached at all. TUPLES
+    are required; the two call sites pass them. Its TTL matches `_load_facts`, so a
+    mid-session SEC refresh can show a mixed vintage for up to 5 minutes.
     """
     label_field = "label_cn" if lang == "zh" else "label_en"
     kmeta = {k["kpi_key"]: k for k in (_kpi_row(k) or {} for k in kpi_keys) if k}

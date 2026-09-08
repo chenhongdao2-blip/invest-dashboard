@@ -11,10 +11,9 @@ import streamlit as st
 from lib import db
 from lib import format as fmt
 from lib import theme
-from lib import i18n
 
 # Shared column tooltips — single source of truth for cross-page consistency.
-# Reference these via render_styled_table(column_help=COLUMN_HELP) or splice
+# Reference these via render_html_table(column_help=COLUMN_HELP) or splice
 # into manual column_config dicts.
 COLUMN_HELP = {
     "Fwd P/E": (
@@ -82,59 +81,6 @@ def sidebar_search(key_prefix: str = ""):
     if "global_ticker" not in st.session_state:
         st.session_state.global_ticker = ""
 
-
-def onboarding_expander(page_name: str, markdown_text: str):
-    """Consistent onboarding expander across pages."""
-    with st.expander(f"How to read this {page_name}"):
-        st.markdown(markdown_text)
-
-
-# ---------- Sort-bug-safe table renderer (extracted from CMSI Coverage) ----------
-
-def render_styled_table(
-    df: pd.DataFrame,
-    *,
-    pct_cols: list[str] | None = None,
-    pct_decimal_cols: list[str] | None = None,
-    mult_cols: list[str] | None = None,
-    money_b_cols: list[str] | None = None,
-    int_cols: list[str] | None = None,
-    text_cols: list[str] | None = None,
-    column_widths: dict[str, str] | None = None,
-    extra_formats: dict[str, str] | None = None,
-    column_help: dict[str, str] | None = None,
-    column_labels: dict[str, str] | None = None,
-    index_label: str | None = None,
-    height: int = 500,
-    hide_index: bool = False,
-    heatmap: bool = False,
-    ref_rows: set | None = None,
-) -> None:
-    """DEPRECATED shim → render_html_table (kept so existing call sites work).
-
-    Previously rendered a pandas Styler via st.dataframe (glide-data-grid CANVAS):
-    CSS could not reach the cells and OS dark-mode penetrated → black tables, and
-    Styler.background_gradient filled whole cells (violating DESIGN.md 染字不染底).
-    Now delegates to the FT-editorial HTML table. `column_widths` is ignored
-    (HTML auto-sizes). Pass heatmap=True for the optional ≤12% tinted heatmap.
-    """
-    render_html_table(
-        df,
-        pct_cols=pct_cols,
-        pct_decimal_cols=pct_decimal_cols,
-        mult_cols=mult_cols,
-        money_b_cols=money_b_cols,
-        int_cols=int_cols,
-        text_cols=text_cols,
-        extra_formats=extra_formats,
-        column_help=column_help,
-        column_labels=column_labels,
-        index_label=index_label,
-        height=height,
-        hide_index=hide_index,
-        heatmap=heatmap,
-        ref_rows=ref_rows,
-    )
 
 
 # ---------- FT-editorial HTML table (Stage 2 — solves dataframe canvas dark) ----------
@@ -304,7 +250,6 @@ def render_html_table(
     strips <script>, killing click-sort. components.html runs a self-contained HTML
     doc in an iframe: full CSS control + working vanilla-JS sort + zero canvas.
 
-    Signature mirrors render_styled_table so call sites migrate with minimal change.
     Coloring follows DESIGN.md: percentages color the TEXT (up=teal/down=red), never
     the cell background. Numbers are right-aligned tabular-nums; text is left.
 

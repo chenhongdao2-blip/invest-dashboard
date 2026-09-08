@@ -18,6 +18,9 @@ from lib import format as fmt
 def _ticker_roster() -> pd.DataFrame:
     """一行一票 (sectors 用 GROUP_CONCAT 拼成 csv)。
 
+    DEPRECATED — `db.market_frame(None).meta` is the same roster (plus `status`
+    and `secondary_listing`) off the shared per-domain cache.
+
     R3 审查 H3：这里原来**没有** status 过滤，而 db.all_tickers() / sector_tickers()
     / top_movers() 三处都有 —— 全市场行情表因此把已退市票混进活跃 universe
     (DAWN 价格冻在 2026-04-24、APLS 冻在 05-15)，用户看到的是一张没有任何标记的
@@ -28,17 +31,13 @@ def _ticker_roster() -> pd.DataFrame:
     2026-09-07：508 个 ticker → 494 个活跃，剔除 14 个 (13 delisted + 1 renamed)。
     这个数只会随 load_universe 增长，写死的旧值会让读者以为 status 列停更了。
     """
-    where = " WHERE status IS NULL" if db._has_column("universe_member", "status") else ""
-    return db.query(
-        f"""SELECT ticker,
-                  MAX(name_cn) AS name_cn, MAX(name_en) AS name_en,
-                  MAX(domain)  AS domain,
-                  GROUP_CONCAT(DISTINCT sector) AS sectors,
-                  MAX(region)  AS region
-           FROM universe_member{where}
-           GROUP BY ticker
-           ORDER BY ticker"""
-    )
+    cols = ["ticker", "name_cn", "name_en", "domain", "sectors", "region"]
+    meta = db.market_frame(None).meta
+    if meta.empty:
+        return pd.DataFrame(columns=cols)
+    # `status` is NULL for every row when the column has not been migrated, so this
+    # degrades to "no filter" exactly like the old `_has_column` guard did.
+    return meta[meta["status"].isna()].reset_index()[cols].reset_index(drop=True)
 
 
 @st.cache_data(ttl=300)
@@ -103,9 +102,9 @@ def render_quote_list(prefer_cn: bool, *, key_prefix: str = "qt") -> None:
         return
 
     all_t = tuple(filt["ticker"].tolist())
-    closes = db.get_close_series_usd(all_t)
-    rets = db.compute_returns(closes)
-    mults = db.latest_multiples(all_t)
+    _mf = db.market_frame(None)
+    rets = db.returns_for(all_t, _mf.as_of, "usd")
+    mults = _mf.multiples.loc[_mf.multiples.index.intersection(all_t)]
     name_map = db.ticker_to_name(prefer_cn=prefer_cn)
 
     disp = pd.DataFrame(index=filt["ticker"])

@@ -27,8 +27,6 @@ from lib import theme
 from lib import ui
 from lib import section_header
 
-st.set_page_config(page_title="Capital Markets · invest-dashboard", page_icon="💰", layout="wide")
-
 i18n.init_lang()
 i18n.render_lang_toggle()
 with st.sidebar:

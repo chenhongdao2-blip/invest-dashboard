@@ -20,9 +20,22 @@ We persist the tail rows as-is so the UI can show "+N more constituents". We nev
 fill an unknown weight as 0.0 (that would turn "unknown" into "zero" — the exact
 bug Codex caught in the etf-data-mcp audit).
 
+DEGRADATION GATE (R3 audit item 7). etf-data-mcp resolves holdings as
+stockanalysis (weights) → barchart (symbols only, every row numbered 1..N, no
+weights) → error envelope. The 2026-08-29 rebuild ran while stockanalysis was
+returning 404 for every ETF, took the barchart fallback, and overwrote a good
+weighted snapshot with a weightless one — while meta.json and the refresh
+manifest both still said "ok". Nothing in the pipeline noticed.
+
+So this job now REFUSES to write when an ETF comes back with zero weighted rows,
+and records the upstream provenance (`_source` / `_partial` / `_reliability`) in
+meta.json either way. Pass --allow-unweighted to persist a degraded fetch
+deliberately; it is then labelled as degraded in meta, not silently.
+
 Run:
     python jobs/build_etf_panel.py
     python jobs/build_etf_panel.py --tickers XLV,VHT   # subset
+    python jobs/build_etf_panel.py --allow-unweighted  # persist a degraded fetch
 
 Network: the etf-data-mcp CLI calls ensure_proxy_env() itself (China proxy 7897).
 """
@@ -112,10 +125,12 @@ def _atomic_write(path: Path, write_fn) -> None:
     tmp.replace(path)
 
 
-def build(tickers: list[tuple[str, str]]) -> None:
+def build(tickers: list[tuple[str, str]], *, allow_unweighted: bool = False) -> None:
     universe_rows: list[dict] = []
     holdings_rows: list[dict] = []
     weight_sum_by_etf: dict[str, float] = {}
+    weighted_rows_by_etf: dict[str, int] = {}
+    provenance_by_etf: dict[str, dict] = {}
     as_of_dates: list[str] = []
 
     for ticker, sub_sector in tickers:
@@ -142,7 +157,16 @@ def build(tickers: list[tuple[str, str]]) -> None:
             row[col] = _num(rets.get(key))
         universe_rows.append(row)
 
+        # Upstream provenance — the field that would have caught 2026-08-29 on the day.
+        provenance_by_etf[ticker] = {
+            "source": hold.get("_source"),
+            "reliability": hold.get("_reliability"),
+            "partial": bool(hold.get("_partial")),
+            "error": hold.get("_error"),
+        }
+
         wsum = 0.0
+        n_weighted = 0
         for h in hold.get("holdings", []) or []:
             wpct = _num(h.get("weight_pct"))
             holdings_rows.append({
@@ -154,6 +178,8 @@ def build(tickers: list[tuple[str, str]]) -> None:
             })
             if wpct is not None:
                 wsum += float(wpct)
+                n_weighted += 1
+        weighted_rows_by_etf[ticker] = n_weighted
         # Coverage = sum of the weighted rows we actually persist, NOT the upstream
         # `weight_sum_pct` field. They disagree for some ETFs (e.g. IBB: field 63.49 vs
         # row-sum 64.80) — the upstream field is computed on a different basis. The
@@ -163,6 +189,30 @@ def build(tickers: list[tuple[str, str]]) -> None:
         for d in (perf.get("_as_of"), hold.get("_as_of")):
             if d:
                 as_of_dates.append(str(d)[:10])
+
+    # ---- degradation gate: never silently overwrite weights with no-weights ----
+    degraded = sorted(t for t, n in weighted_rows_by_etf.items() if n == 0)
+    if degraded:
+        detail = "\n".join(
+            f"    {t}: 0 weighted rows of {sum(1 for r in holdings_rows if r['etf_ticker'] == t)}"
+            f"  source={provenance_by_etf[t]['source']!r}"
+            f" reliability={provenance_by_etf[t]['reliability']!r}"
+            + (f"\n        error: {provenance_by_etf[t]['error']}"
+               if provenance_by_etf[t].get("error") else "")
+            for t in degraded
+        )
+        msg = (
+            f"REFUSING TO WRITE — {len(degraded)} ETF(s) came back with no weights at all:\n"
+            f"{detail}\n"
+            "  This is the symbols-only upstream fallback, not real data. Writing it would\n"
+            "  overwrite the good weighted snapshot with a weightless one (see the module\n"
+            "  docstring: that is exactly what happened on 2026-08-29).\n"
+            "  Fix the upstream source, or re-run with --allow-unweighted to persist this\n"
+            "  fetch deliberately (it will be labelled degraded in etf_hc_meta.json)."
+        )
+        if not allow_unweighted:
+            sys.exit(msg)
+        print(f"WARNING: {msg}\n  --allow-unweighted given: writing anyway, labelled degraded.")
 
     # ---- write (backup-before-overwrite, atomic) ----
     OUT_DIR.mkdir(parents=True, exist_ok=True)
@@ -192,6 +242,9 @@ def build(tickers: list[tuple[str, str]]) -> None:
                              "(rank/name/weight=None). Tail kept for '+N more'; unknown weight "
                              "is None, never 0.",
         "weight_sum_pct_by_etf": weight_sum_by_etf,
+        "weighted_rows_by_etf": weighted_rows_by_etf,
+        "upstream_by_etf": provenance_by_etf,
+        "degraded_etfs": degraded,
         "built_at": datetime.now().isoformat(timespec="seconds"),
     }
     _backup(META_JSON)
@@ -202,6 +255,10 @@ def build(tickers: list[tuple[str, str]]) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description="Bake the Healthcare ETF panel data files.")
     ap.add_argument("--tickers", help="comma-separated subset (default: full curated list)")
+    ap.add_argument(
+        "--allow-unweighted", action="store_true",
+        help="persist a fetch in which some ETF has zero weighted rows (default: refuse)",
+    )
     args = ap.parse_args()
     if args.tickers:
         want = {t.strip().upper() for t in args.tickers.split(",")}
@@ -210,7 +267,7 @@ def main() -> None:
         sel += [(t, "Other") for t in want if t not in {x for x, _ in ETF_LIST}]
     else:
         sel = ETF_LIST
-    build(sel)
+    build(sel, allow_unweighted=args.allow_unweighted)
 
 
 if __name__ == "__main__":

@@ -4,16 +4,16 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-05T00:22:30+00:00",
-    "source_date": "2026-09-04"
+    "refreshed_at": "2026-09-08T00:43:59+00:00",
+    "source_date": "2026-09-08"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
     "source": "SEC EDGAR",
     "max_age_days": 10,
     "status": "ok",
-    "refreshed_at": "2026-08-31T13:48:12+00:00",
-    "source_date": "2026-08-31",
+    "refreshed_at": "2026-09-07T12:31:30+00:00",
+    "source_date": "2026-09-07",
     "note": "2026-08-29 YAML 修复(PR#48)后首次成功运行,周一 cron 恢复"
   },
   "benchmarks_fx": {
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-05T00:24:49+00:00",
-    "source_date": "2026-09-05"
+    "source_date": "2026-09-08"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -37,7 +37,7 @@
     "label": "港股 IPO 散点/破发",
     "source": "Wind+Futu(本地)",
     "max_age_days": 9,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T05:54:14+00:00",
     "source_date": "2026-08-29",
     "note": "Wind (price/mktcap/20d turnover) + Futu OpenD cross-check"
@@ -46,7 +46,7 @@
     "label": "MNC M&A / BD 交易",
     "source": "M&A:FactSet(本地) / BD:PatSnap(本地)",
     "max_age_days": 7,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T06:12:59+00:00",
     "source_date": "2026-08-29",
     "note": "M&A:FactSet / BD:PatSnap 双源切换完成(2026-08-29)"
@@ -84,7 +84,7 @@
     "source": "minodata API(GH手动dispatch)",
     "max_age_days": 7,
     "source_date": "2026-08-29",
-    "status": "ok"
+    "status": "stale"
   },
   "sw_industry_daily": {
     "refreshed_at": "2026-08-29T06:03:19+00:00",
@@ -100,15 +100,15 @@
     "source": "PatSnap(本地)",
     "max_age_days": 7,
     "source_date": "2026-08-31",
-    "status": "ok"
+    "status": "stale"
   },
   "etf_hc_holdings": {
-    "refreshed_at": "2026-08-29T06:16:14+00:00",
+    "refreshed_at": null,
     "label": "ETF 持仓/画像(HC篮)",
     "source": "etf-data CLI(本地)",
     "max_age_days": 45,
-    "source_date": "2026-08-29",
-    "status": "ok"
+    "source_date": "2026-06-29",
+    "status": "stale"
   },
   "china_fund_hc_positioning": {
     "refreshed_at": null,

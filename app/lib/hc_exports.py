@@ -35,7 +35,8 @@ ANCHOR = "2025-08-01"
 _REL_PANELS = {
     "恒生医疗 vs 恒生 vs 恒生科技": ("HSHCI.HK", ["HSHCI.HK", "HSI.HK", "HSTECH.HK"]),
     "NBI vs 纳斯达克综合": ("^NBI", ["^NBI", "^IXIC"]),
-    "标普500医疗 vs 标普500": ("^SP500-35", ["^SP500-35", "^GSPC"]),
+    # XLV ETF 代理 — ^SP500-35 指数本体已无可用数据源，价格口径（见 jobs/build_hc_overview_data.py）
+    "标普500医疗(XLV代理) vs 标普500": ("XLV", ["XLV", "^GSPC"]),
 }
 
 

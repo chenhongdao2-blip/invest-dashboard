@@ -128,7 +128,7 @@ _SID_NAMES = {
     "^NBI":      ("NBI", "NBI"),
     "XBI":       ("XBI", "XBI"),
     "^SOX":      ("费城半导体", "SOX"),
-    "^SP500-35": ("标普医疗", "S&P HC"),
+    "XLV":       ("标普医疗XLV", "S&P HC (XLV)"),   # ETF 代理，非 ^SP500-35 指数本体
 }
 
 # 页面族 rail 预设（四指数）

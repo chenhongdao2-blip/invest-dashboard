@@ -210,7 +210,11 @@ else:
                 "width": 2.2 if hero else sty.get("width", 1.4),
                 "hero": hero}
 
-    def _render_rs_panel(panel_id: str, *, src: str = "iFind · yfinance") -> None:
+    # Default provenance = yfinance. It used to read "iFind · yfinance" for every
+    # panel, which named a source none of them wholly used AND kept naming iFind after
+    # it was retired (2026-08-21). Panels whose provenance differs pass `src`
+    # explicitly: hk = iFind (committed provenance CSV), msci / sphc = ETF proxies.
+    def _render_rs_panel(panel_id: str, *, src: str = "yfinance") -> None:
         hero_id, peer_ids = next((h, p) for pid, h, p in hco.PANELS if pid == panel_id)
         ser = hco.panel_series(_idx, panel_id)
         if hero_id not in ser:
@@ -225,7 +229,7 @@ else:
         }, prefer_cn=_cn)
         st.iframe(doc, height=h)
 
-    _render_rs_panel("hk")                          # headline: 3-line HK comparison, full width
+    _render_rs_panel("hk", src=i18n.t("hc.rs.hk.src"))   # headline: 3-line HK comparison, full width
 
     # MSCI 口径（ETF 代理）— 与 HK 口径并列的「全中国医疗 beta vs 全中国宽基」。KURE/MCHI 是
     # ETF 市价(USD·含息)，非 MSCI 指数本体(免费源/iFind 都拿不到)，故 title + caption 双重标注
@@ -246,7 +250,9 @@ else:
         # Nasdaq (grey = broad market). XBI styled red so it doesn't read as "broad market".
         _render_rs_panel("nbi")
     with _c2:
-        _render_rs_panel("sphc")
+        # XLV ETF proxy on a PRICE basis — the index (^SP500-35) has no reachable
+        # source and the price basis matches ^GSPC beside it. Title + src both say so.
+        _render_rs_panel("sphc", src=i18n.t("hc.rs.sphc.src"))
 
     # Cross-sector theme: biotech (NBI + XBI, red family) vs AI hardware (^SOX, teal).
     # Full-width below the supporting pair — the "rotation between the two hottest themes"

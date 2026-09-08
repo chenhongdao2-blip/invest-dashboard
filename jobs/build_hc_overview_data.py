@@ -7,7 +7,7 @@ Two committed outputs the Streamlit app reads (cloud can't fetch these live):
      panel "hk"     : HSHCI.HK / HSI.HK / HSTECH.HK (恒生医疗 vs 恒生 vs 恒科) — iFind
      panel "msci"   : KURE / MCHI                    (MSCI 中国医疗 vs MSCI 中国, ETF 代理) — yfinance
      panel "nbi"    : ^NBI / ^IXIC / XBI             (NBI 大盘生科 + XBI 等权生科 vs 纳指) — yfinance
-     panel "sphc"   : ^SP500-35 / ^GSPC              (S&P 500 Health Care vs S&P 500) — yfinance
+     panel "sphc"   : XLV / ^GSPC                    (S&P 500 Health Care, XLV proxy, vs S&P 500) — yfinance
      panel "ai_bio" : ^NBI / XBI / ^SOX             (生物科技 NBI+XBI vs AI 硬件 ^SOX 半导体) — yfinance
 
    A series may belong to MORE THAN ONE panel (^NBI / XBI appear in both "nbi" and
@@ -17,6 +17,17 @@ Two committed outputs the Streamlit app reads (cloud can't fetch these live):
    HK indices come from iFind (HIGH reliability) because HSHCI/HSTECH are NOT on
    Yahoo (404 / empty). US indices come from yfinance. The HK raw pull is kept
    for provenance at data/external/hk_index_raw_ifind_<date>.csv.
+
+   CONTINUITY GATE: a series whose consecutive observations jump more than
+   MAX_GAP_TRADING_DAYS apart is REFUSED (exit non-zero) rather than written —
+   yfinance silently returned nothing for ^SP500-35 between 2026-07-17 and
+   2026-09-04 and the page drew a straight line across the hole. Pass --allow-gaps
+   to persist such a fetch deliberately; it is then recorded with degraded=true in
+   data/external/hc_index_comparison_meta.json, not written silently.
+
+   ^SP500-35 was RETIRED from this job on 2026-09-07 and replaced by the XLV ETF
+   on a PRICE-return basis — see PRICE_BASIS_TICKERS for why the basis is not a
+   detail, and SERIES_META["XLV"] for why a proxy is the only option left.
 
 2. data/external/china_fund_hc_positioning.csv
    12 offshore China-equity funds' healthcare over/underweight vs their own
@@ -28,12 +39,15 @@ Run locally (proxy needed for yfinance in CN):
     HTTP_PROXY=http://127.0.0.1:7897 HTTPS_PROXY=http://127.0.0.1:7897 \
     uv run --with yfinance --with openpyxl --with pandas \
     python jobs/build_hc_overview_data.py
+    python jobs/build_hc_overview_data.py --allow-gaps   # persist a holed fetch
 """
 
 from __future__ import annotations
 
 import argparse
-from datetime import date, timedelta
+import json
+import sys
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -41,6 +55,12 @@ import pandas as pd
 REPO = Path(__file__).resolve().parent.parent
 OUT = REPO / "data" / "external"
 ANCHOR = "2025-08-01"
+
+# Continuity gate. No series may jump more than this many TRADING days between two
+# consecutive observations. 5 = "a whole week of sessions vanished" — comfortably
+# above any real market closure, comfortably below the seven-week ^SP500-35 hole
+# this gate exists to catch (see enforce_continuity).
+MAX_GAP_TRADING_DAYS = 5
 # yfinance `end` is EXCLUSIVE — use tomorrow so the latest completed session is included.
 END = (date.today() + timedelta(days=1)).isoformat()
 
@@ -69,7 +89,12 @@ SERIES_META = {
     # ^SOX = PHLX Semiconductor — the US "AI hardware" anchor (ai-researcher reviewed,
     # see benchmarks.py). An index (not an ETF), same quote convention as ^NBI / ^IXIC.
     "^SOX":      ("PHLX Semiconductor (SOX)", "费城半导体 (SOX)", "yfinance"),
-    "^SP500-35": ("S&P 500 Health Care",  "标普500医疗保健", "yfinance"),
+    # XLV = the Health Care Select Sector SPDR, standing in for the S&P 500 Health
+    # Care index (^SP500-35), which we can no longer source — see PRICE_BASIS_TICKERS
+    # for the two reasons and the basis. The labels say "代理 / proxy" and carry the
+    # ticker so a reader of the legend or the CSV cannot mistake the ETF for the index.
+    "XLV":       ("S&P 500 Health Care proxy (XLV ETF, price)",
+                  "标普500医疗保健 代理 (XLV ETF·价格回报)", "yfinance · ETF (price)"),
     "^GSPC":     ("S&P 500",              "标普500",      "yfinance"),
     # MSCI 口径 — investable ETF proxies (the MSCI index levels themselves aren't free /
     # daily-available; iFind doesn't carry them either). KURE tracks MSCI China All Shares
@@ -84,20 +109,138 @@ PANEL_SERIES = {
     "hk":     ["HSHCI.HK", "HSI.HK", "HSTECH.HK"],
     "msci":   ["KURE", "MCHI"],
     "nbi":    ["^NBI", "^IXIC", "XBI"],
-    "sphc":   ["^SP500-35", "^GSPC"],
+    "sphc":   ["XLV", "^GSPC"],
     "ai_bio": ["^NBI", "XBI", "^SOX"],
 }
 # Unique Yahoo-sourced series across ALL panels — startswith so "yfinance · ETF" matches.
 US_TICKERS = sorted({sid for sids in PANEL_SERIES.values()
                      for sid in sids if SERIES_META[sid][2].startswith("yfinance")})
 
+# Tickers pulled with auto_adjust=FALSE, i.e. PRICE return, not total return.
+#
+# WHY XLV REPLACED ^SP500-35 AT ALL (2026-09-07). Two reasons, and the second is the
+# one that settles it:
+#   1. No source available to us can serve the index itself. FactSet GlobalPrices
+#      returns fsymId: null for all seven ^SP500-35 / S&P-500-Health-Care candidate
+#      identifiers while the XLV control resolves fine (so: index identifiers
+#      unsupported, not a broken call); FactSet Macroeconomics' full 715-row US
+#      catalogue has no equity-index category at all; Bigdata has no such index
+#      entity and its own "Health Care" sector row IS XLV, on fixed windows with no
+#      daily series; Quartr is subscription_required on this account.
+#   2. The surviving ^SP500-35 prints are not merely sparse, they are UNSTABLE. The
+#      2026-09-04 point sits in the committed CSV, yet yfinance re-probed on
+#      2026-09-07 returns nothing at all after 2026-07-17 — the print did not go
+#      stale, it disappeared. A benchmark whose history rewrites itself cannot be a
+#      benchmark, and no continuity gate can rescue that: the gate catches a hole,
+#      it cannot catch a source that retracts data it already served.
+#
+# WHY PRICE BASIS, NOT TOTAL RETURN. ^GSPC in the same panel is a PRICE index, and
+# ^SP500-35 was one too. yfinance's default auto_adjust=True reinvests dividends, so
+# pulling XLV that way would put a total-return line against a price line and the
+# ~1.4-1.5%/yr XLV dividend would read as health-care alpha. Measured over
+# 2026-01-02 -> 2026-09-04: ^SP500-35 +10.05% (committed CSV), XLV total return
+# +11.19%, XLV price return +10.25%. Total return overstates the index by 1.14pp of
+# pure dividend; price return tracks it to 0.20pp. That 1.14pp is the fake
+# outperformance this flag exists to prevent.
+PRICE_BASIS_TICKERS = {"XLV"}
 
-def build_index_comparison() -> pd.DataFrame:
+
+def _trading_day_gap(d0: pd.Timestamp, d1: pd.Timestamp) -> int:
+    """Sessions between two consecutive observations, on pandas' US business-day
+    calendar (Mon-Fri).
+
+    NOTE ON PRECISION: `pd.bdate_range` does not know market holidays, so a span
+    containing e.g. Thanksgiving or Christmas is OVER-counted by one day per
+    holiday. That is the safe direction for a tripwire — over-counting can only
+    make the gate fire slightly more eagerly, never blind it — and the slack at a
+    threshold of 5 is ample: the worst US holiday cluster adds ~2-3 days, while the
+    failure this gate exists to catch measures 35.
+    """
+    return len(pd.bdate_range(d0, d1)) - 1
+
+
+def find_continuity_breaks(
+    closes: dict[str, pd.DataFrame], max_gap: int = MAX_GAP_TRADING_DAYS
+) -> list[dict]:
+    """Every jump longer than `max_gap` trading days, as
+    [{series_id, prev_date, next_date, trading_day_gap}, ...] sorted by series.
+
+    Checked on the per-series `closes` map (each unique series exactly once), NOT
+    on the exploded long frame — otherwise a series in two panels (^NBI / XBI) would
+    report the same hole twice.
+    """
+    breaks: list[dict] = []
+    for sid in sorted(closes):
+        c = closes[sid]
+        if c is None or c.empty:
+            continue
+        dates = pd.to_datetime(c["date"]).sort_values().reset_index(drop=True)
+        for i in range(1, len(dates)):
+            gap = _trading_day_gap(dates[i - 1], dates[i])
+            if gap > max_gap:
+                breaks.append({
+                    "series_id": sid,
+                    "prev_date": dates[i - 1].strftime("%Y-%m-%d"),
+                    "next_date": dates[i].strftime("%Y-%m-%d"),
+                    "trading_day_gap": int(gap),
+                })
+    return breaks
+
+
+def enforce_continuity(
+    closes: dict[str, pd.DataFrame], *, allow_gaps: bool = False,
+    max_gap: int = MAX_GAP_TRADING_DAYS,
+) -> list[dict]:
+    """Continuity gate: refuse to write a series with a hole in it.
+
+    Why this exists: on 2026-09-07 the Healthcare page's "S&P 500 Health Care vs
+    S&P 500" panel drew a straight red line from mid-July to early September.
+    yfinance had returned NO bars for ^SP500-35 between 2026-07-17 and 2026-09-04
+    (242 points against ^GSPC's 276 in the same panel). This job wrote whatever it
+    received, the front end joined the two surviving points 35 sessions apart, and
+    the chart showed a smooth 6% climb that never happened. A hole is not data; two
+    endpoints are not a series.
+
+    Returns the break list (empty when clean) so the caller can record it in meta.
+    Exits non-zero unless `allow_gaps`.
+    """
+    breaks = find_continuity_breaks(closes, max_gap=max_gap)
+    if not breaks:
+        return breaks
+
+    detail = "\n".join(
+        f"    {b['series_id']}: {b['prev_date']} -> {b['next_date']}"
+        f" = {b['trading_day_gap']} trading days (max {max_gap})"
+        f"  source={SERIES_META.get(b['series_id'], ('', '', '?'))[2]!r}"
+        for b in breaks
+    )
+    n = len({b["series_id"] for b in breaks})
+    msg = (
+        f"REFUSING TO WRITE — {n} series has a hole longer than {max_gap} trading days:\n"
+        f"{detail}\n"
+        "  Consecutive observations that far apart are not a series. The front end\n"
+        "  connects them with a straight line, so the reader sees a smooth move that\n"
+        "  never happened (see enforce_continuity's docstring: that is exactly what\n"
+        "  ^SP500-35 did on the Healthcare page on 2026-09-07).\n"
+        "  Fix the upstream source, or re-run with --allow-gaps to persist this fetch\n"
+        "  deliberately (it will be labelled degraded in hc_index_comparison_meta.json)."
+    )
+    if not allow_gaps:
+        sys.exit(msg)
+    print(f"WARNING: {msg}\n  --allow-gaps given: writing anyway, labelled degraded.")
+    return breaks
+
+
+def build_index_comparison(*, allow_gaps: bool = False) -> tuple[pd.DataFrame, list[dict]]:
     """Long tidy frame: date, series_id, name_en, name_cn, panel, close, source.
 
     Fetch each unique series' close ONCE (HK from iFind provenance, US from yfinance),
-    then explode by PANEL_SERIES membership so a series shared across panels (^NBI /
-    XBI in nbi + ai_bio) is emitted as one row-set per panel.
+    run the continuity gate over those per-series closes, then explode by
+    PANEL_SERIES membership so a series shared across panels (^NBI / XBI in nbi +
+    ai_bio) is emitted as one row-set per panel.
+
+    Returns (frame, continuity_breaks). Non-empty breaks means the caller passed
+    allow_gaps=True and the output must be labelled degraded.
     """
     closes: dict[str, pd.DataFrame] = {}   # series_id -> df(date, close)
 
@@ -109,15 +252,29 @@ def build_index_comparison() -> pd.DataFrame:
         closes[sid] = g[["date", "close"]].sort_values("date").reset_index(drop=True)
 
     # --- US from yfinance (per-series close) ---
+    # TWO calls, not one: auto_adjust is a per-download flag, and PRICE_BASIS_TICKERS
+    # must come back on a price basis to sit beside the price index ^GSPC in its panel
+    # (see that constant for the 1.14pp of dividend a single auto_adjust=True call
+    # would have silently turned into health-care outperformance).
     import yfinance as yf
 
-    d = yf.download(US_TICKERS, start=ANCHOR, end=END, auto_adjust=True,
-                    progress=False, threads=True, group_by="ticker")
-    for t in US_TICKERS:
-        ser = d[t]["Close"].dropna() if t in d.columns.get_level_values(0) else pd.Series(dtype=float)
-        if ser.empty:
-            raise RuntimeError(f"yfinance returned empty for {t}")
-        closes[t] = pd.DataFrame({"date": ser.index, "close": ser.values})
+    def _fetch(tickers: list[str], *, auto_adjust: bool) -> None:
+        if not tickers:
+            return
+        d = yf.download(tickers, start=ANCHOR, end=END, auto_adjust=auto_adjust,
+                        progress=False, threads=True, group_by="ticker")
+        for t in tickers:
+            ser = (d[t]["Close"].dropna()
+                   if t in d.columns.get_level_values(0) else pd.Series(dtype=float))
+            if ser.empty:
+                raise RuntimeError(f"yfinance returned empty for {t}")
+            closes[t] = pd.DataFrame({"date": ser.index, "close": ser.values})
+
+    _fetch([t for t in US_TICKERS if t not in PRICE_BASIS_TICKERS], auto_adjust=True)
+    _fetch([t for t in US_TICKERS if t in PRICE_BASIS_TICKERS], auto_adjust=False)
+
+    # --- continuity gate: a hole is not data (see enforce_continuity) ---
+    breaks = enforce_continuity(closes, allow_gaps=allow_gaps)
 
     # --- explode by panel membership (a series can land in >1 panel) ---
     rows: list[pd.DataFrame] = []
@@ -138,7 +295,8 @@ def build_index_comparison() -> pd.DataFrame:
     df["source"] = df["series_id"].map(lambda s: SERIES_META[s][2])
     df = df.sort_values(["panel", "series_id", "date"]).reset_index(drop=True)
     df["date"] = df["date"].dt.strftime("%Y-%m-%d")
-    return df[["date", "series_id", "name_en", "name_cn", "panel", "close", "source"]]
+    cols = ["date", "series_id", "name_en", "name_cn", "panel", "close", "source"]
+    return df[cols], breaks
 
 
 def build_fund_positioning() -> pd.DataFrame:
@@ -217,14 +375,35 @@ def main() -> None:
              "Desktop xlsx unavailable on a CI runner. The committed "
              "china_fund_hc_positioning.csv is left untouched.",
     )
+    ap.add_argument(
+        "--allow-gaps", action="store_true",
+        help=f"Persist a series with a hole longer than {MAX_GAP_TRADING_DAYS} trading "
+             "days anyway. Without this the continuity gate REFUSES to write and exits "
+             "non-zero (a gap makes the chart draw a straight line across missing "
+             "sessions). With it, the break is recorded in "
+             "hc_index_comparison_meta.json with degraded=true — labelled, not silent.",
+    )
     args = ap.parse_args()
 
     OUT.mkdir(parents=True, exist_ok=True)
 
-    idx = build_index_comparison()
+    idx, breaks = build_index_comparison(allow_gaps=args.allow_gaps)
     idx_path = OUT / "hc_index_comparison.csv"
     idx.to_csv(idx_path, index=False)
     print(f"[ok] {idx_path}  ({len(idx)} rows, {idx['series_id'].nunique()} series)")
+
+    # Sibling meta (not a new CSV column — hc_overview.py / export_hc_relative_xlsx.py
+    # read the CSV schema). Mirrors etf_hc_meta.json: the gate's verdict is always
+    # recorded, so "clean" and "knowingly degraded" are distinguishable downstream.
+    meta_path = OUT / "hc_index_comparison_meta.json"
+    meta_path.write_text(json.dumps({
+        "built_at": datetime.now().isoformat(timespec="seconds"),
+        "anchor": ANCHOR,
+        "max_gap_trading_days": MAX_GAP_TRADING_DAYS,
+        "degraded": bool(breaks),
+        "continuity_breaks": breaks,
+    }, indent=2, ensure_ascii=False), encoding="utf-8")
+    print(f"[ok] {meta_path}  (degraded={bool(breaks)}, {len(breaks)} break(s))")
     for panel, g in idx.groupby("panel"):
         spread = g.groupby("series_id")["date"].agg(["min", "max", "count"])
         print(f"   panel {panel}:")

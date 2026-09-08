@@ -119,17 +119,22 @@ def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool, *,
     if not sectors:
         return None
 
+    # R3 audit §4: this used to be `sector_tickers` once PER SUB-SECTOR (16 queries
+    # on healthcare) plus two wide close pulls. One cached frame now covers all of
+    # it — rosters, prices, multiples.
+    mf = db.market_frame(domain_id)
+
     # First-wins sector assignment (a ticker in two sectors is counted once).
     # single_block routes every member into one synthetic basket key.
     sector_of: dict[str, str] = {}
     members_count: dict[str, int] = {}
     for sec in sectors:
-        m = db.sector_tickers(domain_id, sec)
-        if m.empty:
+        members = mf.members.get(sec, ())
+        if not members:
             continue
         tgt = _ALL_KEY if single_block else sec
         cnt = 0
-        for t in m["ticker"].tolist():
+        for t in members:
             if t not in sector_of:
                 sector_of[t] = tgt
                 cnt += 1
@@ -138,11 +143,13 @@ def build_domain_bento(domain_id: str, window_col: str, prefer_cn: bool, *,
     if not tickers:
         return None
 
-    closes = db.get_close_series_usd(tickers)
-    rets = db.compute_returns(closes)
+    rets = db.returns_for(tickers, mf.as_of, "usd", domain_id)
     if rets.empty or window_col not in rets.columns:
         return None
-    mult = db.latest_multiples(tickers)
+    # A superset of `tickers` (it also carries _coverage-only members, which
+    # `_domain_sectors` excludes); every read below is a per-ticker `.get`, so the
+    # extra rows are never reached.
+    mult = mf.multiples
     mc = _mcap_col(mult)
     names = db.ticker_to_name(prefer_cn=prefer_cn)
 

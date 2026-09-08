@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import streamlit as st
 import yaml
@@ -133,10 +135,207 @@ def ticker_to_name(prefer_cn: bool = True) -> dict[str, str]:
     return dict(zip(df["ticker"], df["display_name"]))
 
 
+# ---------- per-domain market frame ----------
+@dataclass(frozen=True)
+class MarketFrame:
+    """Everything a domain page needs off ONE cached read.
+
+    R3 audit §4/§8.3: the heatmap issued `sector_tickers` once per sub-sector and
+    then pulled the wide close frame twice (local + USD), 16 queries where 3 do.
+    `close`/`close_usd`/`multiples` cover the domain's ACTIVE members only, which
+    is what every scan path already filtered to.
+
+    `meta` is deliberately NOT status-filtered — same reason `ticker_to_name` is
+    not (see its NOTE above): a delisted or renamed pick must still resolve to a
+    name. It carries a `status` column so callers that need the active set can
+    filter, and `members` is pre-filtered for them.
+    """
+
+    close: pd.DataFrame                      # index=date, columns=ticker, local ccy
+    close_usd: pd.DataFrame                  # same shape, COALESCE(close_usd, close)
+    multiples: pd.DataFrame                  # index=ticker, latest multiples_daily row
+    meta: pd.DataFrame                       # index=ticker, universe_member one row per ticker
+    members: dict[str, tuple[str, ...]]      # sector -> ACTIVE tickers, ordered by ticker
+    as_of: str | None                        # max(prices_daily.date) inside this frame
+
+
+def _universe_subquery(domain: str | None) -> str:
+    """`SELECT DISTINCT ticker …` for the domain's ACTIVE members.
+
+    Used as a sub-select so neither price nor multiples query has to interpolate a
+    500-placeholder `IN (?,?,…)` list — the SQL text stays constant.
+    """
+    return ("SELECT DISTINCT ticker FROM universe_member WHERE 1=1"
+            + (" AND domain = ?" if domain else "") + _active_clause())
+
+
+@st.cache_data(ttl=300)
+def _frame_prices(domain: str | None) -> tuple[pd.DataFrame, pd.DataFrame, str | None]:
+    """Local AND USD wide closes in ONE pass (audit §4: the double pull)."""
+    args: tuple = (domain,) if domain else ()
+    px = query(
+        f"SELECT p.ticker, p.date, p.close, "
+        f"       COALESCE(p.close_usd, p.close) AS close_usd "
+        f"FROM prices_daily p JOIN ({_universe_subquery(domain)}) u ON u.ticker = p.ticker "
+        f"ORDER BY p.ticker, p.date",
+        args,
+    )
+    if px.empty:
+        return pd.DataFrame(), pd.DataFrame(), None
+    as_of = str(px["date"].max())
+    px["date"] = pd.to_datetime(px["date"])
+    return (px.pivot(index="date", columns="ticker", values="close").sort_index(),
+            px.pivot(index="date", columns="ticker", values="close_usd").sort_index(),
+            as_of)
+
+
+@st.cache_data(ttl=300)
+def _frame_multiples(domain: str | None) -> pd.DataFrame:
+    df = query(
+        f"SELECT m.* FROM multiples_daily m JOIN ("
+        f"  SELECT ticker, MAX(date) AS d FROM multiples_daily "
+        f"  WHERE ticker IN ({_universe_subquery(domain)}) GROUP BY ticker"
+        f") l ON l.ticker = m.ticker AND m.date = l.d",
+        (domain,) if domain else (),
+    )
+    return df.set_index("ticker") if not df.empty else df
+
+
+@st.cache_data(ttl=300)
+def _frame_meta(domain: str | None) -> pd.DataFrame:
+    status_col = ("MAX(status)" if _has_column("universe_member", "status") else "NULL")
+    sec_col = ("MAX(COALESCE(secondary_listing, 0))"
+               if _has_column("universe_member", "secondary_listing") else "0")
+    df = query(
+        f"SELECT ticker, MAX(name_cn) AS name_cn, MAX(name_en) AS name_en, "
+        f"       MAX(region) AS region, MAX(domain) AS domain, "
+        f"       GROUP_CONCAT(DISTINCT sector) AS sectors, "
+        f"       {status_col} AS status, {sec_col} AS secondary_listing "
+        f"FROM universe_member{' WHERE domain = ?' if domain else ''} "
+        f"GROUP BY ticker ORDER BY ticker",
+        (domain,) if domain else (),
+    )
+    return df.set_index("ticker") if not df.empty else df
+
+
+@st.cache_data(ttl=300)
+def _frame_members(domain: str | None) -> dict[str, tuple[str, ...]]:
+    """sector -> ACTIVE tickers, ordered by ticker (i.e. `sector_tickers`'s roster).
+
+    First-wins assignment across sectors stays the CALLER's business — `heatmap.py`
+    walks its configured sector order and keeps a ticker's first appearance.
+    """
+    meta = _frame_meta(domain)
+    out: dict[str, list[str]] = {}
+    if meta.empty:
+        return {}
+    for tkr, sectors, status in zip(meta.index, meta["sectors"], meta["status"]):
+        if pd.notna(status):
+            continue
+        for sec in str(sectors or "").split(","):
+            if sec:
+                out.setdefault(sec, []).append(tkr)
+    return {k: tuple(v) for k, v in out.items()}
+
+
+def market_frame(domain: str | None = None) -> MarketFrame:
+    """One domain's whole cross-section: three queries, four cache buckets.
+
+    `domain=None` is the entire universe — what `quote_table`, `top_movers` and
+    `returns_for` want. The argument is HASHED by each `_frame_*` helper, so
+    healthcare / ai / etf / None land in distinct buckets; this is the same
+    discipline `load_domain_cfg` documents above, and for the same reason.
+
+    NOT itself `@st.cache_data` — deviation from design A.1, which asserted "a
+    dataclass of DataFrames pickles fine". It does not, reliably: `cache_data`
+    pickles the return value, and pickling a value by class reference fails with
+    `PicklingError: it's not the same object as lib.db.MarketFrame` the moment
+    `lib.db` is imported twice. `tests/test_hc_overview_cache_key.py` reproduces
+    that by clearing `lib.*` out of `sys.modules` and re-importing — which is
+    precisely what a Streamlit hot reload does, so the failure mode is a 500 on
+    the deployed app, not a test artifact. Caching the DataFrames/tuple/dict
+    pieces instead keeps every cached value a builtin container and makes this
+    assembler free.
+    """
+    close, close_usd, as_of = _frame_prices(domain)
+    return MarketFrame(
+        close=close,
+        close_usd=close_usd,
+        multiples=_frame_multiples(domain),
+        meta=_frame_meta(domain),
+        members=_frame_members(domain),
+        as_of=as_of,
+    )
+
+
+def returns_for(tickers: tuple[str, ...], as_of: str | None = None,
+                basis: str = "usd", domain: str | None = None) -> pd.DataFrame:
+    """Cached `compute_returns` over a slice of a market frame.
+
+    UNCACHED on purpose, and deliberately thin: it only normalises the ticker
+    argument to `tuple(sorted(set(...)))` and hands it to the cached
+    `_returns_for_sorted`. Normalising INSIDE the cached body would not work —
+    `@st.cache_data` hashes the argument it is given, so `("A","B")` and `("B","A")`
+    would be two buckets recomputing the same answer, and the order a caller happens
+    to collect its tickers in is precisely what varies (`quote_table` filters a
+    roster, the heatmap walks sectors). Normalising HERE is what actually makes two
+    callers with the same SET share one bucket.
+
+    Sorting also matches the row order the pivot in `get_close_series_usd` always
+    produced, which is what `tests/test_market_frame.py` pins the output against.
+    """
+    return _returns_for_sorted(tuple(sorted(set(tickers))), as_of, basis, domain)
+
+
+@st.cache_data(ttl=300)
+def _returns_for_sorted(tickers: tuple[str, ...], as_of: str | None = None,
+                        basis: str = "usd", domain: str | None = None) -> pd.DataFrame:
+    """`compute_returns` over a market-frame slice. `tickers` MUST already be
+    sorted+deduped — `returns_for` is the entry point that guarantees it.
+
+    `compute_returns` takes a DataFrame, which Streamlit cannot hash, so the cache
+    lives on this keyed shell instead. `as_of` (pass `market_frame(...).as_of`) is
+    not read — it is in the signature so the key MOVES when new prices land and
+    stays PUT across the re-runs a slider triggers, which is exactly the 258 ms
+    recompute audit §5 measured on `3_Sector_Heatmap.py`'s min-mcap slider.
+
+    Per-ticker results are independent, so `returns_for(all).loc[subset]` equals
+    `returns_for(subset)` — call it once per domain and slice, do not call it once
+    per sub-sector.
+
+    `domain` picks WHICH frame to source from, and exists purely to avoid a cold-load
+    regression: design A.2 sources this from `market_frame(None)` unconditionally,
+    which makes a single domain page materialise the 494-ticker universe frame ON TOP
+    of its own 326-ticker one. Measured on `3_Sector_Heatmap.py`, that pushed the cold
+    AppTest render from 0.30 s to 0.39 s. Pass the same domain you passed
+    `market_frame` and there is only ever one frame in play.
+    """
+    mf = market_frame(domain)
+    src = mf.close_usd if basis == "usd" else mf.close
+    if src.empty:
+        return pd.DataFrame()
+    cols = [t for t in tickers if t in src.columns]
+    if not cols:
+        return pd.DataFrame()
+    return compute_returns(src[cols])
+
+
 # ---------- prices & returns ----------
 @st.cache_data(ttl=300)
 def get_close_series(tickers: tuple[str, ...]) -> pd.DataFrame:
-    """Wide-format close prices: index=date, columns=ticker. Tuple for cache."""
+    """Wide-format close prices: index=date, columns=ticker. Tuple for cache.
+
+    DEPRECATED for multi-ticker use — prefer `market_frame(domain).close`, which
+    fetches local and USD closes in ONE pass instead of two (audit §4).
+
+    Deliberately NOT a wrapper over the frame, despite the "thin wrapper" plan:
+    it is still the right call for a SINGLE ticker (a 1-column pull beats
+    materialising a domain frame) and it is the ONLY correct call for tickers the
+    frame does not carry — Ticker Drill on a DELISTED name, and `ipo_tracker`'s
+    yfinance symbols, which are not universe members at all. Serving those from
+    the frame would hand back an empty column, and slicing the frame would widen
+    every caller's date index to the union of the whole universe.
+    """
     if not tickers:
         return pd.DataFrame()
     placeholders = ",".join("?" * len(tickers))
@@ -151,90 +350,119 @@ def get_close_series(tickers: tuple[str, ...]) -> pd.DataFrame:
     return df.pivot(index="date", columns="ticker", values="close").sort_index()
 
 
+# Split / bad-tick guard: a single-day DROP beyond this is almost never a real
+# return — it's an un-back-adjusted forward split (yfinance sometimes MISSES the
+# split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB mixes pre- and
+# post-split closes) or a bad tick. Any window spanning such a drop is suppressed
+# (NaN) so the heatmap drops the tile rather than printing a fake -90%.
+# DOWNWARD-only + 0.75 by design: real biotech catalysts pop UP big (e.g. 2565.HK
+# +66% on 2026-05-18, no split — must NOT be suppressed), and genuine one-day
+# crashes rarely exceed -75% (2617.HK -60% real distress stays), while
+# forward-split jumps are -80/-90%.
+SPLIT_GUARD = 0.75
+
+# window label -> lookback in VALID observations (not calendar days)
+_RET_WINDOWS = {"1d_%": 1, "5d_%": 5, "1m_%": 21, "3m_%": 63, "6m_%": 126, "60d_%": 60}
+_RET_COLS = ["last", "1d_%", "5d_%", "1m_%", "3m_%", "6m_%", "ytd_%", "60d_%"]
+
+
 def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
     """Per-ticker return windows. Each ticker uses its OWN last valid close —
-    avoids ragged-tail bug across markets (JP closes earlier than US).
-    Output index=ticker, columns=[last, 1d_%, 5d_%, 1m_%, ytd_%, 60d_%]."""
+    avoids the ragged-tail bug across markets (JP closes earlier than US).
+    Output index=ticker, columns=`_RET_COLS`.
+
+    R3 audit §5 / PR 2: this used to be a per-ticker Python loop costing 258 ms
+    on 494 tickers and re-running on every slider tick. It is now column-wise;
+    `tests/test_compute_returns_equiv.py` pins it against a verbatim copy of the
+    loop over the whole committed DB, so the numbers are byte-identical.
+
+    The trick is `rev`: the 1-based rank of each VALID observation counted from
+    the end of its own column (1 = last valid bar). Every per-ticker `.dropna()`
+    positional index in the old loop becomes a mask on `rev`, so the ragged tails
+    stay per-ticker without ever leaving vectorized land.
+    """
     if closes.empty:
         return pd.DataFrame()
 
-    closes = closes.sort_index()
-    out: dict[str, dict[str, float | None]] = {}
+    C = closes.sort_index()
+    valid = C.notna()
+    n_valid = valid.sum()                                # Series[ticker]
+    rev = valid[::-1].cumsum()[::-1].where(valid)        # 1 = last valid, 2 = prior, …
 
-    NAN = float("nan")
-    for ticker in closes.columns:
-        ser = closes[ticker].dropna()
-        if ser.empty:
-            out[ticker] = {k: NAN for k in ("last", "1d_%", "5d_%", "1m_%", "ytd_%", "60d_%")}
-            continue
+    # One gather instead of a full-frame mask per window: `back[k]` is the close
+    # k valid observations back, per column (NaN where the column is too short).
+    # Doing this as 7 separate `C.where(rev == k+1).max()` passes cost 38 of the
+    # function's 75 ms.
+    _depth = max(_RET_WINDOWS.values()) + 1
+    _rv, _cv = rev.to_numpy(), C.to_numpy(dtype="float64")
+    _sel = np.isfinite(_rv) & (_rv <= _depth)
+    _r, _c = np.nonzero(_sel)
+    back = np.full((_depth, C.shape[1]), np.nan)
+    back[_rv[_r, _c].astype(np.intp) - 1, _c] = _cv[_r, _c]
 
-        last = float(ser.iloc[-1])
+    def at(k: int) -> pd.Series:
+        """Close k VALID observations back, per column."""
+        return pd.Series(back[k], index=C.columns)
 
-        # Split / bad-tick guard: a single-day DROP beyond this is almost never a
-        # real return — it's an un-back-adjusted forward split (yfinance sometimes
-        # MISSES the split entirely, e.g. 5801.T / 3110.T 2026-06 ~1:10, so the DB
-        # mixes pre- and post-split closes) or a bad tick. Any window spanning such
-        # a drop is suppressed (NaN) so the heatmap drops the tile rather than
-        # printing a fake -90%. DOWNWARD-only + 0.75 by design: real biotech
-        # catalysts pop UP big (e.g. 2565.HK +66% on 2026-05-18, no split — must
-        # NOT be suppressed), and genuine one-day crashes rarely exceed -75%
-        # (2617.HK -60% real distress stays), while forward-split jumps are -80/-90%.
-        SPLIT_GUARD = 0.75
+    last = at(0)
 
-        def ret_back(n: int) -> float:
-            if len(ser) <= n:
-                return NAN
-            seg = ser.iloc[-n - 1:]
-            if (seg.pct_change() < -SPLIT_GUARD).any():
-                return NAN  # window crosses a split/bad-tick down-discontinuity
-            prev = seg.iloc[0]
-            if pd.isna(prev) or prev == 0:
-                return NAN
-            return float((ser.iloc[-1] / prev - 1) * 100)
+    # `C.ffill().shift(1)` is the previous VALID close, so this equals the old
+    # `ser.dropna().pct_change()` on every valid row. `min_bad` = the smallest
+    # `rev` carrying a guard-tripping drop, i.e. the most RECENT one; a window
+    # reaching n bars back crosses it iff min_bad <= n.
+    pc = C / C.ffill().shift(1) - 1.0
+    bad = (pc < -SPLIT_GUARD) & valid
+    min_bad = rev.where(bad).min()                       # NaN when the column is clean
 
-        # YTD: anchor on the LAST close STRICTLY BEFORE Jan 1 of the series' own
-        # latest year (each ticker uses its own year so cross-year DB rows work).
-        #
-        # R3 audit C1 — anchoring on the FIRST close *of* the year silently drops
-        # the Jan-1 gap: shown = (1+true)/(1+jan_gap) − 1. Measured across 490
-        # tickers: median |error| 2.40pp, p90 10.6pp, max 86.0pp (SNDK showed
-        # +439.5% against a true +525.6%). The prior-year close is the standard
-        # YTD base — a stock that gapped +10% on the first trading day of January
-        # has earned that 10%.
-        #
-        # Fallback: a ticker listed mid-year (or backfilled only from January) has
-        # no prior-year bar; keep the old first-close-of-year behaviour there, as
-        # there is no better base and the gap does not exist.
-        year = ser.index.max().year
-        jan1 = pd.Timestamp(f"{year}-01-01")
-        prior = ser[ser.index < jan1]
-        anchor_pos = len(prior) - 1 if len(prior) else 0
-        window = ser.iloc[anchor_pos:]          # anchor bar .. last bar (inclusive)
-        base = window.iloc[0] if len(window) else NAN
-        if (len(window) and not pd.isna(base) and base != 0
-                and not (window.pct_change() < -SPLIT_GUARD).any()):
-            ytd = float((ser.iloc[-1] / base - 1) * 100)
-        else:
-            ytd = NAN
+    out: dict[str, pd.Series] = {"last": last}
+    for col, n in _RET_WINDOWS.items():
+        prev = at(n).replace(0.0, np.nan)                # anchor of 0 → undefined
+        ok = (n_valid > n) & (min_bad.isna() | (min_bad > n))
+        out[col] = ((last / prev - 1.0) * 100.0).where(ok)
 
-        out[ticker] = {
-            "last": last,
-            "1d_%": ret_back(1),
-            "5d_%": ret_back(5),
-            "1m_%": ret_back(21),
-            "3m_%": ret_back(63),    # M14 audit: 3-month
-            "6m_%": ret_back(126),   # M14 audit: 6-month
-            "ytd_%": ytd,
-            "60d_%": ret_back(60),
-        }
+    # YTD: anchor on the LAST close STRICTLY BEFORE Jan 1 of the series' own
+    # latest year (each ticker uses its own year so cross-year DB rows work).
+    #
+    # R3 audit C1 — anchoring on the FIRST close *of* the year silently drops the
+    # Jan-1 gap: shown = (1+true)/(1+jan_gap) − 1. Measured across 490 tickers:
+    # median |error| 2.40pp, p90 10.6pp, max 86.0pp. The prior-year close is the
+    # standard YTD base — a stock that gapped +10% on the first trading day of
+    # January has earned that 10%.
+    #
+    # Fallback: a ticker listed mid-year (or backfilled only from January) has no
+    # prior-year bar; keep the first-close-of-year behaviour there, as there is no
+    # better base and the gap does not exist.
+    pos = len(C) - 1 - np.argmax(valid.to_numpy()[::-1], axis=0)
+    years = pd.Series(C.index[pos].year, index=C.columns).where(n_valid > 0)
+    ytd = pd.Series(np.nan, index=C.columns, dtype="float64")
+    for y in years.dropna().unique():
+        cols = years.index[years == y]
+        cut = pd.Timestamp(f"{int(y)}-01-01")
+        pre, post = C.loc[C.index < cut, cols], C.loc[C.index >= cut, cols]
+        anchor = pre.ffill().iloc[-1] if len(pre) else pd.Series(np.nan, index=cols)
+        if len(post):                                    # no prior-year bar → fallback
+            anchor = anchor.fillna(post.bfill().iloc[0])
+        anchor = anchor.replace(0.0, np.nan)
+        # bars from the anchor to the last one = 1 + n_ytd, so the guard window
+        # spans rev 1..n_ytd — identical to the loop's `window.pct_change()`.
+        n_ytd = valid.loc[C.index >= cut, cols].sum()
+        clean = min_bad[cols].isna() | (min_bad[cols] > n_ytd)
+        ytd.loc[cols] = ((last[cols] / anchor - 1.0) * 100.0).where(clean)
+    out["ytd_%"] = ytd
 
-    return pd.DataFrame.from_dict(out, orient="index")
+    return pd.DataFrame(out).reindex(columns=_RET_COLS)
 
 
 # ---------- multiples ----------
 @st.cache_data(ttl=300)
 def latest_multiples(tickers: tuple[str, ...]) -> pd.DataFrame:
-    """Latest multiples_daily snapshot per ticker. Includes M1 close_usd + M11 mcap_tier."""
+    """Latest multiples_daily snapshot per ticker. Includes M1 close_usd + M11 mcap_tier.
+
+    DEPRECATED for domain-wide use — prefer `market_frame(domain).multiples`,
+    which runs the same query once per domain instead of once per sub-sector and
+    without a 500-placeholder `IN` list. Kept for single-ticker callers
+    (`6_Ticker_Drill.py`) and comp sets that are not a domain.
+    """
     if not tickers:
         return pd.DataFrame()
     placeholders = ",".join("?" * len(tickers))
@@ -337,6 +565,10 @@ def get_close_series_usd(tickers: tuple[str, ...]) -> pd.DataFrame:
     """M1 audit fix: USD-converted close series (so cross-region returns are comparable).
 
     Falls back to local close × FX if close_usd is null (legacy rows pre-M1 fix).
+
+    DEPRECATED for multi-ticker use — prefer `market_frame(domain).close_usd`.
+    Kept for single-ticker and non-universe callers; see `get_close_series` for
+    why it is not a wrapper over the frame.
     """
     if not tickers:
         return pd.DataFrame()
@@ -366,18 +598,13 @@ def top_movers(n: int = 10, domain: str | None = None,
     language gets its own bucket instead of one poisoning the other. The default
     stays True so any caller that has not been updated keeps today's behaviour.
     """
-    if domain:
-        tickers = tuple(
-            query("SELECT DISTINCT ticker FROM universe_member "
-                  "WHERE domain = ?" + _active_clause(),
-                  (domain,))["ticker"].tolist()
-        )
-    else:
-        tickers = tuple(all_tickers())
+    mf = market_frame(domain)
+    tickers = tuple(mf.close.columns)
     if not tickers:
         return pd.DataFrame(), pd.DataFrame()
-    closes = get_close_series(tickers)
-    rets = compute_returns(closes)
+    # basis stays LOCAL, as it always was here — switching this table to USD is a
+    # display-semantics change (audit C6), not a performance one.
+    rets = returns_for(tickers, mf.as_of, "local", domain)
     if rets.empty:
         return pd.DataFrame(), pd.DataFrame()
     name_map = ticker_to_name(prefer_cn=prefer_cn)

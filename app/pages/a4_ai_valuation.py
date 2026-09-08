@@ -96,8 +96,9 @@ if not selected_sectors:
 
 # Collect all tickers across selected sectors
 all_tickers_by_sec: dict[str, list[str]] = {}
+_MF = db.market_frame("ai")
 for sid in selected_sectors:
-    tlist = db.sector_tickers("ai", sid)["ticker"].tolist()
+    tlist = _MF.members.get(sid, ())
     for t in tlist:
         all_tickers_by_sec.setdefault(t, []).append(sid)
 
@@ -107,9 +108,8 @@ if not all_t:
     st.stop()
 
 # Returns + multiples
-closes = db.get_close_series_usd(all_t)
-rets = db.compute_returns(closes)
-mults = db.latest_multiples(all_t)
+rets = db.returns_for(all_t, _MF.as_of, "usd", "ai")
+mults = _MF.multiples.loc[_MF.multiples.index.intersection(all_t)]
 name_map = db.ticker_to_name(prefer_cn=True)
 
 # Merge

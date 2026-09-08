@@ -47,16 +47,22 @@ with st.sidebar:
     )
 
 
+# R3 audit §4/§5: one cached cross-section for the whole domain, and ONE
+# `compute_returns` over it — not one of each per sub-sector. `returns_for` is
+# keyed on `as_of`, so the min-mcap slider re-runs the page without re-running
+# the return computation.
+_MF = db.market_frame("ai")
+_RETS = db.returns_for(tuple(_MF.close_usd.columns), _MF.as_of, "usd", "ai")
+
+
 def _sector_rows(sec_id: str, name_map: dict) -> list[dict]:
     """One sector's cross-section rows for heat_table (mcap $B, returns %, multiples,
     fcf_yield fraction → %). Missing values stay None → NM in-table."""
-    uni = db.sector_tickers("ai", sec_id)
-    tickers = tuple(uni["ticker"].tolist())
+    tickers = _MF.members.get(sec_id, ())
     if not tickers:
         return []
-    rets = db.compute_returns(db.get_close_series_usd(tickers))
-    mults = db.latest_multiples(tickers)
-    region_by_tk = dict(zip(uni["ticker"], uni["region"]))
+    rets, mults = _RETS, _MF.multiples
+    region_by_tk = _MF.meta["region"].to_dict()
     rows = []
     for tk in tickers:
         r = rets.loc[tk] if (not rets.empty and tk in rets.index) else pd.Series(dtype=float)

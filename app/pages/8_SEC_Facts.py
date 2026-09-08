@@ -353,7 +353,8 @@ comp_kpis = st.multiselect(
 st.caption(i18n.t("sec.comp.hint"))
 
 if comp_tickers and comp_kpis:
-    comp = sf.comp_table(comp_tickers, comp_kpis, lang=i18n.get_lang())
+    # tuples: comp_table is @st.cache_data and a list is unhashable
+    comp = sf.comp_table(tuple(comp_tickers), tuple(comp_kpis), lang=i18n.get_lang())
     # map ticker → display name for readability
     comp.insert(1, "Name", [name_map.get(t, t) for t in comp["Ticker"]])
     st.download_button(

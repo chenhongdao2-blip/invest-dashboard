@@ -79,13 +79,18 @@ _gspc_ytd0 = (float(_bench_all.loc["^GSPC", "ytd_%"])
 
 _sum_rows: list[dict] = []
 all_returns_by_sector: dict[str, pd.DataFrame] = {}
+_MF = db.market_frame("healthcare")
 for sec in cfg["sectors"]:
-    uni = db.sector_tickers("healthcare", sec["id"])
-    tickers = tuple(uni["ticker"].tolist())
+    tickers = _MF.members.get(sec["id"], ())
     if not tickers:
         continue
+    # The 30-day sparkline below needs THIS sector's own date index: a slice of the
+    # domain frame carries every date any healthcare name traded (263 rows vs
+    # managed_care's 241), so `.tail(30)` would silently span a different window.
+    # Returns are safe to slice — `compute_returns` is invariant to all-NaN rows,
+    # pinned by test_returns_for_a_sector_equals_the_old_per_sector_pull.
     closes = db.get_close_series_usd(tickers)   # M1 audit: USD-converted
-    rets = db.compute_returns(closes)
+    rets = db.returns_for(tickers, _MF.as_of, "usd", "healthcare")
     if rets.empty:
         continue
     all_returns_by_sector[sec["id"]] = rets

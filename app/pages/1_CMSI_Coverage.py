@@ -48,6 +48,13 @@ prefer_cn = i18n.get_lang() == "zh"
 # ---------------------------------------------------------------------------
 # 1. Universe 加载
 # ---------------------------------------------------------------------------
+# Deliberately NOT on `db.market_frame("healthcare")`, unlike the other HC pages.
+# The coverage list is ~31 names against the domain's 326, so materialising the
+# domain frame costs more than the four small queries it would replace: measured
+# cold AppTest 0.32 s -> 0.43 s. (It also cannot take names from `mf.meta`, which
+# aggregates with MAX per ticker — 6938.HK is 瑞博生物 in _coverage and
+# 瑞博生物-B under hk_hc_ipo.) A session that has already opened another HC page
+# would get the frame for free; a direct landing would not.
 cmsi = db.sector_tickers("healthcare", "_coverage")
 if cmsi.empty:
     st.warning("No CMSI coverage data — check config/universes/cmsi_coverage_hc.yml")

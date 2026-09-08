@@ -47,8 +47,14 @@ st.caption(i18n.t("ai.cov.caption", date=(db.latest_snapshot_date() or "—")))
 
 
 # --- Load the full AI universe across all 6 sectors ---
+_MF = db.market_frame("ai")
 frames = []
 for sec in cfg["sectors"]:
+    # NOT `_MF.meta`: meta aggregates name/region with MAX per ticker, while this
+    # page shows the (domain, sector) ROW. A ticker listed twice with different
+    # metadata (e.g. 6938.HK is 瑞博生物-B under hk_hc_ipo and 瑞博生物 elsewhere)
+    # would silently change name here. Pinned by
+    # tests/test_market_frame.py::test_meta_rows_match_sector_tickers_except_multi_sector.
     uni = db.sector_tickers("ai", sec["id"])
     if uni.empty:
         continue
@@ -71,9 +77,8 @@ uni_dedup = uni_all.drop_duplicates(subset="ticker", keep="first").set_index("ti
 tickers = tuple(uni_dedup.index.tolist())
 
 # --- Compute returns + multiples ---
-closes = db.get_close_series_usd(tickers)
-rets = db.compute_returns(closes)
-mults = db.latest_multiples(tickers)
+rets = db.returns_for(tickers, _MF.as_of, "usd", "ai")
+mults = _MF.multiples.loc[_MF.multiples.index.intersection(tickers)]
 
 # --- Merge into display DataFrame ---
 merged = rets.copy() if not rets.empty else pd.DataFrame(index=list(tickers))

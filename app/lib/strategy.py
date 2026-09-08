@@ -53,14 +53,21 @@ def _delisted_mtime() -> float:
 
 
 @st.cache_data(ttl=3600)
-def _delisted_overrides(_mtime: float) -> dict[str, tuple[float, float, object]]:
+def _delisted_overrides(mtime: float) -> dict[str, tuple[float, float, object]]:
     """{yf_sym: (entry_price, final_price, delist_ts)} for acquired/delisted picks.
 
     entry_price defaults to final_price when blank → the holding is flat at the
     cash-out value (correct for a merger-arb pick entered ~at the deal price). When
     the pick ran up before acquisition, the analyst fills entry_price so the realized
-    return = final/entry, recognized as a step at delist_date. `_mtime` is only a
-    cache key (see _delisted_mtime). Empty if file absent."""
+    return = final/entry, recognized as a step at delist_date. `mtime` is only a
+    cache key (see _delisted_mtime). Empty if file absent.
+
+    `mtime` is a cache KEY, not data — it must NOT start with an underscore:
+    Streamlit EXCLUDES `_`-prefixed parameters from the cache key
+    (streamlit/runtime/caching/cache_utils.py), so the old `_mtime` name made
+    this invalidation a silent no-op (R3 audit H2). See lib/hc_overview.py:66
+    for the same idiom done right.
+    """
     if not DELISTED_CSV.exists():
         return {}
     d = pd.read_csv(DELISTED_CSV)
@@ -402,7 +409,7 @@ STRATEGIES = {
 
 @st.cache_data(ttl=3600, show_spinner="Fetching picks prices…")
 def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
-                       _ovr_mtime: float = 0.0) -> pd.DataFrame:
+                       ovr_mtime: float = 0.0) -> pd.DataFrame:
     """Wide-format close DataFrame for picks. Live yfinance, cached 1h.
 
     yfinance occasionally fails a whole burst of symbols in one batch
@@ -458,7 +465,7 @@ def fetch_picks_closes(yf_syms: tuple[str, ...], start: str,
     # the book books the REALIZED return (final/entry) instead of dropping the name.
     # entry defaults to final (flat) for merger-arb picks. Done BEFORE the missing-
     # warning so a known cash-out is never flagged as a fetch failure.
-    overrides = _delisted_overrides(_ovr_mtime)
+    overrides = _delisted_overrides(ovr_mtime)
     idx = pd.bdate_range(start=start, end=date.today())
     for sym in yf_syms:
         if sym in overrides and len(idx):

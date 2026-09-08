@@ -88,3 +88,29 @@ jobs:
             data/refresh_manifest.json \
             data/external/hc_index_comparison.csv \
             data/external/us_hc_funds_13f.json
+
+      # C4 audit: three runs died (08-29 ×2, 09-01) leaving NO trace in the
+      # manifest — the freshness audit lived INSIDE the monitored job, so when the
+      # job died the audit died with it and the dashboard kept showing green.
+      # This step runs on ANY prior-step failure and stamps `failed` (which does
+      # NOT bump source_date), then pushes ONLY the manifest.
+      #
+      # ⚠ BLIND SPOT — if the step that failed is the PUSH itself, this stamp
+      #   cannot land either: it calls the same commit_data.sh and fails the same
+      #   way. There is no manifest row for that case and there cannot be one, so
+      #   the GitHub run status is then the ONLY signal that the run died. Do not
+      #   read a green manifest as proof the lane ran; read it as proof the lane
+      #   ran AND could reach main.
+      #
+      #   Ordering matters for the same reason: `if: failure()` does not re-run
+      #   setup, so this step only works because checkout and `Install deps` are
+      #   already behind it (jobs/update_manifest.py imports pandas). Moving it
+      #   earlier would make it die in exactly the runs it exists to record.
+      - name: Stamp failure in refresh manifest
+        if: failure()
+        run: |
+          python jobs/update_manifest.py benchmarks_fx failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          python jobs/update_manifest.py hc_index_comparison failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          python jobs/update_manifest.py us_hc_13f failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          ./scripts/commit_data.sh "data: public market failure stamp $(date -u +%Y-%m-%d) [skip ci]" \
+            data/refresh_manifest.json

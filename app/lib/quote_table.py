@@ -16,14 +16,26 @@ from lib import format as fmt
 
 @st.cache_data(ttl=300)
 def _ticker_roster() -> pd.DataFrame:
-    """一行一票 (sectors 用 GROUP_CONCAT 拼成 csv)。"""
+    """一行一票 (sectors 用 GROUP_CONCAT 拼成 csv)。
+
+    R3 审查 H3：这里原来**没有** status 过滤，而 db.all_tickers() / sector_tickers()
+    / top_movers() 三处都有 —— 全市场行情表因此把已退市票混进活跃 universe
+    (DAWN 价格冻在 2026-04-24、APLS 冻在 05-15)，用户看到的是一张没有任何标记的
+    死价格。改用与 db 同一套 _has_column / _active_clause 判据 (未迁移的老库自动
+    退化为不过滤，不会整站 500)。
+
+    过滤掉多少票**不要写死**——以 universe_member.status 当场为准。实测
+    2026-09-07：508 个 ticker → 494 个活跃，剔除 14 个 (13 delisted + 1 renamed)。
+    这个数只会随 load_universe 增长，写死的旧值会让读者以为 status 列停更了。
+    """
+    where = " WHERE status IS NULL" if db._has_column("universe_member", "status") else ""
     return db.query(
-        """SELECT ticker,
+        f"""SELECT ticker,
                   MAX(name_cn) AS name_cn, MAX(name_en) AS name_en,
                   MAX(domain)  AS domain,
                   GROUP_CONCAT(DISTINCT sector) AS sectors,
                   MAX(region)  AS region
-           FROM universe_member
+           FROM universe_member{where}
            GROUP BY ticker
            ORDER BY ticker"""
     )

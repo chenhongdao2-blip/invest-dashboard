@@ -45,13 +45,32 @@ jobs:
           python jobs/update_manifest.py sec_facts ok
 
       - name: Commit data
+        # H10 audit: a naive `git add/commit/push` raced the other data lanes on
+        # main; commit_data.sh does fetch → rebase → push with conflict-aware retry.
         run: |
-          git config user.email "data-bot@github.com"
-          git config user.name "data-bot"
-          git add data/snapshots.db data/refresh_manifest.json
-          if git diff-index --quiet HEAD; then
-            echo "No data changes to commit"
-          else
-            git commit -m "data: SEC facts refresh $(date -u +%Y-%m-%d) [skip ci]"
-            git push
-          fi
+          ./scripts/commit_data.sh "data: SEC facts refresh $(date -u +%Y-%m-%d) [skip ci]" \
+            data/snapshots.db data/refresh_manifest.json
+
+      # C4 audit: three runs died (08-29 ×2, 09-01) leaving NO trace in the
+      # manifest — the freshness audit lived INSIDE the monitored job, so when the
+      # job died the audit died with it and the dashboard kept showing green.
+      # This step runs on ANY prior-step failure and stamps `failed` (which does
+      # NOT bump source_date), then pushes ONLY the manifest.
+      #
+      # ⚠ BLIND SPOT — if the step that failed is the PUSH itself, this stamp
+      #   cannot land either: it calls the same commit_data.sh and fails the same
+      #   way. There is no manifest row for that case and there cannot be one, so
+      #   the GitHub run status is then the ONLY signal that the run died. Do not
+      #   read a green manifest as proof the lane ran; read it as proof the lane
+      #   ran AND could reach main.
+      #
+      #   Ordering matters for the same reason: `if: failure()` does not re-run
+      #   setup, so this step only works because checkout and `Install deps` are
+      #   already behind it (jobs/update_manifest.py imports pandas). Moving it
+      #   earlier would make it die in exactly the runs it exists to record.
+      - name: Stamp failure in refresh manifest
+        if: failure()
+        run: |
+          python jobs/update_manifest.py sec_facts failed --note "workflow ${{ github.workflow }} run ${{ github.run_id }} failed"
+          ./scripts/commit_data.sh "data: SEC facts failure stamp $(date -u +%Y-%m-%d) [skip ci]" \
+            data/refresh_manifest.json

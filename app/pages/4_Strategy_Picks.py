@@ -71,7 +71,7 @@ def _overview_curve_card(strat_id: str) -> dict | None:
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
     earliest = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
     closes = strat.fetch_picks_closes(yf_syms + (bench_sym,), start=earliest,
-                                      _ovr_mtime=strat._delisted_mtime())
+                                      ovr_mtime=strat._delisted_mtime())
     if closes.empty or bench_sym not in closes.columns:
         return None
     bench_close = closes[bench_sym]
@@ -276,14 +276,20 @@ def render_strategy(strat_id: str) -> None:
 
     # --- Fetch prices ---
     yf_syms = tuple(picks["yf_sym"].dropna().unique().tolist())
-    # Fetch from the earlier of (pick_date - 55 days) and Jan 1 of current year so
-    # that YTD is computable for all strategy books regardless of pick_date.
-    _jan1 = f"{pd.Timestamp.now().year}-01-01"
+    # Fetch from the earlier of (pick_date - 55 days) and ~10 calendar days BEFORE
+    # Jan 1 of the current year so that YTD is computable for all strategy books
+    # regardless of pick_date.
+    # R3 audit C1: YTD anchors on the LAST close of the PRIOR year (see
+    # lib/db.py compute_returns). Starting the window at Jan 1 puts that anchor
+    # outside the fetched range by construction, so the page would keep showing
+    # the old (Jan-gap-losing) YTD even after the db.py fix. 10 days covers the
+    # longest year-end market closure plus a weekend.
+    _pre_ny = (pd.Timestamp(f"{pd.Timestamp.now().year}-01-01") - pd.Timedelta(days=10)).date().isoformat()
     _pre55 = (pd.Timestamp(pick_date) - pd.Timedelta(days=55)).date().isoformat()
-    earliest = min(_jan1, _pre55)
+    earliest = min(_pre_ny, _pre55)
     bench_syms = tuple(s for s in (bench_sym, bench2_sym) if s)
     closes = strat.fetch_picks_closes(yf_syms + bench_syms, start=earliest,
-                                      _ovr_mtime=strat._delisted_mtime())
+                                      ovr_mtime=strat._delisted_mtime())
 
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
@@ -685,7 +691,7 @@ def _hd_chain_dict(meta_chain: dict) -> dict | None:
     v3s = v3b["yf_sym"].dropna().tolist()
     all_syms = tuple(dict.fromkeys(v1s + v2s + v3s + [bench_sym]))
     earliest = (pd.Timestamp(c1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
-    closes = strat.fetch_picks_closes(all_syms, start=earliest, _ovr_mtime=strat._delisted_mtime())
+    closes = strat.fetch_picks_closes(all_syms, start=earliest, ovr_mtime=strat._delisted_mtime())
     if closes.empty or bench_sym not in closes.columns:
         return None
 
@@ -841,7 +847,7 @@ def render_hd_compare() -> None:
         v1_syms + v2_syms + v3_syms + [s for s in (bench_sym, bench2_sym) if s]))
     earliest = (pd.Timestamp(cfg1["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
     closes = strat.fetch_picks_closes(all_syms, start=earliest,
-                                      _ovr_mtime=strat._delisted_mtime())
+                                      ovr_mtime=strat._delisted_mtime())
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
         return
@@ -1113,7 +1119,7 @@ def render_biotech_compare() -> None:
     all_syms = tuple(dict.fromkeys(v4_syms + v5_syms + v6_syms + [bench_sym]))
     earliest = (pd.Timestamp(cfg4["pick_date"]) - pd.Timedelta(days=10)).date().isoformat()
     closes = strat.fetch_picks_closes(all_syms, start=earliest,
-                                      _ovr_mtime=strat._delisted_mtime())
+                                      ovr_mtime=strat._delisted_mtime())
     if closes.empty:
         st.error("Live price fetch failed. Check network/yfinance.")
         return

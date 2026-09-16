@@ -21,7 +21,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-15T00:56:42+00:00",
+    "refreshed_at": "2026-09-16T00:50:10+00:00",
     "source_date": "2026-09-16"
   },
   "hc_index_comparison": {
@@ -29,8 +29,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-15T00:56:44+00:00",
-    "source_date": "2026-09-14",
+    "refreshed_at": "2026-09-16T00:50:12+00:00",
+    "source_date": "2026-09-15",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"
   },
   "hk_ipo_tracker": {
@@ -65,7 +65,7 @@
     "source": "SEC EDGAR",
     "max_age_days": 140,
     "status": "ok",
-    "refreshed_at": "2026-09-15T00:56:54+00:00",
+    "refreshed_at": "2026-09-16T00:50:24+00:00",
     "source_date": "2026-06-30",
     "note": "SEC EDGAR 13F-HR, 12 HC-dedicated funds; prices via yfinance"
   },

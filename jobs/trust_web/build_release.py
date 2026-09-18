@@ -44,7 +44,7 @@ def clean(value, root: Path):
     return value
 
 
-def build(source: Path, output: Path, release_id: str, reports_dir: Path | None = None) -> dict:
+def build(source: Path, output: Path, release_id: str, evidence_dir: Path, reports_dir: Path) -> dict:
     if not re.fullmatch(r"[0-9]{8}-[0-9]{4}", release_id):
         raise ValueError("release_id must be YYYYMMDD-HHMM")
     snapshot_bytes = (source / "watchboard/data/snapshot.json").read_bytes()
@@ -57,6 +57,15 @@ def build(source: Path, output: Path, release_id: str, reports_dir: Path | None 
         # The published model may have different JSON spacing; compare semantic data.
         if json.loads(model_bytes) != model:
             raise ValueError("Snapshot and source tax model disagree")
+    if not evidence_dir.is_dir() or not reports_dir.is_dir():
+        raise FileNotFoundError("Verified evidence and private report directories are required")
+    evidence_files = [item for item in evidence_dir.iterdir() if item.is_file() and item.suffix in (".pdf", ".html")]
+    report_files = list(reports_dir.glob("*.md"))
+    if not evidence_files or any(not item.stem.isdecimal() for item in report_files):
+        raise ValueError("Evidence files or source-ID-named reports are invalid")
+    required_reports = {str(item["id"]) for item in snap["research_notes"]["companies"]["6862.HK"]["broker_views"]}
+    if not required_reports <= {item.stem for item in report_files}:
+        raise ValueError("Missing protected reports referenced by the research snapshot")
 
     release_root = output / "releases" / release_id
     if release_root.exists():
@@ -140,20 +149,13 @@ def build(source: Path, output: Path, release_id: str, reports_dir: Path | None 
     if old_csv.is_file():
         put("exports/个人三情形试算_全926人.csv", old_csv.read_bytes())
     # Keep the publisher's selected offline source files in the private release.
-    evidence_dir = source / "deliverables/补税看板_20260918_1123_分享版/evidence"
-    if not evidence_dir.is_dir():
-        raise FileNotFoundError(evidence_dir)
-    for item in evidence_dir.iterdir():
-        if item.is_file() and item.suffix in (".pdf", ".html"):
-            raw = item.read_bytes()
-            put(f"evidence/{item.name}.gz", gzip.compress(raw, mtime=0))
-            files[f"evidence/{item.name}.gz"]["original_sha256"] = digest(raw)
+    for item in evidence_files:
+        raw = item.read_bytes()
+        put(f"evidence/{item.name}.gz", gzip.compress(raw, mtime=0))
+        files[f"evidence/{item.name}.gz"]["original_sha256"] = digest(raw)
 
-    if reports_dir:
-        for item in reports_dir.glob("*.md"):
-            if not item.stem.isdecimal():
-                raise ValueError(f"Report filename must be its source ID: {item.name}")
-            put(f"reports/{item.stem}.md.gz", gzip.compress(item.read_bytes(), mtime=0))
+    for item in report_files:
+        put(f"reports/{item.stem}.md.gz", gzip.compress(item.read_bytes(), mtime=0))
 
     manifest = {"schema_version": 1, "release": release_id, "source_model_sha256": digest(model_bytes),
                 "source_snapshot_sha256": digest(snapshot_bytes), "price_asof": snap["asof"],
@@ -172,9 +174,11 @@ def main():
     p.add_argument("--source", type=Path, required=True)
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--release", required=True)
-    p.add_argument("--reports", type=Path, help="Private downloaded analyst-report directory")
+    p.add_argument("--evidence", type=Path, required=True, help="Verified evidence directory outside this public repo")
+    p.add_argument("--reports", type=Path, required=True, help="Private reports named by source ID")
     args = p.parse_args()
-    print(json.dumps(build(args.source.resolve(), args.output.resolve(), args.release, args.reports.resolve() if args.reports else None), ensure_ascii=False))
+    print(json.dumps(build(args.source.resolve(), args.output.resolve(), args.release,
+                           args.evidence.resolve(), args.reports.resolve()), ensure_ascii=False))
 
 
 if __name__ == "__main__":

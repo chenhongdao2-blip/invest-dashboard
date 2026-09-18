@@ -24,7 +24,7 @@ TRUST_DATA_GITHUB_TOKEN = "<仅能读取私有数据仓 Contents 的细粒度令
 
 ## 数据发布与回滚
 
-冻结源模型和快照后运行 `jobs/trust_web/build_release.py`，输出目录必须在公开代码仓**之外**；再运行 `jobs/trust_web/verify_release.py <private-root>` 验文件指纹、覆盖分母、首包大小和本机路径。只向私有仓提交版本目录与 `releases/current/manifest.json`。更换数据版本时，先保留上一版目录，再更新 current 清单；回滚只恢复上一版 `releases/<id>/manifest.json` 为 current，并重新验证。不要改写已发布版本目录。
+冻结源模型和快照后运行 `jobs/trust_web/build_release.py --source <已验收项目> --evidence <已验收证据目录> --reports <以来源ID命名的私有报告目录> --output <私有仓目录> --release <YYYYMMDD-HHMM>`。输出目录必须在公开代码仓**之外**；再运行 `jobs/trust_web/verify_release.py <private-root>` 验文件指纹、覆盖分母、首包大小和本机路径。只向私有仓提交版本目录与 `releases/current/manifest.json`。更换数据版本时，先保留上一版目录，再更新 current 清单；回滚只恢复上一版 `releases/<id>/manifest.json` 为 current，并重新验证。不要改写已发布版本目录。
 
 公开仓只提交页面、组件、导出脚本和合成测试。提交前执行 `git diff --cached --name-only` 及敏感数据扫描，不使用 `git add -A`。代码回滚使用公开仓上一提交；数据回滚由私有仓 current 清单控制，两者分别保留。
 

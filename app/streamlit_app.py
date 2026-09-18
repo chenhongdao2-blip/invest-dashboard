@@ -35,7 +35,8 @@ from lib import i18n
 
 # R3 audit §8.4: ONE set_page_config, here at the entry point, instead of the 19
 # per-page copies. Widest settings any page used — every page was `layout="wide"`,
-# and only home.py pinned `initial_sidebar_state`, so both are adopted globally.
+# and only home.py pinned `initial_sidebar_state`. Keep the wide layout globally;
+# auto preserves desktop navigation while starting collapsed on narrow screens.
 #
 # The per-page `page_title` / `page_icon` arguments were redundant: `st.Page` below
 # already takes `title=` for the browser tab, and Streamlit applies it during
@@ -46,7 +47,7 @@ st.set_page_config(
     page_title="invest-dashboard",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="auto",
 )
 
 # 品牌 lockup(「Sidebar 导航 美化」设计):红 C 方块 + CMSI / AI 投研平台,
@@ -84,6 +85,11 @@ ticker_drill = st.Page(
     url_path="Ticker_Drill",               # url 不变 → ?ticker= 深链照常进详情模式
 )
 # (Market Data 已并入 Ticker Drill 的列表模式; 表逻辑搬到 lib/quote_table.py)
+trust_research = st.Page(
+    "pages/trust_research.py",
+    title=_t("Trust Research", "股东与信托"),
+    url_path="Trust_Research",
+)
 model_drill = st.Page(
     "pages/model_drill.py",
     title=_t("Model Drill", "Model Drill 分析师模型"),
@@ -180,7 +186,7 @@ pg = st.navigation(
         # 核心：AI Agent 选股·策略表现 = 平台主张，单独置顶成 section (与其余分隔)。
         # 组名不带 emoji —— 设计的彩色图标 chip(theme.py nth-of-type CSS)承担分组识别。
         _t("Core Strategy", "核心策略"): [strategy_picks],
-        _t("Global", "Global 全局"): [home, ticker_drill, model_drill, sector_rotation],
+        _t("Global", "Global 全局"): [home, ticker_drill, trust_research, model_drill, sector_rotation],
         _t("Healthcare", "Healthcare 医疗健康"): [
             cmsi_coverage,
             healthcare_overview,

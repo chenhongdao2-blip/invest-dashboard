@@ -99,3 +99,7 @@ data/external/factset_raw/
 # —— local-only, NEVER public。
 data/external/mnc_ma_deals_full.csv
 data/external/mnc_ma_rumors.json
+
+# Full trust research and license-bound evidence are kept in a separate private repo.
+data/trust_private/
+.streamlit/trust_test_secrets.toml

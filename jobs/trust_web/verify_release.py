@@ -8,6 +8,7 @@ import argparse
 import gzip
 import hashlib
 import json
+import math
 from pathlib import Path
 
 
@@ -41,6 +42,19 @@ def verify(root: Path, release_id: str | None = None) -> dict:
     assert len(roster_bytes) < 1_000_000
     assert len(set(x["id"] for x in roster["people"])) == len(roster["people"])
     assert len(set(x["code"] for x in roster["companies"])) == len(roster["companies"])
+    if roster["companies"] and "market_cap_cny" in roster["companies"][0]:
+        assert all("market_cap_cny" in row for row in roster["companies"])
+        for row in roster["companies"]:
+            cap = row["market_cap_cny"]
+            if cap is None:
+                assert row["s12_pct"] is None and row["total_pct"] is None, row["code"]
+            else:
+                assert cap > 0, row["code"]
+                for numerator, ratio in ((row["s12_cny"], row["s12_pct"]),
+                                         (row["total_cny"], row["total_pct"])):
+                    assert (numerator is None) == (ratio is None), row["code"]
+                    if numerator is not None:
+                        assert math.isclose(ratio, numerator / cap * 100, rel_tol=1e-10), row["code"]
     assert all(f"people/{x['id']}.json.gz" in files for x in roster["people"])
     assert all(f"companies/{x['code']}.json.gz" in files for x in roster["companies"])
     for rel in files:

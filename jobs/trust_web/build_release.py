@@ -103,7 +103,8 @@ def build(source: Path, output: Path, release_id: str, evidence_dir: Path, repor
                    and company.get("market_cap_asof") == snap["market_asof"].get(company["market"]) else None)
         row = {"code": code, "name": company.get("name"), "market": company["market"],
                "industry": company.get("industry"), "status": company.get("assessment", {}).get("status"),
-               "s12_cny": s12, "total_cny": total, "s12_pct": (s12 / cap_cny * 100 if s12 is not None and cap_cny else None),
+               "s12_cny": s12, "total_cny": total, "market_cap_cny": cap_cny,
+               "s12_pct": (s12 / cap_cny * 100 if s12 is not None and cap_cny else None),
                "total_pct": (total / cap_cny * 100 if total is not None and cap_cny else None),
                "policy_return": company.get("metrics", {}).get("ret_policy"),
                "price_asof": company.get("metrics", {}).get("price_date"),

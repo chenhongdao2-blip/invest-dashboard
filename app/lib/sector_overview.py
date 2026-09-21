@@ -52,6 +52,7 @@ from html import escape as _esc
 
 import streamlit as st
 
+from lib import i18n
 from lib import theme as t
 
 # ── Page-scope DOWN color for wave-2 reskin surfaces (SOVR13) ────────────────
@@ -238,6 +239,8 @@ _ACC_PCT_W = 92          # 期间列宽(px) —— "▲ +31.3%" @13px + 左右 1
 _ACC_REL_W = 172         # 相对标普列宽 = 发散条 + 54px 标签
 _ACC_SCROLL_AT = 12      # 成分数 > 此值 → 面板内部滚动
 _ACC_SCROLL_H = 420      # 滚动面板最大高(px)
+# 地区 chips 的渲染顺序；译名复用板块热力图的 heat.tbl.region.* 键
+_REGION_ORDER = ("US", "HK", "CN", "JP", "KR")
 
 
 def _acc_grid(n_periods: int) -> str:
@@ -408,6 +411,8 @@ def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
     """整张可展开表的 HTML（可选地区 chips + 表头 + 各行 <details>）。"""
     grid = _acc_grid(len(periods))
     uid = f"{zlib.crc32(tk_label.encode()) % 100000:05d}"
+    if region_labels is None:
+        region_labels = {c: i18n.t(f"heat.tbl.region.{c}") for c in _REGION_ORDER}
 
     # 成分里实际出现的地区（按 region_labels 给定顺序），决定 chips 渲不渲染
     present = {_r_cls(m.get("region"))[2:] for r in rows
@@ -539,9 +544,13 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
     切换兄弟行）；所有行都不带 members 时走原 <table> 分支，输出逐字节不变。
     成分排序由调用页决定（本函数不排序）。prefer_cn 影响成分面板说明行与 chips 文案。
 
-    region_labels（SOVR16）：{code: label}，给定即在表上方渲染地区过滤 chips
-    （只渲染成分里实际出现的 code，顺序即给定顺序）。过滤是纯 CSS（hidden
-    checkbox + :has()）—— 无 JS、无 rerun，所以筛选不会把已展开的面板塌掉；
+    region_labels（SOVR16）：{code: label}，缺省 = 本模块按 _REGION_ORDER 自取
+    heat.tbl.region.* 译名（与板块热力图同一批 code、同一套文案）。只渲染成分里
+    实际出现的 code，顺序即给定顺序。**不要把它改回必传的调用方参数**：
+    Streamlit(本地与 Cloud 皆然)的热进程会缓存已 import 的 lib 模块，新 page 撞
+    旧 lib 时多传一个 kwarg 就是 TypeError 整页崩 —— 2026-09-21 线上实撞过一次。
+    新增能力优先走 rows 数据或模块内默认值，不动调用方签名。
+    过滤是纯 CSS（hidden checkbox + :has()）—— 无 JS、无 rerun，所以筛选不会把已展开的面板塌掉；
     Streamlit 原生控件做不到这点。**只筛成分清单，母行聚合口径不变**（George
     2026-09-21 裁定）：筛到港股不会把「制药 · 35」改写成「制药 · 8」。
     """

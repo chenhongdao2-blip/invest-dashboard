@@ -47,6 +47,7 @@ rel_cap / mov_cap 控制色阶与发散条饱和上限（默认 ±25pp / 22pp）
 from __future__ import annotations
 
 import math
+import zlib
 from html import escape as _esc
 
 import streamlit as st
@@ -90,6 +91,21 @@ details.sovr-acc[open] > summary { background:rgba(26,26,26,.030);
 .sovr-caret { transition:transform .16s ease; display:inline-block; }
 details.sovr-acc[open] > summary .sovr-caret { transform:rotate(90deg); }
 .sovr-mrow:hover { background:rgba(26,26,26,.035); }
+
+/* ── 成分地区过滤 chips (SOVR16) ─────────────────────────────────────────
+   纯 CSS：hidden checkbox + label + :has() —— 无 JS、无 rerun，所以筛选时
+   已展开的面板不会塌掉（Streamlit 原生控件会 rerun 重建 DOM，<details> 的
+   open 态会全部丢失，实测）。逐次渲染的过滤规则由 _acc_filter_css() 生成。 */
+/* display 必须由 class 承担：写成内联 style 的话过滤规则(display:none)压不过它。 */
+.sovr-m { display:grid; }
+.sovr-empty { display:none; }
+.sovr-filtered { display:none; color:#c8102e; }
+.sovr-chip { cursor:pointer; display:inline-block; font-family:'JetBrains Mono','IBM Plex Mono','SF Mono',monospace;
+  font-size:10px; letter-spacing:.06em; color:#4a4a4a; background:rgba(255,255,255,.55);
+  border:1px solid #e4d2bd; border-radius:2px; padding:3px 9px; margin-right:6px;
+  transition:background .12s ease,color .12s ease,border-color .12s ease; user-select:none; }
+.sovr-chip:hover { border-color:#d4c4b0; background:rgba(255,255,255,.85); }
+.sovr-f:checked + .sovr-chip { background:#c8102e; color:#fff; border-color:#c8102e; }
 .sovr-panel::-webkit-scrollbar { width:8px; }
 .sovr-panel::-webkit-scrollbar-thumb { background:#d4c4b0; border-radius:4px; }
 </style>""",
@@ -304,48 +320,122 @@ def _acc_member(m: dict, periods: list[str]) -> str:
     return cells
 
 
-def _acc_panel(r: dict, periods: list[str], grid: str, prefer_cn: bool) -> str:
+def _acc_panel(r: dict, periods: list[str], grid: str, prefer_cn: bool,
+               pid: str) -> str:
     """展开后的成分面板：说明行 + 逐支成分（页面侧已按 YTD 降序排好）。"""
     members = r.get("members") or []
     n = len(members)
     cap = (f"成分 · {n} 家 · 等权 · 按 YTD 降序"
            if prefer_cn else f"Constituents · {n} · equal-weight · sorted by YTD")
+    # 筛选态提示：说明行的「N 家」是全篮子口径，筛完屏幕上行数会少于 N —— 不提示
+    # 就会被读成「篮子缩水了」。纯 CSS 显隐，不需要重新计数。
+    fl = ("· 已按地区筛选清单，母行与本行的 N 仍为全篮子口径"
+          if prefer_cn else "· list filtered by region; N above is still the full basket")
     cap_html = (f'<div style="font-family:{t.FONT_MONO};font-size:10px;'
                 f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 34px">'
-                f'{_esc(cap)}</div>')
+                f'{_esc(cap)} <span class="sovr-filtered">{_esc(fl)}</span></div>')
     rows_html = "".join(
-        f'<div class="sovr-mrow" style="display:grid;grid-template-columns:{grid};'
+        f'<div class="sovr-mrow sovr-m {_r_cls(m.get("region"))}" '
+        f'style="grid-template-columns:{grid};'
         f'align-items:stretch">{_acc_member(m, periods)}</div>'
         for m in members
     )
+    empty_txt = "该地区无成分" if prefer_cn else "No constituents in this region"
+    empty_html = (f'<div class="sovr-empty" style="font-size:12px;'
+                  f'color:{t.INK_3};padding:10px 12px 12px 34px">{_esc(empty_txt)}</div>')
     scroll = (f"max-height:{_ACC_SCROLL_H}px;overflow-y:auto;"
               if n > _ACC_SCROLL_AT else "")
-    return (f'<div class="sovr-panel" style="background:rgba(255,255,255,.34);'
+    return (f'<div class="sovr-panel" id="{pid}" '
+            f'style="background:rgba(255,255,255,.34);'
             f'border-bottom:1px solid {t.PAPER_RULE};{scroll}overflow-x:hidden">'
-            f'{cap_html}{rows_html}</div>')
+            f'{cap_html}{rows_html}{empty_html}</div>')
+
+
+def _r_cls(code) -> str:
+    """region code → CSS class（非字母数字一律剔除，code 直接进选择器/ID）。"""
+    c = "".join(ch for ch in str(code or "") if ch.isalnum())
+    return f"r-{c}" if c else ""
+
+
+def _acc_filter_bar(uid: str, regions: list[tuple[str, str]], prefer_cn: bool) -> str:
+    """地区 chips 条：hidden checkbox + label，纯 CSS 多选，无 rerun。"""
+    chips = "".join(
+        f'<input class="sovr-f" type="checkbox" id="sovr-f-{uid}-{code}" hidden>'
+        f'<label for="sovr-f-{uid}-{code}" class="sovr-chip">{_esc(label)}</label>'
+        for code, label in regions
+    )
+    title = "筛选成分" if prefer_cn else "FILTER"
+    hint = "未选 = 全部 · 母行口径不变" if prefer_cn else "none selected = all · aggregates unchanged"
+    return (
+        f'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;'
+        f'padding:9px 12px 8px">'
+        f'<span style="font-family:{t.FONT_MONO};font-size:10px;letter-spacing:.08em;'
+        f'text-transform:uppercase;color:{t.INK_3};font-weight:600">{_esc(title)}</span>'
+        f'<span>{chips}</span>'
+        f'<span style="font-family:{t.FONT_MONO};font-size:9px;color:{t.INK_3};'
+        f'margin-left:auto">{_esc(hint)}</span>'
+        f'</div>'
+    )
+
+
+def _acc_filter_css(uid: str, regions: list[tuple[str, str]],
+                    panel_regions: list[tuple[str, set[str]]]) -> str:
+    """本次渲染的过滤规则。
+
+    · 任一 chip 勾中 → 先隐藏全部成分行，再按勾中的地区逐条放回（并集语义）。
+      放回规则多一个 id + 一个 class，特异性天然高于隐藏规则，不需要 !important。
+    · 空态：某面板的地区集合与勾中集合不相交时显示「该地区无成分」——面板的地区
+      集合在渲染时已知，所以一条规则里把该面板拥有的地区逐个 :not(:has()) 串起来
+      即可，不需要枚举组合。
+    """
+    w = f"#sovr-w-{uid}"
+    out = [f'{w}:has(.sovr-f:checked) .sovr-m{{display:none}}',
+           f'{w}:has(.sovr-f:checked) .sovr-filtered{{display:inline}}']
+    for code, _ in regions:
+        out.append(f'{w}:has(#sovr-f-{uid}-{code}:checked) .sovr-m.r-{code}'
+                   f'{{display:grid}}')
+    for pid, codes in panel_regions:
+        if not codes:
+            continue
+        nots = "".join(f':not(:has(#sovr-f-{uid}-{c}:checked))' for c in sorted(codes))
+        out.append(f'{w}:has(.sovr-f:checked){nots} #{pid} .sovr-empty{{display:block}}')
+    return "<style>" + "".join(out) + "</style>"
 
 
 def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
-                      prefer_cn: bool) -> str:
-    """整张可展开表的 HTML（表头 + 各行 <details> / 无成分则普通行）。"""
+                      prefer_cn: bool,
+                      region_labels: dict[str, str] | None = None) -> str:
+    """整张可展开表的 HTML（可选地区 chips + 表头 + 各行 <details>）。"""
     grid = _acc_grid(len(periods))
+    uid = f"{zlib.crc32(tk_label.encode()) % 100000:05d}"
+
+    # 成分里实际出现的地区（按 region_labels 给定顺序），决定 chips 渲不渲染
+    present = {_r_cls(m.get("region"))[2:] for r in rows
+               for m in (r.get("members") or []) if _r_cls(m.get("region"))}
+    regions = [(c, lbl) for c, lbl in (region_labels or {}).items() if c in present]
+
     head = (f'<div style="display:grid;grid-template-columns:{grid}">'
             f'{_acc_head(tk_label, periods)}</div>')
-    out = [head]
-    for r in rows:
+    out = [_acc_filter_bar(uid, regions, prefer_cn) if regions else "", head]
+    panel_regions: list[tuple[str, set[str]]] = []
+    for i, r in enumerate(rows):
         members = r.get("members") or []
         summary_cells = _acc_summary(r, periods, expandable=bool(members))
         row_grid = (f'display:grid;grid-template-columns:{grid};align-items:stretch')
         if not members:
             out.append(f'<div class="sovr-mrow" style="{row_grid}">{summary_cells}</div>')
             continue
+        pid = f"sovr-p-{uid}-{i}"
+        panel_regions.append(
+            (pid, {_r_cls(m.get("region"))[2:] for m in members if _r_cls(m.get("region"))}))
         out.append(
             f'<details class="sovr-acc">'
             f'<summary style="{row_grid}">{summary_cells}</summary>'
-            f'{_acc_panel(r, periods, grid, prefer_cn)}'
+            f'{_acc_panel(r, periods, grid, prefer_cn, pid)}'
             f'</details>'
         )
-    return (f'<div style="overflow-x:auto;font-size:13px;'
+    css = _acc_filter_css(uid, regions, panel_regions) if regions else ""
+    return (f'{css}<div id="sovr-w-{uid}" style="overflow-x:auto;font-size:13px;'
             f'font-variant-numeric:tabular-nums lining-nums;'
             f'font-family:{t.FONT_DISPLAY}">{"".join(out)}</div>')
 
@@ -434,7 +524,8 @@ def masthead(
 
 def benchmark_table(rows: list[dict], *, source: str | None = None,
                     section_label: str = "基准 · Benchmark ETF",
-                    tk_label: str = "Ticker", prefer_cn: bool = True) -> None:
+                    tk_label: str = "Ticker", prefer_cn: bool = True,
+                    region_labels: dict[str, str] | None = None) -> None:
     """基准多周期表 + sparkline + 发散色阶 + 相对标普发散条 (wave-2 glass reskin).
 
     Row dict: {tk, name, periods:{label:pct,...}, rel_sp(float pp), spark:[~30 closes]}.
@@ -446,7 +537,13 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
     —— 该行即渲染成可点开的 <details>，展开后列出这只自建等权篮子的全部成分，
     列与母行严格对齐。**任一行带 members 时整表改走 grid 分支**（<tr> 无 JS 无法
     切换兄弟行）；所有行都不带 members 时走原 <table> 分支，输出逐字节不变。
-    成分排序由调用页决定（本函数不排序）。prefer_cn 只影响成分面板的说明行。
+    成分排序由调用页决定（本函数不排序）。prefer_cn 影响成分面板说明行与 chips 文案。
+
+    region_labels（SOVR16）：{code: label}，给定即在表上方渲染地区过滤 chips
+    （只渲染成分里实际出现的 code，顺序即给定顺序）。过滤是纯 CSS（hidden
+    checkbox + :has()）—— 无 JS、无 rerun，所以筛选不会把已展开的面板塌掉；
+    Streamlit 原生控件做不到这点。**只筛成分清单，母行聚合口径不变**（George
+    2026-09-21 裁定）：筛到港股不会把「制药 · 35」改写成「制药 · 8」。
     """
     _inject_css()
     if not rows:
@@ -512,7 +609,7 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
         st.markdown(
             f"{sec_head}"
             f'<div style="{glass_style}">'
-            f'{_render_accordion(rows, periods, tk_label, prefer_cn)}'
+            f'{_render_accordion(rows, periods, tk_label, prefer_cn, region_labels)}'
             f'</div>{src_html}',
             unsafe_allow_html=True,
         )

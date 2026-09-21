@@ -115,7 +115,7 @@ for sec in cfg["sectors"]:
     # 不静默少一支。元数据取 _MF.meta（已在本页那一次 market_frame 里缓存好），不额外查库。
     _members: list[dict] = []
     for _tk in tickers:
-        _nm, _sec2 = _tk, False
+        _nm, _sec2, _reg = _tk, False, ""
         if not _MF.meta.empty and _tk in _MF.meta.index:
             _row = _MF.meta.loc[_tk]
             # pd.NA/NaN 是 truthy —— 名字兜底不能用 `or` 链，必须 notna 过滤
@@ -126,6 +126,8 @@ for sec in cfg["sectors"]:
                     _nm = str(_c).strip()
                     break
             _sec2 = bool(_row.get("secondary_listing", 0))
+            _r = _row.get("region")
+            _reg = str(_r).strip() if (_r is not None and pd.notna(_r)) else ""
 
         def _mv(col: str, _t=_tk) -> float | None:
             if _t not in rets.index or col not in rets.columns:
@@ -138,6 +140,7 @@ for sec in cfg["sectors"]:
             "tk": _tk,
             "name": _nm,
             "secondary": _sec2,
+            "region": _reg,
             "periods": {"1日": _mv("1d_%"), "5日": _mv("5d_%"),
                         "1月": _mv("1m_%"), "YTD": _m_ytd},
             "rel_sp": (_m_ytd - _gspc_ytd0
@@ -166,9 +169,12 @@ else:
                 if prefer_cn else
                 f"Source: Yahoo Finance cron EOD · CMSI Focus = equal-weight coverage composite "
                 f"(not an index) · as of {_sum_asof} · for reference")
+    # 地区 chips 复用板块热力图那套 region 标签键（同一批 code，同一套译名）
+    _regions = {c: i18n.t(f"heat.tbl.region.{c}") for c in ("US", "HK", "CN", "JP", "KR")}
     so.benchmark_table(_sum_rows, source=_sum_src,
                        section_label="板块 · Sub-sectors",
-                       tk_label="Ticker", prefer_cn=prefer_cn)
+                       tk_label="Ticker", prefer_cn=prefer_cn,
+                       region_labels=_regions)
 
 st.divider()
 

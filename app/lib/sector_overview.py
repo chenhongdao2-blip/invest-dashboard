@@ -77,6 +77,21 @@ def _inject_css() -> None:
   50% { opacity:.35; transform:scale(.82); }
 }
 tr.sovr-row:hover { background:rgba(26,26,26,.045) !important; }
+
+/* ── 可展开板块行(accordion, SOVR15) ──────────────────────────────────────
+   母行 = <summary>(display:grid, 与表头同 grid-template) ; 成分面板 = <details> body。
+   原生 <details>/<summary>,无 JS —— 同 lib/ipo_detail.py 既有模式。
+   open 态用 inset box-shadow 画左红条(非 border-left),避免 grid 列位移。 */
+details.sovr-acc > summary { list-style:none; cursor:pointer; }
+details.sovr-acc > summary::-webkit-details-marker { display:none; }
+details.sovr-acc > summary:hover { background:rgba(26,26,26,.045); }
+details.sovr-acc[open] > summary { background:rgba(26,26,26,.030);
+  box-shadow:inset 3px 0 0 #c8102e; }
+.sovr-caret { transition:transform .16s ease; display:inline-block; }
+details.sovr-acc[open] > summary .sovr-caret { transform:rotate(90deg); }
+.sovr-mrow:hover { background:rgba(26,26,26,.035); }
+.sovr-panel::-webkit-scrollbar { width:8px; }
+.sovr-panel::-webkit-scrollbar-thumb { background:#d4c4b0; border-radius:4px; }
 </style>""",
         unsafe_allow_html=True,
     )
@@ -100,23 +115,25 @@ def _tint(v, cap: float = REL_CAP) -> str:
     return f"rgba({rgb},{a:.3f})"
 
 
+def _pct_parts(v) -> tuple[str, str]:
+    """(inner_html, background) for one period-return cell — shared by td / grid cell."""
+    if _is_missing(v):
+        return f'<span style="color:{t.INK_3}">—</span>', "transparent"
+    gly = "▲" if v > 0 else ("▼" if v < 0 else "·")
+    sign = "+" if v > 0 else ""
+    col = t.UP if v > 0 else (_DOWN if v < 0 else t.INK_3)
+    return (f'<span style="color:{col};font-weight:600">{gly} {sign}{v:.1f}%</span>',
+            _tint(v))
+
+
 def _pct_cell(v) -> str:
     """Period return cell: ▲/▼/· glyph + signed pct + diverging tint bg (SOVR9).
     v=None/NaN → em-dash grey cell, no glyph, transparent bg.
     """
-    if _is_missing(v):
-        return (
-            f'<td style="text-align:right;white-space:nowrap;padding:0 12px;'
-            f'border-bottom:1px solid {t.PAPER_RULE};background:transparent">'
-            f'<span style="color:{t.INK_3}">—</span></td>'
-        )
-    gly = "▲" if v > 0 else ("▼" if v < 0 else "·")
-    sign = "+" if v > 0 else ""
-    col = t.UP if v > 0 else (_DOWN if v < 0 else t.INK_3)
+    inner, bg = _pct_parts(v)
     return (
         f'<td style="text-align:right;white-space:nowrap;padding:0 12px;'
-        f'border-bottom:1px solid {t.PAPER_RULE};background:{_tint(v)}">'
-        f'<span style="color:{col};font-weight:600">{gly} {sign}{v:.1f}%</span></td>'
+        f'border-bottom:1px solid {t.PAPER_RULE};background:{bg}">{inner}</td>'
     )
 
 
@@ -154,33 +171,183 @@ def _rel_bar(v, cap: float = REL_CAP) -> str:
     Down color: _DOWN (#c8102e). Geometry unchanged from wave-1.
     v=None/NaN → empty state: track + centre line visible, no fill, '—' grey label.
     """
+    return (
+        f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">'
+        f'{_rel_parts(v, cap)}</td>'
+    )
+
+
+def _rel_parts(v, cap: float = REL_CAP, *, h: int = 14, lw: int = 54,
+               fs: int = 12, stretch: bool = False) -> str:
+    """Inner flex(track + centre line + fill + label) of the relative bar.
+    Shared by the <td> wrapper and the grid cell; h/lw/fs shrink it for member rows.
+    stretch=True adds width:100% (needed inside a flex grid cell; a <td> child
+    block already fills the cell, so the default keeps the <table> path byte-identical).
+    """
+    _w = ";width:100%" if stretch else ""
     if _is_missing(v):
         return (
-            f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">'
-            f'<div style="display:flex;align-items:center;gap:8px">'
-            f'<div style="flex:1;position:relative;height:14px;background:#f4ead9">'
+            f'<div style="display:flex;align-items:center;gap:8px{_w}">'
+            f'<div style="flex:1;position:relative;height:{h}px;background:#f4ead9">'
             f'<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;'
             f'background:{t.PAPER_EDGE}"></div></div>'
-            f'<span style="font-family:{t.FONT_MONO};font-size:12px;font-weight:700;'
-            f'color:{t.INK_3};width:54px;text-align:right">—</span>'
-            f'</div></td>'
+            f'<span style="font-family:{t.FONT_MONO};font-size:{fs}px;font-weight:700;'
+            f'color:{t.INK_3};width:{lw}px;text-align:right;white-space:nowrap">—</span>'
+            f'</div>'
         )
     w = min(abs(v) / cap, 1.0) * 50
     color = t.UP if v >= 0 else _DOWN
     fill = f"left:50%;width:{w:.1f}%" if v >= 0 else f"right:50%;width:{w:.1f}%"
     gly = "▲ +" if v >= 0 else "▼ "
     return (
-        f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">'
-        f'<div style="display:flex;align-items:center;gap:8px">'
-        f'<div style="flex:1;position:relative;height:14px;background:#f4ead9">'
+        f'<div style="display:flex;align-items:center;gap:8px{_w}">'
+        f'<div style="flex:1;position:relative;height:{h}px;background:#f4ead9">'
         f'<div style="position:absolute;top:0;bottom:0;left:50%;width:1px;'
         f'background:{t.PAPER_EDGE}"></div>'
         f'<div style="position:absolute;top:2px;bottom:2px;{fill};'
         f'background:{color}"></div></div>'
-        f'<span style="font-family:{t.FONT_MONO};font-size:12px;font-weight:700;'
-        f'color:{color};width:54px;text-align:right">{gly}{v:.1f}</span>'
-        f'</div></td>'
+        f'<span style="font-family:{t.FONT_MONO};font-size:{fs}px;font-weight:700;'
+        f'color:{color};width:{lw}px;text-align:right;white-space:nowrap">{gly}{v:.1f}</span>'
+        f'</div>'
     )
+
+
+# ── 可展开板块行 accordion (SOVR15) ──────────────────────────────────────────
+# 「板块 · Sub-sectors」表的母行 = 我方自建等权篮子(CMSI Focus)，点开看篮子里有谁。
+# 表格无法在无 JS 下让 <tr> 切换兄弟 <tr>，故带成分的表改走 CSS grid + 原生
+# <details>/<summary>（lib/ipo_detail.py 已验证的机制，st.markdown 不被 sanitize 掉）。
+# 表头 / 母行 / 成分行共用同一 grid-template → 列严格对齐，视觉与 <table> 版一致。
+# 不带 members 的调用（基准 ETF 表 / AI 页）仍走原 <table> 分支，零回归。
+_ACC_PCT_W = 92          # 期间列宽(px) —— "▲ +31.3%" @13px + 左右 12px padding
+_ACC_REL_W = 172         # 相对标普列宽 = 发散条 + 54px 标签
+_ACC_SCROLL_AT = 12      # 成分数 > 此值 → 面板内部滚动
+_ACC_SCROLL_H = 420      # 滚动面板最大高(px)
+
+
+def _acc_grid(n_periods: int) -> str:
+    """表头 / 母行 / 成分行共用的 grid-template-columns。"""
+    return (f"136px minmax(150px,1fr) 134px "
+            f"repeat({n_periods},{_ACC_PCT_W}px) {_ACC_REL_W}px")
+
+
+def _acc_cell(inner: str, *, align: str = "left", bg: str = "transparent",
+              pad_left: int = 12, extra: str = "") -> str:
+    """一个 grid 单元：拉伸到整行高(色阶底满格) + 垂直居中 + 行底 hairline。"""
+    just = {"left": "flex-start", "right": "flex-end", "center": "center"}[align]
+    return (f'<div style="display:flex;align-items:center;justify-content:{just};'
+            f'padding:0 12px 0 {pad_left}px;border-bottom:1px solid {t.PAPER_RULE};'
+            f'background:{bg};min-width:0;{extra}">{inner}</div>')
+
+
+def _acc_head(tk_label: str, periods: list[str]) -> str:
+    """表头行 —— 与 <table> 版 _TH 同款(透明底、mono 灰、墨 1.5px 底线)。"""
+    def th(label: str, align: str = "right") -> str:
+        just = {"left": "flex-start", "right": "flex-end", "center": "center"}[align]
+        return (f'<div style="display:flex;align-items:center;justify-content:{just};'
+                f'font-family:{t.FONT_MONO};font-size:10px;letter-spacing:.08em;'
+                f'text-transform:uppercase;font-weight:600;color:{t.INK_3};'
+                f'background:transparent;padding:9px 12px;'
+                f'border-bottom:1.5px solid {t.INK}">{_esc(label)}</div>')
+    cells = (th(tk_label, "left") + th("名称", "left") + th("趋势 30D", "left")
+             + "".join(th(p) for p in periods) + th("相对标普 PP", "center"))
+    return cells
+
+
+def _acc_summary(r: dict, periods: list[str], *, expandable: bool) -> str:
+    """母行单元（46px，与 <table> 版行高/字重一致）。带成分时首列多一个 ▸ caret。"""
+    svg, _ = _spark_svg(r.get("spark"))
+    caret = (f'<span class="sovr-caret" style="color:{t.CMSI_RED};font-size:10px;'
+             f'line-height:1">▸</span>' if expandable else
+             '<span style="width:6px;display:inline-block"></span>')
+    tk = (f'<div style="display:flex;align-items:center;gap:6px;white-space:nowrap;'
+          f'font-family:{t.FONT_MONO};font-weight:700;color:{t.INK};font-size:12px;'
+          f'letter-spacing:.04em">{caret}<span>{_esc(r["tk"])}</span></div>')
+    name = (f'<span style="color:{t.INK};font-weight:500;white-space:nowrap;'
+            f'overflow:hidden;text-overflow:ellipsis">{_esc(r["name"])}</span>')
+    cells = (
+        _acc_cell(tk, extra="height:46px")
+        + _acc_cell(name, extra="height:46px")
+        + _acc_cell(svg, extra="height:46px")
+    )
+    for p in periods:
+        inner, bg = _pct_parts(r["periods"].get(p))
+        cells += _acc_cell(inner, align="right", bg=bg,
+                           extra="white-space:nowrap;height:46px")
+    cells += _acc_cell(_rel_parts(r.get("rel_sp"), stretch=True),
+                       extra="height:46px")
+    return cells
+
+
+def _acc_member(m: dict, periods: list[str]) -> str:
+    """一支成分行（32px，字号降一档、首列缩进，读作母行下钻）。"""
+    chip = ""
+    if m.get("secondary"):
+        chip = (f'<span style="font-family:{t.FONT_MONO};font-size:9px;color:{t.INK_3};'
+                f'border:1px solid {t.PAPER_EDGE_SOFT};border-radius:2px;'
+                f'padding:0 4px;margin-left:6px;flex:none">A/H</span>')
+    tk = (f'<span style="font-family:{t.FONT_MONO};font-weight:600;color:{t.INK_2};'
+          f'font-size:11px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;'
+          f'text-overflow:ellipsis">{_esc(m["tk"])}</span>')
+    name = (f'<span style="color:{t.INK_2};font-size:12px;white-space:nowrap;'
+            f'overflow:hidden;text-overflow:ellipsis">{_esc(m["name"])}</span>{chip}')
+    cells = (
+        _acc_cell(tk, pad_left=34, extra="height:32px")
+        + _acc_cell(name, extra="height:32px")
+        + _acc_cell("", extra="height:32px")
+    )
+    for p in periods:
+        inner, bg = _pct_parts(m.get("periods", {}).get(p))
+        cells += _acc_cell(f'<span style="font-size:12px">{inner}</span>', align="right",
+                           bg=bg, extra="white-space:nowrap;height:32px")
+    cells += _acc_cell(_rel_parts(m.get("rel_sp"), h=10, lw=54, fs=11, stretch=True),
+                       extra="height:32px")
+    return cells
+
+
+def _acc_panel(r: dict, periods: list[str], grid: str, prefer_cn: bool) -> str:
+    """展开后的成分面板：说明行 + 逐支成分（页面侧已按 YTD 降序排好）。"""
+    members = r.get("members") or []
+    n = len(members)
+    cap = (f"成分 · {n} 家 · 等权 · 按 YTD 降序"
+           if prefer_cn else f"Constituents · {n} · equal-weight · sorted by YTD")
+    cap_html = (f'<div style="font-family:{t.FONT_MONO};font-size:10px;'
+                f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 34px">'
+                f'{_esc(cap)}</div>')
+    rows_html = "".join(
+        f'<div class="sovr-mrow" style="display:grid;grid-template-columns:{grid};'
+        f'align-items:stretch">{_acc_member(m, periods)}</div>'
+        for m in members
+    )
+    scroll = (f"max-height:{_ACC_SCROLL_H}px;overflow-y:auto;"
+              if n > _ACC_SCROLL_AT else "")
+    return (f'<div class="sovr-panel" style="background:rgba(255,255,255,.34);'
+            f'border-bottom:1px solid {t.PAPER_RULE};{scroll}overflow-x:hidden">'
+            f'{cap_html}{rows_html}</div>')
+
+
+def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
+                      prefer_cn: bool) -> str:
+    """整张可展开表的 HTML（表头 + 各行 <details> / 无成分则普通行）。"""
+    grid = _acc_grid(len(periods))
+    head = (f'<div style="display:grid;grid-template-columns:{grid}">'
+            f'{_acc_head(tk_label, periods)}</div>')
+    out = [head]
+    for r in rows:
+        members = r.get("members") or []
+        summary_cells = _acc_summary(r, periods, expandable=bool(members))
+        row_grid = (f'display:grid;grid-template-columns:{grid};align-items:stretch')
+        if not members:
+            out.append(f'<div class="sovr-mrow" style="{row_grid}">{summary_cells}</div>')
+            continue
+        out.append(
+            f'<details class="sovr-acc">'
+            f'<summary style="{row_grid}">{summary_cells}</summary>'
+            f'{_acc_panel(r, periods, grid, prefer_cn)}'
+            f'</details>'
+        )
+    return (f'<div style="overflow-x:auto;font-size:13px;'
+            f'font-variant-numeric:tabular-nums lining-nums;'
+            f'font-family:{t.FONT_DISPLAY}">{"".join(out)}</div>')
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
@@ -267,13 +434,19 @@ def masthead(
 
 def benchmark_table(rows: list[dict], *, source: str | None = None,
                     section_label: str = "基准 · Benchmark ETF",
-                    tk_label: str = "Ticker") -> None:
+                    tk_label: str = "Ticker", prefer_cn: bool = True) -> None:
     """基准多周期表 + sparkline + 发散色阶 + 相对标普发散条 (wave-2 glass reskin).
 
     Row dict: {tk, name, periods:{label:pct,...}, rel_sp(float pp), spark:[~30 closes]}.
     Period column order follows first row's periods key order (caller passes identical keys).
     section_label / tk_label: 复用本表做「板块汇总」等非基准表时可改小节头与首列头
     （默认值 = 原基准表，既有调用零回归）。
+
+    可展开（SOVR15）：行可带 `members: [{tk, name, periods, rel_sp, secondary?}, ...]`
+    —— 该行即渲染成可点开的 <details>，展开后列出这只自建等权篮子的全部成分，
+    列与母行严格对齐。**任一行带 members 时整表改走 grid 分支**（<tr> 无 JS 无法
+    切换兄弟行）；所有行都不带 members 时走原 <table> 分支，输出逐字节不变。
+    成分排序由调用页决定（本函数不排序）。prefer_cn 只影响成分面板的说明行。
     """
     _inject_css()
     if not rows:
@@ -323,6 +496,27 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
         + "".join(_th(p) for p in periods)
         + _th("相对标普 PP", "center")
     )
+
+    # ── 可展开分支（任一行带 members）：grid + 原生 <details>，列同表头 ──────
+    if any(r.get("members") for r in rows):
+        glass_style = (
+            "background:rgba(255,255,255,.5);"
+            "backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);"
+            "border:1px solid rgba(255,255,255,.7);"
+            "padding:2px 16px 8px;overflow:hidden;"
+        )
+        src_html = (
+            f'<div style="font-family:{t.FONT_MONO};font-size:11px;color:{t.INK_3};'
+            f'margin-top:8px">{_esc(source)}</div>'
+        ) if source else ""
+        st.markdown(
+            f"{sec_head}"
+            f'<div style="{glass_style}">'
+            f'{_render_accordion(rows, periods, tk_label, prefer_cn)}'
+            f'</div>{src_html}',
+            unsafe_allow_html=True,
+        )
+        return
 
     # ── Table body rows (SOVR8/SOVR9) ────────────────────────────────────
     body: list[str] = []

@@ -169,12 +169,11 @@ else:
                 if prefer_cn else
                 f"Source: Yahoo Finance cron EOD · CMSI Focus = equal-weight coverage composite "
                 f"(not an index) · as of {_sum_asof} · for reference")
-    # 地区 chips 复用板块热力图那套 region 标签键（同一批 code，同一套译名）
-    _regions = {c: i18n.t(f"heat.tbl.region.{c}") for c in ("US", "HK", "CN", "JP", "KR")}
+    # 地区 chips 的标签由 so 自取（heat.tbl.region.*）——不从这里传，见
+    # benchmark_table docstring：热进程缓存旧 lib 时，多传一个 kwarg = 整页 TypeError。
     so.benchmark_table(_sum_rows, source=_sum_src,
                        section_label="板块 · Sub-sectors",
-                       tk_label="Ticker", prefer_cn=prefer_cn,
-                       region_labels=_regions)
+                       tk_label="Ticker", prefer_cn=prefer_cn)
 
 st.divider()
 

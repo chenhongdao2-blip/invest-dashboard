@@ -108,6 +108,45 @@ for sec in cfg["sectors"]:
         return None if pd.isna(_v) else float(_v)
 
     _ytd_avg = _avg("ytd_%")
+
+    # 成分明细（George 2026-09-21：「本质上是我们自己的 index，需要看篮子里有什么」）。
+    # 母行点开后逐支列在下方面板里，列与母行对齐。名单直接走 `tickers` —— 与名称里的
+    # 「· N」同一个 roster，所以展开后的条数必然对得上；个别标的缺行情则该行显示 —，
+    # 不静默少一支。元数据取 _MF.meta（已在本页那一次 market_frame 里缓存好），不额外查库。
+    _members: list[dict] = []
+    for _tk in tickers:
+        _nm, _sec2 = _tk, False
+        if not _MF.meta.empty and _tk in _MF.meta.index:
+            _row = _MF.meta.loc[_tk]
+            # pd.NA/NaN 是 truthy —— 名字兜底不能用 `or` 链，必须 notna 过滤
+            _cands = ([_row.get("name_cn"), _row.get("name_en")] if prefer_cn
+                      else [_row.get("name_en"), _row.get("name_cn")])
+            for _c in _cands:
+                if _c is not None and pd.notna(_c) and str(_c).strip():
+                    _nm = str(_c).strip()
+                    break
+            _sec2 = bool(_row.get("secondary_listing", 0))
+
+        def _mv(col: str, _t=_tk) -> float | None:
+            if _t not in rets.index or col not in rets.columns:
+                return None
+            _v = rets.loc[_t, col]
+            return None if pd.isna(_v) else float(_v)
+
+        _m_ytd = _mv("ytd_%")
+        _members.append({
+            "tk": _tk,
+            "name": _nm,
+            "secondary": _sec2,
+            "periods": {"1日": _mv("1d_%"), "5日": _mv("5d_%"),
+                        "1月": _mv("1m_%"), "YTD": _m_ytd},
+            "rel_sp": (_m_ytd - _gspc_ytd0
+                       if (_gspc_ytd0 is not None and _m_ytd is not None) else None),
+        })
+    # YTD 降序，缺数沉底
+    _members.sort(key=lambda m: (m["periods"]["YTD"] is None,
+                                 -(m["periods"]["YTD"] or 0.0)))
+
     _sum_rows.append({
         "tk": "CMSI Focus",
         "name": f'{i18n.sector_name(sec["id"])} · {len(tickers)}',
@@ -116,6 +155,7 @@ for sec in cfg["sectors"]:
         "rel_sp": (_ytd_avg - _gspc_ytd0
                    if (_gspc_ytd0 is not None and _ytd_avg is not None) else None),
         "spark": _spark,
+        "members": _members,
     })
 
 if not _sum_rows:
@@ -128,7 +168,7 @@ else:
                 f"(not an index) · as of {_sum_asof} · for reference")
     so.benchmark_table(_sum_rows, source=_sum_src,
                        section_label="板块 · Sub-sectors",
-                       tk_label="Ticker")
+                       tk_label="Ticker", prefer_cn=prefer_cn)
 
 st.divider()
 

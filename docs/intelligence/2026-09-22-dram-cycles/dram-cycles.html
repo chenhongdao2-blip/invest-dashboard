@@ -130,8 +130,8 @@ td.dc{min-width:260px;color:var(--ink);} td.dc b{color:var(--loss-ink);font-weig
  </div>
  <div class="finding"><b>数据说的话：</b>六轮「风险叠层」（DRAM 价格最大跌幅 ≥80%：1985 / 1998 / 2001 / 2009 / 2012 / 2023）与美光营业亏损段<b>一一对应</b>；三个未达门槛的下行（2013–16 跌 72.6%、2016–19 跌 77.3%、2020–22 跌 76.1%）对应的谷底利润率只有 −1%、+9%、+11%，没有深度亏损。所以「三寡头后振幅收敛」在 2013–2022 三轮成立，2023 按同一口径回到暴跌桶（美光 −62%，峰→谷 −97pp，四十年第二深）。命题要保留，得给 2023 一个供给侧之外的解释。</div>
  <div class="panel">
-  <h2>DRAM 周期全景 · 一张图：利润率 × 九轮 × 四主线 × 六轮出清</h2>
-  <div class="sub">来源 drillr financial_statements（GAAP，取数 2026-09-22）· 美光 8 月年结、海力士 12 月年结 · 单位 % · 纵轴截到 −100%，2001Q4 的 −193% 超出轴，见表</div>
+  <h2>DRAM 周期全景 · 一张图：营业利润率（周期代理，不是芯片价格）× 九轮 × 四主线 × 六轮出清</h2>
+  <div class="sub">来源 drillr financial_statements（GAAP，取数 2026-09-22）· 美光 8 月年结、海力士 12 月年结 · 单位 % · 纵轴截到 −100%，2001Q4 的 −193% 超出轴 · <b>纵轴全是营业利润率</b>，不是 DRAM 价格：三个源都没有 2020-11 之前的价格序列，价格只出现在六轮门槛（跌幅 ≥80%，你的口径）与第九轮注释（DDR4 合约 1.30→24 美元）</div>
   <div class="legend"><span><i style="background:var(--mu)"></i>美光 MU · 实线 = 季度（2001 起）</span><span><i style="border-top:2px dotted var(--mu);background:none;height:0"></i>美光 MU · 虚线圆点 = 年度（1985–2000 只有年报）</span><span><i style="background:var(--hx)"></i>SK 海力士 000660.KS（2007 起；2007–10 四季度源缺失，已连线）</span><span><span class="sw"></span>美光营业亏损区间</span><span><i style="background:var(--elpida);height:1px;border-top:1px dashed var(--elpida);background:none"></i>2012-02 尔必达破产</span><span><i style="width:14px;height:10px;border:1px solid var(--ink3);background:none;vertical-align:middle"></i>九轮区间 I–IX（你的划分；1978–84 在轴外）· 点「轮次」道任一格展开</span><span><span style="color:var(--loss-ink)">▼</span> 六轮叠层：DRAM 价格最大跌幅 ≥80%（你提供的口径）</span></div>
   <div id="chart"></div>
   <div id="lanes"></div>
@@ -154,35 +154,6 @@ td.dc{min-width:260px;color:var(--ink);} td.dc b{color:var(--loss-ink);font-weig
   <div class="core"><div class="tk">核心观点</div>
    <ol><li>九轮 = 谷—谷完整周期，2012 尔必达破产为分水岭，此后三寡头垄断稳态。</li><li>六轮 = 叠在九轮上的风险叠层（跌幅 ≥80% 的六个暴跌年），标记资本毁灭与尾部风险，与九轮不冲突。</li><li>四条主线：技术迭代改写排位、需求引擎多元化、振幅收敛但未消失、中国变量从缺席到关键。</li><li>第九轮是首个由 AI 需求主导的周期，HBM 改写价值分配；跟踪重点是供需缺口、价格、资本开支与 CoWoS 瓶颈。</li><li>管理式周期降低暴跌频率但无法消除幅度；拐点判定须靠多维高频指标，不靠单一信号。每一次 80% 暴跌都是「出清—固化」闭环：淘汰弱现金玩家，幸存寡头份额与定价权提升——资本周期投资的核心是识别谁会在下一次暴跌中出清、谁能穿越周期。</li></ol>
   </div>
- </div>
- <div class="panel">
-  <h2>九轮总表 · 参考（与上图同一内容，便于整段复制）</h2>
-  <div class="sub">前五列是你给的九轮框架（早期以定性为主）；最后一列是本页数据在该轮区间内的峰值与谷底（美光营业利润率，2001 前年度、2001 起季度），边界错位处加粗。</div>
-  <div class="tw"><table><thead><tr><th>轮</th><th>区间</th><th>主导驱动</th><th>价格与供需</th><th>格局意义</th><th>数据对照（美光营业利润率）</th></tr></thead><tbody><tr><td class="k">I</td><td class="k">1978–1986</td><td>大型机向 PC 过渡；日本 VLSI 国家计划逆袭</td><td>DRAM 单位成本随制程（1K→64K→256K）下行；美系主导权被日系侵蚀</td><td>技术迭代 + 产业政策改写国家排位；1986 日系市占反超</td><td class="dc">只有 FY1985–86 两点（−6% → −59%）。<b>1987–89 不在任何一轮内</b>：FY1988 利润率 +40%、FY1989 +34%，是一段完整上行，建议把第一轮尾或第二轮头覆盖它</td></tr><tr><td class="k">II</td><td class="k">1990–1998</td><td>PC 黄金时代，Win95 引爆需求</td><td>价格战惨烈，多轮暴跌；产能与需求错配常态化</td><td>韩系逆周期扩产上位；三星 1992 量产 64M</td><td class="dc">峰 FY1995 +43.9%，谷 FY1998 −16.4%（六轮 ≥80%）。年度分辨率看不出「多轮」，1990–92 是 +1% 的浅谷</td></tr><tr><td class="k">III</td><td class="k">1999–2002</td><td>互联网泡沫，PC/服务器需求暴涨后崩塌</td><td>跌破现金成本，史上最严重亏损</td><td>泡沫破裂破坏力极强；Siemens 退出、日系整合为尔必达前身</td><td class="dc">峰 FY2000 +31.3%，谷 2001Q4 <b>−193%</b>（含减值），与「史上最严重」一致；<b>亏损延续到 2003Q3</b>，比你的 2002 边界晚三个季度</td></tr><tr><td class="k">IV</td><td class="k">2003–2009</td><td>Vista 预期幻灭叠加金融危机</td><td>2007 见顶后暴跌，2008–09 触谷</td><td>弱现金 + 强周期 = 出清；奇梦达 2009 破产</td><td class="dc">本轮自身峰 2006Q2 仅 +15.3%（利润率意义上没有「见顶」），谷 2009Q2 −71.3%，11 季连亏；2005Q3 另有一次 −12% 单季</td></tr><tr><td class="k">V</td><td class="k">2010–2012</td><td>移动互联网爆发，但产能过剩</td><td>价格持续低迷，微利或亏损</td><td>尔必达 2012 破产，三寡头固化（分水岭）</td><td class="dc">峰 2010Q3 +23.6%，谷 2012Q3 −8.8%，6 季亏损但很浅；海力士同期 −11%。分水岭在利润率上不显眼，显眼的是此后两轮谷底抬高</td></tr><tr><td class="k">VI</td><td class="k">2013–2016</td><td>云计算崛起，移动饱和</td><td>跌幅 72.6%，未达 80% 门槛</td><td>「控产稳价」默契形成</td><td class="dc">峰 2015Q1 +23.7%，谷 2016Q4 −1.0%，仅 3 季小亏 —— 与「振幅收敛」一致</td></tr><tr><td class="k">VII</td><td class="k">2016–2019</td><td>AI 萌芽 + 中美贸易摩擦</td><td>先大涨后回落；峰值毛利率约 55%（DDR4 服务器驱动）</td><td>地缘成核心变量；长鑫/长江起步</td><td class="dc">峰 2018Q4 营业利润率 +51.9%（毛利率 61%，海力士营业利润率 57%），谷 2019Q4–2020Q2 <b>+8.5% 未亏损</b> —— 收敛</td></tr><tr><td class="k">VIII</td><td class="k">2020–2022</td><td>宅经济 / 服务器 / 缺芯的极端错配</td><td>先暴涨后崩落，跌幅 76.1%</td><td>中国产能突破；美光受制裁</td><td class="dc">峰 2021Q4 +35.7%，段内谷 2022Q4 −5.1%。<b>但崩落在损益表上落在 2023Q1–2024Q1</b>（−62%），按谷—谷定义这段亏损属于第八轮的下行尾部，不是第九轮的开头</td></tr><tr><td class="k">IX</td><td class="k">2023–至今</td><td>AI 大模型，HBM 军备竞赛</td><td>2023 跌超 80% 后反转；HBM 15→85 美元/GB</td><td>首次由非消费电子需求主导；HBM 改写价值分配</td><td class="dc">谷 2023Q2 −62.4%（六轮 ≥80%），峰 2026Q3 +80.4%（SEC 10-Q 核实）；海力士 2026Q2 +76%。振幅是四十年之最，两个方向都是</td></tr></tbody></table></div>
- </div>
- <div class="panel">
-  <h2>谷底清单 · 从数据里数出来的</h2>
-  <div class="sub">亏损段 = 美光营业利润率 &lt;0 的连续区间（≥2 季或 &lt;−5%）；两个未亏损谷（1990–92、2019–20）另列。蓝底行 = 尔必达破产之后。</div>
-  <div class="tw"><table><thead><tr><th>谷底</th><th>区间</th><th>谷底利润率</th><th>前峰</th><th>峰→谷</th><th>DRAM 价格最大跌幅 †</th><th>备注</th></tr></thead><tbody>
-<tr><td class="k">1986-08</td><td>FY1985–87</td><td class="k neg">−58.5%</td><td>—（起点）</td><td class="k">—</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>年度口径; 首轮无前峰</td></tr>
-<tr><td class="k">1990-08</td><td>FY1990–92</td><td class="k">+1.1%</td><td>33.7% (FY1989)</td><td class="k">−33pp</td><td class="k">—<span style="color:var(--ink3);font-weight:400"> · 未提供</span></td><td>未亏损谷; 年度口径</td></tr>
-<tr><td class="k">1998-09</td><td>FY1998–99</td><td class="k neg">−16.4%</td><td>43.9% (FY1995)</td><td class="k">−60pp</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>年度口径</td></tr>
-<tr><td class="k">2001-08</td><td>2001Q2–2003Q3</td><td class="k neg">−193.3%</td><td>31.3% (FY2000)</td><td class="k">−225pp</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>含大额减值; 11 季连亏</td></tr>
-<tr><td class="k">2005-06</td><td>2005Q3</td><td class="k neg">−12.3%</td><td>13.9% (2004Q4)</td><td class="k">−26pp</td><td class="k">—<span style="color:var(--ink3);font-weight:400"> · 未提供</span></td><td>单季</td></tr>
-<tr><td class="k">2009-03</td><td>2007Q2–2009Q4</td><td class="k neg">−71.3%</td><td>15.3% (2006Q2)</td><td class="k">−87pp</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>11 季连亏</td></tr>
-<tr class=post><td class="k">2012-05</td><td>2011Q4–2013Q1</td><td class="k neg">−8.8%</td><td>23.6% (2010Q3)</td><td class="k">−32pp</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>尔必达 2012-02 破产在段内</td></tr>
-<tr class=post><td class="k">2016-09</td><td>2016Q2–Q4</td><td class="k neg">−1.0%</td><td>23.7% (2015Q1)</td><td class="k">−25pp</td><td class="k">72.6%<span style="color:var(--ink3);font-weight:400"> · 2013–16 下行, 未达门槛</span></td><td>浅谷; 3 季</td></tr>
-<tr class=post><td class="k">2019-11</td><td>2019Q4–2020Q2</td><td class="k">+8.5%</td><td>51.9% (2018Q4)</td><td class="k">−43pp</td><td class="k">77.3%<span style="color:var(--ink3);font-weight:400"> · 2016–19 下行, 未达门槛</span></td><td>未亏损谷</td></tr>
-<tr class=post><td class="k">2021-03</td><td>2020–22 下行</td><td class="k">+10.6%</td><td>19.1% (2020Q4)</td><td class="k">−9pp</td><td class="k">76.1%<span style="color:var(--ink3);font-weight:400"> · 未达门槛</span></td><td>利润率未成谷, 仅小幅回落</td></tr>
-<tr class=post><td class="k">2023-03</td><td>2023Q1–2024Q1</td><td class="k neg">−62.4%</td><td>34.8% (2022Q3)</td><td class="k">−97pp</td><td class="k neg">≥80%<span style="color:var(--ink3);font-weight:400"> · 六轮</span></td><td>5 季连亏; 40 年来第二深</td></tr>
-</tbody></table></div>
- </div>
- <div class="notes">
-  <b>能画什么、不能画什么。</b>本仓与 TMT 驾驭舱现有的存储数据（TrendForce 价格、指标库）只从 2023 年起，画不了九轮；这张图用的是 drillr 里的公司财报。1985–2000 只有年度数，一年一个点，会抹平 1990–92 那种浅谷的形状；2001 起是季度。<br>
-  <b>代理的边界。</b>美光利润率含 NAND（2006 起）与减值，不是纯 DRAM 价格周期；三星只有合并报表，DS 分部利润没进 drillr，故未画。海力士 2007–2010 四季度营业利润在源里为 0，按缺失处理并在图上直接连线，这四段是插值不是数据。美光 1985–2000 只有年报，用虚线圆点表示分辨率不同，年度末点与 2001 季度首点已连接。<br>
-  <b>已核标记。</b>海力士 2026Q2 净利润 93.9 万亿韩元大于收入 79.3 万亿，已按 2026-07-28 业绩公告核实为真：非营业净利 62.2 万亿，其中投资资产出售 / 评估收益 63.3 万亿（Kioxia 持股出售），本图只用营业利润（60.5 万亿，利润率 76%），不受影响。美光 2026Q3 营业利润率 80.4% 已由 SEC 10-Q 核实（收入 414.6 亿 / 营业利润 333.2 亿美元）。DDR4 8Gb 合约价 1.30（2023-08）→ 24.00 美元（2026-07）两端均与 DRAMeXchange 固定交易价的媒体报道一致，2026-08 已至 25.00。<br>
-  <b>† 价格跌幅 / 80% 门槛</b>：跌幅 = 该轮 DRAM 价格自周期高点到低点的最大跌幅；80% 是六轮文档定义「风险叠层」的入选门槛，六轮（1985/1998/2001/2009/2012/2023）达标，2013–16、2016–19、2020–22 三轮为 72.6 / 77.3 / 76.1% 未达标。数字来自你提供的行业复盘资料（TrendForce 口径），不是本页工具取数，未经第二源核。<br>
-  <b>九轮边界与谷底的三处错位。</b>① 1987–89 不在任何一轮内，却是一段完整上行；② 第三轮亏损延续到 2003Q3，比 2002 边界晚三季；③ 第八轮的崩落在损益表上落在 2023Q1–2024Q1，按谷—谷定义应归第八轮尾部而非第九轮开头 —— 价格跌幅与利润率谷底之间约有两到三个季度的滞后，这个滞后本身就是可用的领先关系。
  </div>
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.0/echarts.min.js"></script>

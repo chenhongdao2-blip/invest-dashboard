@@ -801,6 +801,9 @@ STRINGS = {
         "**默认**：按市值降序、中文名优先。价格 / 倍数来自 `snapshots.db`（每日 cron）。"
     ),
     "ai.ov.title": "AI 总览",
+    "ai.ov.dram.title": "DRAM 周期四十年 · 一张图",
+    "ai.ov.dram.meta": "存储周期锚 · 美光/海力士营业利润率 × 九轮 × 六轮出清",
+    "ai.ov.dram.caption": "纵轴是营业利润率（周期代理），不是芯片价格。峰谷点击可看每轮注释；源文件 docs/intelligence/2026-09-22-dram-cycles/。",
     "ai.heat.title": "AI 板块热力图",
     "ai.scan.title": "AI 估值扫描器",
     "ai.sec.title": "AI · SEC 财报数据",

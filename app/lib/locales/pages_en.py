@@ -838,6 +838,9 @@ STRINGS = {
         "**Defaults**: market-cap descending, Chinese name first. Prices / multiples from `snapshots.db` (daily cron)."
     ),
     "ai.ov.title": "AI Overview",
+    "ai.ov.dram.title": "DRAM Cycles, 40 Years · One Figure",
+    "ai.ov.dram.meta": "MEMORY CYCLE ANCHOR · MU/HYNIX OPERATING MARGIN × 9 ROUNDS × 6 WASHOUTS",
+    "ai.ov.dram.caption": "Y-axis is operating margin (cycle proxy), not chip price. Click peaks/troughs for per-round notes; source in docs/intelligence/2026-09-22-dram-cycles/.",
     "ai.heat.title": "AI Sector Heatmap",
     "ai.scan.title": "AI Valuation Scanner",
     "ai.sec.title": "AI · SEC Company Facts",

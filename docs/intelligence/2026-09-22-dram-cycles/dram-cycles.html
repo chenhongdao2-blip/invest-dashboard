@@ -139,6 +139,17 @@ td.dc{min-width:260px;color:var(--ink);} td.dc b{color:var(--loss-ink);font-weig
 .tv{grid-column:1/-1;font-size:13px;color:var(--ink2);line-height:20px;} .tv span{display:block;font-size:11px;color:var(--ink3);margin-top:4px;}
 .finding b{color:var(--ink);}
 @media (max-width:760px){.detail,.threads{grid-template-columns:repeat(2,minmax(0,1fr));}.ninth{grid-template-columns:1fr;}}
+
+/* driver 三道加强 (George 09-23: v2 后不够突出) */
+.lane.drv{background:color-mix(in srgb,var(--mu) 9%,transparent);}
+.lane.drv .ln{color:var(--ink);font-size:12px;font-weight:700;letter-spacing:.04em;}
+.chip{height:26px;line-height:26px;font-size:13px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--mu) 24%,var(--surface));border-left:3px solid var(--mu);}
+.chip.cn{background:color-mix(in srgb,var(--hx) 28%,var(--surface));border-left-color:var(--hx);}
+.chip.cn.off{background:transparent;border:1px dashed var(--edge,var(--rule));border-left:1px dashed var(--edge,var(--rule));color:var(--ink3);font-weight:500;}
+.chip.rd{background:transparent;font-weight:500;}
+.ev i{width:11px;height:11px;background:var(--mu);box-shadow:0 0 0 1.5px var(--mu);}
+.ev b{font-size:12.5px;font-weight:600;color:var(--ink);}
+.grp b{color:var(--brand,var(--mu));font-size:10px;}
 </style>
 
 <div class="wrap">
@@ -233,52 +244,46 @@ function drawStory(){
  var l1=lane('需求引擎','drv'); LANES.engine.forEach(function(e,i){chip(l1,e[0],cutEnd(LANES.engine,i,0,1),e[2],e[2]+' — '+e[3]);});
  var l2=lane('技术 · 排位','tall drv'); LANES.tech.forEach(function(e,i){ev(l2,e[0],e[1],e[1]+' — '+e[2],'',i%2===1);});
  var l3=lane('中国变量','drv'); LANES.china.forEach(function(e,i){chip(l3,e[0],cutEnd(LANES.china,i,0,1),e[2],e[2]+' — '+e[3],'cn'+(i===0?' off':''));});
- var l4=lane('暴跌 → 出清','crash'); var L4H=272; l4.style.height=L4H+'px';
- l4.querySelector('.ln').innerHTML='暴跌 → 出清<br><span style="display:block;margin-top:6px;text-transform:none;letter-spacing:0;font-size:9px;line-height:1.5;white-space:nowrap;color:var(--ink3)">柱长 = DRAM 价格<br>自高点跌幅（%）<br>不是利润率<br><span style="color:var(--loss-ink)">■</span> ≥80% 六轮出清<br><span style="color:var(--mu)">■</span> 未达门槛<br>卡 = 出清事件<br>　　+ 格局意义<br>你的口径 · TrendForce</span>';
+ var l4=lane('暴跌 → 出清 → 固化','crash'); var L4H=352; l4.style.height=L4H+'px';
+ l4.querySelector('.ln').innerHTML='暴跌 → 出清<br>→ 固化<br><span style="display:block;margin-top:6px;text-transform:none;letter-spacing:0;font-size:9px;line-height:1.5;white-space:nowrap;color:var(--ink3)">柱 = DRAM 价格<br>自高点跌幅（%）<br><span style="color:var(--loss-ink)">■</span> ≥80% 六轮出清<br><span style="color:var(--mu)">■</span> 未达门槛<br>面积 = 主要厂商数<br>卡 = 事件 + 格局意义<br>你的口径 · TrendForce</span>';
  l4.querySelector('.ln').style.cssText+='flex-direction:column;align-items:flex-start;justify-content:center;white-space:nowrap;';
- /* 柱从「价格高点」往下垂: 0% 在 TOP, 100% 在 TOP+FULL; 门槛线在 80% */
- var TOP=18, FULL=90, THR=80; var CRASH_AT={"I":"1986-08-01","II":"1998-09-01","III":"2001-08-01","IV":"2009-03-01","V":"2012-05-01","VI":"2016-09-01","VII":"2019-11-01","VIII":"2022-12-01","IX":"2023-03-01"};
- var hi=document.createElement('div'); hi.style.cssText='position:absolute;left:100px;top:'+(TOP-15)+'px;font-family:JetBrains Mono,monospace;font-size:9px;color:var(--ink3)'; hi.textContent='价格高点'; l4.appendChild(hi);
+ /* 1) 柱: 从「价格高点」往下垂, 门槛线在 80% */
+ var TOP=16, FULL=84, THR=80; var CRASH_AT={"I":"1986-08-01","II":"1998-09-01","III":"2001-08-01","IV":"2009-03-01","V":"2012-05-01","VI":"2016-09-01","VII":"2019-11-01","VIII":"2022-12-01","IX":"2023-03-01"};
+ var hi=document.createElement('div'); hi.style.cssText='position:absolute;left:100px;top:'+(TOP-14)+'px;font-family:JetBrains Mono,monospace;font-size:9px;color:var(--ink3)'; hi.textContent='价格高点'; l4.appendChild(hi);
  var th=document.createElement('div'); th.className='thr'; th.style.top=(TOP+THR/100*FULL)+'px'; l4.appendChild(th);
  var tl=document.createElement('div'); tl.style.cssText='position:absolute;left:'+(px('2026-09-01')+10)+'px;top:'+(TOP+THR/100*FULL-13)+'px;font-family:JetBrains Mono,monospace;font-size:9.5px;color:var(--loss-ink)'; tl.textContent='≥80% 门槛'; l4.appendChild(tl);
  var XS=CRASH.map(function(c){return px(CRASH_AT[c[0]]);});
  var SH=XS.map(function(){return 0;}); for(var k=1;k<XS.length;k++){if(XS[k]-XS[k-1]<18){XS[k-1]-=8;XS[k]+=8;SH[k-1]=1;}}
  var RM={}; ROUNDS.forEach(function(r){RM[r.n]=r;});
- var CW=150, GAP=8, CT=TOP+FULL+18, TH=62, XR=px('2028-06-01');
+ /* 2) 漏斗: 厂商数台阶, 钉真实年份, 台阶落在红柱正下方 */
+ var FT=TOP+FULL+34, FH=54, MAXN=13, FB=FT+FH;
  var svgNS='http://www.w3.org/2000/svg'; var sv4=document.createElementNS(svgNS,'svg'); sv4.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible;pointer-events:none';
- var cards=[];
- CRASH.forEach(function(c,i){var x=XS[i];var pct=parseFloat(String(c[6]).replace(/[^0-9.]/g,''))||THR;var six=c[4];var len=pct/100*FULL;
+ var pts=[]; FUNNEL.forEach(function(f){var x1=clampL(px(f[0])),x2=px(f[1]);var h=f[2]/MAXN*FH;pts.push([x1,FT+FH-h]);pts.push([x2,FT+FH-h]);});
+ var poly=document.createElementNS(svgNS,'polygon'); poly.setAttribute('points',pts.map(function(p){return p[0]+','+p[1];}).join(' ')+' '+pts[pts.length-1][0]+','+FB+' '+pts[0][0]+','+FB);
+ poly.setAttribute('fill',tok('--mu')); poly.setAttribute('fill-opacity','0.14'); poly.setAttribute('stroke',tok('--mu')); poly.setAttribute('stroke-width','1.5'); sv4.appendChild(poly);
+ var bl=document.createElementNS(svgNS,'line'); bl.setAttribute('x1',pts[0][0]); bl.setAttribute('x2',pts[pts.length-1][0]); bl.setAttribute('y1',FB); bl.setAttribute('y2',FB); bl.setAttribute('stroke',tok('--ink3')); bl.setAttribute('stroke-width','1'); sv4.appendChild(bl);
+ FUNNEL.forEach(function(f,i){if(i===0)return;var x=clampL(px(f[0]));var prev=FUNNEL[i-1][2];var h=f[2]/MAXN*FH;var y=FT+FH-h;
+   var v=document.createElementNS(svgNS,'line');v.setAttribute('x1',x);v.setAttribute('x2',x);v.setAttribute('y1',TOP+THR/100*FULL);v.setAttribute('y2',y);v.setAttribute('stroke','#cc0000');v.setAttribute('stroke-width','1');v.setAttribute('stroke-dasharray','2,3');v.setAttribute('opacity','.6');sv4.appendChild(v);
+   var d=document.createElement('div');d.style.cssText='position:absolute;left:'+(x+4)+'px;top:'+(FT-13)+'px;font-family:JetBrains Mono,monospace;font-size:9.5px;font-weight:600;color:var(--loss-ink);white-space:nowrap';d.textContent='−'+(prev-f[2])+' 家';l4.appendChild(d);});
+ FUNNEL.forEach(function(f,i){var x1=clampL(px(f[0])),x2=px(f[1]);var h=f[2]/MAXN*FH;var d=document.createElement('div');d.className='fl';d.style.left=(x1+3)+'px';d.style.width=Math.max(0,x2-x1-6)+'px';d.style.top=(FT+FH-h+2)+'px';
+   d.title=f[3]+' — '+f[4]+'（厂商数为示意整理，非工具取数）';d.innerHTML='<b>'+f[2]+' 家</b>'+(x2-x1>90?' <span>'+f[3]+'</span>':'');l4.appendChild(d);});
+ /* 3) 复盘卡: 事件序列, 等距一行, 引线从柱脚年份落到卡, 单调不交叉 */
+ var X0=px('1984-06-01'), XR=px('2028-06-01'), N=CRASH.length, SW=(XR-X0)/N, CW=Math.floor(SW-8), CT=FB+30;
+ CRASH.forEach(function(c,i){var x=XS[i];var pct=parseFloat(String(c[6]).replace(/[^0-9.]/g,''))||THR;var six=c[4];var len=pct/100*FULL;var r=RM[c[0]]||{};
    var bar=document.createElement('div');bar.style.cssText='position:absolute;width:14px;left:'+(x-7)+'px;top:'+TOP+'px;height:'+len+'px;border-radius:0 0 2px 2px;background:'+(six?'var(--loss-ink)':'var(--mu)');bar.title=c[0]+' · '+c[7]+' · '+c[5];l4.appendChild(bar);
-   var lb=document.createElement('div');lb.style.cssText='position:absolute;transform:translateX(-50%);left:'+x+'px;top:'+(TOP+len+3+SH[i]*12)+'px;font-family:JetBrains Mono,monospace;font-size:9.5px;white-space:nowrap;color:'+(six?'var(--loss-ink)':'var(--mu)');lb.textContent='↓'+c[6];l4.appendChild(lb);
-   cards.push({i:i,x:x,cx:x,tier:i%2,six:six,c:c,r:RM[c[0]]||{},len:len});});
- /* 每层从左到右避让: 左界 = 道标右缘, 右界 = 2028 */
- [0,1].forEach(function(t){var cs=cards.filter(function(k){return k.tier===t;});var minL=96+CW/2+4;
-   cs.forEach(function(k,j){if(j===0){k.cx=Math.max(k.cx,minL);return;}var prev=cs[j-1];if(k.cx-prev.cx<CW+GAP)k.cx=prev.cx+CW+GAP;});
-   for(var j=cs.length-1;j>=0;j--){var k=cs[j];if(k.cx+CW/2>XR)k.cx=XR-CW/2;if(j<cs.length-1&&cs[j+1].cx-k.cx<CW+GAP)k.cx=cs[j+1].cx-CW-GAP;}});
- cards.forEach(function(k){var ct=CT+k.tier*TH; var col=k.six?'var(--loss-ink)':'var(--mu)';
-   var ln=document.createElementNS(svgNS,'line');ln.setAttribute('x1',k.x);ln.setAttribute('y1',TOP+k.len+15+SH[k.i]*12);ln.setAttribute('x2',k.cx);ln.setAttribute('y2',ct);ln.setAttribute('stroke',k.six?'#cc0000':'#4a6fa5');ln.setAttribute('stroke-width','1');ln.setAttribute('stroke-dasharray','3,3');ln.setAttribute('opacity','.6');sv4.appendChild(ln);
-   var ev=document.createElement('div');ev.className='rc'+(k.six?' six':'');ev.style.left=k.cx+'px';ev.style.top=ct+'px';
-   ev.innerHTML='<b>'+k.c[0]+' · '+(k.six?k.c[5]:(k.r.px||k.c[5]))+'</b><span>'+(k.r.mkt||'')+'</span>';ev.title=k.c[0]+' · '+k.c[7]+' · '+k.c[5]+' · '+(k.r.mkt||'');l4.appendChild(ev);});
+   var lb=document.createElement('div');lb.style.cssText='position:absolute;transform:translateX(-50%);left:'+x+'px;top:'+(TOP+len+3+SH[i]*11)+'px;font-family:JetBrains Mono,monospace;font-size:9.5px;white-space:nowrap;color:'+(six?'var(--loss-ink)':'var(--mu)');lb.textContent='↓'+c[6];l4.appendChild(lb);
+   var cx=X0+SW*(i+0.5);
+   var ln=document.createElementNS(svgNS,'line');ln.setAttribute('x1',x);ln.setAttribute('y1',FB+2);ln.setAttribute('x2',cx);ln.setAttribute('y2',CT);ln.setAttribute('stroke',six?'#cc0000':'#4a6fa5');ln.setAttribute('stroke-width','1');ln.setAttribute('stroke-dasharray','3,3');ln.setAttribute('opacity','.55');sv4.appendChild(ln);
+   var ev=document.createElement('div');ev.className='rc'+(six?' six':'');ev.style.left=cx+'px';ev.style.top=CT+'px';ev.style.width=CW+'px';
+   ev.innerHTML='<b>'+c[0]+' · '+(six?c[5]:(r.px||c[5]))+'</b><span>'+(r.mkt||'')+'</span>';ev.title=c[0]+' · '+c[7]+' · '+c[5]+' · '+(r.mkt||'');l4.appendChild(ev);});
  l4.appendChild(sv4);
- /* 底部年份刻度, 与主图 x 轴一致 */
+ /* 4) 年份刻度在最底, 与主图 x 轴一致 */
  var ax=document.createElement('div'); ax.className='tax'; ax.style.top=(L4H-18)+'px';
  ['1985','1991','1998','2005','2012','2019','2026'].forEach(function(yr){var x=px(yr+'-01-01');if(x==null)return;var t=document.createElement('span');t.style.left=x+'px';t.textContent=yr;ax.appendChild(t);});
  l4.appendChild(ax);
-  var l5=lane('格局 · 固化','tall'); l5.style.height='84px';
- l5.querySelector('.ln').innerHTML='格局 · 固化<br><span style="text-transform:none;letter-spacing:0;font-size:9.5px">面积 = 主要厂商数</span>'; l5.querySelector('.ln').style.lineHeight='1.3';
- var H=56, T0=6, MAXN=13;
- var svgNS='http://www.w3.org/2000/svg'; var sv=document.createElementNS(svgNS,'svg'); sv.setAttribute('class','fun'); sv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible';
- var pts=[]; FUNNEL.forEach(function(f){var x1=clampL(px(f[0])),x2=px(f[1]);var h=f[2]/MAXN*H;pts.push([x1,T0+H-h]);pts.push([x2,T0+H-h]);});
- var poly=document.createElementNS(svgNS,'polygon'); var base=T0+H;
- poly.setAttribute('points',pts.map(function(p){return p[0]+','+p[1];}).join(' ')+' '+pts[pts.length-1][0]+','+base+' '+pts[0][0]+','+base);
- poly.setAttribute('fill',tok('--mu')); poly.setAttribute('fill-opacity','0.16'); poly.setAttribute('stroke',tok('--mu')); poly.setAttribute('stroke-width','1.5'); sv.appendChild(poly);
- var bl=document.createElementNS(svgNS,'line'); bl.setAttribute('x1',pts[0][0]); bl.setAttribute('x2',pts[pts.length-1][0]); bl.setAttribute('y1',base); bl.setAttribute('y2',base); bl.setAttribute('stroke',tok('--ink3')); bl.setAttribute('stroke-width','1'); sv.appendChild(bl);
- l5.appendChild(sv);
- FUNNEL.forEach(function(f,i){var x1=clampL(px(f[0])),x2=px(f[1]);var h=f[2]/MAXN*H;var d=document.createElement('div');d.className='fl';d.style.left=(x1+3)+'px';d.style.width=Math.max(0,x2-x1-6)+'px';d.style.top=(T0+H-h-14)+'px';
-   d.title=f[3]+' — '+f[4]+'（厂商数为示意整理，非工具取数）';d.innerHTML='<b>'+f[2]+' 家</b>'+(x2-x1>90?' <span>'+f[3]+'</span>':'');l5.appendChild(d);});
  var ls=lanesEl.querySelectorAll('.lane');
  function grp(from,to,txt,cls){var g=document.createElement('div');g.className='grp'+(cls?' '+cls:'');g.style.top=ls[from].offsetTop+'px';g.style.height=(ls[to].offsetTop+ls[to].offsetHeight-ls[from].offsetTop)+'px';g.innerHTML='<b>'+txt+'</b>';lanesEl.appendChild(g);}
- grp(1,3,'三大 DRIVER'); grp(4,5,'结果','res');
+ grp(1,3,'三大 DRIVER'); grp(4,4,'结果','res');
  var r=ROUNDS.filter(function(x){return x.n===SEL;})[0];
  detail.innerHTML='<div class="t">第 '+r.n+' 轮 · '+r.yrs+(r.six?' <span class="flag">· 六轮叠层：DRAM 价格最大跌幅 ≥80%</span>':' · 跌幅未达 80% 门槛')+'</div>'
   +'<div><span class="k">主导驱动</span>'+r.drv+'</div><div><span class="k">价格与供需</span>'+r.px+'</div><div><span class="k">格局意义</span>'+r.mkt+'</div>'

@@ -235,7 +235,7 @@ function drawStory(){
  var l2=lane('技术 · 排位','tall drv'); LANES.tech.forEach(function(e,i){ev(l2,e[0],e[1],e[1]+' — '+e[2],'',i%2===1);});
  var l3=lane('中国变量','drv'); LANES.china.forEach(function(e,i){chip(l3,e[0],cutEnd(LANES.china,i,0,1),e[2],e[2]+' — '+e[3],'cn'+(i===0?' off':''));});
  var l4=lane('周期 · 峰谷相连','crash'); l4.style.height='524px';
- l4.querySelector('.ln').innerHTML='周期 · 峰谷相连<br><span style="text-transform:none;letter-spacing:0;font-size:9.5px">美光营业利润率<br>峰→谷→峰 按真实时点<br>红段 = 六轮出清<br>▲ 上行如何结束<br>▼ 下行如何结束</span>'; l4.querySelector('.ln').style.lineHeight='1.35';
+ l4.querySelector('.ln').innerHTML='周期 · 峰谷相连<br><span style="display:block;margin-top:6px;text-transform:none;letter-spacing:0;font-size:9px;line-height:1.5;white-space:nowrap;color:var(--ink3)">线 = 美光营业利润率<br>点 = 峰 / 谷<br>　　按真实时点<br><span style="color:var(--mu)">━</span> 上行<br><span style="color:var(--loss-ink)">━</span> 下行·六轮出清<br><span style="color:#9a968f">━</span> 下行·未出清<br>▲ 注释：上行怎么结束<br>▼ 注释：下行怎么结束</span>'; var _ln4=l4.querySelector('.ln'); _ln4.style.cssText+='flex-direction:column;align-items:flex-start;justify-content:flex-start;padding-top:12px;line-height:1.35;';
  var ZT=158, SH=150, SMAX=100, SMIN=-100, SY0=ZT;  /* 上注释区 0–128, 线区 128–278, 下注释区 278–470 */
  function sy(v){var c=Math.max(SMIN,Math.min(SMAX,v));return SY0+(SMAX-c)/(SMAX-SMIN)*SH;}
  var svgNS='http://www.w3.org/2000/svg'; var sv=document.createElementNS(svgNS,'svg'); sv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;overflow:visible';

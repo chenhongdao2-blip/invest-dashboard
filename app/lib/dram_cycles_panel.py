@@ -48,7 +48,13 @@ _GUARD_CLOSE = (
     "}\n"
     "(function(){var tries=0;function ready(){var el=document.getElementById('chart');"
     "return typeof echarts!=='undefined'&&el&&el.clientWidth>0;}"
-    "function tick(){if(ready()){__dramMain();return;}tries++;"
+    # 自适应高度: srcdoc iframe 与父页同源, 直接改 frameElement; 内容高随视口宽变
+    # (窄屏文字折行更多), 固定 height 会截断或留白 — 渲染后 + 尺寸变化时都重算
+    "function fit(){try{var h=document.documentElement.scrollHeight;"
+    "if(window.frameElement&&h>0)window.frameElement.style.height=(h+8)+'px';}catch(e){}}"
+    "function tick(){if(ready()){__dramMain();fit();setTimeout(fit,300);setTimeout(fit,1200);"
+    "if(window.ResizeObserver){new ResizeObserver(fit).observe(document.body);}"
+    "window.addEventListener('resize',fit);return;}tries++;"
     "if(tries<120){requestAnimationFrame(tick);}else{setTimeout(tick,200);}}tick();})();\n"
     "</script>"
 )
@@ -83,7 +89,7 @@ def build_doc(mtime: float) -> str:
     )
 
 
-def render(height: int = 1860) -> None:
+def render(height: int = 2400) -> None:
     if not SOURCE.exists():
         st.warning(f"DRAM 周期图源文件缺失：{SOURCE.relative_to(REPO_ROOT)}")
         return

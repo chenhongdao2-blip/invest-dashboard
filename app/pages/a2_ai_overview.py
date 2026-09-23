@@ -20,6 +20,7 @@ from lib import theme
 from lib import i18n
 from lib import sector_overview as so
 from lib import section_header
+from lib import dram_cycles_panel
 
 
 def _render_pct_table(
@@ -167,6 +168,13 @@ if _all_rets:
     _losers = _mv_rows(_combined.sort_values("1d_%", ascending=True).head(10))
     so.movers(gainers=_gainers, losers=_losers,
               window=("1 日" if prefer_cn else "1D"), prefer_cn=prefer_cn)
+
+# --- DRAM 周期一张图（存储 = AI 硬件链的周期锚）— lib/dram_cycles_panel ---
+theme.section_header(i18n.t("ai.ov.dram.title"), meta=i18n.t("ai.ov.dram.meta"))
+st.caption(i18n.t("ai.ov.dram.caption"))
+dram_cycles_panel.render()
+
+st.divider()
 
 # --- Onboarding ---
 with st.expander(i18n.t("hc.onboarding.title")):

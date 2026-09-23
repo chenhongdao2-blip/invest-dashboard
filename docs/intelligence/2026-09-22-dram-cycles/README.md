@@ -15,11 +15,13 @@
 
 | 内容 | 来源 | 可靠性 | 备注 |
 |---|---|---|---|
-| 美光 / 海力士营业利润率、峰谷 pp | drillr `financial_statements`（GAAP），取数 2026-09-22 | HIGH | 输入行在 `data/drillr_quarterly_inputs.py`；派生峰谷在 `data/micron_hynix_margins_cycles.json`。海力士 2007–2010 四季度营业利润源为 0，按缺失处理并连线（插值）。海力士 2026Q2 净利润 > 收入，违反恒等式，图只用营业利润，待回公告核。美光 2026Q3 营业利润率 80.4% 为源返回值未另核 |
+| 美光 / 海力士营业利润率、峰谷 pp | drillr `financial_statements`（GAAP），取数 2026-09-22 | HIGH | 输入行在 `data/drillr_quarterly_inputs.py`；派生峰谷在 `data/micron_hynix_margins_cycles.json`。海力士 2007–2010 四季度营业利润源为 0，按缺失处理并连线（插值）。海力士 2026Q2 净利润 93.92 万亿韩元 > 收入 79.32 万亿韩元**已核实为真**（2026-07-28 2Q26 业绩公告：非营业净利 62.2 万亿，其中投资资产出售/评估收益 63.3 万亿，主要为 Kioxia 持股出售），图只用营业利润，不受影响。美光 FQ3 2026（2026-05-28 止）收入 414.56 亿 / 营业利润 333.18 亿美元 = 80.4%，**已由 SEC 10-Q（acc 0000723125-26-000015，edgartools XBRL 直取，2026-09-23）核实** |
 | 九轮区间、主导驱动、格局意义、六轮门槛（DRAM 价格最大跌幅 ≥80%）、三轮跌幅 72.6 / 77.3 / 76.1%、三巨头亏损 >150 亿美元 / 减产 >20%、HBM 15→85 美元/GB | George 提供的九轮/六轮框架文档（行业复盘资料，TrendForce 口径） | MEDIUM | 未经工具第二源核；图上凡此类数字均标「你的口径 / 行业复盘资料」 |
-| 第九轮价格谷→峰：DDR4 8Gb 合约 1.30（2023-08）→ 24.00 美元（2026-07），↑17× | Wind EDB `S7800001`（DRAMexchange），WindPy 取数 2026-09-22 | HIGH（Wind 返回原值，量纲美元/颗，未第二源核） | 极端值，用进报告前回 DRAMexchange/TrendForce 原始报价核；`data/wind_dram_price_extrema.json` |
+| 第九轮价格谷→峰：DDR4 8Gb 合约 1.30（2023-08）→ 24.00 美元（2026-07），↑17× | Wind EDB `S7800001`（DRAMexchange），WindPy 取数 2026-09-22 | HIGH（Wind 原值；**两端已第二源核实 2026-09-23**：2023-08 固定交易价 1.30 美元 = news1/亚洲经济引 DRAMeXchange；2026-07 平均固定交易价 24.00 美元 = EBN/首尔经济引 DRAMeXchange，环比 +14.3%） | Wind 序列截至 2026-07-31；DRAMeXchange 2026-08 固定价已到 25.00 美元（edaily，历史新高），即谷→最新 ≈ 19×，图上「↑17×」为 23-08→26-07 口径。`data/wind_dram_price_extrema.json` |
 | 各时期主要 DRAM 厂商数 13/12/9/7/5/3 | 按 George 叙述 + 模型背景知识的示意整理 | LOW | 非工具取数，逐家名单未核；唯一可引的是三寡头合计市占 >95%（George 给的 TrendForce 口径） |
 | 见顶原因 / 出清事件短句 | George 九轮总表 + 六轮红标段落，压缩改写 | MEDIUM | 全文在悬停 |
+
+**未第二源核的剩余项**：九轮区间/三轮跌幅/亏损与减产数字（George 框架文档，TrendForce 口径）与厂商数 13→3（示意）；前者需 TrendForce 原始报告，后者需逐家名单。
 
 **查过但没有的数据**：DRAM 价格 2020-11 之前的序列——George 的 TrendForce 数据包（15 xlsx）价格表只覆盖 2024-01 起，Wind DRAMexchange 序列最早 2020-11，drillr 无价格。因此上行/下行两道统一用利润率口径，价格只作第九轮注释。
 

@@ -5,8 +5,8 @@ artifact 源文件，无 html 壳）。本模块**不复制**图的任何数据�
 装进 Streamlit：
 
 1. 去掉 Google Fonts ``<link>``（国内被墙，见 memory selfhost-inter-fastfollow），
-   改成自托管 Inter / JetBrains Mono 的 ``@font-face``，字体族名沿用源文件的
-   IBM Plex Sans / Mono 以免改动源 CSS。
+   改成自托管 Inter / JetBrains Mono 的 ``@font-face``（源文件自 2026-09-23 Claude Design
+   v2 起直接用 Inter / JetBrains Mono 族名）。
 2. echarts.min.js 从 cdnjs 换成**相对路径** ``app/static/echarts.min.js``
    （云端 /~/+/ 前缀，绝对路径会撞 login → 全站空图，见 memory
    streamlit-cloud-static-path-prefix）。
@@ -31,9 +31,9 @@ _CDN_ECHARTS = '<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.
 
 _FONT_FACE = (
     "<style>"
-    "@font-face{font-family:'IBM Plex Sans';font-style:normal;font-weight:100 900;font-display:swap;"
+    "@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;font-display:swap;"
     "src:url('app/static/fonts/inter-var.woff2') format('woff2-variations');}"
-    "@font-face{font-family:'IBM Plex Mono';font-style:normal;font-weight:100 800;font-display:swap;"
+    "@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;"
     "src:url('app/static/fonts/jetbrains-mono-var.woff2') format('woff2-variations');}"
     "</style>"
 )
@@ -83,7 +83,7 @@ def build_doc(mtime: float) -> str:
     )
 
 
-def render(height: int = 2600) -> None:
+def render(height: int = 1860) -> None:
     if not SOURCE.exists():
         st.warning(f"DRAM 周期图源文件缺失：{SOURCE.relative_to(REPO_ROOT)}")
         return

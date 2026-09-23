@@ -99,3 +99,6 @@ data/external/factset_raw/
 # —— local-only, NEVER public。
 data/external/mnc_ma_deals_full.csv
 data/external/mnc_ma_rumors.json
+
+# FactSet 原始返回（授权数据）只留本地，图上只放派生汇总 — George 2026-09-23 裁定
+docs/intelligence/**/factset_pulls_*.json

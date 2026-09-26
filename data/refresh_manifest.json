@@ -4,7 +4,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-25T14:36:47+00:00",
+    "refreshed_at": "2026-09-26T00:50:58+00:00",
     "source_date": "2026-09-25"
   },
   "sec_facts": {
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-25T00:53:11+00:00",
-    "source_date": "2026-09-25"
+    "source_date": "2026-09-26"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",

@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-28T17:36:01+00:00",
-    "source_date": "2026-09-28"
+    "refreshed_at": "2026-09-29T02:15:05+00:00",
+    "source_date": "2026-09-29"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-26T00:55:11+00:00",
-    "source_date": "2026-09-28"
+    "source_date": "2026-09-29"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -73,7 +73,7 @@
     "label": "生科组合 催化剂时点",
     "source": "手工(PatSnap变化探测+transcript核对)",
     "max_age_days": 30,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T06:51:14+00:00",
     "source_date": "2026-08-29",
     "note": "8/29 sweep: PatSnap 4/22后余额耗尽,余18只drillr新闻fallback;12行更新,transcript锚QURE"

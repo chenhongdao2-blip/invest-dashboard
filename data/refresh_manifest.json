@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-09-29T15:39:35+00:00",
-    "source_date": "2026-09-29"
+    "refreshed_at": "2026-09-30T01:30:24+00:00",
+    "source_date": "2026-09-30"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",
@@ -22,7 +22,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-09-29T02:20:13+00:00",
-    "source_date": "2026-09-29"
+    "source_date": "2026-09-30"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -132,6 +132,6 @@
     "source": "手工(多源三角+对抗核验)",
     "max_age_days": 120,
     "source_date": "2026-06-01",
-    "status": "ok"
+    "status": "stale"
   }
 }

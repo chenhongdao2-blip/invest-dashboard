@@ -69,7 +69,7 @@ MOV_CAP = 22.0  # mover 动量条饱和上限 (spec: cap 22)
 # ── CSS injection (pulseDot keyframes + tr hover) ────────────────────────────
 
 def _inject_css() -> None:
-    """Inject @keyframes pulseDot + sovr-row hover rule.
+    """Inject @keyframes pulseDot + accordion / filter / sort base rules.
     Idempotent — Streamlit rerenders call this every time, same CSS overwrites itself.
     """
     st.markdown(
@@ -78,7 +78,6 @@ def _inject_css() -> None:
   0%,100% { opacity:1; transform:scale(1); }
   50% { opacity:.35; transform:scale(.82); }
 }
-tr.sovr-row:hover { background:rgba(26,26,26,.045) !important; }
 
 /* ── 可展开板块行(accordion, SOVR15) ──────────────────────────────────────
    母行 = <summary>(display:grid, 与表头同 grid-template) ; 成分面板 = <details> body。
@@ -107,6 +106,17 @@ details.sovr-acc[open] > summary .sovr-caret { transform:rotate(90deg); }
   transition:background .12s ease,color .12s ease,border-color .12s ease; user-select:none; }
 .sovr-chip:hover { border-color:#d4c4b0; background:rgba(255,255,255,.85); }
 .sovr-f:checked + .sovr-chip { background:#c8102e; color:#fff; border-color:#c8102e; }
+/* ── 表头点击排序 (SOVR17) ───────────────────────────────────────────────
+   同 SOVR16 的纯 CSS 路线：hidden radio + <label> 表头 + :has()，行容器 flex 列，
+   各行带 --d{k}/--a{k} 名次变量，勾中哪个 radio 就把 order 指向哪个变量。
+   无 rerun → 排序不塌已展开面板。逐次渲染的规则由 _acc_sort_css() 生成。 */
+.sovr-sb { display:flex; flex-direction:column; }
+.sovr-sl { cursor:pointer; user-select:none; white-space:nowrap; }
+.sovr-sl:hover { color:#1a1a1a; }
+.sovr-sl-a, .sovr-ar-up, .sovr-ar-dn, .sovr-reset { display:none; }
+.sovr-ar-idle { opacity:.35; margin-left:3px; }
+.sovr-ar-up, .sovr-ar-dn { color:#c8102e; margin-left:3px; }
+.sovr-reset { color:#c8102e; margin-left:6px; }
 .sovr-panel::-webkit-scrollbar { width:8px; }
 .sovr-panel::-webkit-scrollbar-thumb { background:#d4c4b0; border-radius:4px; }
 </style>""",
@@ -143,17 +153,6 @@ def _pct_parts(v) -> tuple[str, str]:
             _tint(v))
 
 
-def _pct_cell(v) -> str:
-    """Period return cell: ▲/▼/· glyph + signed pct + diverging tint bg (SOVR9).
-    v=None/NaN → em-dash grey cell, no glyph, transparent bg.
-    """
-    inner, bg = _pct_parts(v)
-    return (
-        f'<td style="text-align:right;white-space:nowrap;padding:0 12px;'
-        f'border-bottom:1px solid {t.PAPER_RULE};background:{bg}">{inner}</td>'
-    )
-
-
 def _spark_svg(vals, w: int = 110, h: int = 28, pad: int = 3) -> tuple[str, bool]:
     """30D sparkline: polyline stroke-width 1.5 non-scaling + endpoint circle r2.2.
     Geometry identical to wave-1 _spark_svg; only down color switches to _DOWN (SOVR9).
@@ -182,24 +181,12 @@ def _spark_svg(vals, w: int = 110, h: int = 28, pad: int = 3) -> tuple[str, bool
     return svg, up
 
 
-def _rel_bar(v, cap: float = REL_CAP) -> str:
-    """Center-diverging relative-to-SPX bar (SOVR9).
-    Track: #f4ead9 h14; center 1px #d4c4b0; fill extends from center to ±50%.
-    Down color: _DOWN (#c8102e). Geometry unchanged from wave-1.
-    v=None/NaN → empty state: track + centre line visible, no fill, '—' grey label.
-    """
-    return (
-        f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">'
-        f'{_rel_parts(v, cap)}</td>'
-    )
-
-
 def _rel_parts(v, cap: float = REL_CAP, *, h: int = 14, lw: int = 54,
                fs: int = 12, stretch: bool = False) -> str:
     """Inner flex(track + centre line + fill + label) of the relative bar.
     Shared by the <td> wrapper and the grid cell; h/lw/fs shrink it for member rows.
     stretch=True adds width:100% (needed inside a flex grid cell; a <td> child
-    block already fills the cell, so the default keeps the <table> path byte-identical).
+    block already fills the cell, so the default keeps the legacy output unchanged).
     """
     _w = ";width:100%" if stretch else ""
     if _is_missing(v):
@@ -234,7 +221,7 @@ def _rel_parts(v, cap: float = REL_CAP, *, h: int = 14, lw: int = 54,
 # 表格无法在无 JS 下让 <tr> 切换兄弟 <tr>，故带成分的表改走 CSS grid + 原生
 # <details>/<summary>（lib/ipo_detail.py 已验证的机制，st.markdown 不被 sanitize 掉）。
 # 表头 / 母行 / 成分行共用同一 grid-template → 列严格对齐，视觉与 <table> 版一致。
-# 不带 members 的调用（基准 ETF 表 / AI 页）仍走原 <table> 分支，零回归。
+# 不带 members 的调用（基准 ETF 表 / AI 页）同走 grid，行为普通 grid 行（SOVR17 起，为表头排序）。
 _ACC_PCT_W = 92          # 期间列宽(px) —— "▲ +31.3%" @13px + 左右 12px padding
 _ACC_REL_W = 172         # 相对标普列宽 = 发散条 + 54px 标签
 _ACC_SCROLL_AT = 12      # 成分数 > 此值 → 面板内部滚动
@@ -250,26 +237,100 @@ def _acc_grid(n_periods: int) -> str:
 
 
 def _acc_cell(inner: str, *, align: str = "left", bg: str = "transparent",
-              pad_left: int = 12, extra: str = "") -> str:
+              pad_left: int = 12, rule: str | None = None, extra: str = "") -> str:
     """一个 grid 单元：拉伸到整行高(色阶底满格) + 垂直居中 + 行底 hairline。"""
     just = {"left": "flex-start", "right": "flex-end", "center": "center"}[align]
     return (f'<div style="display:flex;align-items:center;justify-content:{just};'
-            f'padding:0 12px 0 {pad_left}px;border-bottom:1px solid {t.PAPER_RULE};'
+            f'padding:0 12px 0 {pad_left}px;'
+            f'border-bottom:{rule or f"1px solid {t.PAPER_RULE}"};'
             f'background:{bg};min-width:0;{extra}">{inner}</div>')
 
 
-def _acc_head(tk_label: str, periods: list[str]) -> str:
-    """表头行 —— 与 <table> 版 _TH 同款(透明底、mono 灰、墨 1.5px 底线)。"""
-    def th(label: str, align: str = "right") -> str:
+def _sort_keys(periods: list[str]) -> list[str]:
+    """可排序列：各期间 + 相对标普（k = 下标；最后一个 = rel_sp）。"""
+    return [*periods, "rel_sp"]
+
+
+def _sort_val(r: dict, key: str):
+    v = r.get("rel_sp") if key == "rel_sp" else (r.get("periods") or {}).get(key)
+    return None if _is_missing(v) else v
+
+
+def _sort_vars(items: list[dict], keys: list[str]) -> list[str]:
+    """每行的 order 名次变量串（--d{k} 降序 / --a{k} 升序）。缺数两个方向都沉底（NM 恒沉底）。"""
+    out = [""] * len(items)
+    for k, key in enumerate(keys):
+        vals = [_sort_val(it, key) for it in items]
+        have = [i for i, v in enumerate(vals) if v is not None]
+        miss = len(items) + 1
+        dsc = {i: n for n, i in enumerate(sorted(have, key=lambda i: -vals[i]))}
+        asc = {i: n for n, i in enumerate(sorted(have, key=lambda i: vals[i]))}
+        for i in range(len(items)):
+            out[i] += f"--d{k}:{dsc.get(i, miss)};--a{k}:{asc.get(i, miss)};"
+    return out
+
+
+def _acc_sort_inputs(uid: str, n_keys: int) -> str:
+    """排序 radio 组（同 name 互斥）+ 复位 radio。全部 hidden，由表头 <label> 驱动。"""
+    radios = "".join(
+        f'<input class="sovr-s" type="radio" name="sovr-s-{uid}" '
+        f'id="sovr-s-{uid}-{k}-{d}" hidden>'
+        for k in range(n_keys) for d in ("d", "a")
+    )
+    return radios + f'<input type="radio" name="sovr-s-{uid}" id="sovr-s-{uid}-x" hidden>'
+
+
+def _acc_sort_css(uid: str, n_keys: int) -> str:
+    """本次渲染的排序规则：表头箭头态 + 行 order 指向。
+
+    规则带 #wrapper id，特异性高于 _inject_css 的默认显隐类规则，不需要 !important。
+    """
+    w = f"#sovr-w-{uid}"
+    out = [f"{w}:has(.sovr-s:checked) .sovr-reset{{display:inline}}"]
+    for k in range(n_keys):
+        d, a = f"#sovr-s-{uid}-{k}-d", f"#sovr-s-{uid}-{k}-a"
+        out += [
+            # 降序态：显示「再点 → 升序」的 label，带 ▼
+            f"{w}:has({d}:checked) .sovr-k{k}.sovr-sl-d{{display:none}}",
+            f"{w}:has({d}:checked) .sovr-k{k}.sovr-sl-a{{display:inline}}",
+            f"{w}:has({d}:checked) .sovr-k{k} .sovr-ar-dn{{display:inline}}",
+            # 升序态：显示「再点 → 降序」的 label，带 ▲
+            f"{w}:has({a}:checked) .sovr-k{k} .sovr-ar-up{{display:inline}}",
+            f"{w}:has({a}:checked) .sovr-k{k} .sovr-ar-idle{{display:none}}",
+            f"{w}:has({d}:checked) .sovr-k{k}.sovr-sl,"
+            f"{w}:has({a}:checked) .sovr-k{k}.sovr-sl{{color:{t.INK}}}",
+            f"{w}:has({d}:checked) .sovr-sb>.sovr-sr{{order:var(--d{k})}}",
+            f"{w}:has({a}:checked) .sovr-sb>.sovr-sr{{order:var(--a{k})}}",
+        ]
+    return "<style>" + "".join(out) + "</style>"
+
+
+def _acc_head(tk_label: str, periods: list[str], uid: str, prefer_cn: bool) -> str:
+    """表头行 —— 透明底、mono 灰、墨 1.5px 底线；期间列与相对标普列可点击排序。"""
+    def th(inner: str, align: str = "right") -> str:
         just = {"left": "flex-start", "right": "flex-end", "center": "center"}[align]
         return (f'<div style="display:flex;align-items:center;justify-content:{just};'
                 f'font-family:{t.FONT_MONO};font-size:10px;letter-spacing:.08em;'
                 f'text-transform:uppercase;font-weight:600;color:{t.INK_3};'
                 f'background:transparent;padding:9px 12px;'
-                f'border-bottom:1.5px solid {t.INK}">{_esc(label)}</div>')
-    cells = (th(tk_label, "left") + th("名称", "left") + th("趋势 30D", "left")
-             + "".join(th(p) for p in periods) + th("相对标普 PP", "center"))
-    return cells
+                f'border-bottom:1.5px solid {t.INK}">{inner}</div>')
+
+    def sortable(k: int, label: str, align: str = "right") -> str:
+        lb = _esc(label)
+        # 未排/升序态显示 -d label（点了 → 降序）；降序态显示 -a label（点了 → 升序）
+        return th(
+            f'<label for="sovr-s-{uid}-{k}-d" class="sovr-sl sovr-sl-d sovr-k{k}">{lb}'
+            f'<span class="sovr-ar-idle">⇅</span><span class="sovr-ar-up">▲</span></label>'
+            f'<label for="sovr-s-{uid}-{k}-a" class="sovr-sl sovr-sl-a sovr-k{k}">{lb}'
+            f'<span class="sovr-ar-dn">▼</span></label>', align)
+
+    reset = (f'<label for="sovr-s-{uid}-x" class="sovr-sl sovr-reset" '
+             f'title="{"恢复默认顺序" if prefer_cn else "Reset order"}">↺</label>')
+    n = len(periods)
+    return (th(f"{_esc(tk_label)}{reset}", "left") + th("名称", "left")
+            + th("趋势 30D", "left")
+            + "".join(sortable(k, p) for k, p in enumerate(periods))
+            + sortable(n, "相对标普 PP", "center"))
 
 
 def _acc_summary(r: dict, periods: list[str], *, expandable: bool) -> str:
@@ -297,61 +358,74 @@ def _acc_summary(r: dict, periods: list[str], *, expandable: bool) -> str:
     return cells
 
 
+_MEM_RULE = "1px dashed rgba(26,26,26,.10)"   # 成分行分隔：虚线，比母行实线 hairline 轻一级
+
+
 def _acc_member(m: dict, periods: list[str]) -> str:
-    """一支成分行（32px，字号降一档、首列缩进，读作母行下钻）。"""
+    """一支成分行（30px）—— 刻意比母行低一级（George 2026-10-02「个股和指数太一致」）：
+    无色阶底（色阶只留给母行聚合）、数字字重 500 降一档、虚线分隔、相对条更细、
+    首列缩进带树枝符。读作「母行下钻」，不与母行争视线。"""
     chip = ""
     if m.get("secondary"):
         chip = (f'<span style="font-family:{t.FONT_MONO};font-size:9px;color:{t.INK_3};'
                 f'border:1px solid {t.PAPER_EDGE_SOFT};border-radius:2px;'
                 f'padding:0 4px;margin-left:6px;flex:none">A/H</span>')
-    tk = (f'<span style="font-family:{t.FONT_MONO};font-weight:600;color:{t.INK_2};'
+    tk = (f'<span style="color:{t.PAPER_EDGE};font-family:{t.FONT_MONO};font-size:11px;'
+          f'margin-right:6px;flex:none">└</span>'
+          f'<span style="font-family:{t.FONT_MONO};font-weight:500;color:{t.INK_2};'
           f'font-size:11px;letter-spacing:.03em;white-space:nowrap;overflow:hidden;'
           f'text-overflow:ellipsis">{_esc(m["tk"])}</span>')
     name = (f'<span style="color:{t.INK_2};font-size:12px;white-space:nowrap;'
             f'overflow:hidden;text-overflow:ellipsis">{_esc(m["name"])}</span>{chip}')
+    h = "height:30px"
     cells = (
-        _acc_cell(tk, pad_left=34, extra="height:32px")
-        + _acc_cell(name, extra="height:32px")
-        + _acc_cell("", extra="height:32px")
+        _acc_cell(tk, pad_left=30, rule=_MEM_RULE, extra=h)
+        + _acc_cell(name, rule=_MEM_RULE, extra=h)
+        + _acc_cell("", rule=_MEM_RULE, extra=h)
     )
     for p in periods:
-        inner, bg = _pct_parts(m.get("periods", {}).get(p))
-        cells += _acc_cell(f'<span style="font-size:12px">{inner}</span>', align="right",
-                           bg=bg, extra="white-space:nowrap;height:32px")
-    cells += _acc_cell(_rel_parts(m.get("rel_sp"), h=10, lw=54, fs=11, stretch=True),
-                       extra="height:32px")
+        inner, _bg = _pct_parts(m.get("periods", {}).get(p))
+        inner = inner.replace("font-weight:600", "font-weight:500")
+        cells += _acc_cell(f'<span style="font-size:11.5px">{inner}</span>', align="right",
+                           rule=_MEM_RULE, extra=f"white-space:nowrap;{h}")
+    cells += _acc_cell(_rel_parts(m.get("rel_sp"), h=8, lw=54, fs=11, stretch=True),
+                       rule=_MEM_RULE, extra=h)
     return cells
 
 
 def _acc_panel(r: dict, periods: list[str], grid: str, prefer_cn: bool,
                pid: str) -> str:
-    """展开后的成分面板：说明行 + 逐支成分（页面侧已按 YTD 降序排好）。"""
+    """展开后的成分面板：说明行 + 逐支成分（默认顺序 = 页面侧排好的 YTD 降序；
+    表头排序同时作用于面板内成分）。面板底色深一档 + 左侧红细线接住母行的红条，
+    视觉上是嵌套在母行下的子层。"""
     members = r.get("members") or []
     n = len(members)
-    cap = (f"成分 · {n} 家 · 等权 · 按 YTD 降序"
-           if prefer_cn else f"Constituents · {n} · equal-weight · sorted by YTD")
+    cap = (f"成分 · {n} 家 · 等权 · 默认按 YTD 降序，点表头可重排"
+           if prefer_cn else f"Constituents · {n} · equal-weight · YTD desc by default; click headers to sort")
     # 筛选态提示：说明行的「N 家」是全篮子口径，筛完屏幕上行数会少于 N —— 不提示
     # 就会被读成「篮子缩水了」。纯 CSS 显隐，不需要重新计数。
     fl = ("· 已按地区筛选清单，母行与本行的 N 仍为全篮子口径"
           if prefer_cn else "· list filtered by region; N above is still the full basket")
     cap_html = (f'<div style="font-family:{t.FONT_MONO};font-size:10px;'
-                f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 34px">'
+                f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 30px">'
                 f'{_esc(cap)} <span class="sovr-filtered">{_esc(fl)}</span></div>')
+    svars = _sort_vars(members, _sort_keys(periods))
     rows_html = "".join(
-        f'<div class="sovr-mrow sovr-m {_r_cls(m.get("region"))}" '
-        f'style="grid-template-columns:{grid};'
+        f'<div class="sovr-mrow sovr-m sovr-sr {_r_cls(m.get("region"))}" '
+        f'style="{sv}grid-template-columns:{grid};'
         f'align-items:stretch">{_acc_member(m, periods)}</div>'
-        for m in members
+        for m, sv in zip(members, svars)
     )
     empty_txt = "该地区无成分" if prefer_cn else "No constituents in this region"
     empty_html = (f'<div class="sovr-empty" style="font-size:12px;'
-                  f'color:{t.INK_3};padding:10px 12px 12px 34px">{_esc(empty_txt)}</div>')
+                  f'color:{t.INK_3};padding:10px 12px 12px 30px">{_esc(empty_txt)}</div>')
     scroll = (f"max-height:{_ACC_SCROLL_H}px;overflow-y:auto;"
               if n > _ACC_SCROLL_AT else "")
     return (f'<div class="sovr-panel" id="{pid}" '
-            f'style="background:rgba(255,255,255,.34);'
+            f'style="background:rgba(120,90,60,.055);'
+            f'box-shadow:inset 3px 0 0 rgba(200,16,46,.35),inset 0 6px 8px -8px rgba(26,26,26,.25);'
             f'border-bottom:1px solid {t.PAPER_RULE};{scroll}overflow-x:hidden">'
-            f'{cap_html}{rows_html}{empty_html}</div>')
+            f'{cap_html}<div class="sovr-sb">{rows_html}</div>{empty_html}</div>')
 
 
 def _r_cls(code) -> str:
@@ -408,9 +482,12 @@ def _acc_filter_css(uid: str, regions: list[tuple[str, str]],
 def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
                       prefer_cn: bool,
                       region_labels: dict[str, str] | None = None) -> str:
-    """整张可展开表的 HTML（可选地区 chips + 表头 + 各行 <details>）。"""
+    """整张表的 HTML（可选地区 chips + 可排序表头 + 各行；带成分的行渲染成 <details>）。"""
     grid = _acc_grid(len(periods))
-    uid = f"{zlib.crc32(tk_label.encode()) % 100000:05d}"
+    # uid 必须对同页每张表唯一（radio/checkbox id 与 CSS 规则都挂在它上面）——
+    # HC 页两张表 tk_label 相同，所以按行内容取指纹，不能只看 tk_label。
+    _fp = tk_label + "|".join(f'{r["tk"]}:{r["name"]}' for r in rows)
+    uid = f"{zlib.crc32(_fp.encode()) % 100000:05d}"
     if region_labels is None:
         region_labels = {c: i18n.t(f"heat.tbl.region.{c}") for c in _REGION_ORDER}
 
@@ -419,30 +496,35 @@ def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
                for m in (r.get("members") or []) if _r_cls(m.get("region"))}
     regions = [(c, lbl) for c, lbl in (region_labels or {}).items() if c in present]
 
+    keys = _sort_keys(periods)
     head = (f'<div style="display:grid;grid-template-columns:{grid}">'
-            f'{_acc_head(tk_label, periods)}</div>')
-    out = [_acc_filter_bar(uid, regions, prefer_cn) if regions else "", head]
+            f'{_acc_head(tk_label, periods, uid, prefer_cn)}</div>')
+    out: list[str] = []
     panel_regions: list[tuple[str, set[str]]] = []
-    for i, r in enumerate(rows):
+    for i, (r, sv) in enumerate(zip(rows, _sort_vars(rows, keys))):
         members = r.get("members") or []
         summary_cells = _acc_summary(r, periods, expandable=bool(members))
         row_grid = (f'display:grid;grid-template-columns:{grid};align-items:stretch')
         if not members:
-            out.append(f'<div class="sovr-mrow" style="{row_grid}">{summary_cells}</div>')
+            out.append(f'<div class="sovr-mrow sovr-sr" style="{sv}{row_grid}">'
+                       f'{summary_cells}</div>')
             continue
         pid = f"sovr-p-{uid}-{i}"
         panel_regions.append(
             (pid, {_r_cls(m.get("region"))[2:] for m in members if _r_cls(m.get("region"))}))
         out.append(
-            f'<details class="sovr-acc">'
+            f'<details class="sovr-acc sovr-sr" style="{sv}">'
             f'<summary style="{row_grid}">{summary_cells}</summary>'
             f'{_acc_panel(r, periods, grid, prefer_cn, pid)}'
             f'</details>'
         )
-    css = _acc_filter_css(uid, regions, panel_regions) if regions else ""
+    css = (_acc_filter_css(uid, regions, panel_regions) if regions else "")
+    css += _acc_sort_css(uid, len(keys))
+    bar = _acc_filter_bar(uid, regions, prefer_cn) if regions else ""
     return (f'{css}<div id="sovr-w-{uid}" style="overflow-x:auto;font-size:13px;'
             f'font-variant-numeric:tabular-nums lining-nums;'
-            f'font-family:{t.FONT_DISPLAY}">{"".join(out)}</div>')
+            f'font-family:{t.FONT_DISPLAY}">{_acc_sort_inputs(uid, len(keys))}'
+            f'{bar}{head}<div class="sovr-sb">{"".join(out)}</div></div>')
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
@@ -540,9 +622,10 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
 
     可展开（SOVR15）：行可带 `members: [{tk, name, periods, rel_sp, secondary?}, ...]`
     —— 该行即渲染成可点开的 <details>，展开后列出这只自建等权篮子的全部成分，
-    列与母行严格对齐。**任一行带 members 时整表改走 grid 分支**（<tr> 无 JS 无法
-    切换兄弟行）；所有行都不带 members 时走原 <table> 分支，输出逐字节不变。
-    成分排序由调用页决定（本函数不排序）。prefer_cn 影响成分面板说明行与 chips 文案。
+    列与母行严格对齐。整表统一走 CSS grid（<tr> 无 JS 无法切换兄弟行/改顺序），
+    不带 members 的行就是普通 grid 行。
+    默认顺序 = 调用页传入顺序（成分同理）；表头期间列/相对标普列可点击排序
+    （SOVR17，纯 CSS：降序 ↔ 升序，↺ 复位，缺数两向沉底，面板内成分同步重排）。prefer_cn 影响成分面板说明行与 chips 文案。
 
     region_labels（SOVR16）：{code: label}，缺省 = 本模块按 _REGION_ORDER 自取
     heat.tbl.region.* 译名（与板块热力图同一批 code、同一套文案）。只渲染成分里
@@ -583,87 +666,22 @@ def benchmark_table(rows: list[dict], *, source: str | None = None,
         f'{legend}</div>'
     )
 
-    # ── Table header cells (SOVR7): transparent bg, mono gray, ink 1.5px bottom ──
-    _TH = (
-        f"font-family:{t.FONT_MONO};font-size:10px;letter-spacing:.08em;"
-        f"text-transform:uppercase;font-weight:600;color:{t.INK_3};"
-        f"background:transparent;padding:9px 12px;"
-        f"border-bottom:1.5px solid {t.INK};"
-    )
-
-    def _th(label: str, align: str = "right") -> str:
-        # no vertical separators (SOVR7: 零竖分隔线)
-        return f'<th style="{_TH}text-align:{align}">{_esc(label)}</th>'
-
-    head = (
-        _th(tk_label, "left")
-        + _th("名称", "left")
-        + _th("趋势 30D", "left")
-        + "".join(_th(p) for p in periods)
-        + _th("相对标普 PP", "center")
-    )
-
-    # ── 可展开分支（任一行带 members）：grid + 原生 <details>，列同表头 ──────
-    if any(r.get("members") for r in rows):
-        glass_style = (
-            "background:rgba(255,255,255,.5);"
-            "backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);"
-            "border:1px solid rgba(255,255,255,.7);"
-            "padding:2px 16px 8px;overflow:hidden;"
-        )
-        src_html = (
-            f'<div style="font-family:{t.FONT_MONO};font-size:11px;color:{t.INK_3};'
-            f'margin-top:8px">{_esc(source)}</div>'
-        ) if source else ""
-        st.markdown(
-            f"{sec_head}"
-            f'<div style="{glass_style}">'
-            f'{_render_accordion(rows, periods, tk_label, prefer_cn, region_labels)}'
-            f'</div>{src_html}',
-            unsafe_allow_html=True,
-        )
-        return
-
-    # ── Table body rows (SOVR8/SOVR9) ────────────────────────────────────
-    body: list[str] = []
-    for r in rows:
-        svg, _ = _spark_svg(r.get("spark"))
-        cells = (
-            # Ticker: mono 12/700 (SOVR8)
-            f'<td style="font-family:{t.FONT_MONO};font-weight:700;color:{t.INK};'
-            f'font-size:12px;letter-spacing:.04em;text-align:left;padding:0 12px;'
-            f'height:46px;border-bottom:1px solid {t.PAPER_RULE}">{_esc(r["tk"])}</td>'
-            # 名称: 500 weight (SOVR8)
-            f'<td style="text-align:left;color:{t.INK};font-weight:500;padding:0 12px;'
-            f'border-bottom:1px solid {t.PAPER_RULE}">{_esc(r["name"])}</td>'
-            # sparkline SVG
-            f'<td style="padding:0 12px;border-bottom:1px solid {t.PAPER_RULE}">{svg}</td>'
-            + "".join(_pct_cell(r["periods"][p]) for p in periods)
-            + _rel_bar(r["rel_sp"])
-        )
-        # class="sovr-row" enables the CSS hover rule injected by _inject_css()
-        body.append(f'<tr class="sovr-row">{cells}</tr>')
-
-    src_html = (
-        f'<div style="font-family:{t.FONT_MONO};font-size:11px;color:{t.INK_3};'
-        f'margin-top:8px">{_esc(source)}</div>'
-    ) if source else ""
-
-    # ── Glass container (SOVR6): rgba .5 + blur14 + white border, no top accent ──
+    # ── 统一走 grid 分支：表头可排序（SOVR17）；带 members 的行渲染成 <details> ──
     glass_style = (
         "background:rgba(255,255,255,.5);"
         "backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);"
         "border:1px solid rgba(255,255,255,.7);"
         "padding:2px 16px 8px;overflow:hidden;"
     )
+    src_html = (
+        f'<div style="font-family:{t.FONT_MONO};font-size:11px;color:{t.INK_3};'
+        f'margin-top:8px">{_esc(source)}</div>'
+    ) if source else ""
     st.markdown(
         f"{sec_head}"
         f'<div style="{glass_style}">'
-        f'<table style="width:100%;border-collapse:collapse;font-size:13px;'
-        f'font-variant-numeric:tabular-nums lining-nums;font-family:{t.FONT_DISPLAY}">'
-        f'<thead><tr>{head}</tr></thead>'
-        f'<tbody>{"".join(body)}</tbody>'
-        f'</table></div>{src_html}',
+        f'{_render_accordion(rows, periods, tk_label, prefer_cn, region_labels)}'
+        f'</div>{src_html}',
         unsafe_allow_html=True,
     )
 

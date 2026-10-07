@@ -4,9 +4,9 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "failed",
-    "refreshed_at": "2026-10-06T15:47:54+00:00",
+    "refreshed_at": "2026-10-07T01:44:16+00:00",
     "source_date": "2026-10-05",
-    "note": "workflow Fetch EOD data run 37490340445 failed"
+    "note": "workflow Fetch EOD data run 37558430209 failed"
   },
   "sec_facts": {
     "label": "SEC 公司基本面",

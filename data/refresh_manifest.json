@@ -3,9 +3,9 @@
     "label": "美股/港股 EOD 价格·估值",
     "source": "yfinance",
     "max_age_days": 4,
-    "status": "failed",
-    "refreshed_at": "2026-10-07T16:14:22+00:00",
-    "source_date": "2026-10-05",
+    "status": "ok",
+    "refreshed_at": "2026-10-08T02:16:43+00:00",
+    "source_date": "2026-10-08",
     "note": "workflow Fetch EOD data run 37650296164 failed"
   },
   "sec_facts": {
@@ -23,7 +23,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-10-07T01:50:17+00:00",
-    "source_date": "2026-10-07"
+    "source_date": "2026-10-08"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
@@ -56,7 +56,7 @@
     "label": "HSHCI 月线/长周期",
     "source": "Wind(本地)",
     "max_age_days": 40,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-08-29T05:39:28+00:00",
     "source_date": "2026-08-28",
     "note": "2026-08-29 起 iFind→Wind 换源(锚点连续性校验内置于 jobs/hshci_history.py)"

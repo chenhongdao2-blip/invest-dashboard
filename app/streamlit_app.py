@@ -161,7 +161,7 @@ ai_overview = st.Page(
 )
 ai_storage = st.Page(
     "pages/a6_ai_storage.py",
-    title=_t("Memory & Storage", "存储"),
+    title=_t("Memory Research", "Memory Research 存储研究"),
     url_path="AI_Storage",
 )
 ai_heatmap = st.Page(

@@ -117,6 +117,13 @@ details.sovr-acc[open] > summary .sovr-caret { transform:rotate(90deg); }
 .sovr-ar-idle { opacity:.35; margin-left:3px; }
 .sovr-ar-up, .sovr-ar-dn { color:#c8102e; margin-left:3px; }
 .sovr-reset { color:#c8102e; margin-left:6px; }
+/* 成分面板内排序 chips（George 2026-10-09：32 支展开后表头滚出视野，需就地排序）。
+   与表头复用同一组 radio + 同一套 .sovr-k{k}/.sovr-sl-d/-a 显隐规则，只换皮。 */
+.sovr-pchip.sovr-sl { font-family:'JetBrains Mono','IBM Plex Mono','SF Mono',monospace; font-size:10px;
+  letter-spacing:.06em; color:#4a4a4a; background:rgba(255,255,255,.55); border:1px solid #e4d2bd;
+  border-radius:2px; padding:2px 8px; margin-right:5px; }
+.sovr-pchip.sovr-sl:hover { border-color:#d4c4b0; background:rgba(255,255,255,.85); }
+.sovr-pchip .sovr-ar-up, .sovr-pchip .sovr-ar-dn { color:inherit; }
 .sovr-panel::-webkit-scrollbar { width:8px; }
 .sovr-panel::-webkit-scrollbar-thumb { background:#d4c4b0; border-radius:4px; }
 </style>""",
@@ -299,6 +306,9 @@ def _acc_sort_css(uid: str, n_keys: int) -> str:
             f"{w}:has({a}:checked) .sovr-k{k} .sovr-ar-idle{{display:none}}",
             f"{w}:has({d}:checked) .sovr-k{k}.sovr-sl,"
             f"{w}:has({a}:checked) .sovr-k{k}.sovr-sl{{color:{t.INK}}}",
+            f"{w}:has({d}:checked) .sovr-pchip.sovr-k{k},"
+            f"{w}:has({a}:checked) .sovr-pchip.sovr-k{k}"
+            f"{{background:{t.CMSI_RED};color:#fff;border-color:{t.CMSI_RED}}}",
             f"{w}:has({d}:checked) .sovr-sb>.sovr-sr{{order:var(--d{k})}}",
             f"{w}:has({a}:checked) .sovr-sb>.sovr-sr{{order:var(--a{k})}}",
         ]
@@ -393,22 +403,44 @@ def _acc_member(m: dict, periods: list[str]) -> str:
     return cells
 
 
+def _acc_sort_chips(uid: str, periods: list[str], prefer_cn: bool) -> str:
+    """成分面板说明行里的排序 chips —— 指向表头同一组 radio（整表同步重排，状态与表头一致）。"""
+    labels = [*periods, "相对标普" if prefer_cn else "vs S&P"]
+
+    def chip(k: int, lb: str) -> str:
+        lb = _esc(lb)
+        return (f'<label for="sovr-s-{uid}-{k}-d" class="sovr-sl sovr-sl-d sovr-pchip sovr-k{k}">{lb}'
+                f'<span class="sovr-ar-idle">⇅</span><span class="sovr-ar-up">▲</span></label>'
+                f'<label for="sovr-s-{uid}-{k}-a" class="sovr-sl sovr-sl-a sovr-pchip sovr-k{k}">{lb}'
+                f'<span class="sovr-ar-dn">▼</span></label>')
+
+    reset = (f'<label for="sovr-s-{uid}-x" class="sovr-sl sovr-reset" '
+             f'title="{"恢复默认顺序" if prefer_cn else "Reset order"}">↺</label>')
+    head = "排序" if prefer_cn else "Sort"
+    return (f'<span style="margin-right:8px">{head}</span>'
+            + "".join(chip(k, lb) for k, lb in enumerate(labels)) + reset)
+
+
 def _acc_panel(r: dict, periods: list[str], grid: str, prefer_cn: bool,
-               pid: str) -> str:
+               pid: str, uid: str) -> str:
     """展开后的成分面板：说明行 + 逐支成分（默认顺序 = 页面侧排好的 YTD 降序；
     表头排序同时作用于面板内成分）。面板底色深一档 + 左侧红细线接住母行的红条，
     视觉上是嵌套在母行下的子层。"""
     members = r.get("members") or []
     n = len(members)
-    cap = (f"成分 · {n} 家 · 等权 · 默认按 YTD 降序，点表头可重排"
-           if prefer_cn else f"Constituents · {n} · equal-weight · YTD desc by default; click headers to sort")
+    cap = (f"成分 · {n} 家 · 等权 · 默认按 YTD 降序"
+           if prefer_cn else f"Constituents · {n} · equal-weight · YTD desc by default")
     # 筛选态提示：说明行的「N 家」是全篮子口径，筛完屏幕上行数会少于 N —— 不提示
     # 就会被读成「篮子缩水了」。纯 CSS 显隐，不需要重新计数。
     fl = ("· 已按地区筛选清单，母行与本行的 N 仍为全篮子口径"
           if prefer_cn else "· list filtered by region; N above is still the full basket")
+    # 说明行吸顶：成分多于 _ACC_SCROLL_AT 时面板内滚动，排序 chips 不随列表滚走
     cap_html = (f'<div style="font-family:{t.FONT_MONO};font-size:10px;'
-                f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 30px">'
-                f'{_esc(cap)} <span class="sovr-filtered">{_esc(fl)}</span></div>')
+                f'letter-spacing:.08em;color:{t.INK_3};padding:8px 12px 6px 30px;'
+                f'display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;'
+                f'position:sticky;top:0;z-index:2;background:#f3ebe2">'
+                f'<span>{_esc(cap)} <span class="sovr-filtered">{_esc(fl)}</span></span>'
+                f'<span>{_acc_sort_chips(uid, periods, prefer_cn)}</span></div>')
     svars = _sort_vars(members, _sort_keys(periods))
     rows_html = "".join(
         f'<div class="sovr-mrow sovr-m sovr-sr {_r_cls(m.get("region"))}" '
@@ -515,7 +547,7 @@ def _render_accordion(rows: list[dict], periods: list[str], tk_label: str,
         out.append(
             f'<details class="sovr-acc sovr-sr" style="{sv}">'
             f'<summary style="{row_grid}">{summary_cells}</summary>'
-            f'{_acc_panel(r, periods, grid, prefer_cn, pid)}'
+            f'{_acc_panel(r, periods, grid, prefer_cn, pid, uid)}'
             f'</details>'
         )
     css = (_acc_filter_css(uid, regions, panel_regions) if regions else "")

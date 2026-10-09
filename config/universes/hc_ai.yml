@@ -1,4 +1,4 @@
-# Healthcare + AI sector — 14 tickers
+# Healthcare + AI sector — 32 tickers（2026-10-09 扩数字医疗 / AI 制药 / AI 器械 18 支）
 sector_id: hc_ai
 domain: healthcare
 
@@ -51,4 +51,71 @@ tickers:
   - ticker: 4483.T
     name_cn: JMDC
     name_en: JMDC
+    region: JP
+  # ── 数字医疗扩容（2026-10-09；上市状态经 yfinance 2026-10-08 收盘核验）──
+  # 雇主/保险渠道数字服务
+  - ticker: HNGE
+    name_en: Hinge Health
+    region: US
+  - ticker: OMDA
+    name_en: Omada Health
+    region: US
+  # 按例收费的临床 AI 分析 / AI 器械
+  - ticker: HTFL
+    name_en: HeartFlow
+    region: US
+  - ticker: IRTC
+    name_en: iRhythm Technologies
+    region: US
+  - ticker: BFLY
+    name_en: Butterfly Network
+    region: US
+  # 医疗支付 / 工作流软件
+  - ticker: WAY
+    name_en: Waystar
+    region: US
+  - ticker: PHR
+    name_en: Phreesia
+    region: US
+  # 远程医疗
+  - ticker: TDOC
+    name_en: Teladoc Health
+    region: US
+  - ticker: AMWL
+    name_en: Amwell
+    region: US
+  # AI 制药 / 计算药物发现
+  - ticker: SDGR
+    name_en: Schrödinger
+    region: US
+  - ticker: CERT
+    name_en: Certara
+    region: US
+  - ticker: ABSI
+    name_en: Absci
+    region: US
+  - ticker: 2228.HK
+    name_cn: 晶泰控股
+    name_en: XtalPi
+    region: HK
+  - ticker: 3696.HK
+    name_cn: 英矽智能
+    name_en: Insilico Medicine
+    region: HK
+  # 港股互联网医疗 / 医疗大数据
+  - ticker: 0241.HK
+    name_cn: 阿里健康
+    name_en: Alibaba Health
+    region: HK
+  - ticker: 1833.HK
+    name_cn: 平安健康
+    name_en: Ping An Healthcare and Technology
+    region: HK
+  - ticker: 2158.HK
+    name_cn: 医渡科技
+    name_en: Yidu Tech
+    region: HK
+  # 日本医疗 SaaS / 人才平台
+  - ticker: 4480.T
+    name_en: Medley
     region: JP

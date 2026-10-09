@@ -20,7 +20,6 @@ from lib import theme
 from lib import i18n
 from lib import sector_overview as so
 from lib import section_header
-from lib import dram_cycles_panel
 
 
 def _render_pct_table(
@@ -169,10 +168,12 @@ if _all_rets:
     so.movers(gainers=_gainers, losers=_losers,
               window=("1 日" if prefer_cn else "1D"), prefer_cn=prefer_cn)
 
-# --- DRAM 周期一张图（存储 = AI 硬件链的周期锚）— lib/dram_cycles_panel ---
-theme.section_header(i18n.t("ai.ov.dram.title"), meta=i18n.t("ai.ov.dram.meta"))
-st.caption(i18n.t("ai.ov.dram.caption"))
-dram_cycles_panel.render()
+# The expanded memory topic has its own AI navigation entry and stable URL.
+theme.section_header("存储研究" if prefer_cn else "Memory & Storage")
+st.page_link(
+    "pages/a6_ai_storage.py",
+    label="进入存储专题：历史周期、AI / HBM、现金与国家因素 →" if prefer_cn else "Open memory research: cycles, AI / HBM, cash and policy →",
+)
 
 st.divider()
 

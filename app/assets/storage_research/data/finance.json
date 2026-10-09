@@ -1,0 +1,974 @@
+{
+  "asOf": "2026-10-08",
+  "sources": [
+    {
+      "id": "s-fin-mu23",
+      "title": "Micron FY2023 10-K（含FY2022比较数）",
+      "url": "https://www.sec.gov/Archives/edgar/data/723125/000072312523000054/mu-20230831.htm",
+      "date": "2023-10-06",
+      "locator": "Consolidated Balance Sheets / Cash Flows；HTML tables 20、22；Note Debt",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-mu25",
+      "title": "Micron FY2025 10-K（含FY2024、FY2023比较数）",
+      "url": "https://www.sec.gov/Archives/edgar/data/723125/000072312525000028/mu-20250828.htm",
+      "date": "2025-10-03",
+      "locator": "Consolidated Balance Sheets / Cash Flows；HTML tables 20、22；Debt、Leases notes",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-mu26",
+      "title": "Micron FY2026年度业绩公告（未经审计）",
+      "url": "https://investors.micron.com/news/press-release/2026/Micron-Technology-Inc--Reports-Record-Fiscal-Fourth-Quarter-and-Full-Year-2026-Results/default.aspx",
+      "date": "2026-09-30",
+      "locator": "Consolidated Balance Sheets / Cash Flows；HTML tables 6、7、9；53周财年，非日历年",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-muq326",
+      "title": "Micron FY2026 Q3 10-Q",
+      "url": "https://www.sec.gov/Archives/edgar/data/723125/000072312526000015/mu-20260528.htm",
+      "date": "2026-06-25",
+      "locator": "Balance Sheets / Nine Months Cash Flows；HTML tables 8、13；Note 9 Debt及Liquidity and Capital Resources",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-ss21",
+      "title": "Samsung FY2021审计合并财务报表",
+      "url": "https://images.samsung.com/is/content/samsung/assets/global/ir/docs/2021_con_quarter04_all.pdf",
+      "date": null,
+      "locator": "PDF物理p6–7财务状况、p15–16现金流；审计报告日期2022-02-16，首次网页发布时间未核",
+      "kind": "primary",
+      "scope": "三星电子及子公司；并非DS/存储单独财务"
+    },
+    {
+      "id": "s-fin-ss23",
+      "title": "Samsung FY2023审计合并财务报表（含FY2022）",
+      "url": "https://images.samsung.com/is/content/samsung/assets/global/ir/docs/2023_con_quarter04_all.pdf",
+      "date": null,
+      "locator": "PDF物理p6–7财务状况、p15–16现金流；审计报告日期2024-02-19，首次网页发布时间未核",
+      "kind": "primary",
+      "scope": "三星电子及子公司；并非DS/存储单独财务"
+    },
+    {
+      "id": "s-fin-ss25",
+      "title": "Samsung FY2025审计合并财务报表（含FY2024）",
+      "url": "https://images.samsung.com/is/content/samsung/assets/global/ir/docs/2025_con_quarter04_all.pdf",
+      "date": null,
+      "locator": "PDF物理p6–7财务状况、p15–16现金流；审计报告日期2026-02-12，首次网页发布时间未核",
+      "kind": "primary",
+      "scope": "三星电子及子公司；并非DS/存储单独财务"
+    },
+    {
+      "id": "s-fin-ssh126",
+      "title": "Samsung H1 2026审阅合并财务报表",
+      "url": "https://images.samsung.com/is/content/samsung/assets/global/ir/docs/2026_con_quarter02_all.pdf",
+      "date": null,
+      "locator": "PDF物理p5–6财务状况、p14–15现金流，附注9、13、26；审阅日期2026-08-13；首次发布时间未核",
+      "kind": "primary",
+      "scope": "三星电子及子公司；现金流为6个月累计，不是单季"
+    },
+    {
+      "id": "s-fin-hy2122",
+      "title": "SK hynix 2023债券发行文件：2022/2021审计合并财务报表",
+      "url": "https://links.sgx.com/FileOpen/SK%20hynix%20Inc_Final%20Offering%20Circular.ashx?App=Prospectus&FileID=58678",
+      "date": null,
+      "locator": "PDF物理p143–144（F-7–8）财务状况、p148（F-12）现金流；发行文件日期见原件，首次披露日未重建",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-hy2325",
+      "title": "SK hynix 2026 SEC招股书：2025/2024/2023审计比较财务",
+      "url": "https://www.sec.gov/Archives/edgar/data/2120882/000119312526299963/d32785d424b4.htm",
+      "date": "2026-07-10",
+      "locator": "Consolidated Financial Statements；HTML tables 587–588、593；2023采用此版重列比较数",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    },
+    {
+      "id": "s-fin-hyh126",
+      "title": "SK hynix H1 2026合并中期财务报表（SEC 6-K）",
+      "url": "https://www.sec.gov/Archives/edgar/data/2120882/000119312526354777/d147827d6k.htm",
+      "date": "2026-08-18",
+      "locator": "Condensed Consolidated Interim Statements；HTML tables 377–378、382；附注29承诺、6流动性；不取Separate statements",
+      "kind": "primary",
+      "scope": "合并财务报表"
+    }
+  ],
+  "entities": [
+    {
+      "id": "c-mu",
+      "type": "company",
+      "title": "美光 Micron",
+      "kicker": "现金、义务与下一轮投资",
+      "summary": "FY2026现金流大幅增长；把政府补助、客户预付款与经营回款分别看，检验新增产能承诺和客户融资。",
+      "question": "在景气反转时，哪些现金能动用、哪些支出不可避免、剩余资金能买来什么能力？",
+      "chain": [
+        "报表现金与短期投资 → 检查受限、币种及法人归属",
+        "经营回款与已到账支持 → 扣必要支出、债务到期及已承诺付款",
+        "客户认证、技术良率与投产时点 → 验证扩产或并购是否创造回报"
+      ],
+      "evidence": [
+        "最新财务窗口：FY2026A，期末2026-09-03；信息检索截至2026-10-08。",
+        "Micron及子公司GAAP合并",
+        "年度现金流为各自财年实际，中期为累计流量；余额不跨期相加。",
+        "FY2026 PP&E总现金支出30.712十亿美元；本表FCF58.963十亿美元。公司调整后FCF含补助等，不能直接混用。",
+        "Q3 10-Q披露政府激励须满足条件，可被减额、终止或追回；2.00十亿美元可用授信是2026-05-28时点。",
+        "地区标签反映发行人、制造/封测和客户/政策联系，不表示现金或产能按总部国归属；该标签不是各国实时产能配比。"
+      ],
+      "disagreements": [
+        "现金厚度有助于维持投入，但单凭现金规模不能证明技术兑现或投资回报。",
+        "制造能力继续存在、公司继续经营和旧股东获得回报是三个不同结果。"
+      ],
+      "counterevidence": [
+        "经营回款依赖一次性项目或客户预付款；库存和应收持续占资。",
+        "补助附带尚未满足条件、授信不可提款或扩产交付超出现金承受期。",
+        "新技术产品认证延后、良率不达标，现金投入不能及时转为合格产出。"
+      ],
+      "gaps": [
+        "FY2026年度为未经审计公告，最新10-Q为2026-05-28九个月累计；两者重叠。",
+        "债务未含另列经营租赁，不能直接与韩系含全部IFRS租赁的债务排名。",
+        "FY2026补助现金流3.316十亿美元及客户合同负债存款12.747十亿美元分别列于投资/融资活动；不能重复加进OCF。",
+        "2026-05-28可提款授信2.00十亿美元、PP&E采购义务约2.93十亿美元；不是2026-09-03已重新核定的余额。",
+        "FY2026现金流表末现金含受限38.391十亿美元，资产负债表现金38.364；看板采用后者，不合并受限项。"
+      ],
+      "next": [
+        "补齐可动用资金、分年债务到期和必要CapEx；按法人/币种核验融资承诺。",
+        "将下一次财报、客户认证与产能投产节点作为更新触发条件。"
+      ],
+      "related": [],
+      "sourceIds": [
+        "s-fin-mu23",
+        "s-fin-mu25",
+        "s-fin-mu26",
+        "s-fin-muq326"
+      ],
+      "countries": [
+        "US",
+        "JP",
+        "TW",
+        "CN"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "mu"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand"
+      ]
+    },
+    {
+      "id": "c-samsung",
+      "type": "company",
+      "title": "三星电子 Samsung",
+      "kicker": "现金、义务与下一轮投资",
+      "summary": "集团资金与DS经营能力分开；现金改善不等于全部资金能够分配给HBM和存储扩产。",
+      "question": "在景气反转时，哪些现金能动用、哪些支出不可避免、剩余资金能买来什么能力？",
+      "chain": [
+        "报表现金与短期投资 → 检查受限、币种及法人归属",
+        "经营回款与已到账支持 → 扣必要支出、债务到期及已承诺付款",
+        "客户认证、技术良率与投产时点 → 验证扩产或并购是否创造回报"
+      ],
+      "evidence": [
+        "最新财务窗口：H1 2026A，期末2026-06-30；信息检索截至2026-10-08。",
+        "三星电子及子公司合并；不是DS/Memory分部",
+        "年度现金流为各自财年实际，中期为累计流量；余额不跨期相加。",
+        "韩国总部与海外制造/销售是不同关系；集团资金不能按总部所在地直接分配给存储。"
+      ],
+      "disagreements": [
+        "现金厚度有助于维持投入，但单凭现金规模不能证明技术兑现或投资回报。",
+        "制造能力继续存在、公司继续经营和旧股东获得回报是三个不同结果。"
+      ],
+      "counterevidence": [
+        "经营回款依赖一次性项目或客户预付款；库存和应收持续占资。",
+        "补助附带尚未满足条件、授信不可提款或扩产交付超出现金承受期。",
+        "新技术产品认证延后、良率不达标，现金投入不能及时转为合格产出。"
+      ],
+      "gaps": [
+        "本表为三星电子及子公司集团合并，不能作为DS或Memory独立现金表。",
+        "H1 2026现金流为半年累计；集团包含手机、家电、显示等业务，不与纯存储公司做数值排名。",
+        "PP&E承诺30.543192万亿韩元含无形资产采购；到账补助1.592914万亿韩元未净减本表CapEx，也未再加进期末现金。",
+        "受限资金及未提款授信未完成可动用口径核验，缺口不是零。",
+        "各审阅/审计报告日期已留存；首次网页披露时间未重建，不可用此文件做历史PIT回测。"
+      ],
+      "next": [
+        "补齐可动用资金、分年债务到期和必要CapEx；按法人/币种核验融资承诺。",
+        "将下一次财报、客户认证与产能投产节点作为更新触发条件。"
+      ],
+      "related": [],
+      "sourceIds": [
+        "s-fin-ss21",
+        "s-fin-ss23",
+        "s-fin-ss25",
+        "s-fin-ssh126"
+      ],
+      "countries": [
+        "KR",
+        "US",
+        "CN"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "samsung"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand"
+      ]
+    },
+    {
+      "id": "c-hynix",
+      "type": "company",
+      "title": "SK海力士 SK hynix",
+      "kicker": "现金、义务与下一轮投资",
+      "summary": "现金储备与投资承诺同时看；经营现金流中的投资股息、制造回款和扩产支出须分解。",
+      "question": "在景气反转时，哪些现金能动用、哪些支出不可避免、剩余资金能买来什么能力？",
+      "chain": [
+        "报表现金与短期投资 → 检查受限、币种及法人归属",
+        "经营回款与已到账支持 → 扣必要支出、债务到期及已承诺付款",
+        "客户认证、技术良率与投产时点 → 验证扩产或并购是否创造回报"
+      ],
+      "evidence": [
+        "最新财务窗口：H1 2026A，期末2026-06-30；信息检索截至2026-10-08。",
+        "SK hynix及子公司K-IFRS合并",
+        "年度现金流为各自财年实际，中期为累计流量；余额不跨期相加。",
+        "发行文件列示韩国和中国大陆生产/封测设施；国家标签是生产关系，不等于控制权或客户市场相同。"
+      ],
+      "disagreements": [
+        "现金厚度有助于维持投入，但单凭现金规模不能证明技术兑现或投资回报。",
+        "制造能力继续存在、公司继续经营和旧股东获得回报是三个不同结果。"
+      ],
+      "counterevidence": [
+        "经营回款依赖一次性项目或客户预付款；库存和应收持续占资。",
+        "补助附带尚未满足条件、授信不可提款或扩产交付超出现金承受期。",
+        "新技术产品认证延后、良率不达标，现金投入不能及时转为合格产出。"
+      ],
+      "gaps": [
+        "H1 2026合并OCF含13.983648万亿韩元收到股息；不能直接外推为下一期存储业务现金流。",
+        "H1 2026未确认PP&E资本承诺61.484533万亿韩元；时点/交付条件须另查，不能全部当作下季支出。",
+        "政府补助到账0.009730万亿韩元在投资现金流；已进入期末现金，不重复累加。",
+        "债务含IFRS租赁；报表列明授信种类与多币种上限，但不等于全部未提用可用融资。",
+        "2023年度现金流采用新招股书比较口径；没有据此回填历史当时可得信息。"
+      ],
+      "next": [
+        "补齐可动用资金、分年债务到期和必要CapEx；按法人/币种核验融资承诺。",
+        "将下一次财报、客户认证与产能投产节点作为更新触发条件。"
+      ],
+      "related": [],
+      "sourceIds": [
+        "s-fin-hy2122",
+        "s-fin-hy2325",
+        "s-fin-hyh126"
+      ],
+      "countries": [
+        "KR",
+        "CN"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "hynix"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand"
+      ]
+    }
+  ],
+  "companies": [
+    {
+      "id": "mu",
+      "name": "美光 Micron",
+      "country": "US",
+      "currency": "USD",
+      "unit": "十亿美元",
+      "scope": "Micron及子公司GAAP合并",
+      "asOf": "2026-10-08",
+      "summary": "FY2026现金流大幅增长；把政府补助、客户预付款与经营回款分别看，检验新增产能承诺和客户融资。",
+      "sourceIds": [
+        "s-fin-mu23",
+        "s-fin-mu25",
+        "s-fin-mu26",
+        "s-fin-muq326"
+      ],
+      "latest": {
+        "period": "FY2026A",
+        "periodStart": "2025-08-29",
+        "periodEnd": "2026-09-03",
+        "publishedAt": "2026-09-30",
+        "status": "fact",
+        "metrics": [
+          {
+            "key": "cash",
+            "label": "现金及现金等价物",
+            "value": 38.364,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "报表现金口径，不代表全部可自由动用；受限、跨地区调拨及最低运营现金须另核。GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          },
+          {
+            "key": "shortInvestments",
+            "label": "短期投资/金融工具",
+            "value": 5.07,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          },
+          {
+            "key": "debt",
+            "label": "债务（租赁口径见注）",
+            "value": 5.179,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          },
+          {
+            "key": "ocf",
+            "label": "经营现金流",
+            "value": 89.675,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          },
+          {
+            "key": "capex",
+            "label": "PP&E现金支出（未净补助）",
+            "value": 30.712,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          },
+          {
+            "key": "fcf",
+            "label": "FCF＝经营现金流－PP&E现金支出",
+            "value": 58.963,
+            "unit": "十亿美元",
+            "scope": "Micron及子公司GAAP合并",
+            "sourceIds": [
+              "s-fin-mu26"
+            ],
+            "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。"
+          }
+        ],
+        "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。",
+        "documentDate": null
+      },
+      "annual": [
+        {
+          "period": "FY2022A",
+          "periodStart": "2021-09-03",
+          "periodEnd": "2022-09-01",
+          "publishedAt": "2023-10-06",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-mu23"
+          ],
+          "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。",
+          "cash": 8.262,
+          "shortInvestments": 1.069,
+          "debt": 6.906,
+          "ocf": 15.181,
+          "capex": 12.067,
+          "fcf": 3.114,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2023A",
+          "periodStart": "2022-09-02",
+          "periodEnd": "2023-08-31",
+          "publishedAt": "2023-10-06",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-mu23"
+          ],
+          "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。",
+          "cash": 8.577,
+          "shortInvestments": 1.017,
+          "debt": 13.33,
+          "ocf": 1.559,
+          "capex": 7.676,
+          "fcf": -6.117,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2024A",
+          "periodStart": "2023-09-01",
+          "periodEnd": "2024-08-29",
+          "publishedAt": "2025-10-03",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-mu25"
+          ],
+          "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。",
+          "cash": 7.041,
+          "shortInvestments": 1.065,
+          "debt": 13.397,
+          "ocf": 8.507,
+          "capex": 8.386,
+          "fcf": 0.121,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2025A",
+          "periodStart": "2024-08-30",
+          "periodEnd": "2025-08-28",
+          "publishedAt": "2025-10-03",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-mu25"
+          ],
+          "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。",
+          "cash": 9.642,
+          "shortInvestments": 0.665,
+          "debt": 14.577,
+          "ocf": 17.525,
+          "capex": 15.857,
+          "fcf": 1.668,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2026A",
+          "periodStart": "2025-08-29",
+          "periodEnd": "2026-09-03",
+          "publishedAt": "2026-09-30",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-mu26"
+          ],
+          "notes": "GAAP合并实际值。债务=Current debt+Long-term debt，含融资租赁，不含另列经营租赁。FCF仅扣PP&E现金支出，未扣无形资产/收购、未加政府补助或处置。来源日期为本次所用文件披露日期，比较数不表示首次披露日。 FY2026为53周；年度公告未经审计，截至本次SEC submissions快照未找到FY2026 10-K。",
+          "cash": 38.364,
+          "shortInvestments": 5.07,
+          "debt": 5.179,
+          "ocf": 89.675,
+          "capex": 30.712,
+          "fcf": 58.963,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        }
+      ],
+      "interim": [
+        {
+          "period": "FY2026 Q3 YTD",
+          "periodStart": "2025-08-29",
+          "periodEnd": "2026-05-28",
+          "publishedAt": "2026-06-25",
+          "currency": "USD",
+          "unit": "十亿美元",
+          "sourceIds": [
+            "s-fin-muq326"
+          ],
+          "notes": "九个月累计实际值，已包含在FY2026内，不能与年度相加；是最新已披露10-Q，但财务卡优先更晚FY2026年度公告。债务不含经营租赁。",
+          "cash": 24.995,
+          "shortInvestments": 1.027,
+          "debt": 5.722,
+          "ocf": 45.702,
+          "capex": 19.602,
+          "fcf": 26.1,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "nine_months_cumulative"
+        }
+      ],
+      "limitations": [
+        "FY2026年度为未经审计公告，最新10-Q为2026-05-28九个月累计；两者重叠。",
+        "债务未含另列经营租赁，不能直接与韩系含全部IFRS租赁的债务排名。",
+        "FY2026补助现金流3.316十亿美元及客户合同负债存款12.747十亿美元分别列于投资/融资活动；不能重复加进OCF。",
+        "2026-05-28可提款授信2.00十亿美元、PP&E采购义务约2.93十亿美元；不是2026-09-03已重新核定的余额。",
+        "FY2026现金流表末现金含受限38.391十亿美元，资产负债表现金38.364；看板采用后者，不合并受限项。"
+      ]
+    },
+    {
+      "id": "samsung",
+      "name": "三星电子 Samsung",
+      "country": "KR",
+      "currency": "KRW",
+      "unit": "万亿韩元",
+      "scope": "三星电子及子公司合并；不是DS/Memory分部",
+      "asOf": "2026-10-08",
+      "summary": "集团资金与DS经营能力分开；现金改善不等于全部资金能够分配给HBM和存储扩产。",
+      "sourceIds": [
+        "s-fin-ss21",
+        "s-fin-ss23",
+        "s-fin-ss25",
+        "s-fin-ssh126"
+      ],
+      "latest": {
+        "period": "H1 2026A",
+        "periodStart": "2026-01-01",
+        "periodEnd": "2026-06-30",
+        "publishedAt": null,
+        "status": "fact",
+        "metrics": [
+          {
+            "key": "cash",
+            "label": "现金及现金等价物",
+            "value": 92.916382,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "报表现金口径，不代表全部可自由动用；受限、跨地区调拨及最低运营现金须另核。6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          },
+          {
+            "key": "shortInvestments",
+            "label": "短期投资/金融工具",
+            "value": 97.082646,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          },
+          {
+            "key": "debt",
+            "label": "债务（租赁口径见注）",
+            "value": 22.408721,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          },
+          {
+            "key": "ocf",
+            "label": "经营现金流",
+            "value": 145.355192,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          },
+          {
+            "key": "capex",
+            "label": "PP&E现金支出（未净补助）",
+            "value": 31.234818,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          },
+          {
+            "key": "fcf",
+            "label": "FCF＝经营现金流－PP&E现金支出",
+            "value": 114.120374,
+            "unit": "万亿韩元",
+            "scope": "三星电子及子公司合并；不是DS/Memory分部",
+            "sourceIds": [
+              "s-fin-ssh126"
+            ],
+            "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。"
+          }
+        ],
+        "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。",
+        "documentDate": "2026-08-13"
+      },
+      "annual": [
+        {
+          "period": "FY2021A",
+          "periodStart": "2021-01-01",
+          "periodEnd": "2021-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ss21"
+          ],
+          "notes": "三星电子及子公司合并，不是DS/存储单独资金。短期投资=短期金融工具+短期摊余成本资产（如列示）+短期FVTPL；债务含借款、债券及列入借款的IFRS租赁负债。发布日期未重建，审计日期单列。FCF=OCF减原始PP&E现金支出。",
+          "cash": 39.031415,
+          "shortInvestments": 85.118777,
+          "debt": 18.392149,
+          "ocf": 65.105448,
+          "capex": 47.122106,
+          "fcf": 17.983342,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual",
+          "documentDate": "2022-02-16"
+        },
+        {
+          "period": "FY2022A",
+          "periodStart": "2022-01-01",
+          "periodEnd": "2022-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ss23"
+          ],
+          "notes": "三星电子及子公司合并，不是DS/存储单独资金。短期投资=短期金融工具+短期摊余成本资产（如列示）+短期FVTPL；债务含借款、债券及列入借款的IFRS租赁负债。发布日期未重建，审计日期单列。FCF=OCF减原始PP&E现金支出。",
+          "cash": 49.68071,
+          "shortInvestments": 65.546576,
+          "debt": 10.333242,
+          "ocf": 62.181346,
+          "capex": 49.430428,
+          "fcf": 12.750918,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual",
+          "documentDate": "2024-02-19"
+        },
+        {
+          "period": "FY2023A",
+          "periodStart": "2023-01-01",
+          "periodEnd": "2023-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ss23"
+          ],
+          "notes": "三星电子及子公司合并，不是DS/存储单独资金。短期投资=短期金融工具+短期摊余成本资产（如列示）+短期FVTPL；债务含借款、债券及列入借款的IFRS租赁负债。发布日期未重建，审计日期单列。FCF=OCF减原始PP&E现金支出。",
+          "cash": 69.080893,
+          "shortInvestments": 23.326317,
+          "debt": 12.685944,
+          "ocf": 44.137427,
+          "capex": 57.611292,
+          "fcf": -13.473865,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual",
+          "documentDate": "2024-02-19"
+        },
+        {
+          "period": "FY2024A",
+          "periodStart": "2024-01-01",
+          "periodEnd": "2024-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ss25"
+          ],
+          "notes": "三星电子及子公司合并，不是DS/存储单独资金。短期投资=短期金融工具+短期摊余成本资产（如列示）+短期FVTPL；债务含借款、债券及列入借款的IFRS租赁负债。发布日期未重建，审计日期单列。FCF=OCF减原始PP&E现金支出。",
+          "cash": 53.705579,
+          "shortInvestments": 58.946211,
+          "debt": 19.330184,
+          "ocf": 72.982621,
+          "capex": 51.406355,
+          "fcf": 21.576266,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual",
+          "documentDate": "2026-02-12"
+        },
+        {
+          "period": "FY2025A",
+          "periodStart": "2025-01-01",
+          "periodEnd": "2025-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ss25"
+          ],
+          "notes": "三星电子及子公司合并，不是DS/存储单独资金。短期投资=短期金融工具+短期摊余成本资产（如列示）+短期FVTPL；债务含借款、债券及列入借款的IFRS租赁负债。发布日期未重建，审计日期单列。FCF=OCF减原始PP&E现金支出。",
+          "cash": 57.856378,
+          "shortInvestments": 67.990736,
+          "debt": 25.239139,
+          "ocf": 85.315148,
+          "capex": 47.522179,
+          "fcf": 37.792969,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual",
+          "documentDate": "2026-02-12"
+        }
+      ],
+      "interim": [
+        {
+          "period": "H1 2026A",
+          "periodStart": "2026-01-01",
+          "periodEnd": "2026-06-30",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-ssh126"
+          ],
+          "notes": "6个月累计。债务=短期借款13,710,121+一年内到期长期负债1,205,829+债券7,668+长期借款7,485,103（单位百万KRW），含租赁5,074,773。短期投资97,036,646+46,000。PP&E现金支出31,234,818；政府补助1,592,914另列，未净掉。三星集团现金不能直接供DS使用。",
+          "cash": 92.916382,
+          "shortInvestments": 97.082646,
+          "debt": 22.408721,
+          "ocf": 145.355192,
+          "capex": 31.234818,
+          "fcf": 114.120374,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "six_months_cumulative",
+          "documentDate": "2026-08-13"
+        }
+      ],
+      "limitations": [
+        "本表为三星电子及子公司集团合并，不能作为DS或Memory独立现金表。",
+        "H1 2026现金流为半年累计；集团包含手机、家电、显示等业务，不与纯存储公司做数值排名。",
+        "PP&E承诺30.543192万亿韩元含无形资产采购；到账补助1.592914万亿韩元未净减本表CapEx，也未再加进期末现金。",
+        "受限资金及未提款授信未完成可动用口径核验，缺口不是零。",
+        "各审阅/审计报告日期已留存；首次网页披露时间未重建，不可用此文件做历史PIT回测。"
+      ]
+    },
+    {
+      "id": "hynix",
+      "name": "SK海力士 SK hynix",
+      "country": "KR",
+      "currency": "KRW",
+      "unit": "万亿韩元",
+      "scope": "SK hynix及子公司K-IFRS合并",
+      "asOf": "2026-10-08",
+      "summary": "现金储备与投资承诺同时看；经营现金流中的投资股息、制造回款和扩产支出须分解。",
+      "sourceIds": [
+        "s-fin-hy2122",
+        "s-fin-hy2325",
+        "s-fin-hyh126"
+      ],
+      "latest": {
+        "period": "H1 2026A",
+        "periodStart": "2026-01-01",
+        "periodEnd": "2026-06-30",
+        "publishedAt": "2026-08-18",
+        "status": "fact",
+        "metrics": [
+          {
+            "key": "cash",
+            "label": "现金及现金等价物",
+            "value": 26.835986,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "报表现金口径，不代表全部可自由动用；受限、跨地区调拨及最低运营现金须另核。6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          },
+          {
+            "key": "shortInvestments",
+            "label": "短期投资/金融工具",
+            "value": 61.121937,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          },
+          {
+            "key": "debt",
+            "label": "债务（租赁口径见注）",
+            "value": 21.113139,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          },
+          {
+            "key": "ocf",
+            "label": "经营现金流",
+            "value": 91.742501,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          },
+          {
+            "key": "capex",
+            "label": "PP&E现金支出（未净补助）",
+            "value": 18.328836,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          },
+          {
+            "key": "fcf",
+            "label": "FCF＝经营现金流－PP&E现金支出",
+            "value": 73.413665,
+            "unit": "万亿韩元",
+            "scope": "SK hynix及子公司K-IFRS合并",
+            "sourceIds": [
+              "s-fin-hyh126"
+            ],
+            "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。"
+          }
+        ],
+        "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。",
+        "documentDate": null
+      },
+      "annual": [
+        {
+          "period": "FY2021A",
+          "periodStart": "2021-01-01",
+          "periodEnd": "2021-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hy2122"
+          ],
+          "notes": "合并实际；债务含流动/非流动借款及IFRS租赁负债。短期投资=短期金融工具+短期投资资产；金额并非全部可自由动用。2023现金流采用2026招股书比较口径；来源公开日期与该财年首次披露日期不等同。FCF只扣PP&E现金支出，未扣无形资产/并购。",
+          "cash": 5.057982,
+          "shortInvestments": 3.61456,
+          "debt": 19.149571,
+          "ocf": 19.797648,
+          "capex": 12.486635,
+          "fcf": 7.311013,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2022A",
+          "periodStart": "2022-01-01",
+          "periodEnd": "2022-12-31",
+          "publishedAt": null,
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hy2122"
+          ],
+          "notes": "合并实际；债务含流动/非流动借款及IFRS租赁负债。短期投资=短期金融工具+短期投资资产；金额并非全部可自由动用。2023现金流采用2026招股书比较口径；来源公开日期与该财年首次披露日期不等同。FCF只扣PP&E现金支出，未扣无形资产/并购。",
+          "cash": 4.977007,
+          "shortInvestments": 1.431985,
+          "debt": 24.791685,
+          "ocf": 14.780517,
+          "capex": 19.010261,
+          "fcf": -4.229744,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2023A",
+          "periodStart": "2023-01-01",
+          "periodEnd": "2023-12-31",
+          "publishedAt": "2026-07-10",
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hy2325"
+          ],
+          "notes": "合并实际；债务含流动/非流动借款及IFRS租赁负债。短期投资=短期金融工具+短期投资资产；金额并非全部可自由动用。2023现金流采用2026招股书比较口径；来源公开日期与该财年首次披露日期不等同。FCF只扣PP&E现金支出，未扣无形资产/并购。",
+          "cash": 7.587329,
+          "shortInvestments": 1.333589,
+          "debt": 32.498506,
+          "ocf": 4.278191,
+          "capex": 8.325138,
+          "fcf": -4.046947,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2024A",
+          "periodStart": "2024-01-01",
+          "periodEnd": "2024-12-31",
+          "publishedAt": "2026-07-10",
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hy2325"
+          ],
+          "notes": "合并实际；债务含流动/非流动借款及IFRS租赁负债。短期投资=短期金融工具+短期投资资产；金额并非全部可自由动用。2023现金流采用2026招股书比较口径；来源公开日期与该财年首次披露日期不等同。FCF只扣PP&E现金支出，未扣无形资产/并购。",
+          "cash": 11.205117,
+          "shortInvestments": 2.951246,
+          "debt": 25.452109,
+          "ocf": 29.795885,
+          "capex": 15.945534,
+          "fcf": 13.850351,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        },
+        {
+          "period": "FY2025A",
+          "periodStart": "2025-01-01",
+          "periodEnd": "2025-12-31",
+          "publishedAt": "2026-07-10",
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hy2325"
+          ],
+          "notes": "合并实际；债务含流动/非流动借款及IFRS租赁负债。短期投资=短期金融工具+短期投资资产；金额并非全部可自由动用。2023现金流采用2026招股书比较口径；来源公开日期与该财年首次披露日期不等同。FCF只扣PP&E现金支出，未扣无形资产/并购。",
+          "cash": 14.923766,
+          "shortInvestments": 20.018487,
+          "debt": 24.757848,
+          "ocf": 53.373126,
+          "capex": 27.518924,
+          "fcf": 25.854202,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "annual"
+        }
+      ],
+      "interim": [
+        {
+          "period": "H1 2026A",
+          "periodStart": "2026-01-01",
+          "periodEnd": "2026-06-30",
+          "publishedAt": "2026-08-18",
+          "currency": "KRW",
+          "unit": "万亿韩元",
+          "sourceIds": [
+            "s-fin-hyh126"
+          ],
+          "notes": "6个月累计；短期投资=22,397,559+38,724,378，不包含其他金融资产23,060。债务=借款18,586,634+租赁2,526,505。OCF含收到股息13,983,648（单位百万KRW），不全是存储业务重复性回款。",
+          "cash": 26.835986,
+          "shortInvestments": 61.121937,
+          "debt": 21.113139,
+          "ocf": 91.742501,
+          "capex": 18.328836,
+          "fcf": 73.413665,
+          "calculation": "fcf = ocf - gross cash expenditure for property, plant and equipment; no grants or disposals netted",
+          "durationType": "six_months_cumulative"
+        }
+      ],
+      "limitations": [
+        "H1 2026合并OCF含13.983648万亿韩元收到股息；不能直接外推为下一期存储业务现金流。",
+        "H1 2026未确认PP&E资本承诺61.484533万亿韩元；时点/交付条件须另查，不能全部当作下季支出。",
+        "政府补助到账0.009730万亿韩元在投资现金流；已进入期末现金，不重复累加。",
+        "债务含IFRS租赁；报表列明授信种类与多币种上限，但不等于全部未提用可用融资。",
+        "2023年度现金流采用新招股书比较口径；没有据此回填历史当时可得信息。"
+      ]
+    }
+  ],
+  "channelNotes": [
+    "财务数值以所列SEC、交易所及发行人原始报表为准；保留原币、报告期及公开日期。",
+    "Wind双通道复核未完成；本次采用公开披露核对值。各公司债务、现金和资本开支口径见逐项来源。",
+    "OCF−PP&E现金支出为本表统一分析定义，未加补助和资产出售、未扣并购/无形资产；不是发行人调整后FCF，也不是可分红现金或维持性FCF。",
+    "每家公司保留本币；USD单位十亿美元、KRW单位万亿韩元。没有汇率换算、跨公司现金排名、偿债月数或股票评分。",
+    "最新完整年度：Micron FY2022–2026，Samsung/SK hynix FY2021–2025；最新中期：Micron FY2026 Q3九个月，韩系H1 2026六个月。中期与完整年度不能相加。",
+    "金额来自截至2026-10-08可取得的披露。部分早期比较数字/重列来源公开日期晚于报告期，首次披露时间未重建，不用于历史PIT回测。"
+  ]
+}

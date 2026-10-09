@@ -1,0 +1,2214 @@
+{
+  "asOf": "2026-10-08",
+  "sources": [
+    {
+      "id": "s-r-rubin",
+      "title": "NVIDIA：Vera Rubin系统架构",
+      "url": "https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/",
+      "date": "2026-01-05；页面更新至2026-08-21",
+      "locator": "Vera CPU；Memory and decode efficiency；上下文存储章节",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "系统厂架构/规格说明；本轮读取当前版本，不能回填为1月当时全部已知。"
+    },
+    {
+      "id": "s-r-inference",
+      "title": "NVIDIA：LLM推理优化",
+      "url": "https://developer.nvidia.com/blog/mastering-llm-techniques-inference-optimization/",
+      "date": "2023-11-17；2026-10-08所读动态版本",
+      "locator": "Understanding LLM inference；Key-value caching；优化章节",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "技术机制；特定解码模型与配置的描述，不证明所有工作负载固定受同一瓶颈限制。"
+    },
+    {
+      "id": "s-r-sram",
+      "title": "NVIDIA：Groq 3 LPX低时延推理架构",
+      "url": "https://developer.nvidia.com/blog/inside-nvidia-groq-3-lpx-the-low-latency-inference-accelerator-for-the-nvidia-vera-rubin-platform/",
+      "date": "2026-03-16；页面更新2026-04-02",
+      "locator": "Introducing LPX；Attention–FFN disaggregation",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "系统厂架构说明与性能主张；不是本项目实测或终端部署量。"
+    },
+    {
+      "id": "s-r-hynix-tsmc",
+      "title": "SK hynix与TSMC：HBM4合作备忘录",
+      "url": "https://news.skhynix.com/en/sk-hynix-partners-with-tsmc-to-strengthen-hbm-technological-leadership/",
+      "date": "2024-04-19",
+      "locator": "base die与CoWoS分项合作",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "合作计划；不能单凭MOU证明某客户量产、独供或利润。"
+    },
+    {
+      "id": "s-r-samsung-hbm4",
+      "title": "Samsung：HBM4量产与商业出货公告",
+      "url": "https://news.samsung.com/global/samsung-ships-industry-first-commercial-hbm4-with-ultimate-performance-for-ai-computing",
+      "date": "2026-02-12",
+      "locator": "正文量产、1c DRAM及4nm base die",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "公司自述的已执行状态；行业首家与性能比较不作独立证实。"
+    },
+    {
+      "id": "s-r-samsung-hbm4e",
+      "title": "Samsung：HBM4E送样公告",
+      "url": "https://semiconductor.samsung.com/news-events/news/samsung-electronics-begins-shipment-of-industry-first-hbm4e-samples/",
+      "date": "2026-05-29",
+      "locator": "送样；量产需按客户日程优化后启动",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "更新2月的未来送样计划；送样不等于已量产或所有客户通过认证。"
+    },
+    {
+      "id": "s-r-micron-hbm4",
+      "title": "Micron：HBM4、Gen6 SSD、SOCAMM2状态",
+      "url": "https://micron.gcs-web.com/news-releases/news-release-details/micron-high-volume-production-hbm4-designed-nvidia-vera-rubin",
+      "date": "2026-03-16",
+      "locator": "News highlights及第1–7段",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "12H量产出货与16H送样分列；规格比较为厂商口径。"
+    },
+    {
+      "id": "s-r-hynix-hbm4",
+      "title": "SK hynix：HBM4开发完成及量产准备",
+      "url": "https://news.skhynix.com/en/sk-hynix-completes-worlds-first-hbm4-development-and-readies-mass-production/",
+      "date": "2025-09-12",
+      "locator": "完成开发、构建量产体系、Advanced MR-MUF",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "准备就绪与实际客户交付分开；不是2026出货量证明。"
+    },
+    {
+      "id": "s-r-nvhbm",
+      "title": "NVIDIA：NVLink Fusion与NVHBM",
+      "url": "https://developer.nvidia.com/blog?p=120848",
+      "date": "2026-08-26",
+      "locator": "NVHBM custom base-die；qualification；技术对照",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "定制base die架构公告；性能为公司主张，未披露本文可核的客户订单或营收。"
+    },
+    {
+      "id": "s-r-hynix-bonding",
+      "title": "SK hynix Tech Note：混合键合",
+      "url": "https://news.skhynix.com/en/tech-note-series-ep2/",
+      "date": "发表日未单独核定；读取2026-10-08",
+      "locator": "署名作者Seunghwan Joo；HBM Adoption Still In Progress",
+      "kind": "特邀专家署名技术分析",
+      "scope": "原厂网站的特邀学者分析，非公司已批准量产时间表；不采用未复核性能倍数。"
+    },
+    {
+      "id": "s-r-fullstack",
+      "title": "SK hynix：从HBM到eSSD",
+      "url": "https://news.skhynix.com/en/hbm-to-essd/",
+      "date": "2026-07-08",
+      "locator": "AI-DRAM；AI-NAND；制造基础",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "公司产品与战略说明；AI-NAND三条方向为其框架，不是统一行业分类。"
+    },
+    {
+      "id": "s-r-architecture",
+      "title": "Onur Mutlu：AI系统架构与数据移动",
+      "url": "https://news.skhynix.com/en/ai-ecosystem-series-ep3/",
+      "date": "2026-10-02",
+      "locator": "near-memory；disaggregated architecture；研究引用",
+      "kind": "特邀学者署名技术分析",
+      "scope": "SK hynix网站刊载的学者文章；研究机制不等于厂商量产路线。"
+    },
+    {
+      "id": "s-r-pim-demo",
+      "title": "SK hynix：AI Infra Summit 2026展示",
+      "url": "https://news.skhynix.com/en/ai-infra-summit-2026/",
+      "date": "2026-09-17",
+      "locator": "PIM/AiMX体验；SALT-KV分层演示",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "展会演示证明功能展示，不能当客户商用收入或大规模部署。"
+    },
+    {
+      "id": "s-r-hbf",
+      "title": "SK hynix与Sandisk：HBF规格发布",
+      "url": "https://news.skhynix.com/en/hbf-at-fms-2026/",
+      "date": "2026-08-04",
+      "locator": "HBF规格；UCIe；375层NAND计划",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "依据厂商关于OCP规格的公告，未逐条审核完整规格；规格发布不等于产品出货。"
+    },
+    {
+      "id": "s-r-nand",
+      "title": "Micron：选择NAND类型",
+      "url": "https://www.micron.com/products/storage/nand-flash/choosing-the-right-nand",
+      "date": "发表日未标；读取2026-10-08",
+      "locator": "Raw NAND；TLC；QLC；控制器与固件",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "产品原理页；跨代产品的成本与耐久优劣仍需按SKU比较。"
+    },
+    {
+      "id": "s-r-cxl",
+      "title": "CXL Consortium：内存池化与共享",
+      "url": "https://computeexpresslink.org/blog/explaining-cxl-memory-pooling-and-sharing-1049/",
+      "date": "2023-08-02",
+      "locator": "Explaining CXL Memory Pooling and Sharing",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "标准组织说明，证明互连用途；不证明某服务器兼容或项目经济性。"
+    },
+    {
+      "id": "s-r-cowos",
+      "title": "TSMC：CoWoS技术",
+      "url": "https://3dfabric.tsmc.com/english/dedicatedFoundry/technology/cowos.htm",
+      "date": "发表日未标；读取2026-10-08",
+      "locator": "CoWoS-S/R/L；logic与HBM stacks集成",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "网页通过web工具读取；直接快照下载403，未重试；不提供有效产能数字。"
+    },
+    {
+      "id": "s-r-gddr",
+      "title": "Samsung：24Gb GDDR7开发公告",
+      "url": "https://news.samsung.com/global/samsung-develops-industrys-first-24gb-gddr7-dram-for-next-generation-ai-computing",
+      "date": "2024-10-17",
+      "locator": "开发完成；客户验证与量产计划",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "历史开发阶段；2026在售平台或销量需另按SKU查证。"
+    },
+    {
+      "id": "s-r-dram-resource",
+      "title": "Micron FQ3 2024 prepared remarks",
+      "url": "https://micron.gcs-web.com/static-files/4550f98c-1054-4847-a929-c17d520a0564",
+      "date": "2024-06-26",
+      "locator": "第6页：HBM产能资源与资本开支",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "公司当期说明支持资源竞争机制，不把当年换算倍数普遍化。"
+    },
+    {
+      "id": "s-r-ymtc",
+      "title": "YMTC：Xtacking技术说明",
+      "url": "https://www.ymtc.com/en/technicalintroduction.html",
+      "date": "发表日未标；读取2026-10-08",
+      "locator": "阵列与外围独立晶圆；Hybrid Bonding",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "公司技术介绍，含2025产品案例；不披露可核产能、良率或客户订单。"
+    },
+    {
+      "id": "s-r-cxmt",
+      "title": "CXMT：公司介绍与历史",
+      "url": "https://www.cxmt.com/en/about.html",
+      "date": "发表日未标；读取2026-10-08",
+      "locator": "主营DRAM；2019 DDR4量产公告节点",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "范围仅业务角色及历史节点；不能推出当前份额或HBM客户资格。"
+    },
+    {
+      "id": "s-r-longsys",
+      "title": "Longsys：企业存储产品",
+      "url": "https://www.longsys.com/solutions/enterprise-storage/",
+      "date": "发表日未标；读取2026-10-08",
+      "locator": "DDR5 RDIMM；企业NVMe/SATA SSD产品列表",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "产品覆盖；客户订单、成本、资格需回公司定期报告和具体产品公告。"
+    },
+    {
+      "id": "s-r-longsys-edge",
+      "title": "Longsys：MemoryS端侧AI存储说明",
+      "url": "https://www.longsys.com/about-longsys/news/MemoryS-2026-Longsys-Unveils-SPU-and-iSA-Unlocking-8-Key-Innovations-in-Edge-AI-Storage.html",
+      "date": "网页2026-04-22；活动2026-03-27",
+      "locator": "云与端的应用差异；SPU/iSA与集成存储",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "公司战略与产品发布；不能推销量、HBM直接暴露或客户独供。"
+    },
+    {
+      "id": "s-r-biwin",
+      "title": "Biwin：日本ITC合作及公司业务介绍",
+      "url": "https://www.biwintech.com/news/biwin-expands-presence-in-japan-through-itc-corporation-partnership/",
+      "date": "发表日未单独核定；读取2026-10-08",
+      "locator": "About BIWIN；包装、固件及NAND方案",
+      "kind": "原厂或标准组织一手材料",
+      "scope": "web检索可读原厂内容；直接下载403，保留检索快照，不声称完整网页已归档。"
+    },
+    {
+      "id": "s-r-method",
+      "title": "本项目：TREE-10/12与存储研究操作稿的方法抽取",
+      "url": null,
+      "date": "2026-10-08",
+      "locator": "产品—资格—订单—成本—盈利、国内外需求、国家条件、反证",
+      "kind": "项目研究设计",
+      "scope": "研究问题与推断框架；不充当外部事实的第二独立来源。 阅读底稿仅本地留存；此处保留来源说明。"
+    },
+    {
+      "id": "s-r-m05",
+      "title": "华创M05阅读笔记：工作负载、分层与产能口径",
+      "url": null,
+      "date": "原报告2025-11-05；方法复用2026-10-08",
+      "locator": "原报告物理p10–17；项目既有完整阅读笔记",
+      "kind": "卖方框架的本地方法复用",
+      "scope": "本次复读已有笔记，未把2025预测更新为事实；同源引用不作为新增独立证据。 阅读底稿仅本地留存；此处保留来源说明。"
+    }
+  ],
+  "entities": [
+    {
+      "id": "r-training",
+      "type": "route",
+      "title": "预训练与后训练",
+      "kicker": "需求 · 工作负载",
+      "summary": "训练步骤、模型状态与集群配置共同决定需求；后训练还包含采样、奖励评估及更新。",
+      "question": "新增AI预算究竟增加训练、后训练还是推理资源？",
+      "chain": [
+        "按预训练/后训练拆任务量和预算",
+        "量化精度、参数、激活与并行策略决定资源",
+        "映射GPU/ASIC、HBM、主存、SSD及网络BOM",
+        "按新增/替换系统和部署节奏推采购"
+      ],
+      "evidence": [
+        "NVIDIA当前Rubin架构同时覆盖training、post-training和inference，强调计算、内存与通信共同限制。",
+        "预算与部署、利润路径由项目框架推导，未做任何客户需求量估算。"
+      ],
+      "disagreements": [
+        "同额CapEx的土建、电力与芯片含量不同；后训练也不能统一按训练占比折算。"
+      ],
+      "counterevidence": [
+        "利用率低、实验缩减或网络/电力制约，可使预算上涨但当期存储采购不增。"
+      ],
+      "gaps": [
+        "国内外客户预算分项；任务量、精度、现有利用率与新系统BOM。",
+        "数据准备、训练检查点、恢复与归档各自的IO和保存期，不能全部乘一次AI服务器数量。"
+      ],
+      "next": [
+        "客户披露采购/部署变化时，更新对应环节，保留旧预算版本。"
+      ],
+      "related": [
+        "r-inference",
+        "r-hbm",
+        "r-nand-ssd",
+        "r-qualification-profit",
+        "c-nvidia"
+      ],
+      "sourceIds": [
+        "s-r-rubin",
+        "s-r-method",
+        "s-r-m05"
+      ],
+      "countries": [
+        "US",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "nvidia"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-inference",
+      "type": "route",
+      "title": "Prefill、decode与KV cache",
+      "kicker": "需求 · 分阶段看瓶颈",
+      "summary": "长上下文与并发增加缓存压力，但缓存复用、模型结构和调度可以改变实际需求。",
+      "question": "推理增长首先碰到容量、带宽、时延还是成本约束？",
+      "chain": [
+        "输入与prefill生成中间状态",
+        "decode循环读取权重及上下文状态",
+        "按并发、序列、模型、精度测容量/带宽/尾时延",
+        "热数据留近端，冷数据按访问频率分层",
+        "需求量进入平台BOM与订单"
+      ],
+      "evidence": [
+        "NVIDIA推理文说明prefill与decode不同，并讨论KV缓存、batching、量化及注意力优化。",
+        "2026-09-17 SK展示SALT-KV把缓存按重用价值在HBM/DRAM/SSD间调度；这是演示状态。"
+      ],
+      "disagreements": [
+        "小batch decode常受带宽影响，但模型、batch和算子会改变瓶颈；不把“90%训练耗时传输”当规则。",
+        "RAG外部知识库与KV中间状态是不同对象；不能重复放入同一缓存需求。"
+      ],
+      "counterevidence": [
+        "缓存命中改善、量化或减少上下文会降低单任务资源；互连搬移也可能抵消分层收益。"
+      ],
+      "gaps": [
+        "同工作负载的TTFT、TPOT、p99、并发、命中率、缓存驻留与真实采购。"
+      ],
+      "next": [
+        "在固定服务质量与模型条件下测试分层前后，再修订每请求与总量需求。"
+      ],
+      "related": [
+        "r-hbm",
+        "r-lpddr",
+        "r-ddr",
+        "r-nand-ssd",
+        "r-sram",
+        "r-pim",
+        "r-edge-efficiency"
+      ],
+      "sourceIds": [
+        "s-r-inference",
+        "s-r-pim-demo",
+        "s-r-m05"
+      ],
+      "countries": [
+        "US",
+        "KR",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "nvidia",
+        "hynix"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "lpddr",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-edge-efficiency",
+      "type": "route",
+      "title": "端侧、云端与软件效率",
+      "kicker": "需求 · 两个分母",
+      "summary": "终端台数与云请求量分别建账；单位任务变省与总任务增长可以同时发生。",
+      "question": "AI普及增加什么产品，多少被软件效率或替换需求抵消？",
+      "chain": [
+        "国内/海外、云/企业/端分别记录",
+        "新增用途与替换用途分开，前置/延期另作时间标签",
+        "压缩、量化、缓存复用降低单位任务消耗",
+        "将任务总量与单位消耗合并后映射平台",
+        "核订单、回款与部署，而非直接按AI标签加需求"
+      ],
+      "evidence": [
+        "Longsys 2026年端侧发布强调容量、SiP与定制；其发布不是确认销量。",
+        "NVIDIA推理优化文给出软件降低资源与提升利用率的方法。"
+      ],
+      "disagreements": [
+        "端侧推理可能减少部分云调用，也可能带来更多训练/同步；净影响需观测。"
+      ],
+      "counterevidence": [
+        "AI功能使用率低、原有容量已够或终端换机放缓，可抵消单机容量升级。"
+      ],
+      "gaps": [
+        "终端装机/使用率、云付费量、精度损失与同服务质量下硬件消耗。"
+      ],
+      "next": [
+        "按实际使用和采购更新场景；保留效率改善导致需求下降的情景。"
+      ],
+      "related": [
+        "r-training",
+        "r-inference",
+        "r-lpddr",
+        "r-gddr",
+        "c-longsys",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-r-longsys-edge",
+        "s-r-inference",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN",
+        "US"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "longsys",
+        "biwin",
+        "nvidia"
+      ],
+      "productIds": [
+        "lpddr",
+        "gddr",
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-hbm",
+      "type": "route",
+      "title": "HBM3E → HBM4 → HBM4E",
+      "kicker": "产品 · 代际与阶段",
+      "summary": "代际升级、堆叠高度和客户资格分别记录，不能只按HBM市场统一加总。",
+      "question": "更多带宽和容量如何变成合格交付，而非只有标称规格？",
+      "chain": [
+        "工作负载要求容量/带宽/功耗",
+        "选择代际、stack高度、DRAM与base die",
+        "良率与系统认证约束可交付数量",
+        "合同、价格与成本决定利润"
+      ],
+      "evidence": [
+        "Micron 2026-03-16称HBM4 36GB 12H已在一季度量产出货，同时48GB 16H仅已送样。",
+        "Samsung 2026-02-12称HBM4量产并商业出货；2026-05-29称HBM4E已送样、量产仍按客户计划推进。",
+        "SK hynix 2025-09-12公告为开发完成与量产体系准备；本卡未据此虚构2026实际交付量。"
+      ],
+      "disagreements": [
+        "同代不同高度不代表同阶段；各厂“首家”定义不同，不能用公告先后直接排名。"
+      ],
+      "counterevidence": [
+        "客户平台延期、热约束、未达良率或下一代重新认证均可使产能无法兑现。"
+      ],
+      "gaps": [
+        "供应商×客户×平台×代际×高度的交付、良率、价格与取消条款。"
+      ],
+      "next": [
+        "收到新增量产/认证/订单证据时按具体组合更新，旧计划保留日期。"
+      ],
+      "related": [
+        "r-base-die",
+        "r-bonding",
+        "r-cowos",
+        "r-dram-resources",
+        "c-mu",
+        "c-samsung",
+        "c-hynix"
+      ],
+      "sourceIds": [
+        "s-r-micron-hbm4",
+        "s-r-samsung-hbm4",
+        "s-r-samsung-hbm4e",
+        "s-r-hynix-hbm4"
+      ],
+      "countries": [
+        "US",
+        "KR"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "mu",
+        "samsung",
+        "hynix"
+      ],
+      "productIds": [
+        "hbm",
+        "dram"
+      ]
+    },
+    {
+      "id": "r-ddr",
+      "type": "route",
+      "title": "DDR：系统主存与旧规格",
+      "kicker": "产品 · DRAM子类",
+      "summary": "DDR主存承接CPU和服务器任务；新旧代际的供需与客户生命周期可能背离。",
+      "question": "HBM繁荣会不会同时造成普通DRAM紧张，哪些规格例外？",
+      "chain": [
+        "平台认证决定可用DDR代际",
+        "装机、单机容量与换代构成需求",
+        "原厂资源转移和旧规格退出改变供应",
+        "现货/合约与模组库存成本分开追踪"
+      ],
+      "evidence": [
+        "SK hynix 2026-07-08将DDR5单列为服务器系统内存，未把它归为HBM。",
+        "CXMT官方介绍主营DRAM；该介绍不提供当前代际份额。"
+      ],
+      "disagreements": [
+        "旧规格涨价可能来自供给退出而非终端复苏；新代际放量也不保证全行业ASP上升。"
+      ],
+      "counterevidence": [
+        "库存可缓冲供应退出；客户重新认证或替代平台可能削弱短缺。"
+      ],
+      "gaps": [
+        "按DDR规格、终端、地区的产出、库存、合约价和平台切换日程。"
+      ],
+      "next": [
+        "更新同SKU供需和现金占用，避免把局部涨价外推全DRAM。"
+      ],
+      "related": [
+        "r-dram-resources",
+        "r-socamm",
+        "r-cxl",
+        "c-cxmt",
+        "r-qualification-profit"
+      ],
+      "sourceIds": [
+        "s-r-fullstack",
+        "s-r-cxmt",
+        "s-r-method"
+      ],
+      "countries": [
+        "KR",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "hynix",
+        "cxmt"
+      ],
+      "productIds": [
+        "dram"
+      ]
+    },
+    {
+      "id": "r-lpddr",
+      "type": "route",
+      "title": "LPDDR：端侧与服务器",
+      "kicker": "产品 · 低功耗DRAM",
+      "summary": "LPDDR是器件类别；能进入特定服务器架构，也用于移动与端侧。",
+      "question": "低功耗方案换来什么系统收益，又付出何种容量、维修或兼容代价？",
+      "chain": [
+        "平台功耗/空间与带宽目标",
+        "选择LPDDR配置和模块形态",
+        "核控制器、板级/模组及系统资格",
+        "按单机容量和销量映射采购"
+      ],
+      "evidence": [
+        "NVIDIA Vera架构将LPDDR5X/SOCAMM主存与GPU HBM作为分层资源，通过一致互连配合。",
+        "SK 2026-07-08同时讨论LPDDR端侧用途与SOCAMM2服务器产品。"
+      ],
+      "disagreements": [
+        "CPU主存与GPU HBM各有职责，统一地址空间不等物理介质可无成本互换。"
+      ],
+      "counterevidence": [
+        "实际访问路径的时延/带宽或平台不兼容，可能抵消低功耗优势。"
+      ],
+      "gaps": [
+        "同平台功耗、延迟、故障维护成本、采购价格与认证。"
+      ],
+      "next": [
+        "跟踪整机平台采纳与具体配置，不只看LPDDR器件发布。"
+      ],
+      "related": [
+        "r-socamm",
+        "r-hbm",
+        "r-edge-efficiency",
+        "r-inference"
+      ],
+      "sourceIds": [
+        "s-r-rubin",
+        "s-r-fullstack"
+      ],
+      "countries": [
+        "US",
+        "KR"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "nvidia",
+        "hynix"
+      ],
+      "productIds": [
+        "lpddr",
+        "socamm"
+      ]
+    },
+    {
+      "id": "r-gddr",
+      "type": "route",
+      "title": "GDDR：图形与部分AI平台",
+      "kicker": "产品 · 图形DRAM",
+      "summary": "GDDR服务图形及部分AI工作站/加速器，与HBM是否替代取决于系统设计。",
+      "question": "哪类工作负载选择GDDR更合适，哪些必须由HBM承接？",
+      "chain": [
+        "性能和成本目标",
+        "板级带宽、功耗与容量预算",
+        "选择支持GDDR的处理器/板卡",
+        "与HBM平台按相同工作负载比系统成本"
+      ],
+      "evidence": [
+        "Samsung 2024-10-17公布24Gb GDDR7开发，列明当年验证与次年生产计划。此卡不把旧计划自动升级为2026销量。"
+      ],
+      "disagreements": [
+        "GDDR与HBM不是同平台即插即换；省封装成本可能伴随板级面积/功耗权衡。"
+      ],
+      "counterevidence": [
+        "带宽或功耗受限、平台无控制器支持时，无法靠替换颗粒达到目标。"
+      ],
+      "gaps": [
+        "截至当前的具体在售SKU、设计采用、报价、系统级测试与营收。"
+      ],
+      "next": [
+        "以正式在售规格及客户交付补证后更新阶段。"
+      ],
+      "related": [
+        "r-edge-efficiency",
+        "r-hbm",
+        "r-ddr",
+        "r-qualification-profit"
+      ],
+      "sourceIds": [
+        "s-r-gddr",
+        "s-r-method"
+      ],
+      "countries": [
+        "KR"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "samsung"
+      ],
+      "productIds": [
+        "gddr",
+        "dram"
+      ]
+    },
+    {
+      "id": "r-sram",
+      "type": "route",
+      "title": "SRAM与异构推理",
+      "kicker": "产品 · 片上内存",
+      "summary": "高带宽低时延与有限片上容量共同决定适用任务，不能只看带宽判断胜负。",
+      "question": "哪些推理子任务适合SRAM，怎样和HBM协作？",
+      "chain": [
+        "拆prefill、decode attention、FFN/MoE等算子",
+        "按容量、尾时延及通信映射不同引擎",
+        "SRAM路径与HBM/GPU交换中间结果",
+        "评估全系统吞吐/成本而非单芯片峰值"
+      ],
+      "evidence": [
+        "NVIDIA 2026-03-16 LPX文将片上SRAM LPU用于低时延路径，并描述与Rubin GPU分担decode任务。架构说明不提供本项目实测或客户部署规模。"
+      ],
+      "disagreements": [
+        "SRAM带宽优势需支付面积和容量代价；异构调度及互连也有成本。"
+      ],
+      "counterevidence": [
+        "模型放置、通信或利用率不佳时，低时延芯片未必提高整机经济性。"
+      ],
+      "gaps": [
+        "同模型同服务质量下的成本、功耗、tail latency和部署证据。"
+      ],
+      "next": [
+        "出现独立系统测试或客户采购时，更新互补/替代范围。"
+      ],
+      "related": [
+        "r-inference",
+        "r-hbm",
+        "r-pim",
+        "c-nvidia"
+      ],
+      "sourceIds": [
+        "s-r-sram",
+        "s-r-method"
+      ],
+      "countries": [
+        "US"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "nvidia"
+      ],
+      "productIds": [
+        "sram",
+        "hbm"
+      ]
+    },
+    {
+      "id": "r-nand-ssd",
+      "type": "route",
+      "title": "NAND → SSD：数据与上下文",
+      "kicker": "产品 · 颗粒与系统分层",
+      "summary": "NAND是存储介质；SSD把NAND、控制器、固件和接口组合为可用系统。",
+      "question": "AI带来的数据需求如何变成SSD采购，而非直接复制HBM增长率？",
+      "chain": [
+        "数据集、检查点、模型载入及上下文分层",
+        "区分容量、随机IO、写入寿命、尾时延",
+        "配置NAND、控制器、固件及接口",
+        "通过整机/客户验证后采购并交付",
+        "容量型场景另比较HDD/QLC SSD的介质、电力、机架、恢复、耐久与交期总成本。"
+      ],
+      "evidence": [
+        "Micron产品说明区分raw NAND与控制器/固件管理，涉及纠错、坏块与磨损管理。",
+        "Micron 2026-03-16公布Gen6数据中心SSD量产；这不能证明所有企业SSD厂商同受益。"
+      ],
+      "disagreements": [
+        "数据增长不一定等比例提高SSD容量；缓存、压缩、冷热分层和HDD竞争会改变配置。"
+      ],
+      "counterevidence": [
+        "网络或软件瓶颈、客户库存和低写入需求可能令接口升级不产生实际收入增量。",
+        "HDD供货恢复或密度提升、SSD涨价及写入密集需求，均可改变QLC替代范围；一次缺货不等永久替代。"
+      ],
+      "gaps": [
+        "企业客户认证、读写分布、实际IO、寿命要求、价格与合同。"
+      ],
+      "next": [
+        "按工作负载区分性能型/容量型需求，再补各公司业务暴露。"
+      ],
+      "related": [
+        "r-nand-economics",
+        "r-hbf",
+        "r-inference",
+        "c-ymtc",
+        "c-longsys",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-r-nand",
+        "s-r-micron-hbm4",
+        "s-r-method",
+        "s-r-m05"
+      ],
+      "countries": [
+        "US",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "mu",
+        "ymtc",
+        "longsys",
+        "biwin"
+      ],
+      "productIds": [
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-socamm",
+      "type": "route",
+      "title": "SOCAMM：模组形态",
+      "kicker": "方案 · 不同于器件代际",
+      "summary": "SOCAMM/SOCAMM2是模组方案；LPDDR是其所使用的内存类型，二者不能并列为替代介质。",
+      "question": "服务器采用可维护低功耗模组后，谁的认证和价值量改变？",
+      "chain": [
+        "平台选择低功耗主存",
+        "LPDDR器件进入SOCAMM模组",
+        "电气、机械、热与维修设计验证",
+        "器件和模组价值按实际供应角色分配"
+      ],
+      "evidence": [
+        "Micron 2026-03-16宣布192GB SOCAMM2量产；SK 2026-07-08也回顾其192GB SOCAMM2量产。",
+        "不同公告涉及各自平台/产品，不能据此推独供或合计终端需求。"
+      ],
+      "disagreements": [
+        "模组标准化可能扩大供方，也可能由平台认证形成门槛；需具体合同。"
+      ],
+      "counterevidence": [
+        "平台转向其他配置、兼容测试未过或价格过高，会限制采用。"
+      ],
+      "gaps": [
+        "同平台料号、认证、器件来源、模组组装角色、售价与良率。"
+      ],
+      "next": [
+        "有具体客户/平台认证或交付公告时更新，不把其他CAMM形态自动视为SOCAMM。"
+      ],
+      "related": [
+        "r-lpddr",
+        "r-ddr",
+        "c-mu",
+        "c-hynix",
+        "r-qualification-profit"
+      ],
+      "sourceIds": [
+        "s-r-micron-hbm4",
+        "s-r-fullstack",
+        "s-r-method"
+      ],
+      "countries": [
+        "US",
+        "KR"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "mu",
+        "hynix"
+      ],
+      "productIds": [
+        "socamm",
+        "lpddr"
+      ]
+    },
+    {
+      "id": "r-cxl",
+      "type": "route",
+      "title": "CXL：扩展、池化与共享",
+      "kicker": "方案 · 互连而非内存介质",
+      "summary": "CXL连接处理器与设备，可改变内存配置和利用率；仍需具体介质、控制器、软件和平台。",
+      "question": "降低闲置与增加可用容量，是否足以覆盖远端访问和管理成本？",
+      "chain": [
+        "识别容量闲置与不足",
+        "平台/代际支持决定扩展、池化和共享能力",
+        "软件将合适数据放入CXL内存",
+        "测访问时延、资源利用率和总成本"
+      ],
+      "evidence": [
+        "CXL联盟2023-08-02说明池化与共享用途。标准支持不能直接证明某产品全特性可用。"
+      ],
+      "disagreements": [
+        "容量扩展、pooling与coherent sharing不是同一功能；不把CXL与HBM当两个平级颗粒。"
+      ],
+      "counterevidence": [
+        "随机访问敏感、软件迁移困难或互连拥堵时，成本节约可能不成立。"
+      ],
+      "gaps": [
+        "控制器/交换机/主机支持矩阵、工作负载、软件成熟度和采购量。"
+      ],
+      "next": [
+        "以平台兼容清单和真实工作负载测试更新采用边界。"
+      ],
+      "related": [
+        "r-ddr",
+        "r-inference",
+        "r-pim",
+        "r-qualification-profit"
+      ],
+      "sourceIds": [
+        "s-r-cxl",
+        "s-r-method"
+      ],
+      "countries": [
+        "US"
+      ],
+      "status": "inference",
+      "companyIds": [],
+      "productIds": [
+        "cxl",
+        "dram"
+      ]
+    },
+    {
+      "id": "r-base-die",
+      "type": "route",
+      "title": "HBM base die与定制化",
+      "kicker": "制造 · 逻辑功能与议价权",
+      "summary": "HBM的逻辑base die可改变工艺伙伴及功能分工；定制化也可能提高绑定和项目风险。",
+      "question": "自制、代工和客户定制，怎样改变成本、供给约束与利润归属？",
+      "chain": [
+        "客户功能/接口与功耗要求",
+        "base die逻辑工艺及IP选择",
+        "与DRAM stack和系统封装协同",
+        "良率/认证/NRE与订单承诺",
+        "分配存储厂、代工厂与平台价值"
+      ],
+      "evidence": [
+        "2024 SK–TSMC MOU区分HBM4 base die工艺与CoWoS整合合作。",
+        "Samsung 2026 HBM4公告指向自家4nm logic base die；这与仅依据存储DRAM工艺推成本不同。",
+        "NVIDIA 2026-08-26发布NVHBM定制base die架构；具体客户出货与收入未在本卡核到。"
+      ],
+      "disagreements": [
+        "定制化可能提高粘性，也可能使库存专用、研发成本回收依赖少数平台；代工合作不等于对所有厂更优。"
+      ],
+      "counterevidence": [
+        "项目延期、规格修改、良率失约或客户自研，会改变价值分配。"
+      ],
+      "gaps": [
+        "代工/自制成本、NRE、专用产能、平台认证和取消义务。"
+      ],
+      "next": [
+        "按客户/代际记录功能和交易条件；设计公告、验证、量产各自更新。"
+      ],
+      "related": [
+        "r-hbm",
+        "r-bonding",
+        "r-cowos",
+        "c-tsmc",
+        "c-nvidia",
+        "c-samsung",
+        "c-hynix"
+      ],
+      "sourceIds": [
+        "s-r-hynix-tsmc",
+        "s-r-samsung-hbm4",
+        "s-r-nvhbm"
+      ],
+      "countries": [
+        "TW",
+        "KR",
+        "US"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "tsmc",
+        "samsung",
+        "hynix",
+        "nvidia"
+      ],
+      "productIds": [
+        "hbm"
+      ]
+    },
+    {
+      "id": "r-bonding",
+      "type": "route",
+      "title": "堆叠高度与键合路线",
+      "kicker": "制造 · 良率、热与资本开支",
+      "summary": "MR-MUF、TC-NCF与混合键合要比较适用工序、良率和经济性，不能画成无条件代际淘汰。",
+      "question": "更多层是否提高可出售容量，还是先抬高制造成本与失效率？",
+      "chain": [
+        "高度/厚度、I/O和热要求",
+        "微凸点与填充、热压/回流或混合键合方案",
+        "对准、翘曲、良率与测试",
+        "合格stack成本和设备投入",
+        "客户验证与量产节奏"
+      ],
+      "evidence": [
+        "SK 2025-09-12 HBM4准备公告明确Advanced MR-MUF。",
+        "2026年SK技术栏目学者讨论混合键合在HBM的采用时点仍不确定；属于分析而非量产确认。",
+        "Micron 2026-03-16把12H量产与16H送样分开。"
+      ],
+      "disagreements": [
+        "量产可行性还受设备、产能利用率和成本影响；某NAND产品采用混合键合不等于HBM已采用。"
+      ],
+      "counterevidence": [
+        "更成熟微凸点方案满足厚度/热指标，或混合键合良率不足时，替代可能推迟。"
+      ],
+      "gaps": [
+        "同平台stack成本、良率、热测试、设备交期及客户验收。"
+      ],
+      "next": [
+        "以具体SKU工艺与合格出货更新；不采用无来源的统一良率/领先季度。"
+      ],
+      "related": [
+        "r-hbm",
+        "r-base-die",
+        "r-cowos",
+        "r-nand-economics",
+        "c-ymtc"
+      ],
+      "sourceIds": [
+        "s-r-hynix-hbm4",
+        "s-r-hynix-bonding",
+        "s-r-micron-hbm4",
+        "s-r-method"
+      ],
+      "countries": [
+        "KR",
+        "US",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "hynix",
+        "mu",
+        "ymtc"
+      ],
+      "productIds": [
+        "hbm",
+        "nand"
+      ]
+    },
+    {
+      "id": "r-cowos",
+      "type": "route",
+      "title": "HBM stack ≠ CoWoS集成",
+      "kicker": "制造 · 两个供给环节",
+      "summary": "先造合格HBM stack，再把它与逻辑芯片集成为系统封装；两环的产能单位与瓶颈不同。",
+      "question": "哪个环节限制的是HBM产出，哪个限制系统吸收HBM的速度？",
+      "chain": [
+        "合格DRAM die+base die",
+        "TSV/键合/测试形成HBM stack",
+        "CoWoS等方案集成logic+HBM",
+        "板卡整机、网络、电力与部署",
+        "验收和实际使用"
+      ],
+      "evidence": [
+        "TSMC技术页描述逻辑芯片与HBM stacks的CoWoS集成；SK–TSMC公告也将base die与CoWoS合作分列。"
+      ],
+      "disagreements": [
+        "CoWoS扩产可能增加HBM需求，不会自动扩张存储厂的stack产能；其他兼容方案需要单独核。"
+      ],
+      "counterevidence": [
+        "HBM充足而logic/基板不足、或封装扩产但客户部署延迟，都会移动瓶颈。"
+      ],
+      "gaps": [
+        "按平台BOM换算的good die、stack、package和系统产出；在制与成品缓冲。"
+      ],
+      "next": [
+        "每次新增产能披露先核单位、适用平台、良率口径及可用时间。"
+      ],
+      "related": [
+        "r-bonding",
+        "r-base-die",
+        "c-tsmc",
+        "c-nvidia",
+        "r-qualification-profit",
+        "h-effective-supply"
+      ],
+      "sourceIds": [
+        "s-r-cowos",
+        "s-r-hynix-tsmc",
+        "s-r-method"
+      ],
+      "countries": [
+        "TW",
+        "KR",
+        "US"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "tsmc",
+        "hynix",
+        "nvidia"
+      ],
+      "productIds": [
+        "hbm"
+      ]
+    },
+    {
+      "id": "r-dram-resources",
+      "type": "route",
+      "title": "HBM与普通DRAM的资源竞争",
+      "kicker": "供给 · 资源可转换有条件",
+      "summary": "前段晶圆、工艺迁移及后段投入可能竞争资源；不同产品不能用一个固定倍数换算。",
+      "question": "HBM扩张会减少哪个规格的普通DRAM供给，何时体现？",
+      "chain": [
+        "按厂区与制程识别共享资源池",
+        "分配wafer starts和产品组合",
+        "计入die面积、良率、切线停机和后段",
+        "得到分产品合格bit与实际出货",
+        "结合库存验证价格与交期"
+      ],
+      "evidence": [
+        "Micron FQ3 2024说明讨论HBM前段资源与后段投资；这支持机制，不证明当前各厂转换比例。",
+        "M05既有读图记录指出HBM图的产能脚注使用TSV口径；保留这一口径警示，不把图中后段能力与前段晶圆投片直接加总。"
+      ],
+      "disagreements": [
+        "收入占比上升可以来自溢价/组合变化，不能替代晶圆或bit占比；NAND资源也不能无摩擦转HBM。"
+      ],
+      "counterevidence": [
+        "新晶圆/良率提升弥补资源占用、原有库存释放或需求走弱，会削弱普通DRAM涨价。"
+      ],
+      "gaps": [
+        "厂区/节点资源分配、同规格bit供给、库存与资本开支实际进度。"
+      ],
+      "next": [
+        "用现货和合约、交期及可交付bit交叉检查；不从HBM强直接判所有存储利好。"
+      ],
+      "related": [
+        "r-hbm",
+        "r-ddr",
+        "c-cxmt",
+        "r-qualification-profit",
+        "h-effective-supply"
+      ],
+      "sourceIds": [
+        "s-r-dram-resource",
+        "s-r-method",
+        "s-r-m05"
+      ],
+      "countries": [
+        "US",
+        "KR",
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "mu",
+        "hynix",
+        "samsung",
+        "cxmt"
+      ],
+      "productIds": [
+        "hbm",
+        "dram"
+      ]
+    },
+    {
+      "id": "r-nand-economics",
+      "type": "route",
+      "title": "NAND：层数、bit/cell与控制器",
+      "kicker": "供给 · 成本不是层数排名",
+      "summary": "层数、TLC/QLC、外围电路和固件共同决定可用成本与客户价值。",
+      "question": "更高密度怎样变成利润，哪些代价或价格反馈会抵消？",
+      "chain": [
+        "层数与TLC/QLC提高名义密度",
+        "工序时长、良率、bonding及设备决定合格bit成本",
+        "控制器/固件管理耐久、时延与纠错",
+        "企业资格决定可服务应用",
+        "新增供给与销售价格决定实际利润"
+      ],
+      "evidence": [
+        "Micron说明TLC/QLC的bit/cell与性能耐久权衡，并指出NAND依赖控制器和固件。",
+        "YMTC官方技术页说明阵列和外围可在独立晶圆加工后键合；不能只按单晶圆面积推总成本。",
+        "SK 2026-08-04展出的375层方案仍在开发，eSSD量产目标为2027年初。"
+      ],
+      "disagreements": [
+        "高层数≠立即低成本；转换停机、额外工序或良率损失可先抬高成本。"
+      ],
+      "counterevidence": [
+        "量产迟缓、客户验证未过，或行业供给增长压低ASP，可抵消技术收益。"
+      ],
+      "gaps": [
+        "工序/良率成本、同负载耐久与p99、控制器资格、产品mix和价格。"
+      ],
+      "next": [
+        "每次技术公告分开发/送样/认证/量产，按合格bit与销售毛利更新。"
+      ],
+      "related": [
+        "r-nand-ssd",
+        "r-bonding",
+        "r-hbf",
+        "c-ymtc",
+        "c-mu",
+        "c-hynix",
+        "c-longsys",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-r-nand",
+        "s-r-ymtc",
+        "s-r-hbf",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN",
+        "US",
+        "KR"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "ymtc",
+        "mu",
+        "hynix",
+        "longsys",
+        "biwin"
+      ],
+      "productIds": [
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-hbf",
+      "type": "route",
+      "title": "HBF：NAND的带宽前沿",
+      "kicker": "前沿 · 规格已发布，商用待证",
+      "summary": "HBF试图在HBM与SSD之间增加一层，规格发布与真实量产经济性之间仍有验证工作。",
+      "question": "HBF能卸载哪类数据，怎样与HBM互补而非被称为完全替代？",
+      "chain": [
+        "筛选容量大、读多且可分层的数据",
+        "NAND堆叠/互连及控制方案",
+        "检验带宽、延迟、耐久和系统软件",
+        "平台认证与客户采购",
+        "核总成本和原有HBM配置变化"
+      ],
+      "evidence": [
+        "SK/Sandisk 2026-08-04公布HBF规格并称采用UCIe；9月展会展示结构模型。本轮未取得HBF客户量产出货证据。"
+      ],
+      "disagreements": [
+        "接口峰值接近不等于访问延迟、写入特性或可执行任务等同HBM；原厂价值主张待实测。"
+      ],
+      "counterevidence": [
+        "随机访问、写入耐久、软件开销或平台不采纳，可使理论容量优势不兑现。"
+      ],
+      "gaps": [
+        "产品SKU、实测延迟/耐久、试样、认证、量产、订单与成本。"
+      ],
+      "next": [
+        "取得每个新阶段证据再更新；不得用标准发布日期认定可收入化。"
+      ],
+      "related": [
+        "r-nand-ssd",
+        "r-hbm",
+        "r-nand-economics",
+        "r-pim",
+        "c-hynix"
+      ],
+      "sourceIds": [
+        "s-r-hbf",
+        "s-r-pim-demo",
+        "s-r-method"
+      ],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "status": "plan",
+      "companyIds": [
+        "hynix"
+      ],
+      "productIds": [
+        "nand",
+        "hbm",
+        "ssd"
+      ]
+    },
+    {
+      "id": "r-pim",
+      "type": "route",
+      "title": "PIM与近存计算",
+      "kicker": "前沿 · 算子、软件与工艺",
+      "summary": "计算移近数据可能减少搬移，但可支持算子、精度、软件和产能经济性决定采用范围。",
+      "question": "哪些任务该移到内存附近，哪些仍由通用加速器完成？",
+      "chain": [
+        "筛选数据移动密集算子",
+        "区分存内PIM与近存计算位置",
+        "核精度、算子支持、编译/软件和互连",
+        "测整系统收益与迁移成本",
+        "验证客户采用和产能"
+      ],
+      "evidence": [
+        "SK 2026-09-17展示AiM芯片、AiMX卡和服务器LLM体验，是演示证据。",
+        "2026-10-02 Onur Mutlu署名文讨论近存研究架构，不能视作SK全线产品量产承诺。"
+      ],
+      "disagreements": [
+        "PIM、近存计算与CXL不是同一层概念；CXL可以提供连接，但不会自动产生计算功能。"
+      ],
+      "counterevidence": [
+        "算子覆盖不足、软件迁移或通用性损失，可抵消数据搬移节约。"
+      ],
+      "gaps": [
+        "实际客户、量产阶段、长期稳定性、同任务系统成本与精度。"
+      ],
+      "next": [
+        "跟踪原型→可复核演示→平台资格→合同/量产，不以论文性能替代业务结果。"
+      ],
+      "related": [
+        "r-inference",
+        "r-sram",
+        "r-cxl",
+        "r-hbf",
+        "r-qualification-profit"
+      ],
+      "sourceIds": [
+        "s-r-pim-demo",
+        "s-r-architecture",
+        "s-r-method"
+      ],
+      "countries": [
+        "KR",
+        "US"
+      ],
+      "status": "plan",
+      "companyIds": [
+        "hynix"
+      ],
+      "productIds": [
+        "dram",
+        "cxl"
+      ]
+    },
+    {
+      "id": "r-qualification-profit",
+      "type": "route",
+      "title": "从技术路径到公司利润",
+      "kicker": "价值分配 · 最后一段不能跳",
+      "summary": "同一个产业变化，原厂、模组、系统与设备材料可能承担相反的量价成本影响。",
+      "question": "有技术/产品后，公司在何时、靠什么赚到多少利润？",
+      "chain": [
+        "确认公司产品与平台暴露",
+        "分别核样品、资格、设计采用和合同",
+        "核锁量/锁价/取消/验收/付款",
+        "交付与收入确认对接采购批次/制造成本",
+        "加上爬坡、折旧、融资及税项",
+        "相对同季度旧预测做修订"
+      ],
+      "evidence": [
+        "项目TREE-10方法将有效供给、合同和公司暴露分开；本卡是研究设计而非盈利测算。",
+        "原厂公开产品资料仅证明该来源列明的产品/阶段，不证明A股公司已获该客户订单。"
+      ],
+      "disagreements": [
+        "原料涨价可能提高原厂收入，却抬高模组补库成本；售价调整、存货成本和资金占用决定净结果。"
+      ],
+      "counterevidence": [
+        "行业价格上涨但公司份额下降、合同售价滞后或客户延期，利润可不升反降。"
+      ],
+      "gaps": [
+        "公司实际订单、采购/库存成本、销售重定价、旧EPS预测基准和营运资金。"
+      ],
+      "next": [
+        "新财报/订单/价格证据出现后逐项修订；无可靠共识时不宣称股价未计入。"
+      ],
+      "related": [
+        "c-mu",
+        "c-samsung",
+        "c-hynix",
+        "c-longsys",
+        "c-biwin",
+        "r-hbm",
+        "r-nand-ssd",
+        "h-cash-capacity",
+        "h-china-profit"
+      ],
+      "sourceIds": [
+        "s-r-method",
+        "s-r-longsys",
+        "s-r-biwin"
+      ],
+      "countries": [],
+      "status": "inference",
+      "companyIds": [
+        "mu",
+        "samsung",
+        "hynix",
+        "longsys",
+        "biwin"
+      ],
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "c-nvidia",
+      "type": "company",
+      "title": "NVIDIA",
+      "kicker": "公司 · 平台、软件与采购条件",
+      "summary": "以系统架构影响HBM、主存、存储和互连的搭配；技术规格不等于当期存储采购量。",
+      "question": "平台升级怎样改变存储BOM和供应商资格？",
+      "chain": [
+        "工作负载/软件",
+        "平台BOM",
+        "供应商协同与资格",
+        "整机部署",
+        "未来采购与价值分配"
+      ],
+      "evidence": [
+        "Rubin系统文和NVHBM公告提供架构与定制base die入口；美国公司发布的跨国合作不等于制造都在美国。"
+      ],
+      "disagreements": [
+        "定制化可能加强平台约束，也可能通过合作生态扩大兼容方案。"
+      ],
+      "counterevidence": [
+        "平台延期、客户ROI不足、竞争架构或部署瓶颈会改变订单。"
+      ],
+      "gaps": [
+        "分平台量、实际交付、供应商份额、合同和区域销售适用性。"
+      ],
+      "next": [
+        "逐代追踪BOM与资格，国内外客户采购分别取证。"
+      ],
+      "related": [
+        "r-training",
+        "r-inference",
+        "r-base-die",
+        "r-cowos",
+        "r-sram",
+        "c-tsmc"
+      ],
+      "sourceIds": [
+        "s-r-rubin",
+        "s-r-nvhbm",
+        "s-r-sram"
+      ],
+      "countries": [
+        "US"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "nvidia"
+      ],
+      "productIds": [
+        "hbm",
+        "lpddr",
+        "sram",
+        "ssd"
+      ]
+    },
+    {
+      "id": "c-tsmc",
+      "type": "company",
+      "title": "TSMC",
+      "kicker": "公司 · 代工与系统封装",
+      "summary": "与HBM厂商的合作分别涉及逻辑base die和CoWoS集成，制造地点与分配量需项目级证据。",
+      "question": "平台发展给代工和封装各带来什么收入与投入？",
+      "chain": [
+        "客户设计与工艺",
+        "base die良率/产能",
+        "CoWoS系统整合",
+        "认证与验收",
+        "价格、折旧与现金回报"
+      ],
+      "evidence": [
+        "2024 SK–TSMC公告区分base die与CoWoS合作；台湾是本卡企业关联地区，不是全部生产地或客户市场分类。"
+      ],
+      "disagreements": [
+        "协同优势需要对比项目专用投资、客户集中和产能转换。"
+      ],
+      "counterevidence": [
+        "存储/逻辑芯片缺料或系统部署延期可限制封装利用率。"
+      ],
+      "gaps": [
+        "按工艺和厂区可用产能、客户分配、良率及资本开支兑现。"
+      ],
+      "next": [
+        "新增工艺/封装公告按地点、阶段和客户范围更新。"
+      ],
+      "related": [
+        "r-base-die",
+        "r-cowos",
+        "c-hynix",
+        "c-nvidia"
+      ],
+      "sourceIds": [
+        "s-r-hynix-tsmc",
+        "s-r-cowos"
+      ],
+      "countries": [
+        "TW"
+      ],
+      "status": "fact",
+      "companyIds": [
+        "tsmc"
+      ],
+      "productIds": [
+        "hbm"
+      ]
+    },
+    {
+      "id": "c-cxmt",
+      "type": "company",
+      "title": "长鑫存储",
+      "kicker": "公司 · DRAM供给观察",
+      "summary": "以DRAM产品与合格产出进入供给框架；没有用融资或厂房规模替代有效bit。",
+      "question": "国内DRAM扩张会改变哪些规格、区域与客户的供需？",
+      "chain": [
+        "技术与设备可得性",
+        "资金及产线建设",
+        "良率与客户资格",
+        "分规格合格bit",
+        "国内采购与全球供需"
+      ],
+      "evidence": [
+        "公司官网确认DRAM设计、制造与研发角色，并列出合肥Fab建设和2019 DDR4量产公告历史。当前产品量、份额和HBM资格未在本轮核定。"
+      ],
+      "disagreements": [
+        "政策支持可延缓退出或扩张供给；对国内采购方与其他原厂的影响可能不同。"
+      ],
+      "counterevidence": [
+        "良率/设备/客户验证或需求约束，可能使规划产能未形成有效供给。"
+      ],
+      "gaps": [
+        "政策资金法律主体/到账、设备、分产品产能与良率、客户订单。"
+      ],
+      "next": [
+        "按厂区和产品追踪进度；资金、名义产能和实际bit分别记账。"
+      ],
+      "related": [
+        "r-ddr",
+        "r-dram-resources",
+        "h-nation-support",
+        "h-china-profit",
+        "c-longsys"
+      ],
+      "sourceIds": [
+        "s-r-cxmt",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "cxmt"
+      ],
+      "productIds": [
+        "dram"
+      ]
+    },
+    {
+      "id": "c-ymtc",
+      "type": "company",
+      "title": "长江存储",
+      "kicker": "公司 · NAND与Xtacking",
+      "summary": "阵列与外围电路分开加工、再键合是技术路径入口；量产成本和客户范围需独立验证。",
+      "question": "技术与国内产能怎样传到NAND价格和下游公司成本？",
+      "chain": [
+        "工艺/设备与资金",
+        "阵列及外围晶圆",
+        "键合良率与合格bit",
+        "SSD/客户验证",
+        "价格、成本和现金回报"
+      ],
+      "evidence": [
+        "YMTC技术页介绍Xtacking独立晶圆与键合，并列出2025系列产品案例；中国关联不能替代每个厂区/资金主体核验。"
+      ],
+      "disagreements": [
+        "技术获奖或密度提高不直接证明低成本、产能扩张或企业客户大单。"
+      ],
+      "counterevidence": [
+        "良率爬坡、设备限制、价格竞争或客户资格不足会削弱收入弹性。"
+      ],
+      "gaps": [
+        "产能/良率、成本、采购资格、国内外需求和政策资金可用性。"
+      ],
+      "next": [
+        "分别更新技术、有效供给和客户证据；不将NAND直接归为HBM供给。"
+      ],
+      "related": [
+        "r-nand-economics",
+        "r-nand-ssd",
+        "r-bonding",
+        "h-nation-support",
+        "h-china-profit",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-r-ymtc",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "ymtc"
+      ],
+      "productIds": [
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "c-longsys",
+      "type": "company",
+      "title": "江波龙",
+      "kicker": "公司 · 模组、嵌入式与系统",
+      "summary": "公开产品覆盖DDR模组及企业SSD；本专题未确认其直接HBM业务或特定AI客户订单。",
+      "question": "颗粒涨价、企业SSD或端侧AI分别怎样影响季度毛利与现金？",
+      "chain": [
+        "终端用途与平台资格",
+        "采购合约及批次成本",
+        "主控/固件/封装和产品结构",
+        "销售重定价、交付和回款",
+        "存货与营运资金、季度利润"
+      ],
+      "evidence": [
+        "官网企业存储产品列出DDR5 RDIMM、企业NVMe/SATA SSD；2026端侧发布介绍集成存储方向。产品目录不代表全部产品已大规模贡献利润。",
+        "中国公司身份与全球客户/产地分开；本轮未给客户地域收入配比。"
+      ],
+      "disagreements": [
+        "原料涨价与库存收益需分别核成本结转及售价；客户合同刚性不同可带来相反结果。"
+      ],
+      "counterevidence": [
+        "采购先涨、销售滞后、验收延后或回款变慢，可抵消量增。"
+      ],
+      "gaps": [
+        "同季度采购合同、库存批次成本、销售定价与订单、旧预测。"
+      ],
+      "next": [
+        "优先选同业务模式可比产品，与佰维做证据对照，不用品牌名单推独供。"
+      ],
+      "related": [
+        "r-nand-ssd",
+        "r-ddr",
+        "r-edge-efficiency",
+        "r-qualification-profit",
+        "c-biwin",
+        "h-cash-capacity"
+      ],
+      "sourceIds": [
+        "s-r-longsys",
+        "s-r-longsys-edge",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "longsys"
+      ],
+      "productIds": [
+        "dram",
+        "lpddr",
+        "nand",
+        "ssd"
+      ]
+    },
+    {
+      "id": "c-biwin",
+      "type": "company",
+      "title": "佰维存储",
+      "kicker": "公司 · 存储方案与封测",
+      "summary": "公司资料描述NAND存储、软硬件/固件和封装能力；能力范围不等于HBM客户认证。",
+      "question": "产品、封装与颗粒成本变化怎样进入季度盈利？",
+      "chain": [
+        "应用及客户平台",
+        "采购资源与自研/封装环节",
+        "合格交付与销售定价",
+        "存货结转、费用和回款",
+        "季度现金与盈利"
+      ],
+      "evidence": [
+        "Biwin官方业务介绍列示嵌入式、消费、企业及工业NAND方案和软硬件/固件能力。该介绍不能证明对任一AI平台或HBM的量产供货。",
+        "中国主体与海外销售合作分开记录；日本ITC分销合作不等于日本生产或自有DRAM晶圆厂。"
+      ],
+      "disagreements": [
+        "产品组合、合同重定价和营运资金决定弹性，不能按“存储公司”统一涨价收益。"
+      ],
+      "counterevidence": [
+        "采购成本、爬坡费用或客户回款恶化可能抵消ASP提升。"
+      ],
+      "gaps": [
+        "具体SKU/客户资格、销售量价、采购合约、库存成本、债务和现金。"
+      ],
+      "next": [
+        "用公开定期报告及合同信息填齐同季度链条，与江波龙同产品场景比较。"
+      ],
+      "related": [
+        "r-nand-ssd",
+        "r-nand-economics",
+        "r-edge-efficiency",
+        "r-qualification-profit",
+        "c-longsys",
+        "h-cash-capacity"
+      ],
+      "sourceIds": [
+        "s-r-biwin",
+        "s-r-method"
+      ],
+      "countries": [
+        "CN",
+        "JP"
+      ],
+      "status": "inference",
+      "companyIds": [
+        "biwin"
+      ],
+      "productIds": [
+        "nand",
+        "ssd",
+        "dram"
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "id": "workload",
+      "label": "① 任务与预算"
+    },
+    {
+      "id": "memory",
+      "label": "② 存储介质/层级"
+    },
+    {
+      "id": "architecture",
+      "label": "③ 架构与制造选择"
+    },
+    {
+      "id": "delivery",
+      "label": "④ 有效供给/资格"
+    },
+    {
+      "id": "value",
+      "label": "⑤ 公司与价值分配"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "n-training",
+      "label": "预训练 / 后训练",
+      "column": "workload",
+      "entityId": "r-training",
+      "productIds": [],
+      "stage": "需求机制"
+    },
+    {
+      "id": "n-inference",
+      "label": "推理 / KV cache",
+      "column": "workload",
+      "entityId": "r-inference",
+      "productIds": [],
+      "stage": "配置决定瓶颈"
+    },
+    {
+      "id": "n-edge",
+      "label": "云端 / 企业 / 端侧",
+      "column": "workload",
+      "entityId": "r-edge-efficiency",
+      "productIds": [],
+      "stage": "实际采用待核"
+    },
+    {
+      "id": "n-hbm",
+      "label": "HBM 高带宽内存",
+      "column": "memory",
+      "entityId": "r-hbm",
+      "productIds": [
+        "hbm"
+      ],
+      "stage": "按SKU分量产/送样"
+    },
+    {
+      "id": "n-ddr",
+      "label": "DDR 系统主存",
+      "column": "memory",
+      "entityId": "r-ddr",
+      "productIds": [
+        "dram"
+      ],
+      "stage": "按代际核供需"
+    },
+    {
+      "id": "n-lpddr",
+      "label": "LPDDR 低功耗内存",
+      "column": "memory",
+      "entityId": "r-lpddr",
+      "productIds": [
+        "lpddr"
+      ],
+      "stage": "平台配置选择"
+    },
+    {
+      "id": "n-gddr",
+      "label": "GDDR 图形内存",
+      "column": "memory",
+      "entityId": "r-gddr",
+      "productIds": [
+        "gddr"
+      ],
+      "stage": "逐平台验证"
+    },
+    {
+      "id": "n-sram",
+      "label": "SRAM 片上内存",
+      "column": "memory",
+      "entityId": "r-sram",
+      "productIds": [
+        "sram"
+      ],
+      "stage": "异构架构说明"
+    },
+    {
+      "id": "n-nand",
+      "label": "NAND / SSD",
+      "column": "memory",
+      "entityId": "r-nand-ssd",
+      "productIds": [
+        "nand",
+        "ssd"
+      ],
+      "stage": "介质→系统"
+    },
+    {
+      "id": "n-socamm",
+      "label": "SOCAMM 模组",
+      "column": "architecture",
+      "entityId": "r-socamm",
+      "productIds": [
+        "socamm",
+        "lpddr"
+      ],
+      "stage": "部分SKU已量产"
+    },
+    {
+      "id": "n-cxl",
+      "label": "CXL 扩展/池化",
+      "column": "architecture",
+      "entityId": "r-cxl",
+      "productIds": [
+        "cxl"
+      ],
+      "stage": "互连标准/实现各核"
+    },
+    {
+      "id": "n-base",
+      "label": "Base die / 定制HBM",
+      "column": "architecture",
+      "entityId": "r-base-die",
+      "productIds": [
+        "hbm"
+      ],
+      "stage": "代际/平台分阶段"
+    },
+    {
+      "id": "n-stack",
+      "label": "堆叠 / 键合",
+      "column": "architecture",
+      "entityId": "r-bonding",
+      "productIds": [
+        "hbm"
+      ],
+      "stage": "成熟与前沿并存"
+    },
+    {
+      "id": "n-nand-tech",
+      "label": "层数 / TLC / QLC",
+      "column": "architecture",
+      "entityId": "r-nand-economics",
+      "productIds": [
+        "nand"
+      ],
+      "stage": "量产/开发分列"
+    },
+    {
+      "id": "n-hbf",
+      "label": "HBF 前沿",
+      "column": "architecture",
+      "entityId": "r-hbf",
+      "productIds": [
+        "nand"
+      ],
+      "stage": "规格已发布；量产待证"
+    },
+    {
+      "id": "n-pim",
+      "label": "PIM / 近存计算",
+      "column": "architecture",
+      "entityId": "r-pim",
+      "productIds": [
+        "dram"
+      ],
+      "stage": "现场演示；商用待证"
+    },
+    {
+      "id": "n-cowos",
+      "label": "系统封装与部署",
+      "column": "delivery",
+      "entityId": "r-cowos",
+      "productIds": [
+        "hbm"
+      ],
+      "stage": "产能单位分层"
+    },
+    {
+      "id": "n-resources",
+      "label": "资源分配 / 合格bit",
+      "column": "delivery",
+      "entityId": "r-dram-resources",
+      "productIds": [
+        "dram",
+        "hbm"
+      ],
+      "stage": "无统一换算倍数"
+    },
+    {
+      "id": "n-qual",
+      "label": "资格→订单→成本",
+      "column": "delivery",
+      "entityId": "r-qualification-profit",
+      "productIds": [],
+      "stage": "逐公司待证"
+    },
+    {
+      "id": "n-memory-makers",
+      "label": "美光 / 三星 / 海力士",
+      "column": "value",
+      "entityId": "r-hbm",
+      "productIds": [
+        "hbm",
+        "dram",
+        "nand"
+      ],
+      "stage": "产品与现金双核"
+    },
+    {
+      "id": "n-domestic-dram",
+      "label": "长鑫：DRAM供给",
+      "column": "value",
+      "entityId": "c-cxmt",
+      "productIds": [
+        "dram"
+      ],
+      "stage": "当前数量待核"
+    },
+    {
+      "id": "n-domestic-nand",
+      "label": "长江：NAND供给",
+      "column": "value",
+      "entityId": "c-ymtc",
+      "productIds": [
+        "nand"
+      ],
+      "stage": "有效产出待核"
+    },
+    {
+      "id": "n-module",
+      "label": "江波龙 / 佰维",
+      "column": "value",
+      "entityId": "c-longsys",
+      "productIds": [
+        "dram",
+        "nand",
+        "ssd"
+      ],
+      "stage": "客户与成本待核"
+    },
+    {
+      "id": "n-platform",
+      "label": "平台 / 代工与封装",
+      "column": "value",
+      "entityId": "c-tsmc",
+      "productIds": [
+        "hbm"
+      ],
+      "stage": "价值需按合同核"
+    }
+  ],
+  "links": [
+    {
+      "source": "n-training",
+      "target": "n-hbm",
+      "kind": "enables",
+      "label": "平台BOM"
+    },
+    {
+      "source": "n-training",
+      "target": "n-nand",
+      "kind": "enables",
+      "label": "数据/检查点"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-hbm",
+      "kind": "enables",
+      "label": "热数据带宽"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-ddr",
+      "kind": "complement",
+      "label": "分层容量"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-lpddr",
+      "kind": "complement",
+      "label": "平台主存"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-sram",
+      "kind": "enables",
+      "label": "低时延子任务可选架构"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-nand",
+      "kind": "complement",
+      "label": "数据与缓存分层"
+    },
+    {
+      "source": "n-edge",
+      "target": "n-lpddr",
+      "kind": "enables",
+      "label": "功耗/空间"
+    },
+    {
+      "source": "n-edge",
+      "target": "n-gddr",
+      "kind": "enables",
+      "label": "工作站等配置"
+    },
+    {
+      "source": "n-edge",
+      "target": "n-nand",
+      "kind": "enables",
+      "label": "终端存储"
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-base",
+      "kind": "enables",
+      "label": "代际与逻辑"
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-stack",
+      "kind": "enables",
+      "label": "合格stack"
+    },
+    {
+      "source": "n-lpddr",
+      "target": "n-socamm",
+      "kind": "enables",
+      "label": "器件→模组"
+    },
+    {
+      "source": "n-ddr",
+      "target": "n-cxl",
+      "kind": "enables",
+      "label": "可搭配扩展"
+    },
+    {
+      "source": "n-nand",
+      "target": "n-nand-tech",
+      "kind": "enables",
+      "label": "成本/耐久"
+    },
+    {
+      "source": "n-nand",
+      "target": "n-hbf",
+      "kind": "enables",
+      "label": "HBF候选路径"
+    },
+    {
+      "source": "n-hbf",
+      "target": "n-hbm",
+      "kind": "complement",
+      "label": "候选分层；需系统验证"
+    },
+    {
+      "source": "n-inference",
+      "target": "n-pim",
+      "kind": "enables",
+      "label": "数据移动密集算子"
+    },
+    {
+      "source": "n-pim",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "算子/软件/系统验证"
+    },
+    {
+      "source": "n-socamm",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "整机认证"
+    },
+    {
+      "source": "n-cxl",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "软硬件兼容"
+    },
+    {
+      "source": "n-base",
+      "target": "n-stack",
+      "kind": "enables",
+      "label": "base die进入stack"
+    },
+    {
+      "source": "n-base",
+      "target": "n-cowos",
+      "kind": "complement",
+      "label": "匹配系统平台"
+    },
+    {
+      "source": "n-stack",
+      "target": "n-cowos",
+      "kind": "enables",
+      "label": "stack→系统封装"
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-resources",
+      "kind": "resource_competition",
+      "label": "共享资源需分配"
+    },
+    {
+      "source": "n-ddr",
+      "target": "n-resources",
+      "kind": "resource_competition",
+      "label": "制程/厂区限制"
+    },
+    {
+      "source": "n-nand-tech",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "企业级验证"
+    },
+    {
+      "source": "n-cowos",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "交付验收"
+    },
+    {
+      "source": "n-sram",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "系统测试与成本"
+    },
+    {
+      "source": "n-gddr",
+      "target": "n-qual",
+      "kind": "enables",
+      "label": "具体板卡/平台"
+    },
+    {
+      "source": "n-resources",
+      "target": "n-memory-makers",
+      "kind": "enables",
+      "label": "量价成本"
+    },
+    {
+      "source": "n-resources",
+      "target": "n-domestic-dram",
+      "kind": "enables",
+      "label": "国内合格bit进入供给"
+    },
+    {
+      "source": "n-nand-tech",
+      "target": "n-domestic-nand",
+      "kind": "enables",
+      "label": "工艺/成本"
+    },
+    {
+      "source": "n-qual",
+      "target": "n-module",
+      "kind": "enables",
+      "label": "合约/库存/回款"
+    },
+    {
+      "source": "n-qual",
+      "target": "n-memory-makers",
+      "kind": "enables",
+      "label": "原厂盈利路径"
+    },
+    {
+      "source": "n-cowos",
+      "target": "n-platform",
+      "kind": "enables",
+      "label": "代工/封装价值"
+    }
+  ],
+  "themes": [
+    {
+      "id": "r-theme-demand",
+      "title": "01 · AI怎样变成需求",
+      "summary": "预训练、后训练、推理与端侧分别计量。先识别容量/带宽/时延瓶颈，再算采购。",
+      "entityIds": [
+        "r-training",
+        "r-inference",
+        "r-edge-efficiency",
+        "c-nvidia"
+      ]
+    },
+    {
+      "id": "r-theme-hierarchy",
+      "title": "02 · 不是所有内存都互相替代",
+      "summary": "器件、模组、互连和系统分层；比较相同工作负载下的配置代价。",
+      "entityIds": [
+        "r-hbm",
+        "r-ddr",
+        "r-lpddr",
+        "r-gddr",
+        "r-sram",
+        "r-nand-ssd",
+        "r-socamm",
+        "r-cxl"
+      ]
+    },
+    {
+      "id": "r-theme-hbm",
+      "title": "03 · HBM的技术与制造之争",
+      "summary": "代际、base die、堆叠和CoWoS逐层追踪；样品、体系准备、出货各有日期。",
+      "entityIds": [
+        "r-hbm",
+        "r-base-die",
+        "r-bonding",
+        "r-cowos",
+        "r-dram-resources",
+        "c-tsmc"
+      ]
+    },
+    {
+      "id": "r-theme-nand",
+      "title": "04 · NAND自己的供需与利润",
+      "summary": "从合格bit成本到控制器/固件、企业资格和采购，技术进步也可能增加供给压力。",
+      "entityIds": [
+        "r-nand-economics",
+        "r-nand-ssd",
+        "c-ymtc",
+        "c-longsys",
+        "c-biwin"
+      ]
+    },
+    {
+      "id": "r-theme-frontier",
+      "title": "05 · 前沿候选与反证",
+      "summary": "HBF规格与PIM演示已经出现；商业采用、收益和替代范围仍需验证。",
+      "entityIds": [
+        "r-hbf",
+        "r-pim",
+        "r-sram",
+        "r-cxl"
+      ]
+    },
+    {
+      "id": "r-theme-profit",
+      "title": "06 · 谁承接，谁付款，谁盈利",
+      "summary": "国内外需求和供给分开；直接业务、间接影响、库存成本与资金约束连接公司。",
+      "entityIds": [
+        "r-qualification-profit",
+        "c-cxmt",
+        "c-ymtc",
+        "c-longsys",
+        "c-biwin",
+        "c-nvidia",
+        "c-tsmc"
+      ]
+    }
+  ],
+  "notes": [
+    "快照截止2026-10-08；每条来源保留自己的发表/更新日。发布在原厂网站的学者文章已标署名分析。",
+    "图中连线表示研究传导或方案关系，不代表已知采购量、已签合同或客户独供。节点所属列是阅读顺序，介质/模组/互连的本体层级在卡片中另行说明。",
+    "成熟产品与前沿按具体SKU和证据阶段分列；未查到的新阶段记待核，不推定永远未商业化。",
+    "地区是已核企业/合作或需求范围关联；不按总部所在地给全部产能归属。"
+  ]
+}

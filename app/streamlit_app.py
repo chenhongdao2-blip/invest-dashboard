@@ -159,6 +159,11 @@ ai_overview = st.Page(
     title=_t("AI Overview", "AI Overview 算力总览"),
     url_path="AI_Overview",
 )
+ai_storage = st.Page(
+    "pages/a6_ai_storage.py",
+    title=_t("Memory & Storage", "存储"),
+    url_path="AI_Storage",
+)
 ai_heatmap = st.Page(
     "pages/a3_ai_heatmap.py",
     title=_t("AI Heatmap", "AI Heatmap 算力热力图"),
@@ -192,6 +197,7 @@ pg = st.navigation(
         _t("AI", "AI 人工智能"): [
             ai_coverage,
             ai_overview,
+            ai_storage,
             ai_heatmap,
             ai_valuation,
             ai_sec,

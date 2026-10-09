@@ -1,0 +1,1688 @@
+{
+  "asOf": "2026-10-08",
+  "sources": [
+    {
+      "id": "s-x-n01",
+      "title": "Dylan Patel｜算力扩张的供给约束",
+      "url": "https://www.dwarkesh.com/p/dylan-patel",
+      "date": "2026-03-13；当前网页修改2026-10-01",
+      "locator": "官方稿01:05:37–01:42:34；重点章节，非全文审阅",
+      "kind": "播客嘉宾观点",
+      "scope": "市场数量、远期瓶颈及中国供给为嘉宾估计；当前网页非首发版本。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "SemiAnalysis"
+    },
+    {
+      "id": "s-x-n02",
+      "title": "Dylan Patel｜研发、推理与价值分配",
+      "url": "https://www.dwarkesh.com/p/dylan-patel-3",
+      "date": "2026-08-25；当前网页修改2026-10-01",
+      "locator": "00:00–25:40、29:43–48:48；内部研发份额见29:43章",
+      "kind": "播客嘉宾观点",
+      "scope": "已读选定章节；份额与金额非本项目预测。同机构观点不算独立共识。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "SemiAnalysis"
+    },
+    {
+      "id": "s-x-n03",
+      "title": "The Circuit｜Micron Jeremy Werner访谈",
+      "url": "https://share.transistor.fm/s/a83858ff",
+      "date": "2026-05-05",
+      "locator": "节目文稿15:15–19:19、25:48–38:17、42:07–50:15",
+      "kind": "公司高管访谈",
+      "scope": "文本通读；时间戳是节目文稿版，不能直接跳YouTube。同一期两个平台不算独立来源。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "Micron/The Circuit"
+    },
+    {
+      "id": "s-x-n04",
+      "title": "Asianometry｜High Bandwidth Flash Is Coming",
+      "url": "https://www.youtube.com/watch?v=3nTpW52nioI",
+      "date": "2026-09-25香港界面 / 09-24 UTC索引",
+      "locator": "05:30–10:13、13:15–16:51、16:52–20:40",
+      "kind": "技术视频解读",
+      "scope": "已读字幕，不等逐帧核验。规格与量产时间仍需原厂核；作者披露与Sandisk员工交流选题。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "Asianometry"
+    },
+    {
+      "id": "s-x-n05",
+      "title": "Asianometry｜Optane的商业化复盘",
+      "url": "https://www.youtube.com/watch?v=A2BsmrnegrY",
+      "date": "2026-09-21香港界面 / 09-20 UTC索引",
+      "locator": "16:17–18:59、19:06–25:59、26:01–29:33",
+      "kind": "技术视频解读",
+      "scope": "历史技术解读，失败原因属于作者归因；不构成HBF失败概率。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "Asianometry"
+    },
+    {
+      "id": "s-x-v01",
+      "title": "Google Research｜TurboQuant研究",
+      "url": "https://research.google/blog/turboquant-redefining-ai-efficiency-with-extreme-compression/",
+      "date": "2026-03-24；读取2026-10-08",
+      "locator": "How TurboQuant works；Experiments and results",
+      "kind": "研究方原始技术材料",
+      "scope": "KV/向量测试；未复现实验。局部压缩/内核收益不等于总硬件采购下降。",
+      "category": "paper",
+      "proofState": "statement",
+      "family": "Google Research"
+    },
+    {
+      "id": "s-x-v02",
+      "title": "NVIDIA｜Dynamo缓存复用、分层与生命周期",
+      "url": "https://developer.nvidia.com/blog/full-stack-optimizations-for-agentic-inference-with-nvidia-dynamo/",
+      "date": "2026-04-17；当前版本读取2026-10-08",
+      "locator": "KV-aware placement；Layer 3 KV cache management",
+      "kind": "原厂技术说明",
+      "scope": "正文区分已有、正在开发和拟扩展能力；本项目未部署或独立性能测试。",
+      "category": "issuer",
+      "proofState": "statement",
+      "family": "NVIDIA"
+    },
+    {
+      "id": "s-x-v03",
+      "title": "Micron｜停止3D XPoint开发的公告",
+      "url": "https://investors.micron.com/news/press-release/2021/Micron-Updates-Data-Center-Portfolio-Strategy-to-Address-Growing-Opportunity-for-Memory-and-Storage-Hierarchy-Innovation-03-16-2021/default.aspx",
+      "date": "2021-03-16",
+      "locator": "正文：市场验证不足及继续规模商业化所需投资",
+      "kind": "发行人原公告局部核对",
+      "scope": "核到停止开发及公司所述原因；不证明所有历史失败归因。网页可读，直接下载403。",
+      "category": "issuer",
+      "proofState": "checked",
+      "family": "Micron"
+    },
+    {
+      "id": "s-x-p01",
+      "title": "Gavin Baker｜需求、长协与配额",
+      "url": "https://www.youtube.com/watch?v=NGsi2PC4y68",
+      "date": "2026-08-04",
+      "locator": "28:42–32:23、36:49–41:52",
+      "kind": "既有播客字幕回读",
+      "scope": "LTA议价与履约为条件化观点；具体合同和持仓未全量核实。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "Gavin Baker/ILTB"
+    },
+    {
+      "id": "s-x-p02",
+      "title": "Ben Thompson｜融资与回报期限",
+      "url": "https://www.youtube.com/watch?v=h-0NZ-oIjlk",
+      "date": "2026-08-18",
+      "locator": "08:22–13:59、75:40–78:02",
+      "kind": "既有播客字幕回读",
+      "scope": "融资义务与风险观点，不是当期已发生损失或完整金融测算。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "Ben Thompson/ILTB"
+    },
+    {
+      "id": "s-x-p04",
+      "title": "Ray Wang｜需求破坏、供给与备货",
+      "url": "https://www.youtube.com/watch?v=2m7Xak7Ka3Q",
+      "date": "2026-02-16",
+      "locator": "18:55–25:11、39:48–42:49",
+      "kind": "既有播客字幕回读",
+      "scope": "存在较多转录错词，未核数字不入规则；与Dylan同属SemiAnalysis。",
+      "category": "podcast",
+      "proofState": "statement",
+      "family": "SemiAnalysis"
+    },
+    {
+      "id": "s-x-method",
+      "title": "本项目｜三张分析表与分歧设计",
+      "url": null,
+      "date": "2026-10-08",
+      "locator": "表A/B/C；四组分歧；两个场景",
+      "kind": "研究方法设计",
+      "scope": "我们综合设计的条件框架，不归为嘉宾原话，不证明alpha或策略有效。 阅读底稿仅本地留存；此处保留来源说明。",
+      "category": "method",
+      "proofState": "method",
+      "family": "本项目"
+    },
+    {
+      "id": "s-x-coverage",
+      "title": "本轮材料覆盖、利益关系与疑点",
+      "url": null,
+      "date": "2026-10-08",
+      "locator": "N01–N05、V01–V04、F01–F09",
+      "kind": "来源核验记录",
+      "scope": "获取、读取、影音核验分开；倍数、时间表及量纲疑点未纳入默认参数。 阅读底稿仅本地留存；此处保留来源说明。",
+      "category": "method",
+      "proofState": "method",
+      "family": "本项目"
+    },
+    {
+      "id": "s-x-company",
+      "title": "江波龙/佰维｜既有公司证据与断点",
+      "url": null,
+      "date": "观察截止2026-10-07；本次沿用",
+      "locator": "六节点表；最影响判断的公司差异；国内需求待补",
+      "kind": "本项目既有证据快照",
+      "scope": "不是本轮重新取数或更新公司事实；合同执行、季度ASP/结转成本和旧季度模型仍缺。 阅读底稿仅本地留存；此处保留来源说明。",
+      "category": "method",
+      "proofState": "method",
+      "family": "本项目/既有公司披露"
+    }
+  ],
+  "entities": [
+    {
+      "id": "x-table-workload",
+      "type": "analysis",
+      "title": "A｜工作负载—数据对象—存储层级",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "先固定任务与服务目标，再判断什么数据应放在哪一层。应用文件与KV状态分别建账。",
+      "question": "同一工作负载下，哪种存储组合满足性能、质量与成本要求？",
+      "chain": [
+        "任务与用途",
+        "权重/KV/持久数据",
+        "读写、寿命与恢复要求",
+        "候选层级",
+        "同负载测试",
+        "采购与公司资格"
+      ],
+      "evidence": [
+        "Micron访谈讨论主存/SSD层级；NVIDIA正文讨论缓存复用、保留和删除。",
+        "HBF节目提出数据选择与系统经济性问题；本表为本项目扩展。"
+      ],
+      "disagreements": [
+        "以下表格为条件分析，不是已经得到的产品排名或公司预测。"
+      ],
+      "counterevidence": [
+        "关键产品、客户、期间或比较基准不一致时，停止直接外推。"
+      ],
+      "gaps": [
+        "按目标工作负载/公司/产品/季度补同口径输入。"
+      ],
+      "next": [
+        "新证据到达后，注明替换的假设、原文位置和结论改变。"
+      ],
+      "related": [
+        "r-inference",
+        "r-nand-ssd",
+        "r-hbf",
+        "r-edge-efficiency",
+        "x-case-cache"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-n03",
+        "s-x-n04",
+        "s-x-v02"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "数据对象",
+          "需固定的输入",
+          "候选路径",
+          "判断边界"
+        ],
+        "rows": [
+          [
+            "模型权重",
+            "总/激活参数、精度、副本、专家调度",
+            "HBM、其他DRAM、分层存储；候选HBF",
+            "总权重容量与每步读取量不同"
+          ],
+          [
+            "活跃会话KV",
+            "活跃并发、上下文、注意力结构、精度、时延",
+            "HBM/主存与调度协作",
+            "token数量不能独自推出容量或带宽"
+          ],
+          [
+            "暂停/可复用KV",
+            "停留时间、命中概率、恢复期限、删除策略",
+            "CPU DRAM、NVMe、远端；候选HBF",
+            "保留/搬移/重算成本共同决定"
+          ],
+          [
+            "训练/后训练状态",
+            "优化器、分片、检查点、生成/评估与更新",
+            "HBM、主存、SSD及网络",
+            "forward pass不等于对外收费推理"
+          ],
+          [
+            "文件/索引/生成内容",
+            "实际保留率、冷热、去重、副本、耐久",
+            "SSD、HDD/对象存储及缓存",
+            "应用长期记忆不等于物理KV；生成量不等采购量"
+          ]
+        ]
+      },
+      "checklist": [
+        "模型与软件版本、输出质量",
+        "输入/输出长度、并发、batch",
+        "TTFT首token时延、TPOT/TBT输出节奏及尾延迟",
+        "功耗、机架预算、实际利用率",
+        "同一时点/币种的系统成本与客户实际采购"
+      ]
+    },
+    {
+      "id": "x-table-profit",
+      "type": "analysis",
+      "title": "B｜价格—公司盈利—现金",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "同一次价格变化，按收入模式、成本批次和付款条件分别判断。",
+      "question": "原厂、模组和设备材料，何时经由哪些科目获得或失去利润？",
+      "chain": [
+        "报价规格/期限",
+        "客户提价、降配、减量或延期",
+        "实现售价与采购/制造成本",
+        "存货结转与减值",
+        "期间利润",
+        "回款与资金低点"
+      ],
+      "evidence": [
+        "既有公司快照保留采购与结转口径的差异，未闭合季度盈利修订。",
+        "Ray/Gavin/Ben分别提供需求反馈、合同和融资的问法，不构成同一事实多源证实。"
+      ],
+      "disagreements": [
+        "以下表格为条件分析，不是已经得到的产品排名或公司预测。"
+      ],
+      "counterevidence": [
+        "关键产品、客户、期间或比较基准不一致时，停止直接外推。"
+      ],
+      "gaps": [
+        "按目标工作负载/公司/产品/季度补同口径输入。"
+      ],
+      "next": [
+        "新证据到达后，注明替换的假设、原文位置和结论改变。"
+      ],
+      "related": [
+        "r-qualification-profit",
+        "h-profit-bridge",
+        "h-cash-capacity",
+        "c-longsys",
+        "c-biwin",
+        "x-case-nand"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-company",
+        "s-x-p01",
+        "s-x-p02",
+        "s-x-p04"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "环节",
+          "原厂/制造",
+          "模组/品牌",
+          "设备/材料"
+        ],
+        "rows": [
+          [
+            "收入",
+            "合格出货×实现ASP，区分产品组合",
+            "终端数量/容量×销售净价",
+            "订单→交付→验收；耗材随工序/产出"
+          ],
+          [
+            "成本",
+            "工艺/stack良率、折旧、爬坡和封测",
+            "原料批次、结转、主控/固件、减值",
+            "项目成本、产品组合、服务/备件"
+          ],
+          [
+            "价格反馈",
+            "客户替代、竞争供给增加可能抵消涨价",
+            "采购涨价可能压价差、减销量并占用现金",
+            "预算增加不等设备订单已生效"
+          ],
+          [
+            "现金",
+            "预付/合同负债、必要投资、债务与回款",
+            "备货付款、应收、上下游信用期限",
+            "验收回款、预收与在制品资金"
+          ],
+          [
+            "政策",
+            "融资到账、设备准入、可售市场",
+            "本土采购资格、替代料源与价格",
+            "可销售市场、客户资格、收款条件"
+          ]
+        ]
+      },
+      "checklist": [
+        "同一情景编号贯穿量、价、库存、利润与现金",
+        "报价、实际采购价和销售净价分开",
+        "原厂/渠道/客户库存转移不重复计成终端消耗",
+        "客户CapEx与供应商收入不相加",
+        "无同口径旧预测时，修订额保持未知"
+      ]
+    },
+    {
+      "id": "x-table-gates",
+      "type": "analysis",
+      "title": "C｜新技术商业化门槛",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "器件性能、可制造、系统收益、采购和规模经济分别验收；历史失败用于提问。",
+      "question": "性能优势怎样成为可重复的付费采购与股东回报？",
+      "chain": [
+        "器件实测",
+        "制造/测试/可靠性",
+        "软件和系统SLO/TCO",
+        "客户资格与采购",
+        "规模成本/复购"
+      ],
+      "evidence": [
+        "Micron在2021-03-16公告中以市场验证不足解释停止3D XPoint开发。",
+        "Optane与HBF节目提供历史归因和工程问题；不把它们当成功概率模型。"
+      ],
+      "disagreements": [
+        "Optane失败不能直接预测HBF失败；两者基础介质、生态和时点不同。"
+      ],
+      "counterevidence": [
+        "替代品同步降成本、客户软件改造不足、单一来源或无法稳定交货，都可能改变商业判断。"
+      ],
+      "gaps": [
+        "目标SKU的系统实测、第二来源、付费订单/复购、量产经济性。"
+      ],
+      "next": [
+        "按原报告日核送样/认证/量产，更新门槛而不是自动升级全部产品。"
+      ],
+      "related": [
+        "r-hbf",
+        "r-pim",
+        "r-cxl",
+        "r-base-die",
+        "x-dispute-hbf"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-n04",
+        "s-x-n05",
+        "s-x-v03"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "门槛",
+          "所需证据",
+          "未跨过时的表述"
+        ],
+        "rows": [
+          [
+            "物理与器件",
+            "容量/带宽/时延/功耗/耐久的实测条件",
+            "器件能力或原厂主张"
+          ],
+          [
+            "可制造与可测试",
+            "良率、测试、散热、可靠性、单位成本",
+            "工程验证或送样"
+          ],
+          [
+            "软件与系统",
+            "运行时、调度与实际工作负载SLO/TCO",
+            "特定系统验证"
+          ],
+          [
+            "采购与供应",
+            "资格、付费订单、第二来源、生命周期支持",
+            "已认证或有限导入"
+          ],
+          [
+            "规模经济",
+            "复购、可重复出货、成本下降、售后成本",
+            "规模商业化可跟踪"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-dispute-usage",
+      "type": "dispute",
+      "title": "研发与推理的需求口径",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "需求份额的变化首先取决于分母和用途定义。",
+      "question": "如何解释分歧，并确定哪项新证据会改变判断？",
+      "chain": [
+        "统一主体/产品/期间/分母",
+        "区分来源观点",
+        "建立可同时成立的条件",
+        "找能区分情景的证据"
+      ],
+      "evidence": [
+        "Micron访谈强调推理及上下文需求。",
+        "Dylan在29:43章提出领先实验室可能提高内部研发份额。"
+      ],
+      "disagreements": [
+        "两者不必互相否定：全市场与单家实验室不同，付费用途与forward-pass算子不同。"
+      ],
+      "counterevidence": [
+        "若同对象、同口径、同时点的数据仍与采用的解释相反，则重审该解释。"
+      ],
+      "gaps": [
+        "设备、电力、算力小时、采购金额分别统计",
+        "研发、预训练、后训练生成/评估、对外推理和端侧部署分开"
+      ],
+      "next": [
+        "补到可比证据后逐项裁决，保留原说法；无依据不设概率。"
+      ],
+      "related": [
+        "x-table-workload",
+        "r-training",
+        "r-inference"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-n02",
+        "s-x-n03"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "问题",
+          "当前处理"
+        ],
+        "rows": [
+          [
+            "分歧性质",
+            "两者不必互相否定：全市场与单家实验室不同，付费用途与forward-pass算子不同。"
+          ],
+          [
+            "观察量",
+            "设备、电力、算力小时、采购金额分别统计；研发、预训练、后训练生成/评估、对外推理和端侧部署分开"
+          ],
+          [
+            "当前裁决",
+            "保留条件化解释，未裁定市场方向或收益"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-dispute-efficiency",
+      "type": "dispute",
+      "title": "软件效率与硬件采购",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "单位任务节省、总使用增长与新设备采购需要分开。",
+      "question": "如何解释分歧，并确定哪项新证据会改变判断？",
+      "chain": [
+        "统一主体/产品/期间/分母",
+        "区分来源观点",
+        "建立可同时成立的条件",
+        "找能区分情景的证据"
+      ],
+      "evidence": [
+        "Google报告KV/向量压缩测试；不是全球HBM需求预测。",
+        "Gavin讨论成本降低后的使用变化；需求反弹仍需观察。"
+      ],
+      "disagreements": [
+        "固定服务量、固定预算、提高质量三种情景可能产生不同采购结果。"
+      ],
+      "counterevidence": [
+        "若同对象、同口径、同时点的数据仍与采用的解释相反，则重审该解释。"
+      ],
+      "gaps": [
+        "每任务资源与质量、并发/驻留、层级转移",
+        "利用率、已有空闲容量、新增采购时滞"
+      ],
+      "next": [
+        "补到可比证据后逐项裁决，保留原说法；无依据不设概率。"
+      ],
+      "related": [
+        "x-table-workload",
+        "x-case-cache",
+        "r-edge-efficiency"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-v01",
+        "s-x-v02",
+        "s-x-p01"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "问题",
+          "当前处理"
+        ],
+        "rows": [
+          [
+            "分歧性质",
+            "固定服务量、固定预算、提高质量三种情景可能产生不同采购结果。"
+          ],
+          [
+            "观察量",
+            "每任务资源与质量、并发/驻留、层级转移；利用率、已有空闲容量、新增采购时滞"
+          ],
+          [
+            "当前裁决",
+            "保留条件化解释，未裁定市场方向或收益"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-dispute-hbf",
+      "type": "dispute",
+      "title": "HBF与HBM的适用边界",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "先问数据对象，再判断互补或部分替代。",
+      "question": "如何解释分歧，并确定哪项新证据会改变判断？",
+      "chain": [
+        "统一主体/产品/期间/分母",
+        "区分来源观点",
+        "建立可同时成立的条件",
+        "找能区分情景的证据"
+      ],
+      "evidence": [
+        "HBF节目讨论权重、KV放置以及带宽/GB、耐久和软件约束。",
+        "NVIDIA缓存分层区分保留价值与生命周期。"
+      ],
+      "disagreements": [
+        "容量优势不等于同SLO下成本优势；低延迟不足也不能否定所有分层用途。"
+      ],
+      "counterevidence": [
+        "若同对象、同口径、同时点的数据仍与采用的解释相反，则重审该解释。"
+      ],
+      "gaps": [
+        "权重/热KV/暂停KV、读写与恢复目标",
+        "系统软件、功耗/耐久、实测与采购阶段"
+      ],
+      "next": [
+        "补到可比证据后逐项裁决，保留原说法；无依据不设概率。"
+      ],
+      "related": [
+        "r-hbf",
+        "r-hbm",
+        "x-table-gates"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-n04",
+        "s-x-v02"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "问题",
+          "当前处理"
+        ],
+        "rows": [
+          [
+            "分歧性质",
+            "容量优势不等于同SLO下成本优势；低延迟不足也不能否定所有分层用途。"
+          ],
+          [
+            "观察量",
+            "权重/热KV/暂停KV、读写与恢复目标；系统软件、功耗/耐久、实测与采购阶段"
+          ],
+          [
+            "当前裁决",
+            "保留条件化解释，未裁定市场方向或收益"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-dispute-contract",
+      "type": "dispute",
+      "title": "供给紧缺、合同收益与现金",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "稀缺、报价、会计毛利和现金回收是不同结论。",
+      "question": "如何解释分歧，并确定哪项新证据会改变判断？",
+      "chain": [
+        "统一主体/产品/期间/分母",
+        "区分来源观点",
+        "建立可同时成立的条件",
+        "找能区分情景的证据"
+      ],
+      "evidence": [
+        "Gavin强调长期配额对履约的约束。",
+        "Ben提示融资义务与回报期限；Dylan讨论资金条件与议价。"
+      ],
+      "disagreements": [
+        "观点对象和日期不同；需查同一家公司上下游合同，而非统计嘉宾赞成票。"
+      ],
+      "counterevidence": [
+        "若同对象、同口径、同时点的数据仍与采用的解释相反，则重审该解释。"
+      ],
+      "gaps": [
+        "锁量/锁价、预付款、取消与重议价、客户信用",
+        "供货资格、交付验收、收付款期限和资金峰值"
+      ],
+      "next": [
+        "补到可比证据后逐项裁决，保留原说法；无依据不设概率。"
+      ],
+      "related": [
+        "x-table-profit",
+        "h-cash-capacity",
+        "h-9-cash"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-p01",
+        "s-x-p02",
+        "s-x-n02"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "问题",
+          "当前处理"
+        ],
+        "rows": [
+          [
+            "分歧性质",
+            "观点对象和日期不同；需查同一家公司上下游合同，而非统计嘉宾赞成票。"
+          ],
+          [
+            "观察量",
+            "锁量/锁价、预付款、取消与重议价、客户信用；供货资格、交付验收、收付款期限和资金峰值"
+          ],
+          [
+            "当前裁决",
+            "保留条件化解释，未裁定市场方向或收益"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-bottleneck",
+      "type": "analysis",
+      "title": "动态瓶颈与利润归属",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "记录约束位置、解除证据与下一约束，同时检验谁能议价、谁承担投入。",
+      "question": "当前最稀缺的环节，是否就是利润与现金改善最多的公司？",
+      "chain": [
+        "按平台和季度定位约束",
+        "确认已合格产出",
+        "检验相邻环节能力",
+        "合同与竞争决定价值分配",
+        "公司兑现与现金"
+      ],
+      "evidence": [
+        "Dylan存储章节讨论洁净室与工具等约束随时间改变，具体年份为其观点。",
+        "原框架已区分HBM stack与系统封装；此处补当前/下一约束和利润验证。"
+      ],
+      "disagreements": [
+        "瓶颈解除不等于需求消失；稀缺也不自动保证供应商定价权。"
+      ],
+      "counterevidence": [
+        "客户延期、第二来源、重定价或其他环节不足，使原判断失效。"
+      ],
+      "gaps": [
+        "同平台单位换算、良率、合格产出、存货缓冲、交付和合同价格。"
+      ],
+      "next": [
+        "有实际解除或新增约束证据时更新，不统一填固定领先季度。"
+      ],
+      "related": [
+        "h-effective-supply",
+        "r-cowos",
+        "r-dram-resources",
+        "x-table-profit"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-n01",
+        "s-x-n03"
+      ],
+      "countries": [],
+      "status": "inference",
+      "analysisTable": {
+        "columns": [
+          "记录项",
+          "需要回答"
+        ],
+        "rows": [
+          [
+            "当前约束",
+            "哪个产品/平台/季度，哪个工序限制交付？"
+          ],
+          [
+            "解除证据",
+            "设备、良率、合格产出还是客户验收已改善？"
+          ],
+          [
+            "下一约束",
+            "相邻环节是否能匹配？库存缓冲能持续多久？"
+          ],
+          [
+            "资金与收益",
+            "谁先付款、谁能调价、谁承担折旧和营运资金？"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x-case-cache",
+      "type": "scenario",
+      "title": "场景1｜缓存效率提升",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "条件推演：某系统在同质量测试中减少KV占用。不能直接推出HBM采购下降或A股盈利变化。",
+      "question": "效率提高后，哪些存储资源、采购和公司判断应该更新？",
+      "chain": [
+        "确认压缩对象和同质量基准",
+        "区分每任务容量与总并发",
+        "观察层级/利用率与装机",
+        "核新增采购与公司资格",
+        "盈利及旧预测"
+      ],
+      "evidence": [
+        "Google研究证明其测试范围内的KV压缩结果；本场景不继承倍数。",
+        "NVIDIA提供缓存路由/分层的机制；具体部署程度待目标系统核实。"
+      ],
+      "disagreements": [
+        "单位节省与总任务增长可同时发生；不假设必然反弹或必然减采购。"
+      ],
+      "counterevidence": [
+        "质量或尾延迟下降；计算/网络已是瓶颈；复用率提升改变留存需求。"
+      ],
+      "gaps": [
+        "目标系统参数、实际并发/停留、既有空闲容量、采购计划与目标公司的产品资格。"
+      ],
+      "next": [
+        "取得同负载测试与采购/公司证据后才能更新产品和利润；季度修订暂为空。"
+      ],
+      "related": [
+        "x-table-workload",
+        "x-dispute-efficiency",
+        "r-inference",
+        "r-nand-ssd",
+        "r-qualification-profit",
+        "c-longsys",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-v01",
+        "s-x-v02",
+        "s-x-company"
+      ],
+      "countries": [],
+      "status": "inference",
+      "scenario": {
+        "premise": "假设输入：一种配置在同模型/质量要求下减少KV内存占用；不是全行业已观测冲击。",
+        "steps": [
+          {
+            "title": "01｜对象与基准",
+            "body": "记录KV而非权重或文件；固定精度、上下文、并发、batch、TTFT/输出节奏和尾延迟。",
+            "result": "可以判断单任务资源变化；尚不能判断总存储需求。",
+            "related": [
+              "x-table-workload"
+            ]
+          },
+          {
+            "title": "02｜三种需求情景",
+            "body": "固定服务量可能节省资源；固定预算可能扩大使用；更高质量/更长上下文可能消耗释放的空间。",
+            "result": "反弹幅度未知，三种条件并列。",
+            "related": [
+              "x-dispute-efficiency"
+            ]
+          },
+          {
+            "title": "03｜层级与新采购",
+            "body": "观察活跃/暂停KV如何在HBM、DRAM和SSD间流动，并核既有装机能否吸收增长。",
+            "result": "用量/装机/新增采购分别记录；不将搬移量重复加成总容量。",
+            "related": [
+              "r-inference",
+              "r-nand-ssd"
+            ]
+          },
+          {
+            "title": "04｜公司承接",
+            "body": "江波龙/佰维仅沿其已披露业务角色检查；需对应产品、客户资格、订单、实现售价与采购成本。",
+            "result": "缺特定系统供货证据时，结论停在产品机制。",
+            "related": [
+              "c-longsys",
+              "c-biwin",
+              "x-table-profit"
+            ]
+          },
+          {
+            "title": "05｜判断输出",
+            "body": "没有同口径旧季度预测和新量价成本参数，不计算上修额。",
+            "result": "盈利方向未定；旧预测/新预测/差额均未知。",
+            "related": [
+              "r-qualification-profit"
+            ]
+          }
+        ],
+        "outcome": "条件分析已完成：可以区分单位资源、总用量、硬件采购和公司盈利；真实采购与盈利方向仍待证据。",
+        "forecast": {
+          "old": null,
+          "new": null,
+          "delta": null
+        },
+        "status": "method_walkthrough_not_company_forecast"
+      }
+    },
+    {
+      "id": "x-case-nand",
+      "type": "scenario",
+      "title": "场景2｜国产NAND有效供给增加",
+      "kicker": "存储研究深化 · 2026-10-08",
+      "summary": "条件推演：一个已合格产品的可售量增加。可能降低补货成本，也可能压售价和旧库存价值。",
+      "question": "同一供给变化，如何使原厂、模组与设备材料出现不同季度影响？",
+      "chain": [
+        "核可售产品/资格/季度",
+        "国内新增需求与份额替代分开",
+        "采购/销售/库存批次",
+        "利润与资金",
+        "同口径旧预测"
+      ],
+      "evidence": [
+        "既有2026-10-07公司快照保留江波龙与佰维业务/合同/计价差异，本次未刷新原始数据。",
+        "国内实际产品、交付数量和目标公司采购结果仍未独立闭合。"
+      ],
+      "disagreements": [
+        "国产供给增加不等所有模组获益；国内需求增长、进口替代、全球净供给不能混算。"
+      ],
+      "counterevidence": [
+        "资格不匹配、销售降价更快、旧库存减值、合同成本刚性、回款延期。"
+      ],
+      "gaps": [
+        "目标SKU合格可售量、上下游实际合同/交付、采购批次及旧季度预测。"
+      ],
+      "next": [
+        "先补同业务模式的公司—产品—季度证据，再对利润和现金联合复算。"
+      ],
+      "related": [
+        "x-table-profit",
+        "h-china-profit",
+        "h-nation-support",
+        "c-ymtc",
+        "c-longsys",
+        "c-biwin"
+      ],
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage",
+        "s-x-company",
+        "s-x-p04"
+      ],
+      "countries": [],
+      "status": "inference",
+      "scenario": {
+        "premise": "假设输入：国产某NAND SKU已具客户资格、良率与合格可售量增量；融资/建厂公告本身不满足假设。",
+        "steps": [
+          {
+            "title": "01｜有效供给",
+            "body": "记录规格、良率、客户准入、可售数量与季度；已有基线包含的国产量不重复新增。",
+            "result": "只到产品供给层；未推定长江存储的实际当期产量。",
+            "related": [
+              "c-ymtc",
+              "x-bottleneck"
+            ]
+          },
+          {
+            "title": "02｜需求与政策",
+            "body": "国内云/企业、消费端侧、工业等用途分别核；地区、采购主体与国产替代份额单列。",
+            "result": "不套海外配置比例；政策资金到账不等订单形成。",
+            "related": [
+              "h-nation-support",
+              "h-china-profit"
+            ]
+          },
+          {
+            "title": "03｜两家公司分别看",
+            "body": "江波龙核业务模式及原料所有权，不能将TCM集团化为无存货服务费；佰维核实际合同批次、数量覆盖与重定价。",
+            "result": "前者关注交易角色，后者关注采购约束；两者仍都需要销售和结转成本。",
+            "related": [
+              "c-longsys",
+              "c-biwin"
+            ]
+          },
+          {
+            "title": "04｜相反影响与现金",
+            "body": "补货成本下降可能有利新订单价差；终端降价、旧库存重估或销量减少可能抵消。按采购付款—库存—回款排资金时点。",
+            "result": "盈利改善与资金占用方向可不同，不能只看毛利率。",
+            "related": [
+              "x-table-profit",
+              "h-cash-capacity"
+            ]
+          },
+          {
+            "title": "05｜可交付判断",
+            "body": "原厂ASP承压、模组价差变化、设备材料订单/验收各自按条件判断；旧季度预测缺失时不算预期差。",
+            "result": "分公司传导路径可列；具体盈利方向和修订金额仍未知。",
+            "related": [
+              "r-qualification-profit"
+            ]
+          }
+        ],
+        "outcome": "条件分析已完成：形成分公司、分科目与分季度的查证路径；不构成对当前NAND报价、订单或盈利的预测。",
+        "forecast": {
+          "old": null,
+          "new": null,
+          "delta": null
+        },
+        "status": "method_walkthrough_not_company_forecast"
+      },
+      "analysisTable": {
+        "columns": [
+          "对象",
+          "可能改善的条件",
+          "可能抵消/相反方向",
+          "当前缺口"
+        ],
+        "rows": [
+          [
+            "原厂",
+            "合格销量及客户份额提升",
+            "供给增加压ASP，新增折旧/爬坡",
+            "量价、成本与客户事实"
+          ],
+          [
+            "江波龙相关业务",
+            "新批次采购成本下降且销售价保持",
+            "旧库存、销售降价；材料所有权不清",
+            "业务/产品/客户层的真实交易结构"
+          ],
+          [
+            "佰维相关业务",
+            "实际到货保障、成本与产品结构匹配",
+            "锁价批次滞后、减值、付款压力",
+            "合同执行与季度成本覆盖"
+          ],
+          [
+            "设备/材料",
+            "实际扩产订单与交付/验收兑现",
+            "预算延期或准入/回款受限",
+            "具名项目、订单和验收"
+          ]
+        ]
+      }
+    }
+  ],
+  "enrichments": {
+    "r-inference": [
+      "x-table-workload",
+      "x-dispute-usage",
+      "x-case-cache"
+    ],
+    "r-training": [
+      "x-table-workload",
+      "x-dispute-usage"
+    ],
+    "r-nand-ssd": [
+      "x-table-workload",
+      "x-case-cache"
+    ],
+    "r-edge-efficiency": [
+      "x-dispute-efficiency",
+      "x-case-cache",
+      "x-table-workload"
+    ],
+    "r-hbm": [
+      "x-table-workload",
+      "x-table-gates",
+      "x-bottleneck"
+    ],
+    "r-sram": [
+      "x-table-workload",
+      "x-table-gates"
+    ],
+    "r-hbf": [
+      "x-dispute-hbf",
+      "x-table-gates",
+      "x-table-workload"
+    ],
+    "r-pim": [
+      "x-table-gates",
+      "x-table-workload"
+    ],
+    "r-cxl": [
+      "x-table-workload",
+      "x-table-gates"
+    ],
+    "r-base-die": [
+      "x-table-gates",
+      "x-bottleneck"
+    ],
+    "r-bonding": [
+      "x-table-gates",
+      "x-bottleneck"
+    ],
+    "r-cowos": [
+      "x-bottleneck",
+      "x-table-gates"
+    ],
+    "r-dram-resources": [
+      "x-bottleneck",
+      "x-table-profit"
+    ],
+    "r-qualification-profit": [
+      "x-table-profit",
+      "x-case-cache",
+      "x-case-nand"
+    ],
+    "h-profit-bridge": [
+      "x-table-profit",
+      "x-case-nand"
+    ],
+    "h-cash-capacity": [
+      "x-dispute-contract",
+      "x-table-profit"
+    ],
+    "h-9-cash": [
+      "x-dispute-contract",
+      "x-table-profit"
+    ],
+    "h-effective-supply": [
+      "x-bottleneck"
+    ],
+    "h-china-profit": [
+      "x-case-nand",
+      "x-table-profit"
+    ],
+    "h-nation-support": [
+      "x-case-nand",
+      "x-bottleneck"
+    ],
+    "c-cxmt": [
+      "x-bottleneck",
+      "x-table-gates"
+    ],
+    "c-ymtc": [
+      "x-case-nand",
+      "x-table-gates"
+    ],
+    "c-longsys": [
+      "x-case-nand",
+      "x-table-profit"
+    ],
+    "c-biwin": [
+      "x-case-nand",
+      "x-table-profit"
+    ],
+    "c-mu": [
+      "x-table-profit",
+      "x-dispute-contract"
+    ],
+    "c-samsung": [
+      "x-table-profit",
+      "x-dispute-contract"
+    ],
+    "c-hynix": [
+      "x-table-profit",
+      "x-dispute-contract"
+    ]
+  },
+  "edgeDetails": [
+    {
+      "source": "n-training",
+      "target": "n-hbm",
+      "object": "训练/后训练工作负载",
+      "condition": "固定优化器/精度/分片与检查点，区分生成、评估和训练",
+      "observe": "模型状态、计算/读写、集群与采购",
+      "counter": "生成量不是付费推理量；网络或算力可能成为瓶颈",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-training",
+      "target": "n-nand",
+      "object": "训练/后训练工作负载",
+      "condition": "固定优化器/精度/分片与检查点，区分生成、评估和训练",
+      "observe": "模型状态、计算/读写、集群与采购",
+      "counter": "生成量不是付费推理量；网络或算力可能成为瓶颈",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-hbm",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-ddr",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-lpddr",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-sram",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-nand",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-edge",
+      "target": "n-lpddr",
+      "object": "端侧/企业/云的具体部署",
+      "condition": "分别核终端配置、场景与采用，不把云BOM直接迁移",
+      "observe": "台数、单机容量、功耗、客户认证",
+      "counter": "端侧配置替代或未实际采用",
+      "analysisId": "x-case-cache",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-edge",
+      "target": "n-gddr",
+      "object": "端侧/企业/云的具体部署",
+      "condition": "分别核终端配置、场景与采用，不把云BOM直接迁移",
+      "observe": "台数、单机容量、功耗、客户认证",
+      "counter": "端侧配置替代或未实际采用",
+      "analysisId": "x-case-cache",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-edge",
+      "target": "n-nand",
+      "object": "端侧/企业/云的具体部署",
+      "condition": "分别核终端配置、场景与采用，不把云BOM直接迁移",
+      "observe": "台数、单机容量、功耗、客户认证",
+      "counter": "端侧配置替代或未实际采用",
+      "analysisId": "x-case-cache",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-base",
+      "object": "特定平台HBM SKU",
+      "condition": "核接口、base die、stack及系统匹配",
+      "observe": "合格产出、良率、带宽/容量与交付",
+      "counter": "名义产能无法成为客户合格供给",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-stack",
+      "object": "特定平台HBM SKU",
+      "condition": "核接口、base die、stack及系统匹配",
+      "observe": "合格产出、良率、带宽/容量与交付",
+      "counter": "名义产能无法成为客户合格供给",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-lpddr",
+      "target": "n-socamm",
+      "object": "LPDDR与模组/系统",
+      "condition": "确认平台选用及物理/电气/热兼容",
+      "observe": "模组配置、认证与实际采购",
+      "counter": "形态存在不等所有平台采用",
+      "analysisId": "x-table-gates",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-ddr",
+      "target": "n-cxl",
+      "object": "系统DRAM与资源配置",
+      "condition": "分代际、工艺与适配平台",
+      "observe": "带宽/容量、工艺资源、客户生命周期",
+      "counter": "旧代际退出与新代际紧缺可能不同步",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-nand",
+      "target": "n-nand-tech",
+      "object": "NAND/SSD的数据或缓存用途",
+      "condition": "核读写、耐久、容量/带宽与软件数据放置",
+      "observe": "活跃/闲置数据、容量、读取流量、采购",
+      "counter": "生成数据不等永久留存或企业SSD采购",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-nand",
+      "target": "n-hbf",
+      "object": "NAND/SSD的数据或缓存用途",
+      "condition": "核读写、耐久、容量/带宽与软件数据放置",
+      "observe": "活跃/闲置数据、容量、读取流量、采购",
+      "counter": "生成数据不等永久留存或企业SSD采购",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-hbf",
+      "target": "n-hbm",
+      "object": "候选HBF与HBM分层",
+      "condition": "在同负载下核数据对象、搬移、耐久、软件和客户阶段",
+      "observe": "SLO、系统成本、可靠性与付费导入",
+      "counter": "器件容量优势被系统延迟或改造成本抵消",
+      "analysisId": "x-dispute-hbf",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-inference",
+      "target": "n-pim",
+      "object": "推理权重及KV",
+      "condition": "固定质量、上下文、并发、batch和时延要求",
+      "observe": "容量、带宽、缓存命中、尾延迟和采购",
+      "counter": "单任务节省不等总硬件需求下降",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-pim",
+      "target": "n-qual",
+      "object": "PIM支持的算子/软件",
+      "condition": "确认精度、编程、数据路径与系统验证",
+      "observe": "实测工作负载、能耗、采用范围",
+      "counter": "演示不能代表商业部署",
+      "analysisId": "x-table-gates",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-socamm",
+      "target": "n-qual",
+      "object": "SOCAMM模组到公司资格",
+      "condition": "按具体SKU/客户核认证、订单与成本",
+      "observe": "销售净价、采购批次、交付/验收",
+      "counter": "具备产品不等特定平台供货",
+      "analysisId": "x-table-profit",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-cxl",
+      "target": "n-qual",
+      "object": "扩展/池化的实际平台",
+      "condition": "核CPU/设备/软件支持和同负载经济性",
+      "observe": "利用率、尾延迟、总成本、采购",
+      "counter": "扩容不等性能改善或新增DRAM总量",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-base",
+      "target": "n-stack",
+      "object": "base die与stack/系统制造",
+      "condition": "按代际、工艺伙伴和客户规格核匹配",
+      "observe": "良率、热/电、交付与合同分工",
+      "counter": "合作公告不等合格量产或利润兑现",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-base",
+      "target": "n-cowos",
+      "object": "base die与stack/系统制造",
+      "condition": "按代际、工艺伙伴和客户规格核匹配",
+      "observe": "良率、热/电、交付与合同分工",
+      "counter": "合作公告不等合格量产或利润兑现",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-stack",
+      "target": "n-cowos",
+      "object": "HBM stack到系统封装",
+      "condition": "转换成同平台单位并核各环节合格量",
+      "observe": "stack良率、系统集成能力、验收",
+      "counter": "后段不匹配、库存或客户延期",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-hbm",
+      "target": "n-resources",
+      "object": "特定平台HBM SKU",
+      "condition": "核接口、base die、stack及系统匹配",
+      "observe": "合格产出、良率、带宽/容量与交付",
+      "counter": "名义产能无法成为客户合格供给",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-ddr",
+      "target": "n-resources",
+      "object": "系统DRAM与资源配置",
+      "condition": "分代际、工艺与适配平台",
+      "observe": "带宽/容量、工艺资源、客户生命周期",
+      "counter": "旧代际退出与新代际紧缺可能不同步",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-nand-tech",
+      "target": "n-qual",
+      "object": "NAND工艺与公司商业化",
+      "condition": "层数/bit-cell/主控/固件与客户需求一起核",
+      "observe": "单位可用成本、可靠性、资格、ASP",
+      "counter": "层数上升未带来可用成本下降",
+      "analysisId": "x-table-gates",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-cowos",
+      "target": "n-qual",
+      "object": "系统集成到资格/平台角色",
+      "condition": "核实际交付平台与合同责任边界",
+      "observe": "系统产出、验收、价值分配与付款",
+      "counter": "系统可造但客户未部署或收入未确认",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-sram",
+      "target": "n-qual",
+      "object": "SRAM相关异构架构",
+      "condition": "统一模型与低时延目标，核软件/互连",
+      "observe": "容量、带宽、吞吐、功耗与系统价格",
+      "counter": "局部低延迟不保证整体成本更低",
+      "analysisId": "x-table-workload",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-gddr",
+      "target": "n-qual",
+      "object": "GDDR具体平台",
+      "condition": "核模型、带宽需求、软件与客户资格",
+      "observe": "同负载性能、系统成本、订单",
+      "counter": "只凭器件类型推断替代或市场份额",
+      "analysisId": "x-table-gates",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-resources",
+      "target": "n-memory-makers",
+      "object": "工艺资源到公司有效供给",
+      "condition": "分晶圆/工艺/后段/地区和可售产品",
+      "observe": "合格bit、资源占用、实际价格/成本",
+      "counter": "全球份额替代不等净需求增长",
+      "analysisId": "x-table-profit",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-resources",
+      "target": "n-domestic-dram",
+      "object": "工艺资源到公司有效供给",
+      "condition": "分晶圆/工艺/后段/地区和可售产品",
+      "observe": "合格bit、资源占用、实际价格/成本",
+      "counter": "全球份额替代不等净需求增长",
+      "analysisId": "x-table-profit",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-nand-tech",
+      "target": "n-domestic-nand",
+      "object": "NAND工艺与公司商业化",
+      "condition": "层数/bit-cell/主控/固件与客户需求一起核",
+      "observe": "单位可用成本、可靠性、资格、ASP",
+      "counter": "层数上升未带来可用成本下降",
+      "analysisId": "x-table-gates",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-qual",
+      "target": "n-module",
+      "object": "资格到具体公司盈利",
+      "condition": "订单、交付、验收、销售/采购净价、回款分别核",
+      "observe": "季度量价成本与旧预测",
+      "counter": "具备资格但订单/成本/预测基准不明",
+      "analysisId": "x-table-profit",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-qual",
+      "target": "n-memory-makers",
+      "object": "资格到具体公司盈利",
+      "condition": "订单、交付、验收、销售/采购净价、回款分别核",
+      "observe": "季度量价成本与旧预测",
+      "counter": "具备资格但订单/成本/预测基准不明",
+      "analysisId": "x-table-profit",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    },
+    {
+      "source": "n-cowos",
+      "target": "n-platform",
+      "object": "系统集成到资格/平台角色",
+      "condition": "核实际交付平台与合同责任边界",
+      "observe": "系统产出、验收、价值分配与付款",
+      "counter": "系统可造但客户未部署或收入未确认",
+      "analysisId": "x-bottleneck",
+      "status": "inference",
+      "evidenceBoundary": "关系类型沿用主图；以下是研究适用条件，非已验证的全平台供货事实。",
+      "sourceIds": [
+        "s-x-method",
+        "s-x-coverage"
+      ]
+    }
+  ],
+  "tools": [
+    "x-table-workload",
+    "x-table-profit",
+    "x-table-gates"
+  ],
+  "disputes": [
+    "x-dispute-usage",
+    "x-dispute-efficiency",
+    "x-dispute-hbf",
+    "x-dispute-contract"
+  ],
+  "scenarios": [
+    "x-case-cache",
+    "x-case-nand"
+  ],
+  "coverageNote": "新增五期文本：三期专题全文与两期长访谈重点章节；同源不重复计票。"
+}

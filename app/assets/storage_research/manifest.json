@@ -1,0 +1,25 @@
+{
+  "edition": "2026-10-09",
+  "dataAsOf": "2026-10-08",
+  "entities": 114,
+  "sources": 81,
+  "legacySeries": "Identical to existing public chart; first 35 drawdown values suppressed for incomplete window.",
+  "excluded": [
+    "raw reports",
+    "article/podcast full text",
+    "vendor payloads",
+    "local evidence URLs",
+    "machine paths"
+  ],
+  "files": {
+    "index.html": "780e20b284054446fea9f7db0f31797822605eb92c9901be10e58325bda7b89c",
+    "styles.css": "abcf90857d6d691088e57bde015b65b661624197bfc5082cc7fb1e2efe4d451d",
+    "research-polish.css": "92f2a1946713dcb89e18c018f7763d5e2c8ee250590a72e660519fca68158d48",
+    "app.js": "aa6bef2248bea7b6ff845aba32c95075f7c787467ad330a16ef8a319ca0cc73a",
+    "diagram.html": "e66048edce24642b2054bdaa4c1487e0b5e7d58dcd9c93211a9222cbed3e7374",
+    "data/history.json": "0d687e90f933c6f6e011b91fcd291a11657562fb392faf80b15a2595971e7efa",
+    "data/routes.json": "343a2ec870879ca639ff00f74c8c818f79a8fe20fb747be08d56dc9aebc87987",
+    "data/finance.json": "7ac5475017a703961a7b0e646e2bbad88812e5499154a1088c8163cf784bbbb5",
+    "data/research.json": "d05e970604eac59b078ead90b52190fff4adf7dae3eaaf63ebb4d7579b17d96b"
+  }
+}

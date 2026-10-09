@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="从存储周期历史、AI技术路线、现金与国家条件，追踪公司差异与下一条证据。">
+  <title>存储产业 · 研究图谱 | CMSI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="research-polish.css">
+  <script src="assets/echarts.min.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#history">跳到研究内容</a>
+  <main id="top">
+    <header class="compact-header">
+      <div class="compact-topline"><span class="eyebrow">CMSI / AGENTMENTAL · 存储研究专题</span><span id="asof-label">资料截止日待载入</span></div>
+      <div class="compact-title-row"><h1 id="page-title">DRAM 四十年 · 周期、AI 路线与资本</h1><nav aria-label="专题导航"><a href="#history">历史图</a><a href="#ai">AI / HBM 路线</a><a href="#cash">现金与公司</a><a href="#countries">国家因素</a><a href="#evidence">证据</a></nav></div>
+      <p class="compact-lede">需求 × 技术 × 供给 × 现金 × 国家条件 → 公司与股东结果。历史与当前分开，点击图中节点回读证据。 <span id="coverage-summary"></span></p>
+    </header>
+    <div id="load-status" class="load-status" role="status">正在载入研究数据…</div>
+    <section class="guide-section" aria-labelledby="guide-title"><h2 id="guide-title" class="sr-only">研究路径</h2><div id="guided-paths" class="guided-paths"></div><div id="path-progress" class="path-progress" hidden></div></section>
+    <section class="themes-section" aria-labelledby="themes-title"><h2 id="themes-title" class="sr-only">七条研究主线</h2><div id="theme-strip" class="theme-strip"></div></section>
+
+    <section id="history" class="research-section original-history-section" aria-labelledby="history-title">
+      <h2 id="history-title" class="sr-only">DRAM 四十年 · 原图研究画布</h2>
+      <iframe id="original-history-frame" src="diagram.html" title="DRAM 四十年：原图周期、驱动因素与事件序列" width="100%" height="1500" loading="eager"></iframe>
+      <div class="history-fallback" hidden aria-hidden="true">
+      <div class="section-heading"><div><p class="eyebrow">01 / HISTORY & CYCLES</p><h2 id="history-fallback-title">历史从来不只是一条价格曲线</h2><p>把需求、技术、现金与国家条件放回同一时点，分清企业存续、资产接续与股东结果。</p></div><div class="section-mark">1978 <span>—</span> AI</div></div>
+      <div class="history-chart-card"><div class="chart-heading"><div><h3>营业利润率 × 历史时期 × 产业事件</h3><p>纵轴分别为营业利润率 % / 股价距36个月高点回撤 %，不是芯片价格。点时期或事件，展开研究链条。</p></div><div class="segmented" role="group" aria-label="历史图表类型"><button class="is-active" data-history-chart="margin" aria-pressed="true">利润率</button><button data-history-chart="drawdown" aria-pressed="false">股价回撤</button></div></div><div class="history-shared-scroll"><div class="history-shared-canvas"><div id="history-chart" class="chart history-chart" role="img" aria-label="历史利润率或股价回撤图"></div><div id="timeline-matrix" class="timeline-matrix" aria-label="六条事件泳道，与上图共享实际年份横轴"></div></div></div><div id="history-chart-notes" class="chart-footnote"></div></div>
+      <div id="era-selector" class="era-selector" aria-label="选择历史时期"></div>
+      <div class="lane-heading"><div><h3>所选时期 · 研究链条</h3><p id="era-summary">选择上方时期，查看对应研究卡。</p></div><div class="filter-group"><label for="country-filter">事件涉及地区</label><select id="country-filter"><option value="all">全部地区</option><option value="US">美国</option><option value="KR">韩国</option><option value="JP">日本</option><option value="CN">中国大陆</option><option value="TW">中国台湾</option><option value="EU">欧洲</option></select><button id="reset-history" class="subtle-button">重置</button></div></div>
+      <p class="microcopy">地区筛选仅作用于事件关联，不把总部所在地等同于全部产能、客户或政策适用范围。</p>
+      <div id="event-lanes" class="event-lanes"></div>
+      </div>
+    </section>
+
+    <section id="ai" class="research-section ai-section" aria-labelledby="ai-title">
+      <div class="section-heading"><div><p class="eyebrow">02 / AI & TECHNOLOGY PATHWAYS</p><h2 id="ai-title">AI 需求，经过哪条路径兑现？</h2><p>从工作负载到存储层级、制造路线，再到有资格承接的公司。替代、互补和资源竞争，分别判断。</p></div><div class="section-mark route-mark">需求 <span>→</span> 价值</div></div>
+      <div id="route-themes" class="route-themes" aria-label="技术研究主题"></div>
+      <div class="route-toolbar"><div class="relation-legend"><span><i class="relation-line enables"></i>使能</span><span><i class="relation-line complement"></i>互补</span><span><i class="relation-line conditional_substitute"></i>有条件替代</span><span><i class="relation-line resource_competition"></i>资源竞争</span></div><div class="filter-group"><label for="route-company">公司关联</label><select id="route-company"><option value="all">全部路径</option></select><button id="reset-routes" class="subtle-button">重置</button></div></div>
+      <div class="route-graph-scroll"><div id="route-graph" class="route-graph"><svg id="route-lines" aria-hidden="true"></svg><div id="route-columns" class="route-columns"></div></div></div>
+      <div id="route-selection" class="route-selection"><span class="selection-label">读图方式</span><p>点击节点展开研究方法与证据；高亮连线表示相邻关系。路线发展状态以原始披露日期为准。</p></div>
+      <div id="route-insights" class="route-insights"></div>
+      <section class="research-tools-section" aria-labelledby="research-tools-title"><h3 id="research-tools-title">研究深化：分析表、分歧与条件场景</h3><div id="research-tools"></div></section>
+    </section>
+
+    <section id="cash" class="research-section" aria-labelledby="cash-title">
+      <div class="section-heading"><div><p class="eyebrow">03 / CASH & CAPITAL ALLOCATION</p><h2 id="cash-title">穿越周期，现金如何成为行动能力？</h2><p>先看能动用的钱，再看必须支付的钱，最后看剩余资金可以换来什么。</p></div><span class="section-note">当前财务独立展示<br>不会随历史时期倒填</span></div>
+      <div class="cash-questions"><div><span>01</span><h3>有多少钱能动用？</h3><p>现金、投资、受限资金、未提款额度；区分集团与业务。</p></div><div><span>02</span><h3>必须支出多少钱？</h3><p>经营与营运资金、到期债务、必要投资、已承诺付款。</p></div><div><span>03</span><h3>余力能换来什么？</h3><p>技术、客户、产能和收购；同时检验稀释、时点与回报。</p></div></div>
+      <div id="company-cards" class="company-cards"></div>
+      <div class="finance-detail"><div class="chart-heading"><div><h3 id="finance-title">现金流的五年轨迹</h3><p id="finance-scope">公司财年与本币口径独立呈现</p></div><div class="segmented" id="finance-company-tabs" role="group" aria-label="选择财务对照公司"></div></div><div id="finance-chart" class="chart finance-chart" role="img" aria-label="公司经营现金流、资本开支和自由现金流"></div><div class="table-heading"><h4>原始期间与关键字段</h4><span>未取得的字段留空标记，不填零</span></div><div class="table-scroll" id="finance-table"></div><div id="finance-limitations" class="finance-limitations"></div></div>
+      <div id="finance-channel-notes" class="footnote-block"></div>
+    </section>
+
+    <section id="countries" class="research-section" aria-labelledby="countries-title"><div class="section-heading"><div><p class="eyebrow">04 / STATES, MARKETS & EVIDENCE</p><h2 id="countries-title">国家因素怎样到达公司的报表？</h2><p>资金、技术、市场与控制权，逐段追踪；宣布支持、实际到账、合格产出是不同状态。</p></div></div><div class="policy-paths"><div><span>资金与救助</span><p>资格与条件 → 审批/到账 → 可用资金</p></div><div><span>技术与供给约束</span><p>设备/材料/许可 → 能建厂 → 能量产</p></div><div><span>需求与市场准入</span><p>本土采购/认证 → 订单 → 交付与回款</p></div><div><span>退出与控制权</span><p>重组/并购 → 资产接续 → 有效供给</p></div></div><div id="country-events" class="country-events"></div></section>
+
+    <section id="evidence" class="evidence-section" aria-labelledby="evidence-title"><div class="section-heading"><div><p class="eyebrow">SOURCEBOOK / AUDIT TRAIL</p><h2 id="evidence-title">研究可以追问，证据可以回读</h2><p>文章提供方法，原始披露校准事实。空白和分歧是下一步研究的起点。</p></div><div id="evidence-count" class="section-mark"></div></div><div class="source-toolbar"><label for="source-search" class="sr-only">搜索来源</label><input id="source-search" type="search" placeholder="检索来源标题、日期、定位或口径…"><div class="status-legend"><span class="status-tag fact">事实</span><span class="status-tag plan">披露计划</span><span class="status-tag inference">研究推断</span><span class="status-tag unverified">待核</span></div></div><div class="source-filters"><label for="source-category">来源类型</label><select id="source-category"><option value="all">全部类型</option><option value="podcast">播客 / 视频</option><option value="issuer">原厂 / 披露 / 标准</option><option value="paper">论文 / 研究材料</option><option value="report">研报 / 作者材料</option><option value="method">研究方法 / 记录</option><option value="other">其他</option></select><label for="source-proof">证据状态</label><select id="source-proof"><option value="all">全部状态</option><option value="statement">来源陈述，未独立验证</option><option value="checked">原始材料局部核对</option><option value="method">本项目方法</option><option value="unclassified">既有来源未单独标注</option></select><button id="source-reset" class="subtle-button">重置来源筛选</button></div><p class="source-filter-note">局部核对仅证明列明范围；同机构、同事件多平台不重复计票。</p><div id="source-list" class="source-list"></div><div class="source-pagination"><span id="source-range"></span><button id="sources-prev" class="subtle-button">上一页</button><button id="sources-next" class="subtle-button">下一页</button></div></section>
+    <footer><span>CMS INTERNATIONAL <i>×</i> AGENTMENTAL</span><p>存储产业研究专题 · 研究专题<br>框架、事实与待验证判断分别留痕。</p><a href="#top">回到顶部 ↑</a></footer>
+  </main>
+  <div id="drawer-backdrop" class="drawer-backdrop" hidden></div>
+  <aside id="detail-drawer" class="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title" hidden tabindex="-1"><div class="drawer-top"><span id="drawer-kicker">RESEARCH DETAIL</span><button id="drawer-close" class="close-button" aria-label="关闭详情">×</button></div><div id="drawer-body"></div></aside>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

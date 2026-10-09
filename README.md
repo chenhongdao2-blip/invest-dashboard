@@ -7,6 +7,12 @@
 **Author**: George Chen (CMSI HK Healthcare)
 **Plan**: see `~/.claude/plans/modular-toasting-spindle.md`
 
+## AI · 存储研究专题
+
+侧栏 **AI 人工智能 → 存储**，直达 `/AI_Storage`。历史图已扩展为独立专题：九个历史阶段、AI/HBM技术路线、三家公司的现金对照、国家因素、三张研究表和两个条件场景。AI总览保留跳转入口。
+
+内容截止2026-10-08；沿用历史图09-22/23快照并保留口径提示。本栏目为研究框架与证据入口，不是实时行情或自动选股输出。原始研报、公众号/播客全文及供应商原始返回仍只在本地，线上来源入口为公开URL或明确标注的来源说明。[接入与更新说明](docs/storage-research-section.md)
+
 ## Stack
 
 | Layer | Choice |

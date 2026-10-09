@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-10-08T16:21:32+00:00",
-    "source_date": "2026-10-08",
+    "refreshed_at": "2026-10-09T02:29:26+00:00",
+    "source_date": "2026-10-09",
     "note": "workflow Fetch EOD data run 37650296164 failed"
   },
   "sec_facts": {
@@ -23,7 +23,7 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-10-07T01:50:17+00:00",
-    "source_date": "2026-10-08"
+    "source_date": "2026-10-09"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",

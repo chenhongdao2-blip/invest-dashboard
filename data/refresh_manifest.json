@@ -4,7 +4,7 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-10-13T03:12:45+00:00",
+    "refreshed_at": "2026-10-13T16:55:26+00:00",
     "source_date": "2026-10-13",
     "note": "workflow Fetch EOD data run 37650296164 failed"
   },

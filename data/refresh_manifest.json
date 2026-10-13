@@ -4,8 +4,8 @@
     "source": "yfinance",
     "max_age_days": 4,
     "status": "ok",
-    "refreshed_at": "2026-10-12T18:55:56+00:00",
-    "source_date": "2026-10-12",
+    "refreshed_at": "2026-10-13T03:12:45+00:00",
+    "source_date": "2026-10-13",
     "note": "workflow Fetch EOD data run 37650296164 failed"
   },
   "sec_facts": {
@@ -23,13 +23,13 @@
     "max_age_days": 4,
     "status": "ok",
     "refreshed_at": "2026-10-09T02:35:46+00:00",
-    "source_date": "2026-10-12"
+    "source_date": "2026-10-13"
   },
   "hc_index_comparison": {
     "label": "相对表现(美股线)",
     "source": "yfinance",
     "max_age_days": 4,
-    "status": "ok",
+    "status": "stale",
     "refreshed_at": "2026-10-09T02:35:48+00:00",
     "source_date": "2026-10-08",
     "note": "US panels via yfinance; HK lines from committed iFind provenance"
